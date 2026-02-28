@@ -9,7 +9,6 @@
   "scope": "./",
   "display": "fullscreen",
   "display_override": [
-    "fullscreen",
     "standalone",
     "minimal-ui",
     "browser",
@@ -46,26 +45,6 @@
       "label": "شاشة التطبيق"
     }
   ],
-  "shortcuts": [
-    {
-      "name": "فهرس السور",
-      "short_name": "السور",
-      "description": "افتح فهرس السور مباشرة",
-      "url": "/index.html#surahsOverlay"
-    },
-    {
-      "name": "البحث في القرآن",
-      "short_name": "بحث",
-      "description": "افتح البحث في القرآن مباشرة",
-      "url": "/index.html#searchOverlay"
-    },
-    {
-      "name": "التفسير الميسر",
-      "short_name": "التفسير",
-      "description": "افتح التفسير مباشرة",
-      "url": "/index.html#tafsirOverlay"
-    }
-  ],
   "related_applications": [
     {
       "platform": "play",
@@ -79,7 +58,8 @@
     },
     {
       "platform": "webapp",
-      "url": "https://zdig1.github.io/quran/"
+      "url": "https://zdig1.github.io/quran/",
+      "id": "com.gdz.quranreader"
     }
   ],
   "prefer_related_applications": false,
@@ -87,12 +67,5 @@
   "launch_handler": {
     "client_mode": "focus-existing",
     "navigate_existing_client": "/"
-  },
-  "widgets": [
-    {
-      "name": "العلامات المرجعية",
-      "short_name": "العلامات",
-      "url": "/index.html#bookmarksOverlay"
-    }
-  ]
+  }
 }
