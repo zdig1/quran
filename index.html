@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>القرآن الكريم برواية حفص مع التفسير</title>
     <meta name="description"
@@ -413,18 +413,15 @@
     </div>
 
     <script>
-        // Gestion des erreurs globales
         window.addEventListener('error', function (event) {
             if (window.quranApp) {
                 window.quranApp.showToast("⚠️ حدث خطأ غير متوقع");
             }
         });
 
-        // Gestion des promesses non capturées
         window.addEventListener('unhandledrejection', function (event) {
-            event.preventDefault(); // évite les crashs WebView sur Android
+            event.preventDefault();
             const reason = event.reason?.message || event.reason || 'Erreur inconnue';
-            // Ignorer les erreurs réseau silencieuses (ex: version check hors-ligne)
             const silent = ['fetch', 'network', 'Failed to fetch', 'Timeout'];
             if (silent.some(k => String(reason).toLowerCase().includes(k.toLowerCase()))) return;
             if (window.quranApp) {
@@ -436,9 +433,8 @@
     <script src="version.js" defer></script>
 
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(() => console.log("Mode Offline prêt !"));
+        if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+            navigator.serviceWorker.register('sw.js');
         }
     </script>
 </body>
