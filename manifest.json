@@ -73,12 +73,12 @@
       "id": "com.gdz.quranreader"
     },
     {
-      "platform": "android",
+      "platform": "play",
       "url": "https://com-gdz-quranreader.en.uptodown.com/android",
       "id": "com.gdz.quranreader"
     },
     {
-      "platform": "play",
+      "platform": "webapp",
       "url": "https://zdig1.github.io/quran/"
     }
   ],
@@ -89,10 +89,10 @@
     "navigate_existing_client": "/"
   },
   "widgets": [
-  {
-    "name": "العلامات المرجعية",
-    "short_name": "العلامات",
-    "url": "/index.html#bookmarksOverlay"
-  }
-]
+    {
+      "name": "العلامات المرجعية",
+      "short_name": "العلامات",
+      "url": "/index.html#bookmarksOverlay"
+    }
+  ]
 }
