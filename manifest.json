@@ -62,5 +62,10 @@
       "url": "https://zdig1.github.io/quran/"
     }
   ],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "iarc_rating_id": "everyone",
+  "launch_handler": {
+    "client_mode": "focus-existing",
+    "navigate_existing_client": "/"
+  }
 }
