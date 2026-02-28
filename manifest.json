@@ -9,9 +9,8 @@
   "scope": "./",
   "display": "fullscreen",
   "display_override": [
+    "fullscreen",
     "standalone",
-    "minimal-ui",
-    "browser",
     "window-controls-overlay"
   ],
   "orientation": "any",
