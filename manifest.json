@@ -5,7 +5,7 @@
   "description": "تطبيق مصحف حفص كامل مع التفسير والبحث المتقدم، يعمل بدون إنترنت مع دعم الوضع الليلي والفهرسة السريعة.",
   "lang": "ar",
   "dir": "rtl",
-  "start_url": "/index.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "fullscreen",
   "display_override": [

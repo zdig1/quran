@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <title>القرآن الكريم برواية حفص مع التفسير</title>
     <meta name="description"
@@ -51,7 +51,7 @@
   "url": "https://zdig1.github.io/quran/",
   "applicationCategory": "EducationApplication",
   "operatingSystem": "Android, iOS, Windows, Web",
-  "softwareVersion": "2026.02",
+  "softwareVersion": "1.0.5",
   "description": "تطبيق مصحف حفص كامل مع التفسير والبحث بدون إنترنت.",
   "image": "https://zdig1.github.io/quran/media/icon-512.png",
   "audience": {
@@ -86,15 +86,11 @@
       "https://www.linkedin.com/in/zdig1/"
     ]
   },
-  "downloadUrl": "https://quran-58c7cd.gitlab.io/hafs.html"
+  "downloadUrl": "https://quran-58c7cd.gitlab.io/"
 }
 </script>
 
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: https://*.github.io; 
-               script-src 'self' 'unsafe-inline' 'unsafe-eval'; 
-               style-src 'self' 'unsafe-inline'; 
-               img-src 'self' data: https:; 
-               connect-src 'self' https://quran-58c7cd.gitlab.io;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://quran-58c7cd.gitlab.io;">
 
     <!-- ===== SCRIPT OPTIMISÉ ===== -->
     <script>
@@ -434,7 +430,7 @@
 
     <script>
         if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-            navigator.serviceWorker.register('sw.js');
+            navigator.serviceWorker.register('sw.js').catch(() => {});
         }
     </script>
 </body>

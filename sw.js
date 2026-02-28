@@ -1,70 +1,105 @@
-const CACHE_NAME = 'quran-cache-v2'; // Incrémentez le numéro à chaque déploiement
-const PRE_CACHE = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/main.js',
-  '/quran-reader.js',
-  '/quran-calculator.js',
-  '/tafsir-search.js',
-  '/data/quran.json',
-  '/data/tafsir.json',
-  // Ajoutez les fichiers média essentiels (optionnel)
-  '/media/icon-192.png',
-  '/media/icon-512.png',
-  '/media/screenshot.webp',
-  // Si vous voulez pré-cacher les images de khatm et tajwid :
-  '/media/605.webp',
-  '/media/606.webp',
-  '/media/000.webp'
-  // N'ajoutez pas les 604 images des pages ici !
+const CACHE_NAME = 'quran-v105';
+
+// Fichiers indispensables au fonctionnement (JS, CSS, HTML, JSON, manifeste, icônes)
+const CORE_ASSETS = [
+  './',
+  './index.html',
+  './style.css',
+  './main.js',
+  './quran-reader.js',
+  './quran-calculator.js',
+  './tafsir-search.js',
+  './overlays-manager.js',
+  './version.js',
+  './manifest.json',
+  './data/quran.json',
+  './data/tafsir.json',
+  './media/icon-192.png',
+  './media/icon-512.png',
+  './media/000.webp',           // couverture
+  './media/605.webp',           // doua
+  './media/606.webp',            // tajweed/infos
+  './media/NotoKufiArabic-Bold.woff2'  // police (indispensable pour l'affichage)
 ];
 
+// Pré-cache des 10 premières pages pour une première expérience immédiate
+const FIRST_PAGES = [];
+for (let i = 1; i <= 10; i++) {
+  FIRST_PAGES.push(`./quran_pages/${i.toString().padStart(3, '0')}.webp`);
+}
+
+// Toutes les ressources à mettre en cache lors de l'installation
+const PRE_CACHE = [...CORE_ASSETS, ...FIRST_PAGES];
+
+// Installation : mise en cache des ressources critiques
 self.addEventListener('install', event => {
+  self.skipWaiting(); // active immédiatement le nouveau SW
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(PRE_CACHE))
-      .then(() => self.skipWaiting()) // Active immédiatement le nouveau SW
+    caches.open(CACHE_NAME).then(cache => {
+      console.log('[SW] Installation : pré-cache des ressources essentielles');
+      // allSettled pour ne pas échouer si un fichier mineur manque
+      return Promise.allSettled(PRE_CACHE.map(url => 
+        cache.add(url).catch(err => console.warn(`[SW] Échec pré-cache ${url}:`, err))
+      ));
+    })
   );
 });
 
+// Activation : nettoyage des anciens caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => 
       Promise.all(
         keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
       )
-    ).then(() => self.clients.claim()) // Prend le contrôle des clients ouverts
+    ).then(() => self.clients.claim()) // prend le contrôle des clients ouverts
   );
 });
 
+// Interception des requêtes (stratégie Cache First)
 self.addEventListener('fetch', event => {
-  // Ne traiter que les requêtes vers notre domaine (évite les problèmes CORS)
+  // Ignorer les requêtes non-GET
+  if (event.request.method !== 'GET') return;
+
+  // Ne pas intercepter les requêtes vers d'autres domaines (ex: updates)
   if (!event.request.url.startsWith(self.location.origin)) {
-    // Pour les requêtes externes (comme les mises à jour), on passe directement au réseau
-    event.respondWith(fetch(event.request));
+    // Pour les requêtes externes, on passe au réseau sans mise en cache
+    event.respondWith(fetch(event.request).catch(() => new Response('', { status: 503 })));
     return;
   }
 
   event.respondWith(
     caches.match(event.request).then(cached => {
+      // Si en cache, on renvoie direct
       if (cached) return cached;
+
+      // Sinon on va chercher sur le réseau
       return fetch(event.request).then(response => {
-        // Mettre en cache uniquement les ressources valides (statut 200)
+        // On ne met en cache que les réponses valides (statut 200)
         if (response && response.status === 200) {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            // On évite de mettre en cache les requêtes vers des APIs externes (optionnel)
-            cache.put(event.request, responseToCache);
-          });
+          const cloned = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, cloned));
         }
         return response;
-      }).catch(() => {
-        // Fallback pour les images (afficher une image placeholder)
+      }).catch(error => {
+        // Si la requête réseau échoue (hors ligne) et que c'est une image
         if (event.request.destination === 'image') {
-          return caches.match('/media/placeholder.webp'); // Créez cette image
+          // On retourne un SVG avec un message explicite
+          return new Response(
+            `<svg xmlns="http://www.w3.org/2000/svg" width="700" height="1100" viewBox="0 0 700 1100">
+               <rect width="100%" height="100%" fill="#f5f5f5"/>
+               <text x="50%" y="45%" font-family="sans-serif" font-size="24" text-anchor="middle" fill="#333">
+                 ⚠️ الصفحة غير متوفرة حاليا
+               </text>
+               <text x="50%" y="55%" font-family="sans-serif" font-size="18" text-anchor="middle" fill="#666">
+                 زر الصفحة مرة واحدة على الأقل مع الاتصال بالإنترنت
+               </text>
+             </svg>`,
+            { headers: { 'Content-Type': 'image/svg+xml' } }
+          );
         }
-        return new Response('Application hors ligne', { status: 503 });
+        // Pour les autres types, on renvoie une réponse d'erreur simple
+        return new Response('غير متصل', { status: 503 });
       });
     })
   );
