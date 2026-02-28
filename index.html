@@ -5,12 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <title>القرآن الكريم</title>
-    <meta name="description" content="تطبيق متكامل للقراءة والبحث بدون إنترنت">
+    <title>القرآن الكريم برواية حفص مع التفسير</title>
+    <meta name="description"
+        content="تطبيق القرآن الكريم برواية حفص عن عاصم، بدون إنترنت، مع التفسير، البحث، والوضع الليلي.">
+    <meta name="keywords" content="تطبيق القرآن الكريم, مصحف حفص, رواية حفص, قراءة القرآن بدون إنترنت, تفسير القرآن">
+
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="format-detection" content="telephone=no">
 
     <meta name="theme-color" content="#1a5e25">
     <link rel="manifest" href="manifest.json">
-
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="media/icon-192.png" type="image/png">
 
@@ -19,8 +23,61 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="media/icon-192.png">
 
-    <meta http-equiv="Content-Security-Policy" 
-      content="default-src 'self' data: https://*.github.io; 
+    <meta name="author" content="zdig1">
+    <link rel="me" href="https://www.youtube.com/@zdig01">
+    <link rel="me" href="https://www.linkedin.com/in/zdig1/">
+
+    <meta property="og:title" content="القرآن الكريم برواية حفص">
+    <meta property="og:description" content="تطبيق مصحف حفص كامل مع التفسير والبحث بدون إنترنت.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://quran-58c7cd.gitlab.io/">
+    <meta property="og:image" content="media/screenshot.webp">
+    <meta property="og:image:alt" content="تطبيقات القرآن الكريم">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="القرآن الكريم برواية حفص">
+    <meta name="twitter:description" content="تطبيق مصحف حفص كامل مع التفسير والبحث بدون إنترنت.">
+    <meta name="twitter:image" content="media/screenshot.webp">
+    <meta name="twitter:site" content="@zdig1">
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "القرآن الكريم برواية حفص",
+    "url": "https://quran-58c7cd.gitlab.io/",
+    "operatingSystem": "Android, Web",
+    "applicationCategory": "EducationalApplication",
+    "audience": "General",
+    "softwareVersion": "2026.02",
+    "description": "تطبيق مصحف حفص كامل مع التفسير والبحث بدون إنترنت.",
+    "author": {
+      "@type": "Person",
+      "name": "zdig1",
+      "sameAs": [
+        "https://twitter.com/zdig1",
+        "https://www.youtube.com/@zdig01"
+      ]
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "GDZ",
+      "url": "https://quran-58c7cd.gitlab.io/",
+      "sameAs": [
+        "https://www.facebook.com/streaming.rakuen",
+        "https://www.linkedin.com/in/zdig1/"
+      ]
+    },
+    "downloadUrl": "https://quran-58c7cd.gitlab.io/"
+  }
+  </script>
+
+
+
+
+
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: https://*.github.io; 
                script-src 'self' 'unsafe-inline' 'unsafe-eval'; 
                style-src 'self' 'unsafe-inline'; 
                img-src 'self' data: https:; 
@@ -110,232 +167,235 @@
             </div>
             <div class="footer-item">
                 <span class="footer-surah">
-                    <span id="sajdaIcon" class="sajda-icon" style="display: none;">۩ </span>حـ<span id="hizbNumber">1</span>
+                    <span id="sajdaIcon" class="sajda-icon" style="display: none;">۩ </span>حـ<span
+                        id="hizbNumber">1</span>
                 </span>
             </div>
-    </footer>
+        </footer>
 
-    <!-- ===== TOAST ===== -->
-    <div id="toast" class="toast" aria-live="polite"></div>
+        <!-- ===== TOAST ===== -->
+        <div id="toast" class="toast" aria-live="polite"></div>
 
-    <!-- 1. MENU PRINCIPAL -->
-    <div id="menuOverlay" class="menu-overlay">
-        <div class="menu-content">
-            <div class="menu-header">
-                <h2>≡ القائمة الرئيسية</h2>
-                <button class="btn close-btn" id="closeMenuBtn">✕</button>
-            </div>
+        <!-- 1. MENU PRINCIPAL -->
+        <div id="menuOverlay" class="menu-overlay">
+            <div class="menu-content">
+                <div class="menu-header">
+                    <h2>≡ القائمة الرئيسية</h2>
+                    <button class="btn close-btn" id="closeMenuBtn">✕</button>
+                </div>
 
-            <div>
-                <div class="menu-items">
-                    <button class="btn menu-item" id="surahsBtn">
-                        <svg class="menu-icon-svg" viewBox="0 0 24 24">
-                            <path
-                                d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z" />
-                        </svg>
-                        <span class="menu-text">فهرس السور</span>
-                    </button>
+                <div>
+                    <div class="menu-items">
+                        <button class="btn menu-item" id="surahsBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24">
+                                <path
+                                    d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z" />
+                            </svg>
+                            <span class="menu-text">فهرس السور</span>
+                        </button>
 
-                    <button class="btn menu-item" id="juzHizbBtn">
-                        <svg class="menu-icon-svg" viewBox="0 0 24 24">
-                            <path
-                                d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z" />
-                        </svg>
-                        <span class="menu-text">الأجزاء والأحزاب</span>
-                    </button>
+                        <button class="btn menu-item" id="juzHizbBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24">
+                                <path
+                                    d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z" />
+                            </svg>
+                            <span class="menu-text">الأجزاء والأحزاب</span>
+                        </button>
 
-                    <button class="btn menu-item" id="bookmarksBtn">
-                        <svg class="menu-icon-svg" viewBox="0 0 24 24">
-                            <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z" />
-                        </svg>
-                        <span class="menu-text">العلامات المرجعية</span>
-                    </button>
+                        <button class="btn menu-item" id="bookmarksBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24">
+                                <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z" />
+                            </svg>
+                            <span class="menu-text">العلامات المرجعية</span>
+                        </button>
 
-                    <button class="btn menu-item" id="khatmBtn">
-                        <svg class="menu-icon-svg" viewBox="0 0 24 24">
-                            <path
-                                d="M12,19c-3,0-5.3-1.6-6-3.8c-0.2-0.5-0.1-1.1,0.3-1.4c1.1-1,1.9-2.3,2.2-3.8c0.1-0.6,0.6-1,1.2-1c0.7,0,1.2,0.5,1.2,1.2 c0,1.2,0,2.4,0,3.6c0,0.6,0.4,1,1,1s1-0.4,1-1c0-1.2,0-2.4,0-3.6c0-0.7,0.5-1.2,1.2-1.2c0.6,0,1.1,0.4,1.2,1c0.3,1.5,1.1,2.8,2.2,3.8 c0.4,0.3,0.5,0.9,0.3,1.4C17.3,17.4,15,19,12,19z" />
-                            <path
-                                d="M12,21c-4.4,0-8-3.6-8-8c0-0.6,0.4-1,1-1s1,0.4,1,1c0,3.3,2.7,6,6,6s6-2.7,6-6c0-0.6,0.4-1,1-1s1,0.4,1,1 C20,17.4,16.4,21,12,21z" />
-                        </svg>
-                        <span class="menu-text">دعاء ختم القرآن</span>
-                    </button>
+                        <button class="btn menu-item" id="khatmBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24">
+                                <path
+                                    d="M12,19c-3,0-5.3-1.6-6-3.8c-0.2-0.5-0.1-1.1,0.3-1.4c1.1-1,1.9-2.3,2.2-3.8c0.1-0.6,0.6-1,1.2-1c0.7,0,1.2,0.5,1.2,1.2 c0,1.2,0,2.4,0,3.6c0,0.6,0.4,1,1,1s1-0.4,1-1c0-1.2,0-2.4,0-3.6c0-0.7,0.5-1.2,1.2-1.2c0.6,0,1.1,0.4,1.2,1c0.3,1.5,1.1,2.8,2.2,3.8 c0.4,0.3,0.5,0.9,0.3,1.4C17.3,17.4,15,19,12,19z" />
+                                <path
+                                    d="M12,21c-4.4,0-8-3.6-8-8c0-0.6,0.4-1,1-1s1,0.4,1,1c0,3.3,2.7,6,6,6s6-2.7,6-6c0-0.6,0.4-1,1-1s1,0.4,1,1 C20,17.4,16.4,21,12,21z" />
+                            </svg>
+                            <span class="menu-text">دعاء ختم القرآن</span>
+                        </button>
 
-                    <button class="btn menu-item" id="searchBtn">
-                        <svg class="menu-icon-svg" viewBox="0 0 24 24">
-                            <path
-                                d="M15.5,14h-0.8l-0.3-0.3c1-1.1,1.6-2.6,1.6-4.2C16,5.9,13.1,3,9.5,3S3,5.9,3,9.5S5.9,16,9.5,16c1.6,0,3.1-0.6,4.2-1.6l0.3,0.3v0.8l5,5l1.5-1.5L15.5,14z M9.5,14C7,14,5,12,5,9.5S7,5,9.5,5S14,7,14,9.5S12,14,9.5,14z" />
-                        </svg>
-                        <span class="menu-text">البحث في القرآن</span>
-                    </button>
+                        <button class="btn menu-item" id="searchBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24">
+                                <path
+                                    d="M15.5,14h-0.8l-0.3-0.3c1-1.1,1.6-2.6,1.6-4.2C16,5.9,13.1,3,9.5,3S3,5.9,3,9.5S5.9,16,9.5,16c1.6,0,3.1-0.6,4.2-1.6l0.3,0.3v0.8l5,5l1.5-1.5L15.5,14z M9.5,14C7,14,5,12,5,9.5S7,5,9.5,5S14,7,14,9.5S12,14,9.5,14z" />
+                            </svg>
+                            <span class="menu-text">البحث في القرآن</span>
+                        </button>
 
-                    <button class="btn menu-item" id="tafsirBtn">
-                        <svg class="menu-icon-svg" viewBox="0 0 24 24">
-                            <path
-                                d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.45-.75-2.25-1zM6.5 18c-1.15 0-2.34.19-3.5.5V7c1.16-.31 2.35-.5 3.5-.5 1.95 0 4.05.4 5.5 1.5v10c-1.45-1.1-3.55-1.5-5.5-1.5zm14.5.5c-1.16-.31-2.35-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5V8c1.45-1.1 3.55-1.5 5.5-1.5 1.15 0 2.34.19 3.5.5v11.5z" />
-                        </svg>
-                        <span class="menu-text">التفسير الميسر</span>
-                    </button>
+                        <button class="btn menu-item" id="tafsirBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24">
+                                <path
+                                    d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.45-.75-2.25-1zM6.5 18c-1.15 0-2.34.19-3.5.5V7c1.16-.31 2.35-.5 3.5-.5 1.95 0 4.05.4 5.5 1.5v10c-1.45-1.1-3.55-1.5-5.5-1.5zm14.5.5c-1.16-.31-2.35-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5V8c1.45-1.1 3.55-1.5 5.5-1.5 1.15 0 2.34.19 3.5.5v11.5z" />
+                            </svg>
+                            <span class="menu-text">التفسير الميسر</span>
+                        </button>
 
-                    <button class="btn menu-item" id="tajweedBtn">
-                        <svg class="menu-icon-svg" viewBox="0 0 24 24">
-                            <path d="M12,2L4,10l8,8l8-8L12,2z M12,15.2L6.8,10L12,4.8L17.2,10L12,15.2z" />
-                            <path
-                                d="M12,8c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,8,12,8z M12,11c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1S12.6,11,12,11z" />
-                            <path d="M12,22l-2-2h4L12,22z" />
-                        </svg>
-                        <span class="menu-text">قواعد التجويد</span>
-                    </button>
+                        <button class="btn menu-item" id="tajweedBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24">
+                                <path d="M12,2L4,10l8,8l8-8L12,2z M12,15.2L6.8,10L12,4.8L17.2,10L12,15.2z" />
+                                <path
+                                    d="M12,8c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,8,12,8z M12,11c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1S12.6,11,12,11z" />
+                                <path d="M12,22l-2-2h4L12,22z" />
+                            </svg>
+                            <span class="menu-text">قواعد التجويد</span>
+                        </button>
 
-                    <button class="btn menu-item" id="aboutBtn">
-                        <svg class="menu-icon-svg" viewBox="0 0 24 24">
-                            <path
-                                d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
-                        </svg>
-                        <span class="menu-text">حول التطبيق</span>
-                    </button>
+                        <button class="btn menu-item" id="aboutBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24">
+                                <path
+                                    d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+                            </svg>
+                            <span class="menu-text">حول التطبيق</span>
+                        </button>
 
-                    <button class="btn menu-item" id="themeBtn">
-                        <svg class="menu-icon-svg" viewBox="0 0 24 24">
-                            <path
-                                d="M10 2c-1.82 0-3.53.5-5 1.35C7.99 5.08 10 8.3 10 12s-2.01 6.92-5 8.65C6.47 21.5 8.18 22 10 22c5.52 0 10-4.48 10-10S15.52 2 10 2z" />
-                        </svg>
-                        <span class="menu-text">الوضع الليلي</span>
-                    </button>
+                        <button class="btn menu-item" id="themeBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24">
+                                <path
+                                    d="M10 2c-1.82 0-3.53.5-5 1.35C7.99 5.08 10 8.3 10 12s-2.01 6.92-5 8.65C6.47 21.5 8.18 22 10 22c5.52 0 10-4.48 10-10S15.52 2 10 2z" />
+                            </svg>
+                            <span class="menu-text">الوضع الليلي</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- ===== SYSTÈME D'OVERLAYS ===== -->
+        <!-- ===== SYSTÈME D'OVERLAYS ===== -->
 
-    <!-- 1. SOURATES (Standard) -->
-    <div id="surahsOverlay" class="overlay" role="dialog" aria-label="فهرس السور">
-        <div class="overlay-content fullscreen">
-            <div class="overlay-header">
-                <h2>📑 فهرس السور</h2>
-                <button class="btn close-btn" id="closeSurahsBtn">✕</button>
-            </div>
-            <div id="surahsList" class="overlay-body"></div>
-        </div>
-    </div>
-
-    <!-- 2. JUZ/HIZB (Standard) -->
-    <div id="juzHizbOverlay" class="overlay" role="dialog" aria-label="الأجزاء والأحزاب">
-        <div class="overlay-content fullscreen">
-            <div class="overlay-header">
-                <h2>📘 الأجزاء والأحزاب</h2>
-                <button class="btn close-btn" id="closeJuzHizbBtn">✕</button>
-            </div>
-            <div id="juzHizbList" class="overlay-body"></div>
-        </div>
-    </div>
-
-    <!-- 3. SIGNETS (Standard) -->
-    <div id="bookmarksOverlay" class="overlay" role="dialog" aria-label="العلامات المرجعية">
-        <div class="overlay-content">
-            <div class="overlay-header">
-                <h2>🔖 العلامات المرجعية</h2>
-                <button class="btn close-btn" id="closeBookmarksBtn">✕</button>
-            </div>
-            <div id="bookmarksList" class="overlay-body"></div>
-            <div id="noBookmarksMessage" class="empty-message" style="display: none;">
-                <p>لا توجد صفحات مرجعية</p>
-                <p>اضغط على 🔖 في الأعلى لإضافة علامة</p>
+        <!-- 1. SOURATES (Standard) -->
+        <div id="surahsOverlay" class="overlay" role="dialog" aria-label="فهرس السور">
+            <div class="overlay-content fullscreen">
+                <div class="overlay-header">
+                    <h2>📑 فهرس السور</h2>
+                    <button class="btn close-btn" id="closeSurahsBtn">✕</button>
+                </div>
+                <div id="surahsList" class="overlay-body"></div>
             </div>
         </div>
-    </div>
 
-    <!-- 4. KHATM (Fullscreen) -->
-    <div id="khatmOverlay" class="overlay" role="dialog" aria-label="دعاء ختم القرآن">
-        <div class="overlay-content fullscreen">
-            <div class="overlay-header">
-                <h2>🕌 دعاء ختم القرآن</h2>
-                <button class="btn close-btn" id="closeKhatmBtn">✕</button>
-            </div>
-            <div class="overlay-body">
-                <div id="khatmContent" class="overlay-body khatm-content"></div>
+        <!-- 2. JUZ/HIZB (Standard) -->
+        <div id="juzHizbOverlay" class="overlay" role="dialog" aria-label="الأجزاء والأحزاب">
+            <div class="overlay-content fullscreen">
+                <div class="overlay-header">
+                    <h2>📘 الأجزاء والأحزاب</h2>
+                    <button class="btn close-btn" id="closeJuzHizbBtn">✕</button>
+                </div>
+                <div id="juzHizbList" class="overlay-body"></div>
             </div>
         </div>
-    </div>
 
-    <!-- 5. RECHERCHE (Fullscreen) -->
-    <div id="searchOverlay" class="overlay" role="dialog" aria-label="البحث في القرآن">
-        <div class="overlay-content fullscreen">
-            <div class="overlay-header">
-                <h2>🔍 البحث في القرآن</h2>
-                <button class="btn close-btn" id="closeSearchBtn">✕</button>
-            </div>
-
-            <div class="search-container">
-                <div style="position: relative; width: 100%;">
-                    <input type="text" id="searchInput" class="search-input"
-                        placeholder="اكتب كلمة للبحث في القرآن الكريم..." autocomplete="off" aria-label="كلمة البحث"
-                        style="padding-left: 40px;"> <!-- espace pour le bouton -->
-                    <button id="clearSearchBtn" class="clear-search-btn" aria-label="مسح"
-                        style="display: none;">✕</button>
+        <!-- 3. SIGNETS (Standard) -->
+        <div id="bookmarksOverlay" class="overlay" role="dialog" aria-label="العلامات المرجعية">
+            <div class="overlay-content">
+                <div class="overlay-header">
+                    <h2>🔖 العلامات المرجعية</h2>
+                    <button class="btn close-btn" id="closeBookmarksBtn">✕</button>
+                </div>
+                <div id="bookmarksList" class="overlay-body"></div>
+                <div id="noBookmarksMessage" class="empty-message" style="display: none;">
+                    <p>لا توجد صفحات مرجعية</p>
+                    <p>اضغط على 🔖 في الأعلى لإضافة علامة</p>
                 </div>
             </div>
-
-            <div id="searchResults" class="overlay-body"></div>
         </div>
-    </div>
 
-    <!-- 6. TAFSIR (Fullscreen) -->
-    <div id="tafsirOverlay" class="overlay" role="dialog" aria-label="التفسير الميسر">
-        <div class="overlay-content fullscreen">
-            <div class="overlay-header">
-                <h2>📖 التفسير الميسر</h2>
-                <button class="btn close-btn" id="closeTafsirBtn">✕</button>
-            </div>
-
-            <div class="tafsir-controls tafsir-container">
-                <select id="suraSelect" class="tafsir-select" aria-label="اختر السورة">
-                    <option value="">اختر السورة</option>
-                </select>
-                <select id="ayaSelect" class="tafsir-select" aria-label="اختر الآية">
-                    <option value="">اختر الآية</option>
-                </select>
-                <select id="pageSelect" class="tafsir-select" aria-label="اختر الصفحة">
-                    <option value="">اختر الصفحة</option>
-                </select>
-                <button class="btn tafsir-font-btn" id="tafsirThemeToggle" aria-label="تبديل الوضع الليلي">🌙</button>
-
-                <button class="btn tafsir-font-btn" id="tafsirFontDecrease" aria-label="تصغير حجم النص">−</button>
-                <button class="btn tafsir-font-btn" id="tafsirFontReset" aria-label="إعادة الحجم الافتراضي">⟲</button>
-                <button class="btn tafsir-font-btn" id="tafsirFontIncrease" aria-label="تكبير حجم النص">+</button>
-            </div>
-
-            <div id="tafsirContent" class="overlay-body tafsir-content-container"
-                style="padding: 20px; direction: rtl;"></div>
-        </div>
-    </div>
-
-    <!-- 7. TAJWEED (Standard) -->
-    <div id="tajweedOverlay" class="overlay" role="dialog" aria-label="قواعد التجويد">
-        <div class="overlay-content fullscreen">
-            <div class="overlay-header">
-                <h2>📚 قواعد التجويد</h2>
-                <button class="btn close-btn" id="closeTajweedBtn">✕</button>
-            </div>
-            <div class="overlay-body">
-                <div id="tajweedRulesContent" class="tajweed-text"></div>
+        <!-- 4. KHATM (Fullscreen) -->
+        <div id="khatmOverlay" class="overlay" role="dialog" aria-label="دعاء ختم القرآن">
+            <div class="overlay-content fullscreen">
+                <div class="overlay-header">
+                    <h2>🕌 دعاء ختم القرآن</h2>
+                    <button class="btn close-btn" id="closeKhatmBtn">✕</button>
+                </div>
+                <div class="overlay-body">
+                    <div id="khatmContent" class="overlay-body khatm-content"></div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- 8. ABOUT (Standard) -->
-    <div id="aboutOverlay" class="overlay" role="dialog" aria-label="حول التطبيق">
-        <div class="overlay-content">
-            <div class="overlay-header">
-                <h2>📖 حول التطبيق</h2>
-                <button class="btn close-btn" id="closeAboutBtn">✕</button>
-            </div>
-            <div class="overlay-body">
-                <div id="aboutContent" class="about-content"></div>
+        <!-- 5. RECHERCHE (Fullscreen) -->
+        <div id="searchOverlay" class="overlay" role="dialog" aria-label="البحث في القرآن">
+            <div class="overlay-content fullscreen">
+                <div class="overlay-header">
+                    <h2>🔍 البحث في القرآن</h2>
+                    <button class="btn close-btn" id="closeSearchBtn">✕</button>
+                </div>
+
+                <div class="search-container">
+                    <div style="position: relative; width: 100%;">
+                        <input type="text" id="searchInput" class="search-input"
+                            placeholder="اكتب كلمة للبحث في القرآن الكريم..." autocomplete="off" aria-label="كلمة البحث"
+                            style="padding-left: 40px;"> <!-- espace pour le bouton -->
+                        <button id="clearSearchBtn" class="clear-search-btn" aria-label="مسح"
+                            style="display: none;">✕</button>
+                    </div>
+                </div>
+
+                <div id="searchResults" class="overlay-body"></div>
             </div>
         </div>
-    </div>
+
+        <!-- 6. TAFSIR (Fullscreen) -->
+        <div id="tafsirOverlay" class="overlay" role="dialog" aria-label="التفسير الميسر">
+            <div class="overlay-content fullscreen">
+                <div class="overlay-header">
+                    <h2>📖 التفسير الميسر</h2>
+                    <button class="btn close-btn" id="closeTafsirBtn">✕</button>
+                </div>
+
+                <div class="tafsir-controls tafsir-container">
+                    <select id="suraSelect" class="tafsir-select" aria-label="اختر السورة">
+                        <option value="">اختر السورة</option>
+                    </select>
+                    <select id="ayaSelect" class="tafsir-select" aria-label="اختر الآية">
+                        <option value="">اختر الآية</option>
+                    </select>
+                    <select id="pageSelect" class="tafsir-select" aria-label="اختر الصفحة">
+                        <option value="">اختر الصفحة</option>
+                    </select>
+                    <button class="btn tafsir-font-btn" id="tafsirThemeToggle"
+                        aria-label="تبديل الوضع الليلي">🌙</button>
+
+                    <button class="btn tafsir-font-btn" id="tafsirFontDecrease" aria-label="تصغير حجم النص">−</button>
+                    <button class="btn tafsir-font-btn" id="tafsirFontReset"
+                        aria-label="إعادة الحجم الافتراضي">⟲</button>
+                    <button class="btn tafsir-font-btn" id="tafsirFontIncrease" aria-label="تكبير حجم النص">+</button>
+                </div>
+
+                <div id="tafsirContent" class="overlay-body tafsir-content-container"
+                    style="padding: 20px; direction: rtl;"></div>
+            </div>
+        </div>
+
+        <!-- 7. TAJWEED (Standard) -->
+        <div id="tajweedOverlay" class="overlay" role="dialog" aria-label="قواعد التجويد">
+            <div class="overlay-content fullscreen">
+                <div class="overlay-header">
+                    <h2>📚 قواعد التجويد</h2>
+                    <button class="btn close-btn" id="closeTajweedBtn">✕</button>
+                </div>
+                <div class="overlay-body">
+                    <div id="tajweedRulesContent" class="tajweed-text"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. ABOUT (Standard) -->
+        <div id="aboutOverlay" class="overlay" role="dialog" aria-label="حول التطبيق">
+            <div class="overlay-content">
+                <div class="overlay-header">
+                    <h2>📖 حول التطبيق</h2>
+                    <button class="btn close-btn" id="closeAboutBtn">✕</button>
+                </div>
+                <div class="overlay-body">
+                    <div id="aboutContent" class="about-content"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -361,12 +421,12 @@
 
     <script src="version.js" defer></script>
 
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-      .then(() => console.log("Mode Offline prêt !"));
-  }
-</script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log("Mode Offline prêt !"));
+        }
+    </script>
 </body>
 
 </html>

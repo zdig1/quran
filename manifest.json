@@ -1,20 +1,63 @@
 {
-  "name": "مصحف التجويد",
-  "short_name": "المصحف",
-  "start_url": "index.html",
-  "display": "standalone",
-  "background_color": "#F9F4E8",
+  "id": "com.gdz.quranreader",
+  "name": "القرآن الكريم برواية حفص",
+  "short_name": "القرآن",
+  "description": "تطبيق مصحف حفص كامل مع التفسير والبحث المتقدم، يعمل بدون إنترنت مع دعم الوضع الليلي والفهرسة السريعة.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "background_color": "#ffffff",
   "theme_color": "#1a5e25",
+  "categories": [
+    "education",
+    "books",
+    "religion"
+  ],
   "icons": [
     {
       "src": "media/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "media/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "media/screenshot.webp",
+      "type": "image/webp",
+      "sizes": "1000x500",
+      "form_factor": "narrow",
+      "label": "شاشة التطبيق"
+    }
+  ],
+  "related_applications": [
+        {
+      "platform": "android",
+      "url": "https://apkpure.com/p/com.gdz.quranreader",
+      "id": "com.gdz.quranreader"
+    },
+    {
+      "platform": "android",
+      "url": "https://com-gdz-quranreader.en.uptodown.com/android",
+      "id": "com.gdz.quranreader"
+    },
+    {
+      "platform": "webapp",
+      "url": "https://quran-58c7cd.gitlab.io/"
+    }
+  ],
+  "prefer_related_applications": false
 }
