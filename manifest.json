@@ -39,7 +39,7 @@
       "src": "media/screenshot.webp",
       "type": "image/webp",
       "sizes": "1000x500",
-      "form_factor": "narrow",
+      "form_factor": "wide",
       "label": "شاشة التطبيق"
     }
   ],
@@ -56,7 +56,7 @@
     },
     {
       "platform": "webapp",
-      "url": "https://quran-58c7cd.gitlab.io/"
+      "url": "https://zdig1.github.io/quran/"
     }
   ],
   "prefer_related_applications": false
