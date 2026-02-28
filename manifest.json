@@ -9,10 +9,11 @@
   "scope": "./",
   "display": "fullscreen",
   "display_override": [
+    "fullscreen",
     "standalone",
     "minimal-ui",
-    "window-controls-overlay",
-    "browser"
+    "browser",
+    "window-controls-overlay"
   ],
   "orientation": "any",
   "background_color": "#ffffff",
@@ -46,7 +47,7 @@
     }
   ],
   "related_applications": [
-        {
+    {
       "platform": "android",
       "url": "https://apkpure.com/p/com.gdz.quranreader",
       "id": "com.gdz.quranreader"
