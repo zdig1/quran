@@ -1,6 +1,6 @@
 {
   "id": "com.gdz.quranreader",
-  "name": "القرآن الكريم برواية حفص ",
+  "name": "القرآن_الكريم",
   "short_name": "مصحف التجويد – حفص",
   "description": "تطبيق مصحف حفص كامل مع التفسير والبحث المتقدم، يعمل بدون إنترنت مع دعم الوضع الليلي والفهرسة السريعة.",
   "lang": "ar",
@@ -10,7 +10,9 @@
   "display": "fullscreen",
   "display_override": [
     "standalone",
-    "minimal-ui"
+    "minimal-ui",
+    "window-controls-overlay",
+    "browser"
   ],
   "orientation": "any",
   "background_color": "#ffffff",
