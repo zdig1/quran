@@ -87,5 +87,12 @@
   "launch_handler": {
     "client_mode": "focus-existing",
     "navigate_existing_client": "/"
+  },
+  "widgets": [
+  {
+    "name": "العلامات المرجعية",
+    "short_name": "العلامات",
+    "url": "/index.html#bookmarksOverlay"
   }
+]
 }
