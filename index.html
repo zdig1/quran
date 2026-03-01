@@ -9,11 +9,9 @@
     <meta name="description"
         content="تطبيق القرآن الكريم برواية حفص عن عاصم، بدون إنترنت، مع التفسير، البحث، والوضع الليلي.">
     <meta name="keywords" content="تطبيق القرآن الكريم, مصحف حفص, رواية حفص, قراءة القرآن بدون إنترنت, تفسير القرآن">
-
     <meta name="robots" content="index, follow, max-image-preview:large">
-    <meta name="format-detection" content="telephone=no">
     <link rel="canonical" href="https://zdig1.github.io/quran/">
-
+    <meta name="format-detection" content="telephone=no">
     <meta name="theme-color" content="#1a5e25">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
@@ -90,7 +88,8 @@
 }
 </script>
 
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://quran-58c7cd.gitlab.io;">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://quran-58c7cd.gitlab.io;">
 
     <!-- ===== SCRIPT OPTIMISÉ ===== -->
     <script>
@@ -414,7 +413,6 @@
                 window.quranApp.showToast("⚠️ حدث خطأ غير متوقع");
             }
         });
-
         window.addEventListener('unhandledrejection', function (event) {
             event.preventDefault();
             const reason = event.reason?.message || event.reason || 'Erreur inconnue';
@@ -430,7 +428,7 @@
 
     <script>
         if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-            navigator.serviceWorker.register('sw.js').catch(() => {});
+            navigator.serviceWorker.register('sw.js').catch(() => { });
         }
     </script>
 </body>
