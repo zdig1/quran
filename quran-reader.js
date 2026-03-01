@@ -59,7 +59,7 @@ class QuranReader {
       (this.menuObserver = null),
       (this.autoScrollActive = false),
       (this.autoScrollRAF = null),
-      (this.autoScrollSpeed = 0.3),
+      (this.autoScrollSpeed = 0.4),
       (this._scrollAccum = 0));
   }
   async init(e = {}, t = 1) {
@@ -100,7 +100,8 @@ class QuranReader {
           setTimeout(() => {
             (this.goToPage(this.currentPage),
               setTimeout(() => {
-                this.isRestoring = !1;
+                (this.isRestoring = !1,
+                this.updateAutoScrollButton());
               }, 100));
           }, 50));
       }, 50));
@@ -309,10 +310,17 @@ class QuranReader {
           (s.style.top = (e - 1) * this.pageHeight + "px"),
           (s.style.height = this.pageHeight + "px"));
         const t = s.querySelector("img");
+        const cachedSrc = this.imageCache.has(e) ? this.imageCache.get(e) : "";
         ((t.id = `page-${e}`),
-          (t.dataset.page = e),
-          (t.dataset.loaded = "false"),
-          (t.src = ""));
+          (t.dataset.page = e));
+        if (cachedSrc) {
+          // Image déjà en cache : on l'affiche directement sans passer par src=""
+          t.src = cachedSrc;
+          t.dataset.loaded = "true";
+        } else {
+          t.src = "";
+          t.dataset.loaded = "false";
+        }
       }
       s.style.display = "block";
     });

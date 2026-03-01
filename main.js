@@ -303,7 +303,7 @@ showPageInputDialog() {
   // Focus après l'insertion dans le DOM
   requestAnimationFrame(() => {
     input.focus();
-    // Pour forcer l'ouverture du clavier sur certains appareils
+    input.select();
     input.click();
   });
 
@@ -314,8 +314,8 @@ showPageInputDialog() {
     if (done) return;
     const page = parseInt(input.value, 10);
     if (!isNaN(page) && page >= 1 && page <= 604) {
-      cleanup();
       this.goToPage(page);
+      setTimeout(cleanup, 80);
     } else {
       this.showToast('❌ الرجاء إدخال رقم صفحة صحيح (1-604)');
       input.focus();
