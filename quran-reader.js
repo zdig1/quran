@@ -708,32 +708,34 @@ class QuranReader {
     }
 
     
-if (this.elements.footer) {
-  const pageNumberHandler = (e) => {
-    if (this.elements.footer.classList.contains('hidden')) return;
-    const target = e.target.closest('#pageNumber, .footer-value');
-    if (target) {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('Page number clicked'); // Pour déboguer
-      if (window.quranApp && typeof window.quranApp.showPageInputDialog === 'function') {
-        window.quranApp.showPageInputDialog();
-      } else {
-        console.warn('showPageInputDialog not available');
-        // Fallback simple (si la méthode n'existe pas)
-        const page = prompt('أدخل رقم الصفحة (1-604)');
-        if (page) {
-          const p = parseInt(page);
-          if (!isNaN(p) && p >= 1 && p <= 604) window.quranApp?.goToPage(p);
-        }
+if (this.elements.pageNumber) {
+  const openPageDialog = () => {
+    if (this.elements.footer && this.elements.footer.classList.contains('hidden')) return;
+    if (window.quranApp && typeof window.quranApp.showPageInputDialog === 'function') {
+      window.quranApp.showPageInputDialog();
+    } else {
+      const page = prompt('أدخل رقم الصفحة (1-604)');
+      if (page) {
+        const p = parseInt(page);
+        if (!isNaN(p) && p >= 1 && p <= 604) window.quranApp?.goToPage(p);
       }
     }
   };
-  // Ajouter aussi l'événement 'touchstart' avec {passive: false} pour être sûr
-  this.elements.footer.addEventListener('touchstart', pageNumberHandler, { passive: false });
-  this.elements.footer.addEventListener('touchend', pageNumberHandler, { passive: false });
-  this.elements.footer.addEventListener('click', pageNumberHandler);
-  // Stocker pour nettoyage
+  // touchend uniquement (évite le double-déclenchement avec touchstart)
+  // stopPropagation empêche le tap-to-hide de se déclencher
+  this.elements.pageNumber.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openPageDialog();
+  }, { passive: false });
+  // click pour PC / Cordova WebView / PWA desktop
+  this.elements.pageNumber.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openPageDialog();
+  });
+  // Curseur pointer pour indiquer que c'est cliquable
+  this.elements.pageNumber.style.cursor = 'pointer';
+  this.elements.pageNumber.style.userSelect = 'none';
 }
 
 
