@@ -705,25 +705,36 @@ class QuranReader {
           handler: e,
         }));
     }
-// Délégation sur le footer pour le clic sur le numéro de page
+
+    
+// Gestion du clic sur le numéro de page (délégation avec support tactile)
 if (this.elements.footer) {
-  const footerClickHandler = (e) => {
-    // Vérifie si le clic est sur le numéro de page ou son conteneur
+  const pageNumberHandler = (e) => {
+    // Ne pas traiter si le footer est masqué
+    if (this.elements.footer.classList.contains('hidden')) return;
+    
     const target = e.target.closest('#pageNumber, .footer-value');
     if (target) {
-      e.preventDefault(); // Évite les comportements indésirables sur mobile
+      e.preventDefault();
+      e.stopPropagation(); // Empêche les autres handlers de interférer
       if (window.quranApp && typeof window.quranApp.showPageInputDialog === 'function') {
         window.quranApp.showPageInputDialog();
       }
     }
   };
-  this.elements.footer.addEventListener('click', footerClickHandler);
-  this.eventListeners.push({
-    element: this.elements.footer,
-    type: 'click',
-    handler: footerClickHandler
-  });
+  
+  // Écouter à la fois click et touchend pour une compatibilité maximale
+  this.elements.footer.addEventListener('click', pageNumberHandler);
+  this.elements.footer.addEventListener('touchend', pageNumberHandler, { passive: false });
+  
+  this.eventListeners.push(
+    { element: this.elements.footer, type: 'click', handler: pageNumberHandler },
+    { element: this.elements.footer, type: 'touchend', handler: pageNumberHandler }
+  );
 }
+
+
+
     const t = document.querySelector(".menu-overlay");
     (t &&
       ((this.menuObserver = new MutationObserver((e) => {
