@@ -307,13 +307,15 @@ showPageInputDialog() {
     input.click();
   });
 
-  const cleanup = () => backdrop.remove();
+  let done = false;
+  const cleanup = () => { if (done) return; done = true; backdrop.remove(); };
 
   const onGo = () => {
+    if (done) return;
     const page = parseInt(input.value, 10);
     if (!isNaN(page) && page >= 1 && page <= 604) {
-      this.goToPage(page);
       cleanup();
+      this.goToPage(page);
     } else {
       this.showToast('❌ الرجاء إدخال رقم صفحة صحيح (1-604)');
       input.focus();
@@ -322,12 +324,12 @@ showPageInputDialog() {
 
   const onCancel = () => cleanup();
 
-  // Gestionnaires tactiles et click
-  okBtn.addEventListener('click', onGo);
+  // touchend uniquement sur mobile, click pour PC — pas les deux
   okBtn.addEventListener('touchend', (e) => { e.preventDefault(); onGo(); });
+  okBtn.addEventListener('click', () => { if (!('ontouchstart' in window)) onGo(); });
 
-  cancelBtn.addEventListener('click', onCancel);
   cancelBtn.addEventListener('touchend', (e) => { e.preventDefault(); onCancel(); });
+  cancelBtn.addEventListener('click', () => { if (!('ontouchstart' in window)) onCancel(); });
 
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) onCancel();

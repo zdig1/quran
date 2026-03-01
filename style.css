@@ -132,7 +132,7 @@ body {
 
 .header,
 .footer {
-    position: fixed;
+    position: absolute;
     left: 0;
     right: 0;
     z-index: 1001;
@@ -160,6 +160,21 @@ body {
     height: var(--header-height);
     top: 0;
     justify-content: space-between
+}
+
+#autoScrollBtn {
+    font-size: 1.1rem;
+    transition: color .2s ease, transform .2s ease;
+}
+
+#autoScrollBtn.playing {
+    color: var(--primary);
+    animation: autoscroll-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes autoscroll-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.18); }
 }
 
 .footer {

@@ -151,6 +151,10 @@
                 <span id="menuIcon">≡</span>
             </button>
 
+            <button class="btn header-btn" id="autoScrollBtn" aria-label="تمرير تلقائي" style="display:none;">
+                <span id="autoScrollIcon">▶</span>
+            </button>
+
             <button class="btn header-btn" id="bookmarkBtn" aria-label="إضافة/إزالة علامة">
                 <span id="bookmarkIcon">🔖</span>
             </button>
@@ -422,11 +426,7 @@
 
     <script src="version.js" defer></script>
 
-    <script>
-        if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-            navigator.serviceWorker.register('sw.js').catch(() => { });
-        }
-    </script>
+   
 </body>
 
 </html>
