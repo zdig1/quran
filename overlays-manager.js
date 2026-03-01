@@ -329,22 +329,6 @@ class OverlayManager {
     const bookmarks = window.quranApp ? window.quranApp.getBookmarks() : [];
     const surahs = window.quranCalculator.getAllSurahs();
 
-    // === Construire la map des juz qui commencent dans chaque sourate ===
-    const juzList = window.quranCalculator.data?.juz_index || [];
-    const surahJuzMap = new Map(); // clé: id de sourate, valeur: tableau des numéros de juz
-    juzList.forEach((juz) => {
-      const page = juz.page;
-      const surah = surahs.find(
-        (s) => s.page_start <= page && page <= s.page_end,
-      );
-      if (surah) {
-        if (!surahJuzMap.has(surah.id)) {
-          surahJuzMap.set(surah.id, new Set());
-        }
-        surahJuzMap.get(surah.id).add(juz.juz);
-      }
-    });
-
     // === Calcul des sourates bookmarkées ===
     const bookmarkedSurahIds = new Set();
     bookmarks.forEach((bookmark) => {
@@ -352,7 +336,7 @@ class OverlayManager {
         bookmark.page,
       );
       if (surahForPage) {
-        bookmarkedSurahIds.add(surahForPage.id);
+        bookmarkedSurahIds.add(surahForPage.s_id);
       }
     });
 
@@ -361,22 +345,21 @@ class OverlayManager {
     const allSurahs = surahs;
 
     const createSurahItem = (surah, isPinned) => {
-      const hasBookmark = bookmarkedSurahIds.has(surah.id);
+      const hasBookmark = bookmarkedSurahIds.has(surah.s_id);
       const revelationIcon = surah.type === "مدنية" ? "🕌" : "🕋";
-      const juzStarts = surahJuzMap.has(surah.id)
-        ? [Array.from(surahJuzMap.get(surah.id))[0]]
-        : [];
+      // _juzBySurahId pre-construit dans buildPageIndex() → O(1), plus de forEach+find
+      const juzStarts = window.quranCalculator._juzBySurahId?.get(surah.s_id)?.slice(0, 1) || [];
 
       const item = document.createElement("div");
       item.className = "item-container item-surah";
-      item.setAttribute("data-surah-id", surah.id);
+      item.setAttribute("data-surah-id", surah.s_id);
 
       const line1 = document.createElement("div");
       line1.className = "item-line-1";
       line1.innerHTML = `
     <div class="item-right">
-        <button class="pin-btn ${isPinned ? "pinned" : ""}" data-sura-id="${surah.id}">${isPinned ? "⭐" : "📌"}</button>
-        <span class="item-badge">${surah.id}</span>
+        <button class="pin-btn ${isPinned ? "pinned" : ""}" data-sura-id="${surah.s_id}">${isPinned ? "⭐" : "📌"}</button>
+        <span class="item-badge">${surah.s_id}</span>
         <span class="item-title">${surah.name}</span>
     </div>
     <div class="item-left">
@@ -406,7 +389,7 @@ class OverlayManager {
     
     <div class="item-left" style="display: flex; align-items: center;">
         <span class="item-left-icon-col" style="display: inline-flex; align-items: center; min-width: 1rem;">
-            ${window.quranCalculator.hasSajdaInSurah(surah.id) ? '<span class="item-icon item-sajda-icon">۩</span>' : ""}
+            ${window.quranCalculator.hasSajdaInSurah(surah.s_id) ? '<span class="item-icon item-sajda-icon">۩</span>' : ""}
         </span>
         <span class="item-left-tag-col" style="min-width: 4rem; text-align: left;">
                     <span class="item-tertiary">(${surah.verses}) آية</span>
@@ -428,7 +411,7 @@ class OverlayManager {
       pinBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         if (window.quranApp) {
-          const added = window.quranApp.togglePinSurah(surah.id);
+          const added = window.quranApp.togglePinSurah(surah.s_id);
           pinBtn.classList.toggle("pinned", added);
           pinBtn.textContent = added ? "⭐" : "📌";
           this.renderSurahsList();
@@ -456,7 +439,7 @@ class OverlayManager {
     allSection.innerHTML = '<h3 class="section-title">📖 جميع السور</h3>';
     allSurahs.forEach((surah) =>
       allSection.appendChild(
-        createSurahItem(surah, pinnedIds.includes(surah.id)),
+        createSurahItem(surah, pinnedIds.includes(surah.s_id)),
       ),
     );
     overlay.content.appendChild(allSection);
@@ -468,10 +451,10 @@ class OverlayManager {
       1;
     const currentSurah =
       window.quranCalculator?.getFirstSurahForPage(currentPage);
-    if (currentSurah && currentSurah.id) {
+    if (currentSurah && currentSurah.s_id) {
       setTimeout(() => {
         const currentElement = overlay.content.querySelector(
-          `.item-container[data-surah-id="${currentSurah.id}"]`,
+          `.item-container[data-surah-id="${currentSurah.s_id}"]`,
         );
         if (currentElement) {
           currentElement.classList.add("current-item");
@@ -500,11 +483,6 @@ renderJuzHizbList() {
     const hizbs = window.quranCalculator.getHizbWithPageRange();
     const bookmarks = window.quranApp ? window.quranApp.getBookmarks() : [];
 
-    const allSurahs = window.quranCalculator.getAllSurahs();
-    const suraNameToId = Object.fromEntries(
-      allSurahs.map((s) => [s.name, s.id]),
-    );
-
     hizbs.forEach((hizb) => {
       const startPage = hizb.page_start;
       const endPage = hizb.page_end;
@@ -513,7 +491,8 @@ renderJuzHizbList() {
       );
       const isNewJuz = parseInt(hizb.hizb) % 2 !== 0;
       const juzNum = Math.ceil(parseInt(hizb.hizb) / 2);
-      const suraId = suraNameToId[hizb.sura] || "?";
+      // _surahIdByName pre-construit dans buildPageIndex() → O(1), plus de Object.fromEntries
+      const suraId = window.quranCalculator._surahIdByName?.get(hizb.sura) ?? "?";
 
       const item = document.createElement("div");
       item.className = "item-container item-juzhizb";
