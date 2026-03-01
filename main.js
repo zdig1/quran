@@ -251,11 +251,12 @@ class QuranApp {
 showPageInputDialog() {
   const backdrop = document.createElement('div');
   backdrop.className = 'confirm-backdrop';
+  backdrop.style.zIndex = '100000'; // encore plus haut
 
   const dialog = document.createElement('div');
   dialog.className = 'confirm-dialog';
   dialog.style.maxWidth = '300px';
-  dialog.style.direction = 'rtl'; // RTL pour tout le contenu
+  dialog.style.direction = 'rtl';
 
   const p = document.createElement('p');
   p.textContent = 'أدخل رقم الصفحة (1-604):';
@@ -263,20 +264,22 @@ showPageInputDialog() {
   dialog.appendChild(p);
 
   const input = document.createElement('input');
-  input.type = 'number';
-  input.min = 1;
-  input.max = 604;
+  input.type = 'tel';
+  input.inputMode = 'numeric';
+  input.pattern = '[0-9]*';
+  input.placeholder = '1-604';
   input.value = this.lastPage;
-  input.style.width = '100%';
-  input.style.padding = '8px';
-  input.style.marginBottom = '15px';
-  input.style.borderRadius = '4px';
-  input.style.border = '1px solid #ccc';
-  input.style.boxSizing = 'border-box';
-  input.style.direction = 'ltr';  // Pour les chiffres
-  input.style.textAlign = 'right'; // Pour coller à droite
-  input.style.fontSize = '16px';
-  
+  input.style.cssText = `
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    direction: ltr;
+    text-align: right;
+    font-size: 16px;
+  `;
   dialog.appendChild(input);
 
   const buttonDiv = document.createElement('div');
@@ -297,9 +300,15 @@ showPageInputDialog() {
   backdrop.appendChild(dialog);
   document.body.appendChild(backdrop);
 
-  // Reste identique...
-  setTimeout(() => input.focus(), 100);
+  // Focus après l'insertion dans le DOM
+  requestAnimationFrame(() => {
+    input.focus();
+    // Pour forcer l'ouverture du clavier sur certains appareils
+    input.click();
+  });
+
   const cleanup = () => backdrop.remove();
+
   const onGo = () => {
     const page = parseInt(input.value, 10);
     if (!isNaN(page) && page >= 1 && page <= 604) {
@@ -310,12 +319,20 @@ showPageInputDialog() {
       input.focus();
     }
   };
+
   const onCancel = () => cleanup();
+
+  // Gestionnaires tactiles et click
   okBtn.addEventListener('click', onGo);
+  okBtn.addEventListener('touchend', (e) => { e.preventDefault(); onGo(); });
+
   cancelBtn.addEventListener('click', onCancel);
+  cancelBtn.addEventListener('touchend', (e) => { e.preventDefault(); onCancel(); });
+
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) onCancel();
   });
+
   input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();

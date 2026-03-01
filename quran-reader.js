@@ -253,6 +253,7 @@ class QuranReader {
       }
   }
   handleResize() {
+     if (this.readingMode !== 'scroll' || !this.spacer) return;
     this.resizePending ||
       ((this.resizePending = !0),
       requestAnimationFrame(() => {
@@ -707,30 +708,32 @@ class QuranReader {
     }
 
     
-// Gestion du clic sur le numéro de page (délégation avec support tactile)
 if (this.elements.footer) {
   const pageNumberHandler = (e) => {
-    // Ne pas traiter si le footer est masqué
     if (this.elements.footer.classList.contains('hidden')) return;
-    
     const target = e.target.closest('#pageNumber, .footer-value');
     if (target) {
       e.preventDefault();
-      e.stopPropagation(); // Empêche les autres handlers de interférer
+      e.stopPropagation();
+      console.log('Page number clicked'); // Pour déboguer
       if (window.quranApp && typeof window.quranApp.showPageInputDialog === 'function') {
         window.quranApp.showPageInputDialog();
+      } else {
+        console.warn('showPageInputDialog not available');
+        // Fallback simple (si la méthode n'existe pas)
+        const page = prompt('أدخل رقم الصفحة (1-604)');
+        if (page) {
+          const p = parseInt(page);
+          if (!isNaN(p) && p >= 1 && p <= 604) window.quranApp?.goToPage(p);
+        }
       }
     }
   };
-  
-  // Écouter à la fois click et touchend pour une compatibilité maximale
-  this.elements.footer.addEventListener('click', pageNumberHandler);
+  // Ajouter aussi l'événement 'touchstart' avec {passive: false} pour être sûr
+  this.elements.footer.addEventListener('touchstart', pageNumberHandler, { passive: false });
   this.elements.footer.addEventListener('touchend', pageNumberHandler, { passive: false });
-  
-  this.eventListeners.push(
-    { element: this.elements.footer, type: 'click', handler: pageNumberHandler },
-    { element: this.elements.footer, type: 'touchend', handler: pageNumberHandler }
-  );
+  this.elements.footer.addEventListener('click', pageNumberHandler);
+  // Stocker pour nettoyage
 }
 
 
