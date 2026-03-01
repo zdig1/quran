@@ -30,15 +30,15 @@
     --menu-bg: #000000;
     --menu-text: #ffffff;
     --menu-border: #333333;
-    --badge-search: #d32f2f;
+    --badge-search: var(--error);
     --badge-juzhizb: #1976d2;
-    --quran-text-red: #d32f2f;
+    --quran-text-red: var(--error);
     --quran-text-red-bg: rgba(211, 47, 47, .05);
-    --stat-results: #d32f2f;
-    --stat-suras: #1a5e25;
+    --stat-results: var(--error);
+    --stat-suras: var(--primary);
     --tag-bg: var(--primary-light);
     --tag-color: var(--primary);
-    --search-text-color: #d32f2f;
+    --search-text-color: var(--error);
     --remove-btn-bg: #ffeded;
     --remove-btn-color: var(--error);
     --remove-btn-border: #ffcdd2;
@@ -47,7 +47,7 @@
     --border-width: 2px;
     --transition-default: opacity .3s ease;
     --current-item-bg: rgb(146, 178, 152);
-    --tafsir-select-bg: #d32f2f;
+    --tafsir-select-bg: var(--error);
     --tafsir-select-text: #ffffff
 }
 
@@ -120,7 +120,8 @@ body {
     background: var(--bg);
     z-index: 1;
     display: flex;
-    flex-direction: column
+    flex-direction: column;
+    margin-bottom: env(safe-area-inset-bottom)
 }
 
 @font-face {
@@ -162,23 +163,9 @@ body {
     justify-content: space-between
 }
 
-#autoScrollBtn {
-    font-size: 1.1rem;
-    transition: color .2s ease, transform .2s ease;
-}
-
-#autoScrollBtn.playing {
-    color: var(--primary);
-    animation: autoscroll-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes autoscroll-pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.18); }
-}
-
 .footer {
-    height: var(--footer-height);
+    height: calc(var(--footer-height) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
     bottom: 0;
     display: grid;
     grid-template-columns: 1fr auto 1fr
@@ -892,7 +879,6 @@ body {
 
 .khatm-content {
     gap: 0;
-    padding: 0;
     align-items: stretch
 }
 
@@ -1080,7 +1066,6 @@ body {
     color: var(--text);
     font-family: 'Segoe UI', sans-serif;
     font-weight: normal;
-    text-align: right;
     direction: rtl;
     text-align: justify !important;
     text-align-last: right !important;
@@ -1194,10 +1179,6 @@ body {
     color: var(--primary)
 }
 
-.night-mode .about-content strong {
-    color: var(--success)
-}
-
 .loading-placeholder {
     display: flex;
     flex-direction: column;
@@ -1251,7 +1232,7 @@ body {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, .5);
-    z-index: 99999;
+    z-index: 100000;
     display: flex;
     align-items: center;
     justify-content: center
@@ -1266,7 +1247,8 @@ body {
     width: 90%;
     text-align: center;
     direction: rtl;
-    box-shadow: var(--shadow-heavy)
+    box-shadow: var(--shadow-heavy);
+    z-index: 100001
 }
 
 .confirm-dialog p {
@@ -1368,10 +1350,6 @@ body {
     line-height: 1.5
 }
 
-.night-mode .about-title {
-    color: var(--success)
-}
-
 .about-version {
     font-size: var(--text-sm);
     color: var(--text-light)
@@ -1414,7 +1392,10 @@ body {
     color: var(--primary)
 }
 
-.night-mode .about-stat strong {
+.night-mode .about-title,
+.night-mode .about-content strong,
+.night-mode .about-stat strong,
+.night-mode .about-footer a {
     color: var(--success)
 }
 
@@ -1433,23 +1414,3 @@ body {
     text-decoration: none
 }
 
-.night-mode .about-footer a {
-    color: var(--success)
-}
-
-.footer {
-    padding-bottom: env(safe-area-inset-bottom);
-    height: calc(var(--footer-height) + env(safe-area-inset-bottom))
-}
-
-.page-container {
-    margin-bottom: env(safe-area-inset-bottom)
-}
-
-.confirm-backdrop {
-    z-index: 100000 !important
-}
-
-.confirm-dialog {
-    z-index: 100001 !important
-}
