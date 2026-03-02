@@ -63,7 +63,6 @@
   "prefer_related_applications": false,
   "iarc_rating_id": "everyone",
   "launch_handler": {
-    "client_mode": "focus-existing",
-    "navigate_existing_client": "/"
+    "client_mode": "focus-existing"
   }
 }
