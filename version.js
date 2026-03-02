@@ -2,7 +2,7 @@
   "use strict";
 
   const APP_ID      = "quranreader";
-  const APP_VERSION = "1.0.5";
+  const APP_VERSION = "1.0.5"; // doit correspondre à sw.js CACHE_NAME "quran-v1.0.5"
 
   function safe(text) {
     return text
@@ -81,6 +81,7 @@
     window.updateChecker.check();
   };
 
-  window.addEventListener("quran:appReady", () => setTimeout(run, 5000), { once: true });
-  setTimeout(run, 10000);
+window.addEventListener("quran:appReady", () => setTimeout(run, 5000), { once: true });
+window.addEventListener("quran:appError", () => { fired = true; }, { once: true });
+setTimeout(run, 10000);
 })();
