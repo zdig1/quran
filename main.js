@@ -251,6 +251,7 @@ class QuranApp {
 showPageInputDialog() {
   // Bloquer le resize pendant que la boite est ouverte (evite le saut de page sur APK)
   if (window.quranReader) window.quranReader._dialogOpen = true;
+  window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
 
   const backdrop = document.createElement('div');
   backdrop.className = 'confirm-backdrop';
@@ -320,6 +321,7 @@ showPageInputDialog() {
     backdrop.remove();
     // Debloquer le resize
     if (window.quranReader) window.quranReader._dialogOpen = false;
+    window.dispatchEvent(new CustomEvent("quran:overlayClosed"));
   };
 
   const onGo = () => {

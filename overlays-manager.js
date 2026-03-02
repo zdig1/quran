@@ -606,8 +606,11 @@ renderJuzHizbList() {
       backdrop.appendChild(dialog);
       document.body.appendChild(backdrop);
 
+      window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
+
       const cleanup = (result) => {
         backdrop.remove();
+        window.dispatchEvent(new CustomEvent("quran:overlayClosed"));
         resolve(result);
       };
 

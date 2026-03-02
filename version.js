@@ -81,6 +81,6 @@
     window.updateChecker.check();
   };
 
-  window.addEventListener("quran:appReady", () => setTimeout(run, 2000), { once: true });
+  window.addEventListener("quran:appReady", () => setTimeout(run, 5000), { once: true });
   setTimeout(run, 10000);
 })();

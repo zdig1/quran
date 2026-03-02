@@ -839,7 +839,8 @@ class QuranReader {
     const i = () => {
       ((this.buttonsVisible = !0),
         this.applyButtonsVisibility(),
-        this.enableTapDetection(!1));
+        this.enableTapDetection(!1),
+        (this._dialogOpen = true));
     };
     (window.addEventListener("quran:overlayOpened", i),
       this.eventListeners.push({
@@ -848,7 +849,8 @@ class QuranReader {
         handler: i,
       }));
     const a = () => {
-      this.enableTapDetection(!0);
+      (this.enableTapDetection(!0),
+        (this._dialogOpen = false));
     };
     (window.addEventListener("quran:overlayClosed", a),
       this.eventListeners.push({
