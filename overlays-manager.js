@@ -106,9 +106,9 @@ class OverlayManager {
 
   cacheBookmarksOverlay() {
     this.overlays.bookmarks = {
-      element:  document.getElementById("bookmarksOverlay"),
+      element: document.getElementById("bookmarksOverlay"),
       closeBtn: document.getElementById("closeBookmarksBtn"),
-      content:  document.getElementById("bookmarksList"),
+      content: document.getElementById("bookmarksList"),
     };
     this.lazyLoaded.add("bookmarks");
     this.setupOverlayEventListeners("bookmarks");
@@ -348,7 +348,9 @@ class OverlayManager {
       const hasBookmark = bookmarkedSurahIds.has(surah.s_id);
       const revelationIcon = surah.type === "مدنية" ? "🕌" : "🕋";
       // _juzBySurahId pre-construit dans buildPageIndex() → O(1), plus de forEach+find
-      const juzStarts = window.quranCalculator._juzBySurahId?.get(surah.s_id)?.slice(0, 1) || [];
+      const juzStarts =
+        window.quranCalculator._juzBySurahId?.get(surah.s_id)?.slice(0, 1) ||
+        [];
 
       const item = document.createElement("div");
       item.className = "item-container item-surah";
@@ -356,46 +358,11 @@ class OverlayManager {
 
       const line1 = document.createElement("div");
       line1.className = "item-line-1";
-      line1.innerHTML = `
-    <div class="item-right">
-        <button class="pin-btn ${isPinned ? "pinned" : ""}" data-sura-id="${surah.s_id}">${isPinned ? "⭐" : "📌"}</button>
-        <span class="item-badge">${surah.s_id}</span>
-        <span class="item-title">${surah.name}</span>
-    </div>
-    <div class="item-left">
-     <span class="item-left-icon-col" style="text-align: center; min-width: 2rem;">
-            ${hasBookmark ? '<span class="item-icon item-bookmark-indicator">🔖</span>' : ""}
-        </span>
-            <!-- Juz badge ici, aligné avec sajda -->
-        <span style="color: #1976d2; font-weight: bold; font-size: 0.8rem; display: inline-flex; align-items: center; min-width: 1rem;">
-            ${juzStarts.map((j) => `ج ${j}`).join(" ")}
-        </span>
-        <span class="item-left-tag-col" style="min-width: 4rem; text-align: left;">
-            <span class="item-tag">ص ${surah.page_start}</span>
-        </span>
-    </div>
-  `;
+      line1.innerHTML = `<div class="item-right"><button class="pin-btn ${isPinned ? "pinned" : ""}" data-sura-id="${surah.s_id}">${isPinned ? "⭐" : "📌"}</button><span class="item-badge">${surah.s_id}</span><span class="item-title">${this.escapeHtml(surah.name)}</span></div><div class="item-left"><span class="item-left-icon-col" style="text-align:center;min-width:2rem;">${hasBookmark ? '<span class="item-icon item-bookmark-indicator">🔖</span>' : ""}</span><span style="color:#1976d2;font-weight:bold;font-size:0.8rem;display:inline-flex;align-items:center;min-width:1rem;">${juzStarts.map((j) => `ج ${j}`).join(" ")}</span><span class="item-left-tag-col" style="min-width:4rem;text-align:left;"><span class="item-tag">ص ${surah.page_start}</span></span></div>`;
 
       const line2 = document.createElement("div");
       line2.className = "item-line-2";
-      line2.innerHTML = `
-    <div class="item-right" style="display: flex; align-items: center; gap: 0.5rem;">
-        <span class="item-subtitle" style="display: flex; align-items: center; gap: 0.25rem;">
-            <span>النزول:</span>
-            <span class="order-value">${surah.order}</span>
-        </span>   
-        <span class="item-revelation-icon" style="display: inline-flex; align-items: center;">${revelationIcon}</span>
-    </div>
-    
-    <div class="item-left" style="display: flex; align-items: center;">
-        <span class="item-left-icon-col" style="display: inline-flex; align-items: center; min-width: 1rem;">
-            ${window.quranCalculator.hasSajdaInSurah(surah.s_id) ? '<span class="item-icon item-sajda-icon">۩</span>' : ""}
-        </span>
-        <span class="item-left-tag-col" style="min-width: 4rem; text-align: left;">
-                    <span class="item-tertiary">(${surah.verses}) آية</span>
-        </span>
-    </div>
-  `;
+      line2.innerHTML = `<div class="item-right" style="display:flex;align-items:center;gap:0.5rem;"><span class="item-subtitle" style="display:flex;align-items:center;gap:0.25rem;"><span>النزول:</span><span class="order-value">${this.escapeHtml(String(surah.order))}</span></span><span class="item-revelation-icon" style="display:inline-flex;align-items:center;">${revelationIcon}</span></div><div class="item-left" style="display:flex;align-items:center;"><span class="item-left-icon-col" style="display:inline-flex;align-items:center;min-width:1rem;">${window.quranCalculator.hasSajdaInSurah(surah.s_id) ? '<span class="item-icon item-sajda-icon">۩</span>' : ""}</span><span class="item-left-tag-col" style="min-width:4rem;text-align:left;"><span class="item-tertiary">(${this.escapeHtml(String(surah.verses))}) آية</span></span></div>`;
 
       item.appendChild(line1);
       item.appendChild(line2);
@@ -475,7 +442,7 @@ class OverlayManager {
     }
   }
 
-renderJuzHizbList() {
+  renderJuzHizbList() {
     const overlay = this.overlays.juzHizb;
     if (!overlay?.content || !window.quranCalculator) return;
     overlay.content.innerHTML = "";
@@ -491,8 +458,9 @@ renderJuzHizbList() {
       );
       const isNewJuz = parseInt(hizb.hizb) % 2 !== 0;
       const juzNum = Math.ceil(parseInt(hizb.hizb) / 2);
-      // _surahIdByName pre-construit dans buildPageIndex() → O(1), plus de Object.fromEntries
-      const suraId = window.quranCalculator._surahIdByName?.get(hizb.sura) ?? "?";
+      // _surahIdByName pre-construit dans buildPageIndex() → O(1)
+      const suraId =
+        window.quranCalculator._surahIdByName?.get(hizb.sura) ?? "?";
 
       const item = document.createElement("div");
       item.className = "item-container item-juzhizb";
@@ -500,30 +468,7 @@ renderJuzHizbList() {
 
       const line1 = document.createElement("div");
       line1.className = "item-line-1";
-      line1.innerHTML = `
-        <div class="item-right juzhizb-grid">
-          ${
-            isNewJuz
-              ? '<span class="item-badge juzhizb-grid-col1">ج ' +
-                juzNum +
-                "</span>"
-              : '<span class="juzhizb-grid-col1"></span>'
-          }
-          <span class="item-title juzhizb-grid-col2">الحزب ${hizb.hizb}</span>
-        </div>
-        <div class="item-left">
-          <span class="item-left-icon-col">
-            ${
-              hasBookmarkInRange
-                ? '<span class="item-icon item-bookmark-indicator">🔖</span>'
-                : ""
-            }
-          </span>
-          <span class="item-left-tag-col">
-            <span class="item-tag">ص ${hizb.page_start}</span>
-          </span>
-        </div>
-      `;
+      line1.innerHTML = `<div class="item-right juzhizb-grid">${isNewJuz ? `<span class="item-badge juzhizb-grid-col1">ج ${juzNum}</span>` : '<span class="juzhizb-grid-col1"></span>'}<span class="item-title juzhizb-grid-col2">الحزب ${hizb.hizb}</span></div><div class="item-left"><span class="item-left-icon-col">${hasBookmarkInRange ? '<span class="item-icon item-bookmark-indicator">🔖</span>' : ""}</span><span class="item-left-tag-col"><span class="item-tag">ص ${hizb.page_start}</span></span></div>`;
 
       const line2 = document.createElement("div");
       line2.className = "item-line-2";
@@ -531,17 +476,9 @@ renderJuzHizbList() {
       let ayaText = hizb.aya_txt || "";
       ayaText = ayaText.replace(/\s*\(\d+\)\s*$/, "").trim();
 
-      const prefix = `${suraId}. ${hizb.sura} - آية (${hizb.aya})`;
+      const prefix = `${this.escapeHtml(String(suraId))}. ${this.escapeHtml(hizb.sura)} - آية (${this.escapeHtml(String(hizb.aya))})`;
 
-      line2.innerHTML = `
-        <div class="item-right juzhizb-grid">
-          <span class="juzhizb-grid-col1"></span>
-          <span class="item-subtitle juzhizb-grid-col2">
-            <span class="aya-text">${ayaText}</span>
-            <span class="aya-prefix">${prefix}</span>
-          </span>
-        </div>
-      `;
+      line2.innerHTML = `<div class="item-right juzhizb-grid"><span class="juzhizb-grid-col1"></span><span class="item-subtitle juzhizb-grid-col2"><span class="aya-text">${this.escapeHtml(ayaText)}</span><span class="aya-prefix">${prefix}</span></span></div>`;
 
       item.appendChild(line1);
       item.appendChild(line2);
@@ -570,7 +507,7 @@ renderJuzHizbList() {
       }, 50);
     }
   }
-  
+
   // ============================================
   // 3. BOOKMARKS OVERLAY
   // ============================================
@@ -784,19 +721,7 @@ renderJuzHizbList() {
   }
 
   renderBookmarkDisplayMode(item, bookmark) {
-    item.innerHTML = `
-      <div class="item-line-1">
-        <div class="item-right">
-          <button class="icon-btn icon-btn--edit" data-id="${bookmark.id}" title="تعديل الاسم">✏️</button>
-          <span class="item-title bookmark-name" data-id="${bookmark.id}">${this.escapeHtml(bookmark.name)}</span>
-        </div>
-        <div class="item-left">
-          <span class="item-tag">ص ${bookmark.page}</span>
-          <button class="icon-btn icon-btn--recycle" data-id="${bookmark.id}" title="استبدال الصفحة بالصفحة الحالية">♻️</button>
-          <button class="icon-btn icon-btn--remove" data-id="${bookmark.id}" title="حذف">🗑️</button>
-        </div>
-      </div>
-    `;
+    item.innerHTML = `<div class="item-line-1"><div class="item-right"><button class="icon-btn icon-btn--edit" data-id="${bookmark.id}" title="تعديل الاسم">✏️</button><span class="item-title bookmark-name" data-id="${bookmark.id}">${this.escapeHtml(bookmark.name)}</span></div><div class="item-left"><span class="item-tag">ص ${bookmark.page}</span><button class="icon-btn icon-btn--recycle" data-id="${bookmark.id}" title="استبدال الصفحة بالصفحة الحالية">♻️</button><button class="icon-btn icon-btn--remove" data-id="${bookmark.id}" title="حذف">🗑️</button></div></div>`;
     this.attachBookmarkEvents(item, bookmark);
   }
 
@@ -868,12 +793,7 @@ renderJuzHizbList() {
     const overlay = this.overlays.khatm;
     if (!overlay?.content) return;
     if (overlay.content.children.length > 0) return;
-    overlay.content.innerHTML = `
-      <div class="khatm-page">
-        <img src="media/605.webp" alt="دعاء ختم القرآن - الصفحة 605" loading="lazy">
-        <img src="media/606.webp" alt="دعاء ختم القرآن - الصفحة 606" loading="lazy">
-      </div>
-    `;
+    overlay.content.innerHTML = `<div class="khatm-page"><img src="media/605.webp" alt="دعاء ختم القرآن - الصفحة 605" loading="lazy"><img src="media/606.webp" alt="دعاء ختم القرآن - الصفحة 606" loading="lazy"></div>`;
   }
 
   // ============================================
@@ -910,6 +830,12 @@ renderJuzHizbList() {
         const clearBtn = document.getElementById("clearSearchBtn");
         if (!clearBtn) return;
 
+        // Cloner l'input pour effacer les anciens listeners avant d'en ajouter un nouveau
+        const oldInput = overlay.input;
+        const newInput = oldInput.cloneNode(true);
+        oldInput.parentNode.replaceChild(newInput, oldInput);
+        overlay.input = newInput;
+
         // Fonction de mise à jour de la visibilité
         const updateClearButton = () => {
           const currentBtn = document.getElementById("clearSearchBtn");
@@ -918,7 +844,7 @@ renderJuzHizbList() {
           }
         };
 
-        // Écouter les changements de l'input
+        // Un seul listener propre sur le nouvel input cloné
         overlay.input.addEventListener("input", updateClearButton);
 
         // Cloner le bouton pour éviter les doublons d'écouteurs
@@ -976,14 +902,7 @@ renderJuzHizbList() {
     if (!(await window.quranApp?.loadTafsir())) return;
     const overlay = this.lazyLoadOverlay("tafsir");
     if (overlay && overlay.content) {
-      overlay.content.innerHTML = `
-        <div class="tafsir-loading-overlay">
-          <div style="text-align: center;">
-            <div class="spinner" style="margin-bottom: 20px;"></div>
-            <p>جاري تحميل التفسير...</p>
-          </div>
-        </div>
-      `;
+      overlay.content.innerHTML = `<div class="tafsir-loading-overlay" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;background:inherit;"><div style="text-align:center;"><div class="spinner" style="margin-bottom:20px;"></div><p>جاري تحميل التفسير...</p></div></div>`;
       this.showOverlay("tafsir");
       this._tafsirInitTimeout = setTimeout(async () => {
         if (window.tafsirManager?.initTafsirUI) {
