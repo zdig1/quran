@@ -249,9 +249,12 @@ class QuranApp {
       : document.body.classList.remove("night-mode");
   }
 showPageInputDialog() {
+  // Bloquer le resize pendant que la boite est ouverte (evite le saut de page sur APK)
+  if (window.quranReader) window.quranReader._dialogOpen = true;
+
   const backdrop = document.createElement('div');
   backdrop.className = 'confirm-backdrop';
-  backdrop.style.zIndex = '100000'; // encore plus haut
+  backdrop.style.zIndex = '100000';
 
   const dialog = document.createElement('div');
   dialog.className = 'confirm-dialog';
@@ -300,22 +303,31 @@ showPageInputDialog() {
   backdrop.appendChild(dialog);
   document.body.appendChild(backdrop);
 
-  // Focus après l'insertion dans le DOM
-  requestAnimationFrame(() => {
+  // Fix 3 (APK): focus + select avec double delai pour WebView Android
+  setTimeout(() => {
     input.focus();
-    input.select();
-    input.click();
-  });
+    setTimeout(() => {
+      input.setSelectionRange(0, input.value.length);
+    }, 100);
+  }, 50);
 
   let done = false;
-  const cleanup = () => { if (done) return; done = true; backdrop.remove(); };
+  const cleanup = () => {
+    if (done) return;
+    done = true;
+    // Cacher le clavier avant de supprimer la boite
+    input.blur();
+    backdrop.remove();
+    // Debloquer le resize
+    if (window.quranReader) window.quranReader._dialogOpen = false;
+  };
 
   const onGo = () => {
     if (done) return;
     const page = parseInt(input.value, 10);
     if (!isNaN(page) && page >= 1 && page <= 604) {
       this.goToPage(page);
-      setTimeout(cleanup, 80);
+      cleanup();
     } else {
       this.showToast('❌ الرجاء إدخال رقم صفحة صحيح (1-604)');
       input.focus();
@@ -324,7 +336,7 @@ showPageInputDialog() {
 
   const onCancel = () => cleanup();
 
-  // touchend uniquement sur mobile, click pour PC — pas les deux
+  // touchend uniquement sur mobile, click pour PC
   okBtn.addEventListener('touchend', (e) => { e.preventDefault(); onGo(); });
   okBtn.addEventListener('click', () => { if (!('ontouchstart' in window)) onGo(); });
 

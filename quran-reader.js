@@ -310,17 +310,10 @@ class QuranReader {
           (s.style.top = (e - 1) * this.pageHeight + "px"),
           (s.style.height = this.pageHeight + "px"));
         const t = s.querySelector("img");
-        const cachedSrc = this.imageCache.has(e) ? this.imageCache.get(e) : "";
         ((t.id = `page-${e}`),
-          (t.dataset.page = e));
-        if (cachedSrc) {
-          // Image déjà en cache : on l'affiche directement sans passer par src=""
-          t.src = cachedSrc;
-          t.dataset.loaded = "true";
-        } else {
-          t.src = "";
-          t.dataset.loaded = "false";
-        }
+          (t.dataset.page = e),
+          (t.dataset.loaded = "false"),
+          (t.src = ""));
       }
       s.style.display = "block";
     });
@@ -787,50 +780,33 @@ class QuranReader {
         }));
     }
 
-    // Auto-scroll button
     if (this.elements.autoScrollBtn) {
       const autoScrollHandler = () => this.toggleAutoScroll();
-      this.elements.autoScrollBtn.addEventListener('click', autoScrollHandler);
-      this.elements.autoScrollBtn.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        autoScrollHandler();
-      }, { passive: false });
-      this.eventListeners.push({
-        element: this.elements.autoScrollBtn,
-        type: 'click',
-        handler: autoScrollHandler,
-      });
+      (this.elements.autoScrollBtn.addEventListener("click", autoScrollHandler),
+        this.eventListeners.push({
+          element: this.elements.autoScrollBtn,
+          type: "click",
+          handler: autoScrollHandler,
+        }));
+    }
+    if (this.elements.pageNumber) {
+      const pageNumberHandler = () => {
+        window.quranApp &&
+          typeof window.quranApp.showPageInputDialog === "function" &&
+          window.quranApp.showPageInputDialog();
+      };
+      (this.elements.pageNumber.addEventListener("click", pageNumberHandler),
+        (this.elements.pageNumber.style.cursor = "pointer"),
+        (this.elements.pageNumber.style.userSelect = "none"),
+        this.eventListeners.push({
+          element: this.elements.pageNumber,
+          type: "click",
+          handler: pageNumberHandler,
+        }));
     }
 
 
-if (this.elements.footer) {
-  const pageNumberHandler = (e) => {
-    if (this.elements.footer.classList.contains('hidden')) return;
-    const target = e.target.closest('#pageNumber, .footer-value');
-    if (target) {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('Page number clicked'); // Pour déboguer
-      if (window.quranApp && typeof window.quranApp.showPageInputDialog === 'function') {
-        window.quranApp.showPageInputDialog();
-      } else {
-        console.warn('showPageInputDialog not available');
-        // Fallback simple (si la méthode n'existe pas)
-        const page = prompt('أدخل رقم الصفحة (1-604)');
-        if (page) {
-          const p = parseInt(page);
-          if (!isNaN(p) && p >= 1 && p <= 604) window.quranApp?.goToPage(p);
-        }
-      }
-    }
-  };
-  // Ajouter aussi l'événement 'touchstart' avec {passive: false} pour être sûr
-  this.elements.footer.addEventListener('touchstart', pageNumberHandler, { passive: false });
-  this.elements.footer.addEventListener('touchend', pageNumberHandler, { passive: false });
-  this.elements.footer.addEventListener('click', pageNumberHandler);
-  // Stocker pour nettoyage
-}
+
 
 
 

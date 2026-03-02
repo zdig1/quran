@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <title>القرآن الكريم برواية حفص مع التفسير</title>
     <meta name="description"
@@ -426,7 +426,11 @@
 
     <script src="version.js" defer></script>
 
-   
+    <script>
+        if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+            navigator.serviceWorker.register('sw.js').catch(() => { });
+        }
+    </script>
 </body>
 
 </html>
