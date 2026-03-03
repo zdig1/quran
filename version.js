@@ -13,14 +13,11 @@
           .replace(/'/g, "&#039;")
       : "";
   }
-
   window.updateChecker = {
     check: function () {
       fetch("https://quran-58c7cd.gitlab.io/updates.json?t=" + Date.now())
-        .then(function (r) {
-          return r.json();
-        })
-        .then(function (data) {
+        .then((r) => r.json())
+        .then((data) => {
           const app = data.apps[APP_ID];
           if (!app) return;
 
@@ -40,45 +37,49 @@
           const message = safe(app.message || "Nouvelle version disponible");
           const version = safe(app.version);
           const log = safe(app.log || "");
-          const url = app.url && app.url.startsWith("http") ? app.url : "#";
-          const btnText = app.button_text
-            ? safe(app.button_text)
-            : "تحميــل";
+          const url = app.url || "#";
+          const btnText = app.button_text ? safe(app.button_text) : "تحميــل";
           const logHtml = log
-            ? `<div style="font-size:0.85rem;margin-top:4px;">📝 ${log}</div>`
+            ? `<div style="font-size:0.85rem; margin-top:4px;">📝 ${log}</div>`
             : "";
           const banner = document.createElement("div");
           banner.id = "update-banner";
           banner.style.cssText =
             "position:fixed;top:0;left:0;width:100%;z-index:9999;box-sizing:border-box;";
-          banner.innerHTML = `
-            <div style="background:${color};color:white;padding:10px;display:flex;flex-direction:column;">
-              <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-                <div style="flex:1;">
-                  <div style="font-weight:bold;margin-bottom:2px;">${message}</div>
-                  <div style="font-size:0.9rem;">v${version}</div>
-                  ${logHtml}
-                </div>
-                <button id="update-download-btn" style="background:white;color:${color};border:none;padding:10px;border-radius:4px;font-weight:bold;cursor:pointer;">${btnText}</button>
-              </div>
-              <button id="update-close-btn" style="background:none;border:none;color:white;cursor:pointer;font-size:20px;margin:4px auto 0;">×</button>
-            </div>`;
+          banner.innerHTML = `<div style="background:${color};color:white;padding:10px;display:flex;flex-direction:column;position:relative;">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;width:100%;">
+          <div style="flex:1;"><div style="font-weight:bold;margin-bottom:2px;">${message}</div>
+          <div style="font-size:0.9rem;">الإصدار ${version}</div>${logHtml}</div>
+          <button id="download-btn" style="background:white;color:${color};border:none;padding:10px;border-radius:4px;font-weight:bold;cursor:pointer;white-space:nowrap;">${btnText}</button></div>
+          <button id="close-btn" style="background:none;border:none;color:white;cursor:pointer;font-size:20px;width:40px;display:flex;align-items:center;justify-content:center;margin:auto;">×</button></div>`;
           document.body.prepend(banner);
           document
-            .getElementById("update-download-btn")
-            .addEventListener("click", function () {
-              window.open(url, "_blank");
+            .getElementById("download-btn")
+            .addEventListener("click", () => {
+              window.open(url, "_system");
             });
-          document
-            .getElementById("update-close-btn")
-            .addEventListener("click", function () {
-              banner.remove();
-            });
+          document.getElementById("close-btn").addEventListener("click", () => {
+            banner.remove();
+          });
         })
-        .catch(function () {});
+        .catch(() => {});
     },
   };
-  setTimeout(function () {
+  let fired = false;
+  const run = () => {
+    if (fired) return;
+    fired = true;
     window.updateChecker.check();
-  }, 3000);
+  };
+  window.addEventListener("quran:appReady", () => setTimeout(run, 5000), {
+    once: true,
+  });
+  window.addEventListener(
+    "quran:appError",
+    () => {
+      fired = true;
+    },
+    { once: true },
+  );
+  setTimeout(run, 10000);
 })();
