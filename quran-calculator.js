@@ -15,6 +15,8 @@ class QuranCalculator {
   }
   buildPageIndex() {
     const a = this.pageMap;
+    // Index 1–604 uniquement — index 0 intentionnellement null (non utilisé)
+    a[0] = null;
     for (let t = 1; t <= 604; t++)
       a[t] = {
         surah: null,

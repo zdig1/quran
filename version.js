@@ -45,19 +45,8 @@
 
           const banner = document.createElement("div");
           banner.id = "update-banner";
-          banner.style.cssText = "position:fixed; top:0; left:0; width:100%; z-index:9999; box-sizing:border-box;";
-          banner.innerHTML = `
-            <div style="background:${color}; color:white; padding:10px; display:flex; flex-direction:column; position:relative;">
-              <div style="display:flex; align-items:flex-end; justify-content:space-between; width:100%;">
-                <div style="flex:1;">
-                  <div style="font-weight:bold; margin-bottom:2px;">${message}</div>
-                  <div style="font-size:0.9rem;">الإصدار ${version}</div>
-                  ${logHtml}
-                </div>
-                <button id="download-btn" style="background:white; color:${color}; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer; white-space:nowrap;">${btnText}</button>
-              </div>
-              <button id="close-btn" style="background:none; border:none; color:white; cursor:pointer; font-size:20px; width:40px; display:flex; align-items:center; justify-content:center; margin:auto;">×</button>
-            </div>`;
+          banner.style.cssText = "position:fixed;top:0;left:0;width:100%;z-index:9999;box-sizing:border-box;";
+          banner.innerHTML = `<div style="background:${color};color:white;padding:10px;display:flex;flex-direction:column;position:relative;"><div style="display:flex;align-items:flex-end;justify-content:space-between;width:100%;"><div style="flex:1;"><div style="font-weight:bold;margin-bottom:2px;">${message}</div><div style="font-size:0.9rem;">الإصدار ${version}</div>${logHtml}</div><button id="download-btn" style="background:white;color:${color};border:none;padding:10px;border-radius:4px;font-weight:bold;cursor:pointer;white-space:nowrap;">${btnText}</button></div><button id="close-btn" style="background:none;border:none;color:white;cursor:pointer;font-size:20px;width:40px;display:flex;align-items:center;justify-content:center;margin:auto;">×</button></div>`;
 
           document.body.prepend(banner);
 

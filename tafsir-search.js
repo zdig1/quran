@@ -57,16 +57,22 @@ class TafsirSearchManager {
     return t?.length ? this._sortByQuranOrder(t)[0] : null;
   }
   async preload() {
-    if (!this.isLoaded && !this.isLoading) {
+    if (this.isLoaded) return;
+    if (this.loadPromise) return this.loadPromise;
+    this.loadPromise = (async () => {
       this.isLoading = !0;
       try {
-        (await this.loadData(), (this.isLoaded = !0), this.buildSurahsIndex());
+        await this.loadData();
+        this.isLoaded = !0;
+        this.buildSurahsIndex();
       } catch (t) {
         throw t;
       } finally {
         this.isLoading = !1;
+        this.loadPromise = null;
       }
-    }
+    })();
+    return this.loadPromise;
   }
   async loadData() {
     try {
@@ -610,7 +616,7 @@ class TafsirSearchManager {
       s <= 0 ||
       (a + s >= 0.8 * e && this.nextTafsirPage
         ? await this.loadNextPage(t)
-        : a <= 0.2 * s &&
+        : a <= 0.1 * e &&
           this.previousTafsirPage &&
           this.previousTafsirPage > 1 &&
           (await this.loadPreviousPage(t)));

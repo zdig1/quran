@@ -28,10 +28,22 @@
       "purpose": "any"
     },
     {
+      "src": "media/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
       "src": "media/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "media/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "screenshots": [
@@ -45,12 +57,12 @@
   ],
   "related_applications": [
     {
-      "platform": "play",
+      "platform": "webapp",
       "url": "https://apkpure.com/p/com.gdz.quranreader",
       "id": "com.gdz.quranreader"
     },
     {
-      "platform": "play",
+      "platform": "webapp",
       "url": "https://com-gdz-quranreader.en.uptodown.com/android",
       "id": "com.gdz.quranreader"
     },

@@ -59,6 +59,8 @@ class QuranReader {
       (this.menuObserver = null),
       (this.autoScrollActive = !1),
       (this.autoScrollRAF = null),
+      (this.autoScrollSpeeds = [0.2, 0.4, 0.7, 1.1, 1.6]),
+      (this.autoScrollSpeedIdx = 1),
       (this.autoScrollSpeed = 0.4),
       (this._scrollAccum = 0));
   }
@@ -91,19 +93,17 @@ class QuranReader {
   }
   async initializeState(e) {
     let t = e;
-    ((this.currentPage = Math.max(1, Math.min(604, t))),
-      (this.isRestoring = !0),
-      this.createAllPages(),
-      this.updatePageInfo(this.currentPage),
-      setTimeout(() => {
-        (this.applyReadingMode(),
-          setTimeout(() => {
-            (this.goToPage(this.currentPage),
-              setTimeout(() => {
-                ((this.isRestoring = !1), this.updateAutoScrollButton());
-              }, 100));
-          }, 50));
-      }, 50));
+    this.currentPage = Math.max(1, Math.min(604, t));
+    this.isRestoring = !0;
+    this.createAllPages();
+    this.updatePageInfo(this.currentPage);
+    await new Promise((r) => requestAnimationFrame(r));
+    this.applyReadingMode();
+    await new Promise((r) => requestAnimationFrame(r));
+    this.goToPage(this.currentPage);
+    await new Promise((r) => requestAnimationFrame(r));
+    this.isRestoring = !1;
+    this.updateAutoScrollButton();
   }
   updatePageInfo(e) {
     if ((e > 604 && (e = 604), e < 1 && (e = 1), !window.quranCalculator))
@@ -437,55 +437,58 @@ class QuranReader {
       this.isPortraitMode ? "book" : "scroll"
     );
   }
-  applyReadingMode() {
-    const e = this.readingMode;
-    this.readingMode = this.detectReadingMode();
-    const t = this.elements.pageScroll;
-    t &&
-      (this.cleanupResizeObserver(),
-      (t.style.opacity = "0"),
-      e !== this.readingMode && this.createAllPages(),
-      t.classList.remove("mode-portrait", "mode-landscape"),
-      (t.style.cssText = ""),
-      "book" === this.readingMode
-        ? (t.classList.add("mode-portrait"),
-          Object.assign(t.style, {
-            overflowX: "hidden",
-            overflowY: "auto",
-            display: "block",
-            height: "100%",
-            width: "100vw",
-          }),
-          (this.swipeEnabled = !0),
-          this.setupSwipeNavigation())
-        : (t.classList.add("mode-landscape"),
-          Object.assign(t.style, {
-            overflowX: "hidden",
-            overflowY: "auto",
-            display: "block",
-            height: "100%",
-            width: "100%",
-          }),
-          (this.swipeEnabled = !1),
-          this.removeSwipeNavigation()),
-      "scroll" === this.readingMode && this.setupResizeObserver(),
-      requestAnimationFrame(() => {
-        ("scroll" === this.readingMode
-          ? this.scrollToPage(this.currentPage)
-          : this.goToPage(this.currentPage),
-          (t.style.opacity = "1"));
-      }),
-      window.dispatchEvent(
-        new CustomEvent("quran:readingModeChanged", {
-          detail: {
-            mode: this.readingMode,
-            isPortrait: this.isPortraitMode,
-            savedPage: this.currentPage,
-          },
+applyReadingMode() {
+  const e = this.readingMode;
+  this.readingMode = this.detectReadingMode();
+  const t = this.elements.pageScroll;
+  t &&
+    (this.cleanupResizeObserver(),
+    this._cleanupTapHandlers(),   // ← suppression des anciens handlers
+    (t.style.opacity = "0"),
+    e !== this.readingMode && this.createAllPages(),
+    t.classList.remove("mode-portrait", "mode-landscape"),
+    (t.style.cssText = ""),
+    "book" === this.readingMode
+      ? (t.classList.add("mode-portrait"),
+        Object.assign(t.style, {
+          overflowX: "hidden",
+          overflowY: "auto",
+          display: "block",
+          height: "100%",
+          width: "100vw",
         }),
-      ),
-      this.updateAutoScrollButton());
-  }
+        (this.swipeEnabled = !0),
+        this.setupSwipeNavigation())
+      : (t.classList.add("mode-landscape"),
+        Object.assign(t.style, {
+          overflowX: "hidden",
+          overflowY: "auto",
+          display: "block",
+          height: "100%",
+          width: "100%",
+        }),
+        (this.swipeEnabled = !1),
+        this.removeSwipeNavigation()),
+    "scroll" === this.readingMode && this.setupResizeObserver(),
+    requestAnimationFrame(() => {
+      ("scroll" === this.readingMode
+        ? this.scrollToPage(this.currentPage)
+        : this.goToPage(this.currentPage),
+        (t.style.opacity = "1"));
+    }),
+    window.dispatchEvent(
+      new CustomEvent("quran:readingModeChanged", {
+        detail: {
+          mode: this.readingMode,
+          isPortrait: this.isPortraitMode,
+          savedPage: this.currentPage,
+        },
+      }),
+    ),
+    this.updateAutoScrollButton(),
+    // ✅ Réactivation du tap après nettoyage
+    this.setupTapToHide());
+}
   removeSwipeNavigation() {
     this.elements.pageScroll &&
       this.swipeHandlers &&
@@ -560,6 +563,14 @@ class QuranReader {
       }),
       this.elements.pageScroll.addEventListener("touchend", a),
       (this.swipeHandlers = { touchstart: s, touchmove: i, touchend: a }));
+  }
+  _cleanupTapHandlers() {
+    if (this.tapHandlers && this.elements.pageScroll) {
+      this.elements.pageScroll.removeEventListener("touchstart", this.tapHandlers.touchstart);
+      this.elements.pageScroll.removeEventListener("touchend", this.tapHandlers.touchend);
+      this.elements.pageScroll.removeEventListener("click", this.tapHandlers.click);
+      this.tapHandlers = {};
+    }
   }
   setupTapToHide() {
     if (!this.elements.pageScroll) return;
@@ -638,8 +649,14 @@ class QuranReader {
     if (this.autoScrollActive) return;
     this.autoScrollActive = !0;
     const e = document.getElementById("autoScrollBtn"),
-      t = document.getElementById("autoScrollIcon");
-    (e && e.classList.add("playing"), t && (t.textContent = "⏸"));
+      t = document.getElementById("autoScrollIcon"),
+      slower = document.getElementById("autoScrollSlower"),
+      faster = document.getElementById("autoScrollFaster");
+    (e && e.classList.add("playing"),
+      t && (t.textContent = "⏸"),
+      slower && (slower.style.display = "", requestAnimationFrame(() => slower.classList.add("visible"))),
+      faster && (faster.style.display = "", requestAnimationFrame(() => faster.classList.add("visible"))));
+    this._updateSpeedButtons();
     let s = null;
     const i = (e) => {
       if (this.autoScrollActive) {
@@ -669,14 +686,31 @@ class QuranReader {
         (cancelAnimationFrame(this.autoScrollRAF),
         (this.autoScrollRAF = null)));
     const e = document.getElementById("autoScrollBtn"),
-      t = document.getElementById("autoScrollIcon");
+      t = document.getElementById("autoScrollIcon"),
+      slower = document.getElementById("autoScrollSlower"),
+      faster = document.getElementById("autoScrollFaster");
     (e && e.classList.remove("playing"), t && (t.textContent = "▶"));
+    if (slower) { slower.classList.remove("visible"); setTimeout(() => { slower.style.display = "none"; }, 200); }
+    if (faster) { faster.classList.remove("visible"); setTimeout(() => { faster.style.display = "none"; }, 200); }
   }
   toggleAutoScroll() {
     this.autoScrollActive ? this.stopAutoScroll() : this.startAutoScroll();
   }
+  changeSpeed(delta) {
+    const newIdx = Math.max(0, Math.min(this.autoScrollSpeeds.length - 1, this.autoScrollSpeedIdx + delta));
+    if (newIdx === this.autoScrollSpeedIdx) return;
+    this.autoScrollSpeedIdx = newIdx;
+    this.autoScrollSpeed = this.autoScrollSpeeds[newIdx];
+    this._updateSpeedButtons();
+  }
+  _updateSpeedButtons() {
+    const slower = document.getElementById("autoScrollSlower");
+    const faster = document.getElementById("autoScrollFaster");
+    if (slower) slower.disabled = this.autoScrollSpeedIdx === 0;
+    if (faster) faster.disabled = this.autoScrollSpeedIdx === this.autoScrollSpeeds.length - 1;
+  }
   updateAutoScrollButton() {
-    const e = document.getElementById("autoScrollBtn");
+    const e = document.getElementById("autoScrollGroup") || document.getElementById("autoScrollBtn");
     e &&
       ("scroll" === this.readingMode
         ? (e.style.display = "")
@@ -770,6 +804,18 @@ class QuranReader {
           type: "click",
           handler: e,
         }));
+    }
+    const slowerBtn = document.getElementById("autoScrollSlower");
+    if (slowerBtn) {
+      const h = () => this.changeSpeed(-1);
+      (slowerBtn.addEventListener("click", h),
+        this.eventListeners.push({ element: slowerBtn, type: "click", handler: h }));
+    }
+    const fasterBtn = document.getElementById("autoScrollFaster");
+    if (fasterBtn) {
+      const h = () => this.changeSpeed(1);
+      (fasterBtn.addEventListener("click", h),
+        this.eventListeners.push({ element: fasterBtn, type: "click", handler: h }));
     }
     if (this.elements.pageNumber) {
       const e = () => {

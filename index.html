@@ -151,9 +151,13 @@
                 <span id="menuIcon">≡</span>
             </button>
 
-            <button class="btn header-btn" id="autoScrollBtn" aria-label="تمرير تلقائي" style="display:none;">
-                <span id="autoScrollIcon">▶</span>
-            </button>
+            <div class="autoscroll-group" id="autoScrollGroup" style="display:none;">
+                <button class="btn header-btn autoscroll-speed-btn" id="autoScrollSlower" aria-label="تباطؤ" style="display:none;">−</button>
+                <button class="btn header-btn" id="autoScrollBtn" aria-label="تمرير تلقائي">
+                    <span id="autoScrollIcon">▶</span>
+                </button>
+                <button class="btn header-btn autoscroll-speed-btn" id="autoScrollFaster" aria-label="تسريع" style="display:none;">+</button>
+            </div>
 
             <button class="btn header-btn" id="bookmarkBtn" aria-label="إضافة/إزالة علامة">
                 <span id="bookmarkIcon">🔖</span>
@@ -320,9 +324,7 @@
                     <h2>🕌 دعاء ختم القرآن</h2>
                     <button class="btn close-btn" id="closeKhatmBtn">✕</button>
                 </div>
-                <div class="overlay-body">
-                    <div id="khatmContent" class="overlay-body khatm-content"></div>
-                </div>
+                <div id="khatmContent" class="overlay-body khatm-content"></div>
             </div>
         </div>
 

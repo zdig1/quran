@@ -1,3 +1,5 @@
+// ⚠️ SYNC VERSION : doit correspondre à APP_VERSION dans version.js
+// Toute mise à jour de fichier DOIT incrémenter cette version pour invalider le cache
 const CACHE_NAME = "quran-v1.0.5",
   CORE_ASSETS = [
     "./index.html",
@@ -45,7 +47,19 @@ const PRE_CACHE = [...CORE_ASSETS, ...FIRST_PAGES];
     );
   }),
   self.addEventListener("fetch", (e) => {
-    "GET" === e.request.method &&
+    if ("GET" !== e.request.method) return;
+
+    // 🛠️ DEV : Network-First sur localhost → les modifs sont visibles immédiatement
+    const isLocalhost = self.location.hostname === "localhost" ||
+      self.location.hostname === "127.0.0.1" ||
+      self.location.hostname === "::1";
+
+    if (isLocalhost) {
+      e.respondWith(
+        fetch(e.request).catch(() => caches.match(e.request))
+      );
+      return;
+    }
       (e.request.url.startsWith(self.location.origin)
         ? e.respondWith(
             caches.match(e.request).then(

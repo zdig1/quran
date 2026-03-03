@@ -120,7 +120,8 @@ body {
     background: var(--bg);
     z-index: 1;
     display: flex;
-    flex-direction: column
+    flex-direction: column;
+    margin-bottom: env(safe-area-inset-bottom)
 }
 
 @font-face {
@@ -163,10 +164,11 @@ body {
 }
 
 .footer {
-    height: var(--footer-height);
+    height: calc(var(--footer-height) + env(safe-area-inset-bottom));
     bottom: 0;
     display: grid;
-    grid-template-columns: 1fr auto 1fr
+    grid-template-columns: 1fr auto 1fr;
+    padding-bottom: env(safe-area-inset-bottom)
 }
 
 .footer-item {
@@ -859,20 +861,15 @@ body {
     border-radius: 8px
 }
 
-.khatm-content,
-.tajweed-content {
+.khatm-content {
     flex: 1;
     width: auto;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     background: var(--bg);
-    padding: 0
-}
-
-.khatm-content {
-    gap: 0;
     padding: 0;
+    gap: 0;
     align-items: stretch
 }
 
@@ -1060,7 +1057,6 @@ body {
     color: var(--text);
     font-family: 'Segoe UI', sans-serif;
     font-weight: normal;
-    text-align: right;
     direction: rtl;
     text-align: justify !important;
     text-align-last: right !important;
@@ -1222,6 +1218,32 @@ body {
     font-weight: 500
 }
 
+.autoscroll-group {
+    display: flex;
+    align-items: center;
+    gap: .25rem
+}
+
+.autoscroll-speed-btn {
+    font-size: 1.3rem;
+    font-weight: 900;
+    opacity: 0;
+    transform: scale(.7);
+    transition: opacity .2s ease, transform .2s ease;
+    pointer-events: none
+}
+
+.autoscroll-speed-btn.visible {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto
+}
+
+.autoscroll-speed-btn:disabled {
+    opacity: .3 !important;
+    pointer-events: none
+}
+
 ::-webkit-scrollbar {
     width: 0;
     background: transparent
@@ -1231,7 +1253,7 @@ body {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, .5);
-    z-index: 99999;
+    z-index: 100000;
     display: flex;
     align-items: center;
     justify-content: center
@@ -1246,7 +1268,8 @@ body {
     width: 90%;
     text-align: center;
     direction: rtl;
-    box-shadow: var(--shadow-heavy)
+    box-shadow: var(--shadow-heavy);
+    z-index: 100001
 }
 
 .confirm-dialog p {
@@ -1415,21 +1438,4 @@ body {
 
 .night-mode .about-footer a {
     color: var(--success)
-}
-
-.footer {
-    padding-bottom: env(safe-area-inset-bottom);
-    height: calc(var(--footer-height) + env(safe-area-inset-bottom))
-}
-
-.page-container {
-    margin-bottom: env(safe-area-inset-bottom)
-}
-
-.confirm-backdrop {
-    z-index: 100000 !important
-}
-
-.confirm-dialog {
-    z-index: 100001 !important
 }

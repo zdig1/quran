@@ -106,9 +106,9 @@ class OverlayManager {
 
   cacheBookmarksOverlay() {
     this.overlays.bookmarks = {
-      element: document.getElementById("bookmarksOverlay"),
+      element:  document.getElementById("bookmarksOverlay"),
       closeBtn: document.getElementById("closeBookmarksBtn"),
-      content: document.getElementById("bookmarksList"),
+      content:  document.getElementById("bookmarksList"),
     };
     this.lazyLoaded.add("bookmarks");
     this.setupOverlayEventListeners("bookmarks");
@@ -341,16 +341,14 @@ class OverlayManager {
     });
 
     const pinnedIds = window.quranApp ? window.quranApp.getPinnedSurahs() : [];
-    const pinnedSurahs = surahs.filter((s) => pinnedIds.includes(s.id));
+    const pinnedSurahs = surahs.filter((s) => pinnedIds.includes(s.s_id));
     const allSurahs = surahs;
 
     const createSurahItem = (surah, isPinned) => {
       const hasBookmark = bookmarkedSurahIds.has(surah.s_id);
       const revelationIcon = surah.type === "مدنية" ? "🕌" : "🕋";
       // _juzBySurahId pre-construit dans buildPageIndex() → O(1), plus de forEach+find
-      const juzStarts =
-        window.quranCalculator._juzBySurahId?.get(surah.s_id)?.slice(0, 1) ||
-        [];
+      const juzStarts = window.quranCalculator._juzBySurahId?.get(surah.s_id)?.slice(0, 1) || [];
 
       const item = document.createElement("div");
       item.className = "item-container item-surah";
@@ -459,8 +457,7 @@ class OverlayManager {
       const isNewJuz = parseInt(hizb.hizb) % 2 !== 0;
       const juzNum = Math.ceil(parseInt(hizb.hizb) / 2);
       // _surahIdByName pre-construit dans buildPageIndex() → O(1)
-      const suraId =
-        window.quranCalculator._surahIdByName?.get(hizb.sura) ?? "?";
+      const suraId = window.quranCalculator._surahIdByName?.get(hizb.sura) ?? "?";
 
       const item = document.createElement("div");
       item.className = "item-container item-juzhizb";
@@ -507,7 +504,7 @@ class OverlayManager {
       }, 50);
     }
   }
-
+  
   // ============================================
   // 3. BOOKMARKS OVERLAY
   // ============================================
@@ -830,12 +827,6 @@ class OverlayManager {
         const clearBtn = document.getElementById("clearSearchBtn");
         if (!clearBtn) return;
 
-        // Cloner l'input pour effacer les anciens listeners avant d'en ajouter un nouveau
-        const oldInput = overlay.input;
-        const newInput = oldInput.cloneNode(true);
-        oldInput.parentNode.replaceChild(newInput, oldInput);
-        overlay.input = newInput;
-
         // Fonction de mise à jour de la visibilité
         const updateClearButton = () => {
           const currentBtn = document.getElementById("clearSearchBtn");
@@ -844,7 +835,8 @@ class OverlayManager {
           }
         };
 
-        // Un seul listener propre sur le nouvel input cloné
+        // Écouter les changements de l'input
+        // Note: overlay.input est déjà cloné par setupSearchUI ci-dessus → pas de doublon
         overlay.input.addEventListener("input", updateClearButton);
 
         // Cloner le bouton pour éviter les doublons d'écouteurs

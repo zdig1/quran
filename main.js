@@ -1,6 +1,7 @@
 class QuranApp {
   constructor() {
     ((this.isInitialized = !1),
+      (this.isInitializing = !1),
       (this.bookmarks = []),
       (this.lastPage = 1),
       (this.theme = "light"),
@@ -20,24 +21,27 @@ class QuranApp {
       (this._readingModeChangedHandler = null));
   }
   async init() {
-    if (!this.isInitialized)
-      try {
-        (this.restoreFromLocalStorage(),
-          this.applyTheme(),
-          await this.initCalculator(),
-          await this.initReader(),
-          this.initOverlays(),
-          this.setupEventListeners(),
-          this.updateBookmarkIcon(this.lastPage),
-          this.setupCleanupHandlers(),
-          (this.isInitialized = !0),
-          window.dispatchEvent(new CustomEvent("quran:appReady")));
-      } catch (e) {
-        (this.showToast("❌ خطأ في تحميل التطبيق"),
-          window.dispatchEvent(
-            new CustomEvent("quran:appError", { detail: { error: e.message } }),
-          ));
-      }
+    if (this.isInitialized || this.isInitializing) return;
+    this.isInitializing = true;
+    try {
+      (this.restoreFromLocalStorage(),
+        this.applyTheme(),
+        await this.initCalculator(),
+        await this.initReader(),
+        this.initOverlays(),
+        this.setupEventListeners(),
+        this.updateBookmarkIcon(this.lastPage),
+        this.setupCleanupHandlers(),
+        (this.isInitialized = !0),
+        window.dispatchEvent(new CustomEvent("quran:appReady")));
+    } catch (e) {
+      (this.showToast("❌ خطأ في تحميل التطبيق"),
+        window.dispatchEvent(
+          new CustomEvent("quran:appError", { detail: { error: e.message } }),
+        ));
+    } finally {
+      this.isInitializing = false;
+    }
   }
   restoreFromLocalStorage() {
     try {
@@ -137,10 +141,7 @@ class QuranApp {
       this.bookmarks.sort((e, t) => e.page - t.page),
       this.saveToLocalStorage(),
       this.updateBookmarkIcon(e.page),
-      window.dispatchEvent(new CustomEvent("quran:bookmarkChanged")),
-      window.dispatchEvent(
-        new CustomEvent("quran:bookmarkAdded", { detail: { bookmark: e } }),
-      ));
+      window.dispatchEvent(new CustomEvent("quran:bookmarkChanged")));
   }
   replaceBookmarkPage(e, t) {
     const a = this.bookmarks.find((t) => t.id === e);
@@ -164,9 +165,7 @@ class QuranApp {
       return (
         this.saveToLocalStorage(),
         this.updateBookmarkIcon(e.page),
-        window.dispatchEvent(
-          new CustomEvent("quran:bookmarkRemoved", { detail: { bookmark: e } }),
-        ),
+        window.dispatchEvent(new CustomEvent("quran:bookmarkChanged")),
         !0
       );
     }
@@ -342,8 +341,7 @@ class QuranApp {
     const e = (e) => {
       if (e.detail?.page) {
         const t = e.detail.page;
-        ((this.lastPage = t),
-          this.updateCurrentPage(t),
+        (this.updateCurrentPage(t),
           this.updateBookmarkIcon(t),
           "undefined" != typeof window && (window.currentQuranPage = t));
       }
