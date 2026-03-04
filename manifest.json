@@ -5,7 +5,7 @@
   "description": "تطبيق مصحف حفص كامل مع التفسير والبحث المتقدم، يعمل بدون إنترنت مع دعم الوضع الليلي والفهرسة السريعة.",
   "lang": "ar",
   "dir": "rtl",
-  "start_url": "./index.html",
+  "start_url": "./index.html?utm_source=pwa",
   "scope": "./",
   "display": "fullscreen",
   "display_override": [
@@ -57,18 +57,8 @@
   ],
   "related_applications": [
     {
-      "platform": "webapp",
+      "platform": "play",
       "url": "https://apkpure.com/p/com.gdz.quranreader",
-      "id": "com.gdz.quranreader"
-    },
-    {
-      "platform": "webapp",
-      "url": "https://com-gdz-quranreader.en.uptodown.com/android",
-      "id": "com.gdz.quranreader"
-    },
-    {
-      "platform": "webapp",
-      "url": "https://zdig1.github.io/quran/",
       "id": "com.gdz.quranreader"
     }
   ],

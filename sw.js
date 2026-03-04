@@ -1,1 +1,116 @@
-const CACHE_NAME="quran-v1.0.6",CORE_ASSETS=["./index.html","./style.css","./main.js","./quran-reader.js","./quran-calculator.js","./tafsir-search.js","./overlays-manager.js","./version.js","./manifest.json","./data/quran.json","./data/tafsir.json","./media/icon-192.png","./media/icon-512.png","./media/000.webp","./media/605.webp","./media/606.webp","./media/NotoKufiArabic-Bold.woff2"],FIRST_PAGES=[];for(let e=1;e<=10;e++)FIRST_PAGES.push(`./quran_pages/${e.toString().padStart(3,"0")}.webp`);const PRE_CACHE=[...CORE_ASSETS,...FIRST_PAGES];self.addEventListener("install",(e=>{self.skipWaiting(),e.waitUntil(caches.open(CACHE_NAME).then((e=>Promise.allSettled(PRE_CACHE.map((t=>e.add(t).catch((()=>{}))))))))})),self.addEventListener("activate",(e=>{e.waitUntil(caches.keys().then((e=>Promise.all(e.filter((e=>e!==CACHE_NAME)).map((e=>caches.delete(e)))))).then((()=>self.clients.claim())))})),self.addEventListener("fetch",(e=>{if("GET"!==e.request.method)return;if(!e.request.url.startsWith(self.location.origin))return;"localhost"===self.location.hostname||"127.0.0.1"===self.location.hostname||"::1"===self.location.hostname?e.respondWith(fetch(e.request).catch((()=>caches.match(e.request)))):e.respondWith((async()=>{try{const t=await caches.match(e.request);if(t)return t;const s=await fetch(e.request);if(s&&200===s.status){const t=s.clone();(await caches.open(CACHE_NAME)).put(e.request,t)}return s}catch(t){return"image"===e.request.destination?new Response('<svg xmlns="http://www.w3.org/2000/svg" width="700" height="1100" viewBox="0 0 700 1100"><rect width="100%" height="100%" fill="#f5f5f5"/><text x="50%" y="45%" font-family="sans-serif" font-size="24" text-anchor="middle" fill="#333">⚠️ الصفحة غير متوفرة حاليا</text><text x="50%" y="55%" font-family="sans-serif" font-size="18" text-anchor="middle" fill="#666">زر الصفحة مرة واحدة على الأقل مع الاتصال بالإنترنت</text></svg>',{headers:{"Content-Type":"image/svg+xml"}}):e.request.url.includes(".json")?new Response(JSON.stringify([]),{status:503,headers:{"Content-Type":"application/json"}}):new Response("غير متصل",{status:503})}})())}));
+const CACHE_NAME = "quran-v1.0.6";
+
+const CORE_ASSETS = [
+  "./index.html",
+  "./style.css",
+  "./main.js",
+  "./quran-reader.js",
+  "./quran-calculator.js",
+  "./tafsir-search.js",
+  "./overlays-manager.js",
+  "./version.js",
+  "./manifest.json",
+  "./data/quran.json",
+  "./data/tafsir.json",
+  "./media/icon-192.png",
+  "./media/icon-512.png",
+  "./media/000.webp",
+  "./media/605.webp",
+  "./media/606.webp",
+  "./media/NotoKufiArabic-Bold.woff2",
+];
+
+const FIRST_PAGES = [];
+for (let p = 1; p <= 10; p++) {
+  FIRST_PAGES.push(`./quran_pages/${p.toString().padStart(3, "0")}.webp`);
+}
+
+const PRE_CACHE = [...CORE_ASSETS, ...FIRST_PAGES];
+
+const OFFLINE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="700" height="1100" viewBox="0 0 700 1100">
+  <rect width="100%" height="100%" fill="#f5f5f5"/>
+  <text x="50%" y="45%" font-family="sans-serif" font-size="24" text-anchor="middle" fill="#333">⚠️ الصفحة غير متوفرة حاليا</text>
+  <text x="50%" y="55%" font-family="sans-serif" font-size="18" text-anchor="middle" fill="#666">زر الصفحة مرة واحدة على الأقل مع الاتصال بالإنترنت</text>
+</svg>`;
+
+const isLocalhost = ["localhost", "127.0.0.1", "::1"].includes(self.location.hostname);
+
+// ============================================
+// INSTALL — pré-cache des assets essentiels
+// ============================================
+
+self.addEventListener("install", (event) => {
+  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(
+        PRE_CACHE.map((url) => cache.add(url).catch(() => {}))
+      )
+    )
+  );
+});
+
+// ============================================
+// ACTIVATE — suppression des anciens caches
+// ============================================
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) =>
+        Promise.all(
+          keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        )
+      )
+      .then(() => self.clients.claim())
+  );
+});
+
+// ============================================
+// FETCH — stratégie Cache First
+// ============================================
+
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+  if (!event.request.url.startsWith(self.location.origin)) return;
+
+  // En développement local : réseau d'abord
+  if (isLocalhost) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  event.respondWith(handleFetch(event.request));
+});
+
+async function handleFetch(request) {
+  try {
+    // Cache first
+    const cached = await caches.match(request);
+    if (cached) return cached;
+
+    // Sinon réseau + mise en cache
+    const response = await fetch(request);
+    if (response && response.status === 200) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (err) {
+    // Fallbacks hors ligne
+    if (request.destination === "image") {
+      return new Response(OFFLINE_SVG, {
+        headers: { "Content-Type": "image/svg+xml" },
+      });
+    }
+    if (request.url.includes(".json")) {
+      return new Response(JSON.stringify([]), {
+        status: 503,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    return new Response("غير متصل", { status: 503 });
+  }
+}

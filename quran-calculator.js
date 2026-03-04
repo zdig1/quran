@@ -1,1 +1,161 @@
-class QuranCalculator{constructor(){this.data=null,this.isLoaded=!1,this.pageMap=new Array(605)}async load(){if(this.isLoaded)return this.data;const a=await fetch("data/quran.json",{cache:"force-cache"});if(!a.ok)throw new Error(`HTTP ${a.status}`);return this.data=await a.json(),this.buildPageIndex(),this.isLoaded=!0,this.data}buildPageIndex(){const a=this.pageMap;a[0]=null;for(let t=1;t<=604;t++)a[t]={surah:null,hizb:1,juz:1,sajda:!1,isHizbStart:!1,isJuzStart:!1};const{surah_index:t=[],hizb_index:e=[],juz_index:s=[],sajda_index:r=[]}=this.data||{};t.forEach((t=>{for(let e=t.page_start;e<=t.page_end;e++)a[e].surah={s_id:t.s_id,name:t.name,verses_count:t.verses,type:t.type,order:t.order}}));let i=1,n=0;for(let t=1;t<=604;t++)e[n]?.page===t&&(i=e[n].hizb,a[t].isHizbStart=!0,n++),a[t].hizb=i;let u=1;n=0;for(let t=1;t<=604;t++)s[n]?.page===t&&(u=s[n].juz,a[t].isJuzStart=!0,n++),a[t].juz=u;const h=new Set(r.map((a=>a.page)));for(let t=1;t<=604;t++)a[t].sajda=h.has(t);this._sajdaSet=new Set(r.map((a=>a.s_id))),this._juzBySurahId=new Map,s.forEach((a=>{this._juzBySurahId.has(a.s_id)||this._juzBySurahId.set(a.s_id,[]),this._juzBySurahId.get(a.s_id).push(a.juz)})),this._surahIdByName=new Map(t.map((a=>[a.name,a.s_id])))}getPageData(a){if(a=Number(a),!Number.isInteger(a)||a<1||a>604)return null;const t=this.pageMap[a];return t?{page:a,...t}:null}getPageNotifications(a){const t=this.getPageData(a);if(!t)return[];const e=[];return t.isJuzStart&&e.push(`الجزء ${t.juz}`),t.isHizbStart&&e.push(`الحزب ${t.hizb}`),t.sajda&&e.push("سجدة"),e}getAllSurahs(){return(this.data?.surah_index||[]).map((a=>({...a,verses_count:a.verses})))}getHizbIndex(){return this.data?.hizb_index||[]}hasSajdaInSurah(a){return this._sajdaSet?this._sajdaSet.has(a):this.data?.sajda_index?.some((t=>t.s_id===a))||!1}getFirstSurahForPage(a){const t=this.getPageData(a);return t?.surah?{s_id:t.surah.s_id,name:t.surah.name,verses_count:t.surah.verses_count,type:t.surah.type,order:t.surah.order}:null}getHizbForPage(a){return{hizb:this.getPageData(a)?.hizb??1}}getHizbWithPageRange(){const a=this.getHizbIndex();return a.length?a.map(((t,e)=>{const s=a[e+1];return{...t,page_start:t.page,page_end:s?s.page-1:604}})):[]}}window.quranCalculator=new QuranCalculator;
+class QuranCalculator {
+  constructor() {
+    this.data    = null;
+    this.isLoaded = false;
+    this.pageMap  = new Array(605);
+  }
+
+  // ============================================
+  // CHARGEMENT
+  // ============================================
+
+  async load() {
+    if (this.isLoaded) return this.data;
+    const response = await fetch("data/quran.json", { cache: "force-cache" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    this.data = await response.json();
+    this.buildPageIndex();
+    this.isLoaded = true;
+    return this.data;
+  }
+
+  // ============================================
+  // INDEX DES PAGES
+  // ============================================
+
+  buildPageIndex() {
+    const map = this.pageMap;
+    map[0] = null;
+    for (let p = 1; p <= 604; p++) {
+      map[p] = { surah: null, hizb: 1, juz: 1, sajda: false, isHizbStart: false, isJuzStart: false };
+    }
+
+    const {
+      surah_index: surahIndex = [],
+      hizb_index:  hizbIndex  = [],
+      juz_index:   juzIndex   = [],
+      sajda_index: sajdaIndex = [],
+    } = this.data || {};
+
+    // Sourates
+    surahIndex.forEach((surah) => {
+      for (let p = surah.page_start; p <= surah.page_end; p++) {
+        map[p].surah = {
+          s_id:        surah.s_id,
+          name:        surah.name,
+          verses_count: surah.verses,
+          type:        surah.type,
+          order:       surah.order,
+        };
+      }
+    });
+
+    // Hizbs
+    let currentHizb = 1;
+    let hizbIdx     = 0;
+    for (let p = 1; p <= 604; p++) {
+      if (hizbIndex[hizbIdx]?.page === p) {
+        currentHizb      = hizbIndex[hizbIdx].hizb;
+        map[p].isHizbStart = true;
+        hizbIdx++;
+      }
+      map[p].hizb = currentHizb;
+    }
+
+    // Juz
+    let currentJuz = 1;
+    let juzIdx     = 0;
+    for (let p = 1; p <= 604; p++) {
+      if (juzIndex[juzIdx]?.page === p) {
+        currentJuz      = juzIndex[juzIdx].juz;
+        map[p].isJuzStart = true;
+        juzIdx++;
+      }
+      map[p].juz = currentJuz;
+    }
+
+    // Sajdas
+    const sajdaPages = new Set(sajdaIndex.map((s) => s.page));
+    for (let p = 1; p <= 604; p++) map[p].sajda = sajdaPages.has(p);
+
+    // Index inversés utiles pour overlays
+    this._sajdaSet = new Set(sajdaIndex.map((s) => s.s_id));
+
+    this._juzBySurahId = new Map();
+    juzIndex.forEach((entry) => {
+      if (!this._juzBySurahId.has(entry.s_id)) this._juzBySurahId.set(entry.s_id, []);
+      this._juzBySurahId.get(entry.s_id).push(entry.juz);
+    });
+
+    this._surahIdByName = new Map(surahIndex.map((s) => [s.name, s.s_id]));
+  }
+
+  // ============================================
+  // ACCÈS AUX DONNÉES
+  // ============================================
+
+  getPageData(page) {
+    page = Number(page);
+    if (!Number.isInteger(page) || page < 1 || page > 604) return null;
+    const data = this.pageMap[page];
+    return data ? { page, ...data } : null;
+  }
+
+  getPageNotifications(page) {
+    const data = this.getPageData(page);
+    if (!data) return [];
+    const notifications = [];
+    if (data.isJuzStart)  notifications.push(`الجزء ${data.juz}`);
+    if (data.isHizbStart) notifications.push(`الحزب ${data.hizb}`);
+    if (data.sajda)       notifications.push("سجدة");
+    return notifications;
+  }
+
+  getAllSurahs() {
+    return (this.data?.surah_index || []).map((s) => ({ ...s, verses_count: s.verses }));
+  }
+
+  getHizbIndex() {
+    return this.data?.hizb_index || [];
+  }
+
+  hasSajdaInSurah(sura_id) {
+    if (this._sajdaSet) return this._sajdaSet.has(sura_id);
+    return this.data?.sajda_index?.some((s) => s.s_id === sura_id) || false;
+  }
+
+  getFirstSurahForPage(page) {
+    const data = this.getPageData(page);
+    if (!data?.surah) return null;
+    return {
+      s_id:         data.surah.s_id,
+      name:         data.surah.name,
+      verses_count: data.surah.verses_count,
+      type:         data.surah.type,
+      order:        data.surah.order,
+    };
+  }
+
+  getHizbForPage(page) {
+    return { hizb: this.getPageData(page)?.hizb ?? 1 };
+  }
+
+  getHizbWithPageRange() {
+    const hizbs = this.getHizbIndex();
+    if (!hizbs.length) return [];
+    return hizbs.map((hizb, i) => {
+      const next = hizbs[i + 1];
+      return {
+        ...hizb,
+        page_start: hizb.page,
+        page_end:   next ? next.page - 1 : 604,
+      };
+    });
+  }
+}
+
+// ============================================
+// INITIALISATION
+// ============================================
+
+window.quranCalculator = new QuranCalculator();

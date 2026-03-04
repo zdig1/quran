@@ -1,1 +1,484 @@
-class QuranApp{constructor(){this.isInitialized=!1,this.isInitializing=!1,this.bookmarks=[],this.lastPage=1,this.theme="light",this.NOTIFICATION_DURATION=1e3,this.tafsirLoaded=!1,this.tafsirLoading=!1,this.tafsirLoadQueue=[],this.pinnedSurahs=[],this._toastTimeout=null,this._beforeUnloadHandler=null,this._pageHideHandler=null,this._visibilityChangeHandler=null,this._onlineHandler=null,this._offlineHandler=null,this._pageChangedHandler=null,this._bookmarkChangedHandler=null,this._readingModeChangedHandler=null}async init(){if(!this.isInitialized&&!this.isInitializing){this.isInitializing=!0;try{this.restoreFromLocalStorage(),this.applyTheme(),await this.initCalculator(),await this.initReader(),this.initOverlays(),this.setupEventListeners(),this.updateBookmarkIcon(this.lastPage),this.setupCleanupHandlers(),this.isInitialized=!0,window.dispatchEvent(new CustomEvent("quran:appReady"))}catch(e){this.showToast("❌ خطأ في تحميل التطبيق"),window.dispatchEvent(new CustomEvent("quran:appError",{detail:{error:e.message}}))}finally{this.isInitializing=!1}}}restoreFromLocalStorage(){try{const e=localStorage.getItem("quran_bookmarks");this.bookmarks=e?JSON.parse(e):[],this.bookmarks=this.bookmarks.map(((e,t)=>"number"==typeof e?{page:e,name:`صفحة ${e}`,date:(new Date).toISOString(),id:`bookmark_${e}_${Date.now()}_${t}`}:{...e,id:e.id||`bookmark_${e.page}_${Date.now()}_${t}`}));const t=localStorage.getItem("quran_lastPage");this.lastPage=t?parseInt(t):1,(isNaN(this.lastPage)||this.lastPage<1||this.lastPage>604)&&(this.lastPage=1),this.theme=localStorage.getItem("quran_theme")||"light";const a=localStorage.getItem("quran_pinnedSurahs");this.pinnedSurahs=a?JSON.parse(a):[]}catch(e){this.bookmarks=[],this.lastPage=1,this.theme="light",this.pinnedSurahs=[],["quran_bookmarks","quran_lastPage","quran_theme","quran_pinnedSurahs"].forEach((e=>localStorage.removeItem(e))),localStorage.removeItem("quran_readingMode"),localStorage.removeItem("quran_lastMode"),localStorage.setItem("quran_lastPage","1"),localStorage.setItem("quran_theme","light"),localStorage.setItem("quran_bookmarks","[]"),localStorage.setItem("quran_pinnedSurahs","[]")}}saveToLocalStorage(){try{localStorage.setItem("quran_bookmarks",JSON.stringify(this.bookmarks)),localStorage.setItem("quran_lastPage",this.lastPage.toString()),localStorage.setItem("quran_theme",this.theme),localStorage.setItem("quran_pinnedSurahs",JSON.stringify(this.pinnedSurahs)),window.quranReader&&localStorage.setItem("quran_readingMode",window.quranReader.readingMode)}catch(e){try{localStorage.setItem("quran_lastPage",this.lastPage.toString())}catch(e){}}}getCurrentPage(){return this.lastPage}updateCurrentPage(e){const t=parseInt(e,10);!isNaN(t)&&t>=1&&t<=604&&(this.lastPage=t,localStorage.setItem("quran_lastPage",t.toString()),"undefined"!=typeof window&&(window.currentQuranPage=t))}goToPage(e){window.quranReader&&window.quranReader.goToPage(e)}togglePinSurah(e){const t=this.pinnedSurahs.indexOf(e);return-1===t?this.pinnedSurahs.push(e):this.pinnedSurahs.splice(t,1),this.saveToLocalStorage(),window.dispatchEvent(new CustomEvent("quran:pinnedSurahsUpdated")),-1===t}isSurahPinned(e){return this.pinnedSurahs.includes(e)}getPinnedSurahs(){return[...this.pinnedSurahs]}getBookmarks(){return[...this.bookmarks]}addBookmark(e){this.bookmarks.push(e),this.bookmarks.sort(((e,t)=>e.page-t.page)),this.saveToLocalStorage(),this.updateBookmarkIcon(e.page),window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"))}replaceBookmarkPage(e,t){const a=this.bookmarks.find((t=>t.id===e));if(!a)return!1;if(t<1||t>604)return!1;const n=a.page;return a.page=t,this.bookmarks.sort(((e,t)=>e.page-t.page)),this.saveToLocalStorage(),this.updateBookmarkIcon(n),this.updateBookmarkIcon(t),window.dispatchEvent(new CustomEvent("quran:bookmarkChanged")),!0}removeBookmarkById(e){const t=this.bookmarks.findIndex((t=>t.id===e));if(t>-1){const e=this.bookmarks.splice(t,1)[0];return this.saveToLocalStorage(),this.updateBookmarkIcon(e.page),window.dispatchEvent(new CustomEvent("quran:bookmarkChanged")),!0}return!1}updateBookmark(e,t){const a=this.bookmarks.find((t=>t.id===e));return!!a&&(a.name=t.trim()||`صفحة ${a.page}`,this.saveToLocalStorage(),window.dispatchEvent(new CustomEvent("quran:bookmarkChanged")),!0)}updateBookmarkIcon(e){const t=document.getElementById("bookmarkIcon");if(!t)return;const a=this.bookmarks.some((t=>t.page===e));t.textContent=a?"⭐":"🔖",t.title=a?"علامة مرجعية موجودة":"إضافة علامة مرجعية"}async loadTafsir(){if(this.tafsirLoaded)return!0;if(this.tafsirLoading)return new Promise((e=>{this.tafsirLoadQueue.push(e)}));this.tafsirLoading=!0;try{if(!window.tafsirManager)throw new Error("Module TafsirManager non trouvé");const e=window.tafsirManager.preload(),t=new Promise(((e,t)=>setTimeout((()=>t(new Error("Timeout"))),2e4)));return await Promise.race([e,t]),this.tafsirLoaded=!0,this.tafsirLoading=!1,this.tafsirLoadQueue.forEach((e=>e(!0))),this.tafsirLoadQueue=[],window.dispatchEvent(new CustomEvent("tafsir:ready")),!0}catch(e){return this.tafsirLoaded=!1,this.tafsirLoading=!1,this.tafsirLoadQueue.forEach((e=>e(!1))),this.tafsirLoadQueue=[],this.showToast("❌ خطأ في تحميل التفسير"),!1}}toggleTheme(){const e=document.body.classList.toggle("night-mode");this.theme=e?"night":"light",this.saveToLocalStorage(),this.updateAllThemeIcons(),window.dispatchEvent(new CustomEvent("quran:themeChanged",{detail:{theme:this.theme}})),this.showToast(e?"🌙 تفعيل الوضع الليلي":"☀️ تفعيل الوضع النهاري")}updateAllThemeIcons(){const e=document.getElementById("tafsirThemeToggle");if(e){const t=document.body.classList.contains("night-mode");e.textContent=t?"☀️":"🌙"}window.overlayManager&&window.overlayManager.updateThemeButtonText()}applyTheme(){"night"===this.theme?document.body.classList.add("night-mode"):document.body.classList.remove("night-mode")}showPageInputDialog(){window.quranReader&&(window.quranReader._dialogOpen=!0),window.dispatchEvent(new CustomEvent("quran:overlayOpened"));const e=document.createElement("div");e.className="confirm-backdrop",e.style.zIndex="100000";const t=document.createElement("div");t.className="confirm-dialog",t.style.maxWidth="300px",t.style.direction="rtl";const a=document.createElement("p");a.textContent="أدخل رقم الصفحة (1-604):",a.style.textAlign="center",t.appendChild(a);const n=document.createElement("input");n.type="tel",n.inputMode="numeric",n.pattern="[0-9]*",n.placeholder="1-604",n.value=this.lastPage,n.style.cssText="width:100%;padding:8px;margin-bottom:15px;border-radius:4px;border:1px solid #ccc;box-sizing:border-box;direction:ltr;text-align:right;font-size:16px;",t.appendChild(n);const o=document.createElement("div");o.className="confirm-buttons",o.style.justifyContent="center";const i=document.createElement("button");i.className="confirm-btn ok",i.textContent="اذهب";const r=document.createElement("button");r.className="confirm-btn cancel",r.textContent="إلغاء",o.appendChild(i),o.appendChild(r),t.appendChild(o),e.appendChild(t),document.body.appendChild(e),setTimeout((()=>{n.focus(),setTimeout((()=>{n.setSelectionRange(0,n.value.length)}),100)}),50);let s=!1;const d=()=>{s||(s=!0,n.blur(),e.remove(),window.quranReader&&(window.quranReader._dialogOpen=!1),window.dispatchEvent(new CustomEvent("quran:overlayClosed")))},l=()=>{if(s)return;const e=parseInt(n.value,10);!isNaN(e)&&e>=1&&e<=604?(this.goToPage(e),d()):(this.showToast("❌ الرجاء إدخال رقم صفحة صحيح (1-604)"),n.focus())},h=()=>d();i.addEventListener("touchend",(e=>{e.preventDefault(),l()})),i.addEventListener("click",(()=>{"ontouchstart"in window||l()})),r.addEventListener("touchend",(e=>{e.preventDefault(),h()})),r.addEventListener("click",(()=>{"ontouchstart"in window||h()})),e.addEventListener("click",(t=>{t.target===e&&h()})),n.addEventListener("keypress",(e=>{"Enter"===e.key&&(e.preventDefault(),l())}))}async initCalculator(){if(!window.quranCalculator)throw new Error("Module Calculator non trouvé");await window.quranCalculator.load()}async initReader(){if(!window.quranReader)throw new Error("Module Reader non trouvé");await window.quranReader.init({},this.lastPage)}initOverlays(){if(!window.overlayManager)throw new Error("Module OverlayManager non trouvé");window.overlayManager.init({app:this})}setupEventListeners(){const e=e=>{if(e.detail?.page){const t=e.detail.page;this.updateCurrentPage(t),this.updateBookmarkIcon(t),"undefined"!=typeof window&&(window.currentQuranPage=t)}};window.addEventListener("quran:pageChanged",e);const t=()=>{this.updateBookmarkIcon(this.lastPage)};window.addEventListener("quran:bookmarkChanged",t);const a=e=>{e.detail?.savedPage&&(this.lastPage=e.detail.savedPage,this.updateCurrentPage(e.detail.savedPage))};window.addEventListener("quran:readingModeChanged",a);const n=e=>{const t=document.querySelector(".overlay.show"),a=document.querySelector(".menu-overlay.show");if(t){const a=t.querySelector(".overlay-body");switch(e.key){case"ArrowDown":e.preventDefault(),a&&a.scrollBy({top:120,behavior:"smooth"});break;case"ArrowUp":e.preventDefault(),a&&a.scrollBy({top:-120,behavior:"smooth"});break;case"Home":e.preventDefault(),a&&(a.scrollTop=0);break;case"End":e.preventDefault(),a&&(a.scrollTop=a.scrollHeight);break}return}if(a)return;const n=window.quranReader;if(n)switch(e.key){case"ArrowLeft":case"PageDown":e.preventDefault(),n.goToNextPage();break;case"ArrowRight":case"PageUp":e.preventDefault(),n.goToPreviousPage();break;case"ArrowUp":e.preventDefault(),"scroll"===n.readingMode&&n.elements.pageScroll?.scrollBy({top:-120,behavior:"smooth"});break;case"ArrowDown":e.preventDefault(),"scroll"===n.readingMode&&n.elements.pageScroll?.scrollBy({top:120,behavior:"smooth"});break;case"Home":e.preventDefault(),n.goToFirstPage();break;case"End":e.preventDefault(),n.goToLastPage();break}};document.addEventListener("keydown",n),this._keyDownHandler=n,this._pageChangedHandler=e,this._bookmarkChangedHandler=t,this._readingModeChangedHandler=a}setupCleanupHandlers(){this._beforeUnloadHandler=()=>{this.isInitialized&&this.saveToLocalStorage()},window.addEventListener("beforeunload",this._beforeUnloadHandler),this._pageHideHandler=()=>{this.isInitialized&&this.saveToLocalStorage()},window.addEventListener("pagehide",this._pageHideHandler),this._visibilityChangeHandler=()=>{"hidden"===document.visibilityState?(this.saveToLocalStorage(),window.quranReader&&window.quranReader.imageCache.clear()):"visible"===document.visibilityState&&window.quranReader&&"function"==typeof window.quranReader.onAppResume&&window.quranReader.onAppResume()},document.addEventListener("visibilitychange",this._visibilityChangeHandler);const e=()=>{window.quranApp?.showToast("✅ الاتصال بالإنترنت متوفر")},t=()=>{window.quranApp?.showToast("⚠️ تم فقدان الاتصال بالإنترنت")};window.addEventListener("online",e),window.addEventListener("offline",t),this._onlineHandler=e,this._offlineHandler=t}showToast(e){const t=document.getElementById("toast");t&&(this._toastTimeout&&clearTimeout(this._toastTimeout),t.textContent=e,t.style.display="block",t.style.opacity="1",t.classList.add("show"),this._toastTimeout=setTimeout((()=>{t.style.opacity="0",t.classList.remove("show"),setTimeout((()=>{t.style.display="none"}),300)}),this.NOTIFICATION_DURATION))}}window.quranApp||(window.quranApp=new QuranApp),"undefined"==typeof window||window.currentQuranPage||(window.currentQuranPage=1);
+class QuranApp {
+  constructor() {
+    this.isInitialized  = false;
+    this.isInitializing = false;
+
+    this.bookmarks    = [];
+    this.pinnedSurahs = [];
+    this.lastPage     = 1;
+    this.theme        = "light";
+
+    this.NOTIFICATION_DURATION = 1000;
+
+    this.tafsirLoaded    = false;
+    this.tafsirLoading   = false;
+    this.tafsirLoadQueue = [];
+
+    this._toastTimeout             = null;
+    this._beforeUnloadHandler      = null;
+    this._pageHideHandler          = null;
+    this._visibilityChangeHandler  = null;
+    this._onlineHandler            = null;
+    this._offlineHandler           = null;
+    this._pageChangedHandler       = null;
+    this._bookmarkChangedHandler   = null;
+    this._readingModeChangedHandler = null;
+    this._keyDownHandler           = null;
+  }
+
+  // ============================================
+  // INITIALISATION
+  // ============================================
+
+  async init() {
+    if (this.isInitialized || this.isInitializing) return;
+    this.isInitializing = true;
+    try {
+      this.restoreFromLocalStorage();
+      this.applyTheme();
+      await this.initCalculator();
+      await this.initReader();
+      this.initOverlays();
+      this.setupEventListeners();
+      this.updateBookmarkIcon(this.lastPage);
+      this.setupCleanupHandlers();
+      this.isInitialized = true;
+      window.dispatchEvent(new CustomEvent("quran:appReady"));
+    } catch (err) {
+      this.showToast("❌ خطأ في تحميل التطبيق");
+      window.dispatchEvent(new CustomEvent("quran:appError", { detail: { error: err.message } }));
+    } finally {
+      this.isInitializing = false;
+    }
+  }
+
+  async initCalculator() {
+    if (!window.quranCalculator) throw new Error("Module Calculator non trouvé");
+    await window.quranCalculator.load();
+  }
+
+  async initReader() {
+    if (!window.quranReader) throw new Error("Module Reader non trouvé");
+    await window.quranReader.init({}, this.lastPage);
+  }
+
+  initOverlays() {
+    if (!window.overlayManager) throw new Error("Module OverlayManager non trouvé");
+    window.overlayManager.init({ app: this });
+  }
+
+  // ============================================
+  // PERSISTANCE
+  // ============================================
+
+  restoreFromLocalStorage() {
+    try {
+      const rawBookmarks = localStorage.getItem("quran_bookmarks");
+      this.bookmarks = rawBookmarks ? JSON.parse(rawBookmarks) : [];
+      this.bookmarks = this.bookmarks.map((b, i) =>
+        typeof b === "number"
+          ? { page: b, name: `صفحة ${b}`, date: new Date().toISOString(), id: `bookmark_${b}_${Date.now()}_${i}` }
+          : { ...b, id: b.id || `bookmark_${b.page}_${Date.now()}_${i}` }
+      );
+
+      const rawPage = localStorage.getItem("quran_lastPage");
+      this.lastPage = rawPage ? parseInt(rawPage) : 1;
+      if (isNaN(this.lastPage) || this.lastPage < 1 || this.lastPage > 604) this.lastPage = 1;
+
+      this.theme = localStorage.getItem("quran_theme") || "light";
+
+      const rawPinned = localStorage.getItem("quran_pinnedSurahs");
+      this.pinnedSurahs = rawPinned ? JSON.parse(rawPinned) : [];
+    } catch (err) {
+      this.bookmarks    = [];
+      this.lastPage     = 1;
+      this.theme        = "light";
+      this.pinnedSurahs = [];
+      ["quran_bookmarks", "quran_lastPage", "quran_theme", "quran_pinnedSurahs",
+       "quran_readingMode", "quran_lastMode"].forEach((key) => localStorage.removeItem(key));
+      localStorage.setItem("quran_lastPage",     "1");
+      localStorage.setItem("quran_theme",        "light");
+      localStorage.setItem("quran_bookmarks",    "[]");
+      localStorage.setItem("quran_pinnedSurahs", "[]");
+    }
+  }
+
+  saveToLocalStorage() {
+    try {
+      localStorage.setItem("quran_bookmarks",    JSON.stringify(this.bookmarks));
+      localStorage.setItem("quran_lastPage",     this.lastPage.toString());
+      localStorage.setItem("quran_theme",        this.theme);
+      localStorage.setItem("quran_pinnedSurahs", JSON.stringify(this.pinnedSurahs));
+      if (window.quranReader) localStorage.setItem("quran_readingMode", window.quranReader.readingMode);
+    } catch (err) {
+      try { localStorage.setItem("quran_lastPage", this.lastPage.toString()); } catch (e) {}
+    }
+  }
+
+  // ============================================
+  // NAVIGATION
+  // ============================================
+
+  getCurrentPage() { return this.lastPage; }
+
+  updateCurrentPage(page) {
+    const pageNum = parseInt(page, 10);
+    if (isNaN(pageNum) || pageNum < 1 || pageNum > 604) return;
+    this.lastPage = pageNum;
+    localStorage.setItem("quran_lastPage", pageNum.toString());
+    if (typeof window !== "undefined") window.currentQuranPage = pageNum;
+  }
+
+  goToPage(page) {
+    window.quranReader?.goToPage(page);
+  }
+
+  // ============================================
+  // SOURATES ÉPINGLÉES
+  // ============================================
+
+  togglePinSurah(sura_id) {
+    const idx = this.pinnedSurahs.indexOf(sura_id);
+    const added = idx === -1;
+    if (added) this.pinnedSurahs.push(sura_id);
+    else this.pinnedSurahs.splice(idx, 1);
+    this.saveToLocalStorage();
+    window.dispatchEvent(new CustomEvent("quran:pinnedSurahsUpdated"));
+    return added;
+  }
+
+  isSurahPinned(sura_id) { return this.pinnedSurahs.includes(sura_id); }
+  getPinnedSurahs()       { return [...this.pinnedSurahs]; }
+
+  // ============================================
+  // MARQUE-PAGES
+  // ============================================
+
+  getBookmarks() { return [...this.bookmarks]; }
+
+  addBookmark(bookmark) {
+    this.bookmarks.push(bookmark);
+    this.bookmarks.sort((a, b) => a.page - b.page);
+    this.saveToLocalStorage();
+    this.updateBookmarkIcon(bookmark.page);
+    window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
+  }
+
+  replaceBookmarkPage(bookmarkId, newPage) {
+    const bookmark = this.bookmarks.find((b) => b.id === bookmarkId);
+    if (!bookmark || newPage < 1 || newPage > 604) return false;
+    const oldPage  = bookmark.page;
+    bookmark.page  = newPage;
+    this.bookmarks.sort((a, b) => a.page - b.page);
+    this.saveToLocalStorage();
+    this.updateBookmarkIcon(oldPage);
+    this.updateBookmarkIcon(newPage);
+    window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
+    return true;
+  }
+
+  removeBookmarkById(bookmarkId) {
+    const idx = this.bookmarks.findIndex((b) => b.id === bookmarkId);
+    if (idx === -1) return false;
+    const removed = this.bookmarks.splice(idx, 1)[0];
+    this.saveToLocalStorage();
+    this.updateBookmarkIcon(removed.page);
+    window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
+    return true;
+  }
+
+  updateBookmark(bookmarkId, newName) {
+    const bookmark = this.bookmarks.find((b) => b.id === bookmarkId);
+    if (!bookmark) return false;
+    bookmark.name = newName.trim() || `صفحة ${bookmark.page}`;
+    this.saveToLocalStorage();
+    window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
+    return true;
+  }
+
+  updateBookmarkIcon(page) {
+    const icon = document.getElementById("bookmarkIcon");
+    if (!icon) return;
+    const hasBookmark = this.bookmarks.some((b) => b.page === page);
+    icon.textContent = hasBookmark ? "⭐" : "🔖";
+    icon.title       = hasBookmark ? "علامة مرجعية موجودة" : "إضافة علامة مرجعية";
+  }
+
+  // ============================================
+  // TAFSIR
+  // ============================================
+
+  async loadTafsir() {
+    if (this.tafsirLoaded) return true;
+    if (this.tafsirLoading) return new Promise((resolve) => { this.tafsirLoadQueue.push(resolve); });
+
+    this.tafsirLoading = true;
+    try {
+      if (!window.tafsirManager) throw new Error("Module TafsirManager non trouvé");
+      const load    = window.tafsirManager.preload();
+      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 20000));
+      await Promise.race([load, timeout]);
+
+      this.tafsirLoaded  = true;
+      this.tafsirLoading = false;
+      this.tafsirLoadQueue.forEach((resolve) => resolve(true));
+      this.tafsirLoadQueue = [];
+      window.dispatchEvent(new CustomEvent("tafsir:ready"));
+      return true;
+    } catch (err) {
+      this.tafsirLoaded  = false;
+      this.tafsirLoading = false;
+      this.tafsirLoadQueue.forEach((resolve) => resolve(false));
+      this.tafsirLoadQueue = [];
+      this.showToast("❌ خطأ في تحميل التفسير");
+      return false;
+    }
+  }
+
+  // ============================================
+  // THÈME
+  // ============================================
+
+  toggleTheme() {
+    const isNight = document.body.classList.toggle("night-mode");
+    this.theme = isNight ? "night" : "light";
+    this.saveToLocalStorage();
+    this.updateAllThemeIcons();
+    window.dispatchEvent(new CustomEvent("quran:themeChanged", { detail: { theme: this.theme } }));
+    this.showToast(isNight ? "🌙 تفعيل الوضع الليلي" : "☀️ تفعيل الوضع النهاري");
+  }
+
+  updateAllThemeIcons() {
+    const btn = document.getElementById("tafsirThemeToggle");
+    if (btn) btn.textContent = document.body.classList.contains("night-mode") ? "☀️" : "🌙";
+    window.overlayManager?.updateThemeButtonText();
+  }
+
+  applyTheme() {
+    if (this.theme === "night") {
+      document.body.classList.add("night-mode");
+    } else {
+      document.body.classList.remove("night-mode");
+    }
+  }
+
+  // ============================================
+  // DIALOGUE SAISIE DE PAGE
+  // ============================================
+
+  showPageInputDialog() {
+    if (window.quranReader) window.quranReader._dialogOpen = true;
+    window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
+
+    const backdrop = document.createElement("div");
+    backdrop.className  = "confirm-backdrop";
+    backdrop.style.zIndex = "100000";
+
+    const dialog = document.createElement("div");
+    dialog.className    = "confirm-dialog";
+    dialog.style.maxWidth  = "300px";
+    dialog.style.direction = "rtl";
+
+    const label = document.createElement("p");
+    label.textContent  = "أدخل رقم الصفحة (1-604):";
+    label.style.textAlign = "center";
+    dialog.appendChild(label);
+
+    const input = document.createElement("input");
+    input.type      = "tel";
+    input.inputMode = "numeric";
+    input.pattern   = "[0-9]*";
+    input.placeholder = "1-604";
+    input.value     = this.lastPage;
+    input.style.cssText = "width:100%;padding:8px;margin-bottom:15px;border-radius:4px;border:1px solid #ccc;box-sizing:border-box;direction:ltr;text-align:right;font-size:16px;";
+    dialog.appendChild(input);
+
+    const btnRow = document.createElement("div");
+    btnRow.className       = "confirm-buttons";
+    btnRow.style.justifyContent = "center";
+
+    const goBtn     = document.createElement("button");
+    goBtn.className = "confirm-btn ok";
+    goBtn.textContent = "اذهب";
+
+    const cancelBtn     = document.createElement("button");
+    cancelBtn.className = "confirm-btn cancel";
+    cancelBtn.textContent = "إلغاء";
+
+    btnRow.appendChild(goBtn);
+    btnRow.appendChild(cancelBtn);
+    dialog.appendChild(btnRow);
+    backdrop.appendChild(dialog);
+    document.body.appendChild(backdrop);
+
+    setTimeout(() => {
+      input.focus();
+      setTimeout(() => input.setSelectionRange(0, input.value.length), 100);
+    }, 50);
+
+    let closed = false;
+
+    const close = () => {
+      if (closed) return;
+      closed = true;
+      input.blur();
+      backdrop.remove();
+      if (window.quranReader) window.quranReader._dialogOpen = false;
+      window.dispatchEvent(new CustomEvent("quran:overlayClosed"));
+    };
+
+    const confirm = () => {
+      if (closed) return;
+      const pageNum = parseInt(input.value, 10);
+      if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= 604) {
+        this.goToPage(pageNum);
+        close();
+      } else {
+        this.showToast("❌ الرجاء إدخال رقم صفحة صحيح (1-604)");
+        input.focus();
+      }
+    };
+
+    const isTouchDevice = "ontouchstart" in window;
+    goBtn.addEventListener("touchend",   (e) => { e.preventDefault(); confirm(); });
+    goBtn.addEventListener("click",      ()  => { if (!isTouchDevice) confirm(); });
+    cancelBtn.addEventListener("touchend", (e) => { e.preventDefault(); close(); });
+    cancelBtn.addEventListener("click",    ()  => { if (!isTouchDevice) close(); });
+    backdrop.addEventListener("click",   (e) => { if (e.target === backdrop) close(); });
+    input.addEventListener("keypress",   (e) => { if (e.key === "Enter") { e.preventDefault(); confirm(); } });
+  }
+
+  // ============================================
+  // TOAST
+  // ============================================
+
+  showToast(message) {
+    const toast = document.getElementById("toast");
+    if (!toast) return;
+    if (this._toastTimeout) clearTimeout(this._toastTimeout);
+    toast.textContent    = message;
+    toast.style.display  = "block";
+    toast.style.opacity  = "1";
+    toast.classList.add("show");
+    this._toastTimeout = setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.classList.remove("show");
+      setTimeout(() => { toast.style.display = "none"; }, 300);
+    }, this.NOTIFICATION_DURATION);
+  }
+
+  // ============================================
+  // ÉCOUTEURS D'ÉVÉNEMENTS
+  // ============================================
+
+  setupEventListeners() {
+    const onPageChanged = (e) => {
+      if (!e.detail?.page) return;
+      const page = e.detail.page;
+      this.updateCurrentPage(page);
+      this.updateBookmarkIcon(page);
+      if (typeof window !== "undefined") window.currentQuranPage = page;
+    };
+    window.addEventListener("quran:pageChanged", onPageChanged);
+    this._pageChangedHandler = onPageChanged;
+
+    const onBookmarkChanged = () => this.updateBookmarkIcon(this.lastPage);
+    window.addEventListener("quran:bookmarkChanged", onBookmarkChanged);
+    this._bookmarkChangedHandler = onBookmarkChanged;
+
+    const onReadingModeChanged = (e) => {
+      if (e.detail?.savedPage) {
+        this.lastPage = e.detail.savedPage;
+        this.updateCurrentPage(e.detail.savedPage);
+      }
+    };
+    window.addEventListener("quran:readingModeChanged", onReadingModeChanged);
+    this._readingModeChangedHandler = onReadingModeChanged;
+
+    const onKeyDown = (e) => {
+      const overlayEl = document.querySelector(".overlay.show");
+      const menuEl    = document.querySelector(".menu-overlay.show");
+
+      if (overlayEl) {
+        const body = overlayEl.querySelector(".overlay-body");
+        switch (e.key) {
+          case "ArrowDown": e.preventDefault(); body?.scrollBy({ top:  120, behavior: "smooth" }); break;
+          case "ArrowUp":   e.preventDefault(); body?.scrollBy({ top: -120, behavior: "smooth" }); break;
+          case "Home":      e.preventDefault(); if (body) body.scrollTop = 0;              break;
+          case "End":       e.preventDefault(); if (body) body.scrollTop = body.scrollHeight; break;
+        }
+        return;
+      }
+
+      if (menuEl) return;
+
+      const reader = window.quranReader;
+      if (!reader) return;
+
+      switch (e.key) {
+        case "ArrowLeft":
+        case "PageDown":
+          e.preventDefault();
+          reader.goToNextPage();
+          break;
+        case "ArrowRight":
+        case "PageUp":
+          e.preventDefault();
+          reader.goToPreviousPage();
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          if (reader.readingMode === "scroll") reader.elements.pageScroll?.scrollBy({ top: -120, behavior: "smooth" });
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          if (reader.readingMode === "scroll") reader.elements.pageScroll?.scrollBy({ top: 120, behavior: "smooth" });
+          break;
+        case "Home": e.preventDefault(); reader.goToFirstPage(); break;
+        case "End":  e.preventDefault(); reader.goToLastPage();  break;
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    this._keyDownHandler = onKeyDown;
+  }
+
+  // ============================================
+  // NETTOYAGE
+  // ============================================
+
+  setupCleanupHandlers() {
+    this._beforeUnloadHandler = () => {
+      if (this.isInitialized) this.saveToLocalStorage();
+    };
+    window.addEventListener("beforeunload", this._beforeUnloadHandler);
+
+    this._pageHideHandler = () => {
+      if (this.isInitialized) this.saveToLocalStorage();
+    };
+    window.addEventListener("pagehide", this._pageHideHandler);
+
+    this._visibilityChangeHandler = () => {
+      if (document.visibilityState === "hidden") {
+        this.saveToLocalStorage();
+        window.quranReader?.imageCache.clear();
+      } else if (document.visibilityState === "visible") {
+        if (typeof window.quranReader?.onAppResume === "function") {
+          window.quranReader.onAppResume();
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", this._visibilityChangeHandler);
+
+    this._onlineHandler  = () => window.quranApp?.showToast("✅ الاتصال بالإنترنت متوفر");
+    this._offlineHandler = () => window.quranApp?.showToast("⚠️ تم فقدان الاتصال بالإنترنت");
+    window.addEventListener("online",  this._onlineHandler);
+    window.addEventListener("offline", this._offlineHandler);
+  }
+}
+
+// ============================================
+// INITIALISATION
+// ============================================
+
+if (!window.quranApp) window.quranApp = new QuranApp();
+if (typeof window !== "undefined" && !window.currentQuranPage) window.currentQuranPage = 1;
