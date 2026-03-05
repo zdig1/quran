@@ -223,24 +223,10 @@ class QuranReader {
       img.setAttribute("data-page", page);
       img.setAttribute("data-loaded", "false");
       img.src = "";
-      
-      const isActive = page === this.currentPage;
-      wrapper.style.display = isActive ? "flex" : "none";
-      wrapper.classList.toggle("active", isActive);
-      
-      // Sur iOS, forcer le reflow pour éviter l'image blanche
-      if (isActive && /iPad|iPhone|iPod/.test(navigator.userAgent)) {
-        wrapper.style.opacity = "0";
-        requestAnimationFrame(() => {
-          wrapper.style.opacity = "1";
-        });
-      }
-      
-      this.loadPageImage(page, isActive ? "high" : "low");
+      wrapper.style.display = (page === this.currentPage) ? "flex" : "none";
+      wrapper.classList.toggle("active", page === this.currentPage);
+      this.loadPageImage(page, page === this.currentPage ? "high" : "low");
     });
-    
-    // Ajuster la hauteur pour les navigateurs mobiles
-    setTimeout(() => this._adjustPortraitImageHeight(), 100);
   }
 
   createPagesForScrollMode() {
@@ -567,9 +553,6 @@ class QuranReader {
       });
       this.swipeEnabled = true;
       this.setupSwipeNavigation();
-      
-      // Ajuster la hauteur de l'image pour les navigateurs mobiles
-      this._adjustPortraitImageHeight();
     } else {
       container.classList.add("mode-landscape");
       Object.assign(container.style, {
@@ -585,26 +568,14 @@ class QuranReader {
 
     if (this.readingMode === "scroll") this.setupResizeObserver();
 
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const applyDelay = isIOS ? 100 : 0;
-
-    setTimeout(() => {
-      requestAnimationFrame(() => {
-        if (this.readingMode === "scroll") {
-          this.scrollToPage(this.currentPage);
-        } else {
-          this.goToPage(this.currentPage);
-          
-          // Fix iOS : forcer le reflow du viewport
-          if (isIOS) {
-            window.scrollTo(0, 0);
-            document.body.style.height = '100vh';
-            document.body.style.height = '100dvh';
-          }
-        }
-        container.style.opacity = "1";
-      });
-    }, applyDelay);
+    requestAnimationFrame(() => {
+      if (this.readingMode === "scroll") {
+        this.scrollToPage(this.currentPage);
+      } else {
+        this.goToPage(this.currentPage);
+      }
+      container.style.opacity = "1";
+    });
 
     window.dispatchEvent(new CustomEvent("quran:readingModeChanged", {
       detail: { mode: this.readingMode, isPortrait: this.isPortraitMode, savedPage: this.currentPage },
@@ -612,28 +583,6 @@ class QuranReader {
 
     this.updateAutoScrollButton();
     this.setupTapToHide();
-  }
-
-  // ============================================
-  // DÉTECTION DE PAGE (SCROLL)
-  // ============================================
-
-  _adjustPortraitImageHeight() {
-    // Calculer la hauteur visible réelle (viewport - barres navigateur)
-    const visualViewportHeight = window.visualViewport?.height || window.innerHeight;
-    const isMobileBrowser = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    if (isMobileBrowser) {
-      // Appliquer la hauteur calculée aux images portrait
-      const images = this.elements.pageScroll?.querySelectorAll('.portrait-image');
-      if (images) {
-        images.forEach(img => {
-          // Utiliser 90% de la hauteur visible pour laisser de l'espace
-          img.style.setProperty('height', `${visualViewportHeight * 0.9}px`, 'important');
-          img.style.setProperty('max-height', `${visualViewportHeight * 0.9}px`, 'important');
-        });
-      }
-    }
   }
 
   // ============================================
@@ -914,7 +863,7 @@ class QuranReader {
       this.isTransitioning = true;
       const savedPage = this.currentPage;
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const delay = isIOS ? 600 : 50;
+      const delay = isIOS ? 500 : 50;
       
       setTimeout(() => {
         try {
@@ -1026,19 +975,6 @@ class QuranReader {
     };
     window.addEventListener("quran:menuToggle", onMenuToggle);
     this.eventListeners.push({ element: window, type: "quran:menuToggle", handler: onMenuToggle });
-
-    // Recalculer la hauteur de l'image quand les barres du navigateur apparaissent/disparaissent
-    if (window.visualViewport) {
-      const onViewportChange = () => {
-        if (this.readingMode === "book") {
-          this._adjustPortraitImageHeight();
-        }
-      };
-      window.visualViewport.addEventListener("resize", onViewportChange);
-      window.visualViewport.addEventListener("scroll", onViewportChange);
-      this.eventListeners.push({ element: window.visualViewport, type: "resize", handler: onViewportChange });
-      this.eventListeners.push({ element: window.visualViewport, type: "scroll", handler: onViewportChange });
-    }
 
     const onOverlayOpened = () => {
       this.buttonsVisible = true;

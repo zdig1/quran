@@ -50,8 +50,8 @@
     {
       "src": "media/screenshot.webp",
       "type": "image/webp",
-      "sizes": "1000x500",
-      "form_factor": "wide",
+      "sizes": "400x800",
+      "form_factor": "narrow",
       "label": "شاشة التطبيق"
     }
   ],
