@@ -9,8 +9,10 @@
   "scope": "./",
   "display": "fullscreen",
   "display_override": [
+    "window-controls-overlay",
     "fullscreen",
-    "standalone"
+    "standalone",
+    "minimal-ui"
   ],
   "orientation": "any",
   "background_color": "#ffffff",
