@@ -238,6 +238,9 @@ class QuranReader {
       
       this.loadPageImage(page, isActive ? "high" : "low");
     });
+    
+    // Ajuster la hauteur pour les navigateurs mobiles
+    setTimeout(() => this._adjustPortraitImageHeight(), 100);
   }
 
   createPagesForScrollMode() {
@@ -564,6 +567,9 @@ class QuranReader {
       });
       this.swipeEnabled = true;
       this.setupSwipeNavigation();
+      
+      // Ajuster la hauteur de l'image pour les navigateurs mobiles
+      this._adjustPortraitImageHeight();
     } else {
       container.classList.add("mode-landscape");
       Object.assign(container.style, {
@@ -606,6 +612,28 @@ class QuranReader {
 
     this.updateAutoScrollButton();
     this.setupTapToHide();
+  }
+
+  // ============================================
+  // DÉTECTION DE PAGE (SCROLL)
+  // ============================================
+
+  _adjustPortraitImageHeight() {
+    // Calculer la hauteur visible réelle (viewport - barres navigateur)
+    const visualViewportHeight = window.visualViewport?.height || window.innerHeight;
+    const isMobileBrowser = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    if (isMobileBrowser) {
+      // Appliquer la hauteur calculée aux images portrait
+      const images = this.elements.pageScroll?.querySelectorAll('.portrait-image');
+      if (images) {
+        images.forEach(img => {
+          // Utiliser 90% de la hauteur visible pour laisser de l'espace
+          img.style.setProperty('height', `${visualViewportHeight * 0.9}px`, 'important');
+          img.style.setProperty('max-height', `${visualViewportHeight * 0.9}px`, 'important');
+        });
+      }
+    }
   }
 
   // ============================================
@@ -998,6 +1026,19 @@ class QuranReader {
     };
     window.addEventListener("quran:menuToggle", onMenuToggle);
     this.eventListeners.push({ element: window, type: "quran:menuToggle", handler: onMenuToggle });
+
+    // Recalculer la hauteur de l'image quand les barres du navigateur apparaissent/disparaissent
+    if (window.visualViewport) {
+      const onViewportChange = () => {
+        if (this.readingMode === "book") {
+          this._adjustPortraitImageHeight();
+        }
+      };
+      window.visualViewport.addEventListener("resize", onViewportChange);
+      window.visualViewport.addEventListener("scroll", onViewportChange);
+      this.eventListeners.push({ element: window.visualViewport, type: "resize", handler: onViewportChange });
+      this.eventListeners.push({ element: window.visualViewport, type: "scroll", handler: onViewportChange });
+    }
 
     const onOverlayOpened = () => {
       this.buttonsVisible = true;
