@@ -195,8 +195,11 @@ body {
 }
 
 .footer-item {
-  display:flex;
-  align-items:center
+  display:flex!important;
+  align-items:center;
+  visibility:visible!important;
+  opacity:1!important;
+  min-height:30px
 }
 
 .footer-item:first-child {
@@ -209,12 +212,19 @@ body {
 
 .footer-surah,
 .footer-value {
-  background:rgba(255, 255, 255, .7);
+  background:rgba(255, 255, 255, .7)!important;
   border-radius:1.25rem;
-  padding:var(--space-sm) var(--space-md);
-  color:var(--text);
+  padding:8px 12px!important;
+  color:#333333!important;
   font-weight:500;
-  box-shadow:0 1px 6px rgba(0, 0, 0, .1)
+  box-shadow:0 1px 6px rgba(0, 0, 0, .1);
+  display:inline-block!important;
+  min-width:50px;
+  min-height:30px;
+  font-size:14px!important;
+  line-height:1.5!important;
+  visibility:visible!important;
+  opacity:1!important
 }
 
 .night-mode .footer-surah,
