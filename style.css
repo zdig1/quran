@@ -415,7 +415,8 @@ body {
   width:100vw;
   position:relative;
   transition:all .3s ease;
-  background:var(--bg)
+  background:var(--bg);
+  z-index:1
 }
 
 .mode-portrait .page-wrapper {
