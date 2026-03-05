@@ -223,9 +223,20 @@ class QuranReader {
       img.setAttribute("data-page", page);
       img.setAttribute("data-loaded", "false");
       img.src = "";
-      wrapper.style.display = (page === this.currentPage) ? "flex" : "none";
-      wrapper.classList.toggle("active", page === this.currentPage);
-      this.loadPageImage(page, page === this.currentPage ? "high" : "low");
+      
+      const isActive = page === this.currentPage;
+      wrapper.style.display = isActive ? "flex" : "none";
+      wrapper.classList.toggle("active", isActive);
+      
+      // Sur iOS, forcer le reflow pour éviter l'image blanche
+      if (isActive && /iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        wrapper.style.opacity = "0";
+        requestAnimationFrame(() => {
+          wrapper.style.opacity = "1";
+        });
+      }
+      
+      this.loadPageImage(page, isActive ? "high" : "low");
     });
   }
 
@@ -568,14 +579,26 @@ class QuranReader {
 
     if (this.readingMode === "scroll") this.setupResizeObserver();
 
-    requestAnimationFrame(() => {
-      if (this.readingMode === "scroll") {
-        this.scrollToPage(this.currentPage);
-      } else {
-        this.goToPage(this.currentPage);
-      }
-      container.style.opacity = "1";
-    });
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const applyDelay = isIOS ? 100 : 0;
+
+    setTimeout(() => {
+      requestAnimationFrame(() => {
+        if (this.readingMode === "scroll") {
+          this.scrollToPage(this.currentPage);
+        } else {
+          this.goToPage(this.currentPage);
+          
+          // Fix iOS : forcer le reflow du viewport
+          if (isIOS) {
+            window.scrollTo(0, 0);
+            document.body.style.height = '100vh';
+            document.body.style.height = '100dvh';
+          }
+        }
+        container.style.opacity = "1";
+      });
+    }, applyDelay);
 
     window.dispatchEvent(new CustomEvent("quran:readingModeChanged", {
       detail: { mode: this.readingMode, isPortrait: this.isPortraitMode, savedPage: this.currentPage },
@@ -862,14 +885,30 @@ class QuranReader {
     const handleOrientationChange = () => {
       this.isTransitioning = true;
       const savedPage = this.currentPage;
-      const delay = /iPad|iPhone|iPod/.test(navigator.userAgent) ? 350 : 50;
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const delay = isIOS ? 600 : 50;
+      
       setTimeout(() => {
         try {
           this.applyReadingMode();
           setTimeout(() => {
             this.goToPage(savedPage);
+            
+            // Sur iOS, forcer le rechargement de l'image en mode portrait
+            if (isIOS && this.readingMode === "book") {
+              const img = document.querySelector(`img[data-page="${savedPage}"]`);
+              if (img) {
+                const src = img.src;
+                img.src = '';
+                requestAnimationFrame(() => {
+                  img.src = src;
+                  img.setAttribute("data-loaded", "true");
+                });
+              }
+            }
+            
             this.isTransitioning = false;
-          }, 200);
+          }, isIOS ? 300 : 200);
         } catch (err) {
           this.isTransitioning = false;
         }

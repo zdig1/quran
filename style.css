@@ -418,15 +418,17 @@ body {
 
 .mode-portrait .page-wrapper {
   width:100vw;
-  height:90vh;
+  height:100vh;
+  height:100dvh;
   display:none;
   align-items:center;
   justify-content:center;
   position:absolute;
   top:0;
   left:0;
-  transition:none;
-  background:var(--bg)
+  transition:opacity .2s ease;
+  background:var(--bg);
+  opacity:1
 }
 
 .mode-portrait .page-wrapper.active {
@@ -434,18 +436,23 @@ body {
   align-items:center;
   justify-content:center;
   height:100vh;
-  background:var(--bg)
+  height:100dvh;
+  background:var(--bg);
+  opacity:1
 }
 
 .mode-portrait .portrait-image {
   width:100%;
   height:90vh;
+  height:90dvh;
   max-height:90vh;
+  max-height:90dvh;
   min-height:auto;
   object-fit:fill;
   margin:auto;
   aspect-ratio:unset;
-  transition:none
+  transition:none;
+  display:block
 }
 
 .mode-landscape /* ============================================
