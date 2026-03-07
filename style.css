@@ -222,7 +222,7 @@ body {
 
 .footer-surah,
 .footer-value {
-  background: rgba(255, 255, 255, .7) !important;
+  background: rgba(255, 255, 255, .7);
   border-radius: 1.25rem;
   padding: 8px 12px !important;
   color: var(--text);
@@ -467,16 +467,8 @@ body {
 
 .mode-portrait .portrait-image {
   width: 100%;
-  height: 90vh;
-  height: 90dvh;
-  max-height: 90vh;
-  max-height: 90dvh;
-  min-height: auto;
+  display: block;
   object-fit: fill;
-  margin: auto;
-  aspect-ratio: unset;
-  transition: none;
-  display: block
 }
 
 /* En PWA standalone iOS, utiliser 100% de l'espace */
