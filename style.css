@@ -181,7 +181,6 @@ body {
   height: var(--header-height);
   top: 0;
   justify-content: space-between;
-  padding: 0 var(--space-lg)
 }
 
 .footer {
@@ -190,7 +189,6 @@ body {
   bottom: 0;
   display: grid !important;
   grid-template-columns: 1fr auto 1fr;
-  padding: 0 var(--space-lg);
   padding-bottom: 0;
   pointer-events: auto !important;
   transform: translateZ(0)
