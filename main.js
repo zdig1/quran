@@ -312,122 +312,130 @@ class QuranApp {
   // DIALOGUE SAISIE DE PAGE
   // ============================================
 
-  showPageInputDialog() {
-    if (window.quranReader) window.quranReader._dialogOpen = true;
-    window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
+showPageInputDialog() {
+  if (window.quranReader) window.quranReader._dialogOpen = true;
+  window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
 
-    // Backdrop = réutilise la classe .overlay (même comportement 15vh que bookmarks)
-    const backdrop = document.createElement("div");
-    backdrop.className = "overlay show";
-    backdrop.style.zIndex = "100000";
+  // Backdrop standard
+  const backdrop = document.createElement("div");
+  backdrop.className = "overlay show";
+  backdrop.style.zIndex = "100000";
 
-    // Dialog = réutilise .overlay-content (même style que bookmarks)
-    const dialog = document.createElement("div");
-    dialog.className = "overlay-content";
-    dialog.style.maxWidth = "300px";
+  // Dialog avec la classe overlay-content (largeur standard)
+  const dialog = document.createElement("div");
+  dialog.className = "overlay-content";
 
-    // Header = réutilise .overlay-header avec titre + bouton ✕
-    const header = document.createElement("div");
-    header.className = "overlay-header";
+  // Header
+  const header = document.createElement("div");
+  header.className = "overlay-header";
 
-    const title = document.createElement("h2");
-    title.textContent = "📄 الانتقال إلى صفحة";
+  const title = document.createElement("h2");
+  title.textContent = "📄 الانتقال إلى صفحة";
 
-    const closeBtn = document.createElement("button");
-    closeBtn.className = "btn close-btn";
-    closeBtn.textContent = "✕";
-    closeBtn.setAttribute("aria-label", "إغلاق");
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "btn close-btn";
+  closeBtn.textContent = "✕";
+  closeBtn.setAttribute("aria-label", "إغلاق");
 
-    header.appendChild(title);
-    header.appendChild(closeBtn);
-    dialog.appendChild(header);
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  dialog.appendChild(header);
 
-    const label = document.createElement("p");
-    label.textContent = "أدخل رقم الصفحة (1-604)";
-    label.style.cssText = "text-align:right;margin:5px;";
+  // Corps
+  const body = document.createElement("div");
+  body.style.padding = "16px";
 
-    // Corps : input + bouton اذهب
-    const body = document.createElement("div");
-    body.style.cssText = "padding:16px;";
+  const label = document.createElement("p");
+  label.textContent = "أدخل رقم الصفحة (1-604)";
+  label.style.textAlign = "right";
+  label.style.margin = "0 0 12px 0";
+  body.appendChild(label);
 
-    const input = document.createElement("input");
-    input.type = "tel";
-    input.inputMode = "numeric";
-    input.pattern = "[0-9]*";
-    input.placeholder = "1-604";
-    input.value = this.lastPage;
-    input.className = "search-input";
-    input.style.cssText = "direction:ltr;text-align:right;margin-bottom:12px;";
+  // Conteneur pour input + bouton (flex row)
+  const row = document.createElement("div");
+  row.style.display = "flex";
+  row.style.alignItems = "center";
+  row.style.gap = "8px";
 
-    const btnRow = document.createElement("div");
-    btnRow.className = "confirm-buttons";
+  const input = document.createElement("input");
+  input.type = "tel";
+  input.inputMode = "numeric";
+  input.pattern = "[0-9]*";
+  input.placeholder = "1-604";
+  input.value = this.lastPage;
+  input.className = "search-input";
+  input.style.flex = "1";          // prend l'espace disponible
+  input.style.direction = "ltr";
+  input.style.textAlign = "right";
+  input.style.margin = "0";
 
-    const goBtn = document.createElement("button");
-    goBtn.className = "confirm-btn ok";
-    goBtn.textContent = "اذهب";
+  const goBtn = document.createElement("button");
+  goBtn.className = "confirm-btn ok";
+  goBtn.textContent = "اذهب";
+  goBtn.style.flexShrink = "0";    // ne se réduit pas
 
-    btnRow.appendChild(goBtn);
-    dialog.appendChild(label);
-    body.appendChild(input);
-    body.appendChild(btnRow);
-    dialog.appendChild(body);
+  row.appendChild(input);
+  row.appendChild(goBtn);
+  body.appendChild(row);
 
-    backdrop.appendChild(dialog);
-    document.body.appendChild(backdrop);
+  dialog.appendChild(body);
+  backdrop.appendChild(dialog);
+  document.body.appendChild(backdrop);
 
-    setTimeout(() => {
+  // Focus et sélection
+  setTimeout(() => {
+    input.focus();
+    setTimeout(() => input.setSelectionRange(0, input.value.length), 100);
+  }, 50);
+
+  let closed = false;
+
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    input.blur();
+    backdrop.remove();
+    if (window.quranReader) window.quranReader._dialogOpen = false;
+    window.dispatchEvent(new CustomEvent("quran:overlayClosed"));
+  };
+
+  const confirm = () => {
+    if (closed) return;
+    const pageNum = parseInt(input.value, 10);
+    if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= 604) {
+      this.goToPage(pageNum);
+      close();
+    } else {
+      this.showToast("❌ الرجاء إدخال رقم صفحة صحيح (1-604)");
       input.focus();
-      setTimeout(() => input.setSelectionRange(0, input.value.length), 100);
-    }, 50);
+    }
+  };
 
-    let closed = false;
-
-    const close = () => {
-      if (closed) return;
-      closed = true;
-      input.blur();
-      backdrop.remove();
-      if (window.quranReader) window.quranReader._dialogOpen = false;
-      window.dispatchEvent(new CustomEvent("quran:overlayClosed"));
-    };
-
-    const confirm = () => {
-      if (closed) return;
-      const pageNum = parseInt(input.value, 10);
-      if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= 604) {
-        this.goToPage(pageNum);
-        close();
-      } else {
-        this.showToast("❌ الرجاء إدخال رقم صفحة صحيح (1-604)");
-        input.focus();
-      }
-    };
-
-    const isTouchDevice = "ontouchstart" in window;
-    goBtn.addEventListener("touchend", (e) => {
+  const isTouch = "ontouchstart" in window;
+  goBtn.addEventListener("touchend", (e) => {
+    e.preventDefault();
+    confirm();
+  });
+  goBtn.addEventListener("click", () => {
+    if (!isTouch) confirm();
+  });
+  closeBtn.addEventListener("touchend", (e) => {
+    e.preventDefault();
+    close();
+  });
+  closeBtn.addEventListener("click", () => {
+    if (!isTouch) close();
+  });
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) close();
+  });
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
       e.preventDefault();
       confirm();
-    });
-    goBtn.addEventListener("click", () => {
-      if (!isTouchDevice) confirm();
-    });
-    closeBtn.addEventListener("touchend", (e) => {
-      e.preventDefault();
-      close();
-    });
-    closeBtn.addEventListener("click", () => {
-      if (!isTouchDevice) close();
-    });
-    backdrop.addEventListener("click", (e) => {
-      if (e.target === backdrop) close();
-    });
-    input.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        confirm();
-      }
-    });
-  }
+    }
+  });
+}
 
   // ============================================
   // TOAST
