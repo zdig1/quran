@@ -349,7 +349,7 @@ body {
   font-size: var(--text-md);
   cursor: pointer;
   padding: 0;
-  margin: 0px 5px -20px 0px;
+  margin: 0px 5px -25px 0px;
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -1041,7 +1041,7 @@ body {
 }
 
 .item-search {
-    padding: 0 var(--overlay-padding-x);
+  padding: 0 var(--overlay-padding-x);
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background-color .2s
@@ -1051,7 +1051,7 @@ body {
 .item-search .item-line-2.item-search-text {
   font-family: 'MyNotoKufi', sans-serif;
   font-weight: bold;
-    font-size: 14px;
+  font-size: 14px;
   color: var(--search-text-color);
   text-align: justify !important;
   text-align-last: right !important;
