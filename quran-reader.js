@@ -566,14 +566,21 @@ class QuranReader {
   // MODE DE LECTURE
   // ============================================
 
-  detectReadingMode() {
-    if (window.screen?.orientation) {
-      this.isPortraitMode = window.screen.orientation.type.includes("portrait");
-    } else {
-      this.isPortraitMode = window.innerHeight / window.innerWidth > 11 / 7;
-    }
-    return this.isPortraitMode ? "book" : "scroll";
+detectReadingMode() {
+  // 1. Essayer l'API moderne screen.orientation
+  if (window.screen && window.screen.orientation) {
+    this.isPortraitMode = window.screen.orientation.type.startsWith('portrait');
   }
+  // 2. Fallback avec matchMedia
+  else if (window.matchMedia) {
+    this.isPortraitMode = window.matchMedia('(orientation: portrait)').matches;
+  }
+  // 3. Dernier recours : ratio hauteur/largeur
+  else {
+    this.isPortraitMode = window.innerHeight > window.innerWidth;
+  }
+  return this.isPortraitMode ? 'book' : 'scroll';
+}
 
   applyReadingMode() {
     const prevMode = this.readingMode;

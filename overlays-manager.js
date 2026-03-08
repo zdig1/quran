@@ -16,6 +16,7 @@ class OverlayManager {
     this.bookmarkFormInput = null;
     this.bookmarkFormButton = null;
     this.bookmarkFormCancel = null;
+    this._clearSearchHandler = null;
   }
 
   init(config = {}) {
@@ -792,25 +793,29 @@ class OverlayManager {
     const clearBtn = document.getElementById("clearSearchBtn");
     if (!clearBtn) return;
 
+    // Supprimer l'ancien écouteur s'il existe
+    if (this._clearSearchHandler) {
+      clearBtn.removeEventListener("click", this._clearSearchHandler);
+    }
+
     const updateVisibility = () => {
-      const btn = document.getElementById("clearSearchBtn");
-      if (btn) btn.style.display = overlay.input.value ? "block" : "none";
+      clearBtn.style.display = overlay.input.value ? "block" : "none";
     };
 
-    overlay.input.addEventListener("input", updateVisibility);
-
-    const newClearBtn = clearBtn.cloneNode(true);
-    clearBtn.parentNode.replaceChild(newClearBtn, clearBtn);
-
-    document.getElementById("clearSearchBtn").addEventListener("click", () => {
+    // Nouvel écouteur
+    this._clearSearchHandler = () => {
       overlay.input.value = "";
       updateVisibility();
-      window.tafsirManager?.clearSearch
-        ? window.tafsirManager.clearSearch()
-        : (overlay.results.innerHTML = "");
+      if (window.tafsirManager?.clearSearch) {
+        window.tafsirManager.clearSearch();
+      } else {
+        overlay.results.innerHTML = "";
+      }
       overlay.input.focus();
-    });
+    };
 
+    clearBtn.addEventListener("click", this._clearSearchHandler);
+    overlay.input.addEventListener("input", updateVisibility);
     updateVisibility();
   }
 
