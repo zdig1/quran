@@ -655,7 +655,7 @@ body {
    ============================================ */
 
 .item-container {
-  padding: 5px 10px;
+  padding: 0;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   display: flex;
@@ -1565,10 +1565,6 @@ body {
 /* ============================================
    ITEMS LISTES
    ============================================ */
-
-.item-container {
-  padding: 0
-}
 
 .item-search .item-line-2[data-clickable="true"] {
   cursor: pointer;
