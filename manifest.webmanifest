@@ -1,7 +1,7 @@
 {
   "id": "com.gdz.quranreader",
   "name": "القرآن الكريم",
-  "short_name": "مصحف التجويد – حفص",
+  "short_name": "مصحف التجويد - حفص",
   "description": "تطبيق مصحف حفص كامل مع التفسير والبحث المتقدم، يعمل بدون إنترنت مع دعم الوضع الليلي والفهرسة السريعة.",
   "version": "1.0.7",
   "lang": "ar",
@@ -54,7 +54,7 @@
       "id": "com.gdz.quranreader"
     }
   ],
-  "prefer_related_applications": false,
+  "prefer_related_applications": true,
   "iarc_rating_id": "everyone",
   "launch_handler": {
     "client_mode": [

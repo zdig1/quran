@@ -26,13 +26,17 @@ for (let p = 1; p <= 10; p++) {
 
 const PRE_CACHE = [...CORE_ASSETS, ...FIRST_PAGES];
 
-const OFFLINE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="700" height="1100" viewBox="0 0 700 1100">
+const OFFLINE_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="1100" viewBox="0 0 700 1100">
   <rect width="100%" height="100%" fill="#f5f5f5"/>
-  <text x="50%" y="45%" font-family="sans-serif" font-size="24" text-anchor="middle" fill="#333">⚠️ الصفحة غير متوفرة حاليا</text>
-  <text x="50%" y="55%" font-family="sans-serif" font-size="18" text-anchor="middle" fill="#666">زر الصفحة مرة واحدة على الأقل مع الاتصال بالإنترنت</text>
-</svg>`;
+  <text x="50%" y="45%" font-family="sans-serif" font-size="60" text-anchor="middle" fill="#333">⚠️ الصفحة غير متوفرة حاليا</text>
+  <text x="50%" y="55%" font-family="sans-serif" font-size="36" text-anchor="middle" fill="#666">زر الصفحة مرة واحدة على الأقل مع الاتصال بالإنترنت</text>
+</svg>
+`;
 
-const isLocalhost = ["localhost", "127.0.0.1", "::1"].includes(self.location.hostname);
+const isLocalhost = ["localhost", "127.0.0.1", "::1"].includes(
+  self.location.hostname,
+);
 
 // ============================================
 // INSTALL — pré-cache des assets essentiels
@@ -41,11 +45,13 @@ const isLocalhost = ["localhost", "127.0.0.1", "::1"].includes(self.location.hos
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) =>
-      Promise.allSettled(
-        PRE_CACHE.map((url) => cache.add(url).catch(() => {}))
-      )
-    )
+    caches
+      .open(CACHE_NAME)
+      .then((cache) =>
+        Promise.allSettled(
+          PRE_CACHE.map((url) => cache.add(url).catch(() => {})),
+        ),
+      ),
   );
 });
 
@@ -55,13 +61,16 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys()
+    caches
+      .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-        )
+          keys
+            .filter((key) => key !== CACHE_NAME)
+            .map((key) => caches.delete(key)),
+        ),
       )
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -76,7 +85,7 @@ self.addEventListener("fetch", (event) => {
   // En développement local : réseau d'abord
   if (isLocalhost) {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
+      fetch(event.request).catch(() => caches.match(event.request)),
     );
     return;
   }
@@ -90,15 +99,24 @@ async function handleFetch(request) {
     const cached = await caches.match(request);
     if (cached) return cached;
 
-    // Sinon réseau + mise en cache
+    // Sinon réseau
     const response = await fetch(request);
+
+    // Si la requête est pour une image et que la réponse n'est pas OK (404, 500...)
+    if (request.destination === "image" && !response.ok) {
+      return new Response(OFFLINE_SVG, {
+        headers: { "Content-Type": "image/svg+xml" },
+      });
+    }
+
+    // Mise en cache des réponses valides
     if (response && response.status === 200) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }
     return response;
   } catch (err) {
-    // Fallbacks hors ligne
+    // Erreur réseau : fallback pour images
     if (request.destination === "image") {
       return new Response(OFFLINE_SVG, {
         headers: { "Content-Type": "image/svg+xml" },

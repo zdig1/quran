@@ -868,9 +868,10 @@ class QuranReader {
     if ("wakeLock" in navigator) {
       navigator.wakeLock
         .request("screen")
-        .then((lock) => (this._wakeLock = lock));
+        .then((lock) => (this._wakeLock = lock))
+        .catch((err) => console.warn("Wake Lock error:", err));
     }
-    
+
     const btnScroll = document.getElementById("autoScrollBtn");
     const btnIcon = document.getElementById("autoScrollIcon");
     const btnSlower = document.getElementById("autoScrollSlower");

@@ -118,9 +118,11 @@ class TafsirSearchManager {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       this.data = await response.json();
       this.initializeDataStructures();
-      window.dispatchEvent(new CustomEvent("tafsir:loaded", {
-        detail: { ayatCount: this.data.length },
-      }));
+      window.dispatchEvent(
+        new CustomEvent("tafsir:loaded", {
+          detail: { ayatCount: this.data.length },
+        }),
+      );
       return this.data;
     } catch (err) {
       throw err;
@@ -166,11 +168,14 @@ class TafsirSearchManager {
         });
       }
       const entry = this.surahsMap.get(sura_n);
-      if (aya[this.F.page] < entry.page_start) entry.page_start = aya[this.F.page];
+      if (aya[this.F.page] < entry.page_start)
+        entry.page_start = aya[this.F.page];
       if (aya[this.F.page] > entry.page_end) entry.page_end = aya[this.F.page];
       if (aya[this.F.aya_n] > entry.verses) entry.verses = aya[this.F.aya_n];
     });
-    this.surahsIndex = Array.from(this.surahsMap.values()).sort((a, b) => a.id - b.id);
+    this.surahsIndex = Array.from(this.surahsMap.values()).sort(
+      (a, b) => a.id - b.id,
+    );
   }
 
   getSurahsIndex() {
@@ -187,15 +192,17 @@ class TafsirSearchManager {
     if (!this.data || isNaN(pageNum)) return null;
     const ayat = this.getAyatByPage(pageNum);
     const first = this._getFirstAyaOfPage(ayat);
-    return first ? {
-      sura_n: first[this.F.sura_n],
-      sura: first[this.F.sura],
-      aya_n: first[this.F.aya_n],
-      page: first[this.F.page],
-      isSuraStart: first[this.F.aya_n] === 1,
-      id: first[this.F.id],
-      ayatCountOnPage: ayat.length,
-    } : null;
+    return first
+      ? {
+          sura_n: first[this.F.sura_n],
+          sura: first[this.F.sura],
+          aya_n: first[this.F.aya_n],
+          page: first[this.F.page],
+          isSuraStart: first[this.F.aya_n] === 1,
+          id: first[this.F.id],
+          ayatCountOnPage: ayat.length,
+        }
+      : null;
   }
 
   getAyatByPage(page) {
@@ -216,16 +223,18 @@ class TafsirSearchManager {
     const suraNum = parseInt(sura_n);
     const ayaNum = parseInt(aya_n);
     const found = this.data.find(
-      (aya) => aya[this.F.sura_n] === suraNum && aya[this.F.aya_n] === ayaNum
+      (aya) => aya[this.F.sura_n] === suraNum && aya[this.F.aya_n] === ayaNum,
     );
-    return found ? {
-      sura_n: found[this.F.sura_n],
-      sura: found[this.F.sura],
-      aya_n: found[this.F.aya_n],
-      text: found[this.F.text],
-      page: found[this.F.page],
-      tfsir: found[this.F.tfsir],
-    } : null;
+    return found
+      ? {
+          sura_n: found[this.F.sura_n],
+          sura: found[this.F.sura],
+          aya_n: found[this.F.aya_n],
+          text: found[this.F.text],
+          page: found[this.F.page],
+          tfsir: found[this.F.tfsir],
+        }
+      : null;
   }
 
   getTafsir(sura_n, aya_n) {
@@ -319,20 +328,20 @@ class TafsirSearchManager {
       : "<div></div>";
   }
 
-_renderSearchResults(resultsEl, results, query, onAyaClick) {
-  if (results.length === 0) {
-    resultsEl.innerHTML = `<div class="search-empty">
+  _renderSearchResults(resultsEl, results, query, onAyaClick) {
+    if (results.length === 0) {
+      resultsEl.innerHTML = `<div class="search-empty">
       <p><b>لا توجد نتائج لــ :</b></p>
       <p>"${this.escapeHtml(query)}"</p>
       <p>جرب 🔍 كلمة بحث أخرى</p>
     </div>`;
-    this.lastResults = resultsEl.innerHTML;
-    return;
-  }
+      this.lastResults = resultsEl.innerHTML;
+      return;
+    }
 
-  let html = "";
-  results.forEach((item, index) => {
-    html += `<div class="item-container item-search" data-sura="${item.sura_n}" data-aya="${item.aya_n}">
+    let html = "";
+    results.forEach((item, index) => {
+      html += `<div class="item-container item-search" data-sura="${item.sura_n}" data-aya="${item.aya_n}">
       <div class="item-line-1">
         <div class="item-right">
           <span class="item-badge">${index + 1}</span>
@@ -344,23 +353,23 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
       </div>
       <div class="item-line-2 item-search-text" data-clickable="true">${this.escapeHtml(item.text)}</div>
     </div>`;
-  });
-
-  resultsEl.innerHTML = html;
-  this.lastResults = html;
-
-  // Attacher l'écouteur uniquement sur les éléments cliquables (ligne 2)
-  resultsEl.querySelectorAll('[data-clickable="true"]').forEach((el) => {
-    el.addEventListener("click", (e) => {
-      e.stopPropagation(); // Empêche toute propagation inutile
-      const container = el.closest('.item-container');
-      if (!container) return;
-      const sura = container.getAttribute("data-sura");
-      const aya = container.getAttribute("data-aya");
-      if (onAyaClick) onAyaClick(sura, aya);
     });
-  });
-}
+
+    resultsEl.innerHTML = html;
+    this.lastResults = html;
+
+    // Attacher l'écouteur uniquement sur les éléments cliquables (ligne 2)
+    resultsEl.querySelectorAll('[data-clickable="true"]').forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation(); // Empêche toute propagation inutile
+        const container = el.closest(".item-container");
+        if (!container) return;
+        const sura = container.getAttribute("data-sura");
+        const aya = container.getAttribute("data-aya");
+        if (onAyaClick) onAyaClick(sura, aya);
+      });
+    });
+  }
 
   setupSearchUI(inputEl, resultsEl, onAyaClick) {
     if (!inputEl || !resultsEl) return null;
@@ -415,7 +424,11 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
       if (e.key === "Enter") performSearch();
     });
 
-    setTimeout(() => { try { inputEl.focus(); } catch (e) {} }, 100);
+    setTimeout(() => {
+      try {
+        inputEl.focus();
+      } catch (e) {}
+    }, 100);
     updateStats();
     if (inputEl.value.trim().length > 0) performSearch();
 
@@ -428,7 +441,11 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
         updateStats();
         this.lastResults = "";
       },
-      focus: () => { try { inputEl.focus(); } catch (e) {} },
+      focus: () => {
+        try {
+          inputEl.focus();
+        } catch (e) {}
+      },
     };
 
     return this.searchUI;
@@ -472,7 +489,13 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
     const addedSuras = new Set();
     sorted.forEach((aya) => {
       if (aya[this.F.aya_n] === 1 && !addedSuras.has(aya[this.F.sura_n])) {
-        container.appendChild(this._createSuraTitleElement(aya[this.F.sura_n], aya[this.F.sura], aya[this.F.page]));
+        container.appendChild(
+          this._createSuraTitleElement(
+            aya[this.F.sura_n],
+            aya[this.F.sura],
+            aya[this.F.page],
+          ),
+        );
         addedSuras.add(aya[this.F.sura_n]);
       }
       const tafsir = this.getTafsir(aya[this.F.sura_n], aya[this.F.aya_n]);
@@ -490,13 +513,25 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
       const sura_n = aya[this.F.sura_n];
       const aya_n = aya[this.F.aya_n];
 
-      if (aya_n === 1 && !container.querySelector(`.sura-title-container[data-sura="${sura_n}"]`)) {
-        fragment.appendChild(this._createSuraTitleElement(sura_n, aya[this.F.sura], aya[this.F.page]));
+      if (
+        aya_n === 1 &&
+        !container.querySelector(`.sura-title-container[data-sura="${sura_n}"]`)
+      ) {
+        fragment.appendChild(
+          this._createSuraTitleElement(
+            sura_n,
+            aya[this.F.sura],
+            aya[this.F.page],
+          ),
+        );
       }
 
       const tafsir = this.getTafsir(sura_n, aya_n);
       if (!tafsir?.tfsir) return;
-      if (container.querySelector(`[data-sura="${sura_n}"][data-aya="${aya_n}"]`)) return;
+      if (
+        container.querySelector(`[data-sura="${sura_n}"][data-aya="${aya_n}"]`)
+      )
+        return;
 
       fragment.appendChild(this._createAyaElement(aya, tafsir.tfsir));
     });
@@ -520,9 +555,23 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
   // UI TAFSIR — INITIALISATION
   // ============================================
 
-  async initTafsirUI(suraSelect, ayaSelect, pageSelect, contentContainer, onPageChange, onAyaClick) {
+  async initTafsirUI(
+    suraSelect,
+    ayaSelect,
+    pageSelect,
+    contentContainer,
+    onPageChange,
+    onAyaClick,
+  ) {
     this.optimizeForMobile();
-    this.tafsirUI = { suraSelect, ayaSelect, pageSelect, contentContainer, onPageChange, onAyaClick };
+    this.tafsirUI = {
+      suraSelect,
+      ayaSelect,
+      pageSelect,
+      contentContainer,
+      onPageChange,
+      onAyaClick,
+    };
     await this.ensureLoaded();
     this.initializeTafsirSelectors();
     this.initTafsirFontControls();
@@ -549,9 +598,12 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
     const { suraSelect, ayaSelect, pageSelect } = this.tafsirUI;
     if (!suraSelect || !ayaSelect || !pageSelect) return;
 
-    if (this._suraChangeHandler) suraSelect.removeEventListener("change", this._suraChangeHandler);
-    if (this._pageChangeHandler) pageSelect.removeEventListener("change", this._pageChangeHandler);
-    if (this._ayaChangeHandler) ayaSelect.removeEventListener("change", this._ayaChangeHandler);
+    if (this._suraChangeHandler)
+      suraSelect.removeEventListener("change", this._suraChangeHandler);
+    if (this._pageChangeHandler)
+      pageSelect.removeEventListener("change", this._pageChangeHandler);
+    if (this._ayaChangeHandler)
+      ayaSelect.removeEventListener("change", this._ayaChangeHandler);
 
     this._suraChangeHandler = () => this.handleSuraChange();
     this._pageChangeHandler = () => this.handlePageChange();
@@ -589,7 +641,11 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
         this.updateAyaDropdown(ayat);
         this.tafsirUI.ayaSelect.value = first[this.F.aya_n];
         this.tafsirUI.pageSelect.value = first[this.F.page];
-        this.updateTafsirNavigation(first[this.F.sura_n], first[this.F.aya_n], first[this.F.page]);
+        this.updateTafsirNavigation(
+          first[this.F.sura_n],
+          first[this.F.aya_n],
+          first[this.F.page],
+        );
         await this.loadTafsirForPage(first[this.F.page]);
         setTimeout(() => this.scrollToFirstAyaOfSura(parseInt(sura_n)), 300);
       }
@@ -609,7 +665,11 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
         this.tafsirUI.suraSelect.value = first[this.F.sura_n];
         this.updateAyaDropdown(this.getAyatBySura(first[this.F.sura_n]));
         this.tafsirUI.ayaSelect.value = first[this.F.aya_n];
-        this.updateTafsirNavigation(first[this.F.sura_n], first[this.F.aya_n], page);
+        this.updateTafsirNavigation(
+          first[this.F.sura_n],
+          first[this.F.aya_n],
+          page,
+        );
         setTimeout(() => this.scrollToFirstAyaOfPage(parseInt(page)), 300);
       }
     }
@@ -623,13 +683,20 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
     const aya_n = this.tafsirUI.ayaSelect.value;
     if (sura_n && aya_n) {
       const found = this.getAyatBySura(parseInt(sura_n)).find(
-        (aya) => aya[this.F.aya_n] === parseInt(aya_n)
+        (aya) => aya[this.F.aya_n] === parseInt(aya_n),
       );
       if (found) {
         this.tafsirUI.pageSelect.value = found[this.F.page];
-        this.updateTafsirNavigation(found[this.F.sura_n], found[this.F.aya_n], found[this.F.page]);
+        this.updateTafsirNavigation(
+          found[this.F.sura_n],
+          found[this.F.aya_n],
+          found[this.F.page],
+        );
         await this.loadTafsirForPage(found[this.F.page]);
-        setTimeout(() => this.scrollToAya(found[this.F.sura_n], found[this.F.aya_n]), 300);
+        setTimeout(
+          () => this.scrollToAya(found[this.F.sura_n], found[this.F.aya_n]),
+          300,
+        );
       }
     }
     this.updatingDropdowns = false;
@@ -667,7 +734,9 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
       if (aya_n && ayaSelect.value != aya_n) ayaSelect.value = aya_n;
       if (page && pageSelect.value != page) pageSelect.value = page;
     } finally {
-      setTimeout(() => { this.updatingDropdowns = false; }, 50);
+      setTimeout(() => {
+        this.updatingDropdowns = false;
+      }, 50);
     }
   }
 
@@ -695,7 +764,10 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
     }
 
     const from = Math.max(0, pageIndex - this.config.preloadRadius);
-    const to = Math.min(cachedPages.length - 1, pageIndex + this.config.preloadRadius);
+    const to = Math.min(
+      cachedPages.length - 1,
+      pageIndex + this.config.preloadRadius,
+    );
     let allAyat = [];
     cachedPages.slice(from, to + 1).forEach((p) => {
       const ayat = this.pageCache.get(p);
@@ -709,8 +781,17 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
       const pageAyat = this.getAyatByPage(page);
       if (pageAyat?.length) {
         const first = this._getFirstAyaOfPage(pageAyat);
-        this.updateTafsirNavigation(first[this.F.sura_n], first[this.F.aya_n], page);
-        this.syncDropdowns(first[this.F.sura_n], first[this.F.aya_n], page, "init");
+        this.updateTafsirNavigation(
+          first[this.F.sura_n],
+          first[this.F.aya_n],
+          page,
+        );
+        this.syncDropdowns(
+          first[this.F.sura_n],
+          first[this.F.aya_n],
+          page,
+          "init",
+        );
       }
     } else {
       contentContainer.innerHTML = "";
@@ -724,9 +805,18 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
   setupInfiniteScroll(container) {
     if (!container) return;
     if (this.scrollHandlers) {
-      this.scrollHandlers.container.removeEventListener("scroll", this.scrollHandlers.handler);
-      if (this.scrollTimeout) { clearTimeout(this.scrollTimeout); this.scrollTimeout = null; }
-      if (this.scrollRAF) { cancelAnimationFrame(this.scrollRAF); this.scrollRAF = null; }
+      this.scrollHandlers.container.removeEventListener(
+        "scroll",
+        this.scrollHandlers.handler,
+      );
+      if (this.scrollTimeout) {
+        clearTimeout(this.scrollTimeout);
+        this.scrollTimeout = null;
+      }
+      if (this.scrollRAF) {
+        cancelAnimationFrame(this.scrollRAF);
+        this.scrollRAF = null;
+      }
     }
 
     let lastScrollTime = 0;
@@ -777,8 +867,14 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
       const el = ayaEls[i];
       const elRect = el.getBoundingClientRect();
       const mid = elRect.top + elRect.height / 2;
-      if (mid >= top && mid <= threshold) { visible = el; break; }
-      if (elRect.bottom <= top) { visible = visible || el; break; }
+      if (mid >= top && mid <= threshold) {
+        visible = el;
+        break;
+      }
+      if (elRect.bottom <= top) {
+        visible = visible || el;
+        break;
+      }
     }
 
     if (!visible && ayaEls.length) visible = ayaEls[0];
@@ -803,13 +899,18 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
     if (scrollHeight <= 0 || clientHeight <= 0) return;
     if (scrollTop + clientHeight >= 0.8 * scrollHeight && this.nextTafsirPage) {
       await this.loadNextPage(container);
-    } else if (scrollTop <= 0.1 * scrollHeight && this.previousTafsirPage && this.previousTafsirPage > 1) {
+    } else if (
+      scrollTop <= 0.1 * scrollHeight &&
+      this.previousTafsirPage &&
+      this.previousTafsirPage > 1
+    ) {
       await this.loadPreviousPage(container);
     }
   }
 
   async loadNextPage(container) {
-    if (!this.nextTafsirPage || this.nextTafsirPage > 604 || this.isLoadingMore) return;
+    if (!this.nextTafsirPage || this.nextTafsirPage > 604 || this.isLoadingMore)
+      return;
     this.isLoadingMore = true;
     const page = this.nextTafsirPage;
     try {
@@ -821,11 +922,18 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
         this.cleanupDistantPages();
       }
     } catch (err) {}
-    setTimeout(() => { this.isLoadingMore = false; }, 100);
+    setTimeout(() => {
+      this.isLoadingMore = false;
+    }, 100);
   }
 
   async loadPreviousPage(container) {
-    if (!this.previousTafsirPage || this.previousTafsirPage < 1 || this.isLoadingMore) return;
+    if (
+      !this.previousTafsirPage ||
+      this.previousTafsirPage < 1 ||
+      this.isLoadingMore
+    )
+      return;
     this.isLoadingMore = true;
     const page = this.previousTafsirPage;
     try {
@@ -839,7 +947,9 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
         this.cleanupDistantPages();
       }
     } catch (err) {}
-    setTimeout(() => { this.isLoadingMore = false; }, 100);
+    setTimeout(() => {
+      this.isLoadingMore = false;
+    }, 100);
   }
 
   async smartPreloadAround(page) {
@@ -899,7 +1009,10 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
       const el = container.querySelector(`[data-page="${page}"]`);
       if (!el) return;
       this.isScrolling = true;
-      const offset = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+      const offset =
+        el.getBoundingClientRect().top -
+        container.getBoundingClientRect().top +
+        container.scrollTop;
       container.scrollTop = offset;
       if (el.classList.contains("tafsir-aya-container")) {
         const sura_n = parseInt(el.dataset.sura);
@@ -914,7 +1027,9 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
           this.syncDropdowns(sura_n, first[this.F.aya_n], page, "scroll");
         }
       }
-      setTimeout(() => { this.isScrolling = false; }, 100);
+      setTimeout(() => {
+        this.isScrolling = false;
+      }, 100);
     }, 100);
   }
 
@@ -923,7 +1038,11 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
     if (!container) return;
     const el = container.querySelector(`[data-sura="${sura_n}"]`);
     if (!el) return;
-    const top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop - 20;
+    const top =
+      el.getBoundingClientRect().top -
+      container.getBoundingClientRect().top +
+      container.scrollTop -
+      20;
     if ("scrollBehavior" in document.documentElement.style) {
       container.scrollTo({ top, behavior: "smooth" });
     } else {
@@ -934,9 +1053,15 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
   scrollToAya(sura_n, aya_n) {
     const container = this.tafsirUI?.contentContainer;
     if (!container) return;
-    const el = container.querySelector(`[data-sura="${sura_n}"][data-aya="${aya_n}"]`);
+    const el = container.querySelector(
+      `[data-sura="${sura_n}"][data-aya="${aya_n}"]`,
+    );
     if (!el) return;
-    const top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop - 20;
+    const top =
+      el.getBoundingClientRect().top -
+      container.getBoundingClientRect().top +
+      container.scrollTop -
+      20;
     if ("scrollBehavior" in document.documentElement.style) {
       container.scrollTo({ top, behavior: "smooth" });
     } else {
@@ -949,7 +1074,10 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
   // ============================================
 
   optimizeForMobile() {
-    const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0 || window.innerWidth <= 768;
+    const isMobile =
+      "ontouchstart" in window ||
+      navigator.maxTouchPoints > 0 ||
+      window.innerWidth <= 768;
     if (!isMobile) return;
     this.config.searchCacheSize = 50;
     this.config.pageCacheSize = 10;
@@ -973,8 +1101,13 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
 
   _applyFontSize(container, size) {
     container.style.fontSize = size + "px";
-    container.querySelectorAll(".item-search-text, .tafsir-explanation, .sura-name-kufi")
-      .forEach((el) => { el.style.fontSize = size + "px"; });
+    container
+      .querySelectorAll(
+        ".item-search-text, .tafsir-explanation, .sura-name-kufi",
+      )
+      .forEach((el) => {
+        el.style.fontSize = size + "px";
+      });
   }
 
   _updateThemeToggleBtn(btn) {
@@ -986,11 +1119,14 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
   _setupFontSizeObserver(container, getFontSize) {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.type !== "childList" || !mutation.addedNodes.length) return;
+        if (mutation.type !== "childList" || !mutation.addedNodes.length)
+          return;
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType !== 1) return;
-          const selector = ".item-search-text, .tafsir-explanation, .sura-name-kufi";
-          if (node.matches?.(selector)) node.style.fontSize = getFontSize() + "px";
+          const selector =
+            ".item-search-text, .tafsir-explanation, .sura-name-kufi";
+          if (node.matches?.(selector))
+            node.style.fontSize = getFontSize() + "px";
           node.querySelectorAll?.(selector).forEach((el) => {
             el.style.fontSize = getFontSize() + "px";
           });
@@ -1008,7 +1144,10 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
         this.fontSizeObserver = null;
       }
       if (this.themeChangeHandler) {
-        window.removeEventListener("quran:themeChanged", this.themeChangeHandler);
+        window.removeEventListener(
+          "quran:themeChanged",
+          this.themeChangeHandler,
+        );
         this.themeChangeHandler = null;
       }
 
@@ -1018,56 +1157,60 @@ _renderSearchResults(resultsEl, results, query, onAyaClick) {
       const btnTheme = document.getElementById("tafsirThemeToggle");
       const container = this.tafsirUI?.contentContainer;
 
-      if (!btnDecrease || !btnIncrease || !btnReset || !btnTheme || !container) return;
+      if (!btnDecrease || !btnIncrease || !btnReset || !btnTheme || !container)
+        return;
 
-      let fontSize = Math.min(32, Math.max(12, parseInt(localStorage.getItem("tafsir_font_size")) || 16));
+      let fontSize = Math.min(
+        32,
+        Math.max(12, parseInt(localStorage.getItem("tafsir_font_size")) || 16),
+      );
       this._applyFontSize(container, fontSize);
       this._updateThemeToggleBtn(btnTheme);
 
-      // Clone pour éviter les doublons d'écouteurs
-      const newDecrease = btnDecrease.cloneNode(true);
-      const newIncrease = btnIncrease.cloneNode(true);
-      const newReset = btnReset.cloneNode(true);
-      const newTheme = btnTheme.cloneNode(true);
-      btnDecrease.parentNode.replaceChild(newDecrease, btnDecrease);
-      btnIncrease.parentNode.replaceChild(newIncrease, btnIncrease);
-      btnReset.parentNode.replaceChild(newReset, btnReset);
-      btnTheme.parentNode.replaceChild(newTheme, btnTheme);
-
-      newIncrease.addEventListener("click", () => {
+      // Supprimer le clonage des boutons
+      btnIncrease.addEventListener("click", () => {
         fontSize = Math.min(32, fontSize + 2);
         this._applyFontSize(container, fontSize);
         localStorage.setItem("tafsir_font_size", fontSize);
         window.quranApp?.showToast(`📏 حجم النص: ${fontSize}px`);
       });
 
-      newDecrease.addEventListener("click", () => {
+      btnDecrease.addEventListener("click", () => {
         fontSize = Math.max(12, fontSize - 2);
         this._applyFontSize(container, fontSize);
         localStorage.setItem("tafsir_font_size", fontSize);
         window.quranApp?.showToast(`📏 حجم النص: ${fontSize}px`);
       });
 
-      newReset.addEventListener("click", () => {
+      btnReset.addEventListener("click", () => {
         fontSize = 16;
         this._applyFontSize(container, fontSize);
         localStorage.setItem("tafsir_font_size", fontSize);
         window.quranApp?.showToast("📏 تم إعادة الحجم الافتراضي");
       });
 
-      newTheme.addEventListener("click", () => {
-        if (window.quranApp && typeof window.quranApp.toggleTheme === "function") {
+      btnTheme.addEventListener("click", () => {
+        if (
+          window.quranApp &&
+          typeof window.quranApp.toggleTheme === "function"
+        ) {
           window.quranApp.toggleTheme();
         } else {
           document.body.classList.toggle("night-mode");
-          localStorage.setItem("quran_theme", document.body.classList.contains("night-mode") ? "night" : "light");
+          localStorage.setItem(
+            "quran_theme",
+            document.body.classList.contains("night-mode") ? "night" : "light",
+          );
         }
-        this._updateThemeToggleBtn(newTheme);
+        this._updateThemeToggleBtn(btnTheme);
       });
 
-      this.themeChangeHandler = () => this._updateThemeToggleBtn(newTheme);
+      this.themeChangeHandler = () => this._updateThemeToggleBtn(btnTheme);
       window.addEventListener("quran:themeChanged", this.themeChangeHandler);
-      this.fontSizeObserver = this._setupFontSizeObserver(container, () => fontSize);
+      this.fontSizeObserver = this._setupFontSizeObserver(
+        container,
+        () => fontSize,
+      );
     });
   }
 }
@@ -1082,8 +1225,11 @@ if (typeof window !== "undefined") {
 }
 
 setTimeout(() => {
-  if (!window.tafsirManager.isLoaded && !window.tafsirManager.isLoading
-      && document.visibilityState === "visible") {
+  if (
+    !window.tafsirManager.isLoaded &&
+    !window.tafsirManager.isLoading &&
+    document.visibilityState === "visible"
+  ) {
     window.tafsirManager.preload().catch(() => {});
   }
 }, 10000);
