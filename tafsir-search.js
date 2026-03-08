@@ -992,9 +992,13 @@ class TafsirSearchManager {
     const radius = this.config.preloadRadius + 1;
     const minPage = Math.max(1, this.currentTafsirPage - radius);
     const maxPage = Math.min(604, this.currentTafsirPage + radius);
-    container.querySelectorAll("[data-page]").forEach((el) => {
+
+    // Ne supprimer que les conteneurs de versets (les titres de sourates sont conservés)
+    container.querySelectorAll(".tafsir-aya-container").forEach((el) => {
       const p = parseInt(el.dataset.page);
-      if (!isNaN(p) && (p < minPage || p > maxPage)) el.remove();
+      if (!isNaN(p) && (p < minPage || p > maxPage)) {
+        el.remove();
+      }
     });
   }
 

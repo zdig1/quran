@@ -31,7 +31,10 @@ class QuranApp {
   // ============================================
 
   async init() {
-    if (this.isInitialized || this.isInitializing) return;
+    if (this.isInitializing) return;
+    if (this.isInitialized) {
+      this.destroy(); // Nettoyer avant de réinitialiser
+    }
     this.isInitializing = true;
     try {
       this.restoreFromLocalStorage();
@@ -79,6 +82,7 @@ class QuranApp {
     try {
       const rawBookmarks = localStorage.getItem("quran_bookmarks");
       this.bookmarks = rawBookmarks ? JSON.parse(rawBookmarks) : [];
+      if (!Array.isArray(this.bookmarks)) this.bookmarks = [];
       this.bookmarks = this.bookmarks.map((b, i) =>
         typeof b === "number"
           ? {
@@ -312,130 +316,133 @@ class QuranApp {
   // DIALOGUE SAISIE DE PAGE
   // ============================================
 
-showPageInputDialog() {
-  if (window.quranReader) window.quranReader._dialogOpen = true;
-  window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
+  showPageInputDialog() {
+    if (this._dialogOpen) return;
+    this._dialogOpen = true;
+    if (window.quranReader) window.quranReader._dialogOpen = true;
+    window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
 
-  // Backdrop standard
-  const backdrop = document.createElement("div");
-  backdrop.className = "overlay show";
-  backdrop.style.zIndex = "100000";
+    // Backdrop standard
+    const backdrop = document.createElement("div");
+    backdrop.className = "overlay show";
+    backdrop.style.zIndex = "100000";
 
-  // Dialog avec la classe overlay-content (largeur standard)
-  const dialog = document.createElement("div");
-  dialog.className = "overlay-content";
+    // Dialog avec la classe overlay-content (largeur standard)
+    const dialog = document.createElement("div");
+    dialog.className = "overlay-content";
 
-  // Header
-  const header = document.createElement("div");
-  header.className = "overlay-header";
+    // Header
+    const header = document.createElement("div");
+    header.className = "overlay-header";
 
-  const title = document.createElement("h2");
-  title.textContent = "📄 الانتقال إلى صفحة";
+    const title = document.createElement("h2");
+    title.textContent = "📄 الانتقال إلى صفحة";
 
-  const closeBtn = document.createElement("button");
-  closeBtn.className = "btn close-btn";
-  closeBtn.textContent = "✕";
-  closeBtn.setAttribute("aria-label", "إغلاق");
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "btn close-btn";
+    closeBtn.textContent = "✕";
+    closeBtn.setAttribute("aria-label", "إغلاق");
 
-  header.appendChild(title);
-  header.appendChild(closeBtn);
-  dialog.appendChild(header);
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    dialog.appendChild(header);
 
-  // Corps
-  const body = document.createElement("div");
-  body.style.padding = "16px";
+    // Corps
+    const body = document.createElement("div");
+    body.style.padding = "16px";
 
-  const label = document.createElement("p");
-  label.textContent = "أدخل رقم الصفحة (1-604)";
-  label.style.textAlign = "right";
-  label.style.margin = "0 0 12px 0";
-  body.appendChild(label);
+    const label = document.createElement("p");
+    label.textContent = "أدخل رقم الصفحة (1-604)";
+    label.style.textAlign = "right";
+    label.style.margin = "0 0 12px 0";
+    body.appendChild(label);
 
-  // Conteneur pour input + bouton (flex row)
-  const row = document.createElement("div");
-  row.style.display = "flex";
-  row.style.alignItems = "center";
-  row.style.gap = "8px";
+    // Conteneur pour input + bouton (flex row)
+    const row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.alignItems = "center";
+    row.style.gap = "8px";
 
-  const input = document.createElement("input");
-  input.type = "tel";
-  input.inputMode = "numeric";
-  input.pattern = "[0-9]*";
-  input.placeholder = "1-604";
-  input.value = this.lastPage;
-  input.className = "search-input";
-  input.style.flex = "1";          // prend l'espace disponible
-  input.style.direction = "ltr";
-  input.style.textAlign = "right";
-  input.style.margin = "0";
+    const input = document.createElement("input");
+    input.type = "tel";
+    input.inputMode = "numeric";
+    input.pattern = "[0-9]*";
+    input.placeholder = "1-604";
+    input.value = this.lastPage;
+    input.className = "search-input";
+    input.style.flex = "1"; // prend l'espace disponible
+    input.style.direction = "ltr";
+    input.style.textAlign = "right";
+    input.style.margin = "0";
 
-  const goBtn = document.createElement("button");
-  goBtn.className = "confirm-btn ok";
-  goBtn.textContent = "اذهب";
-  goBtn.style.flexShrink = "0";    // ne se réduit pas
+    const goBtn = document.createElement("button");
+    goBtn.className = "confirm-btn ok";
+    goBtn.textContent = "اذهب";
+    goBtn.style.flexShrink = "0"; // ne se réduit pas
 
-  row.appendChild(input);
-  row.appendChild(goBtn);
-  body.appendChild(row);
+    row.appendChild(input);
+    row.appendChild(goBtn);
+    body.appendChild(row);
 
-  dialog.appendChild(body);
-  backdrop.appendChild(dialog);
-  document.body.appendChild(backdrop);
+    dialog.appendChild(body);
+    backdrop.appendChild(dialog);
+    document.body.appendChild(backdrop);
 
-  // Focus et sélection
-  setTimeout(() => {
-    input.focus();
-    setTimeout(() => input.setSelectionRange(0, input.value.length), 100);
-  }, 50);
-
-  let closed = false;
-
-  const close = () => {
-    if (closed) return;
-    closed = true;
-    input.blur();
-    backdrop.remove();
-    if (window.quranReader) window.quranReader._dialogOpen = false;
-    window.dispatchEvent(new CustomEvent("quran:overlayClosed"));
-  };
-
-  const confirm = () => {
-    if (closed) return;
-    const pageNum = parseInt(input.value, 10);
-    if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= 604) {
-      this.goToPage(pageNum);
-      close();
-    } else {
-      this.showToast("❌ الرجاء إدخال رقم صفحة صحيح (1-604)");
+    // Focus et sélection
+    setTimeout(() => {
       input.focus();
-    }
-  };
+      setTimeout(() => input.setSelectionRange(0, input.value.length), 100);
+    }, 50);
 
-  const isTouch = "ontouchstart" in window;
-  goBtn.addEventListener("touchend", (e) => {
-    e.preventDefault();
-    confirm();
-  });
-  goBtn.addEventListener("click", () => {
-    if (!isTouch) confirm();
-  });
-  closeBtn.addEventListener("touchend", (e) => {
-    e.preventDefault();
-    close();
-  });
-  closeBtn.addEventListener("click", () => {
-    if (!isTouch) close();
-  });
-  backdrop.addEventListener("click", (e) => {
-    if (e.target === backdrop) close();
-  });
-  input.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
+    let closed = false;
+
+    const close = () => {
+      if (closed) return;
+      closed = true;
+      this._dialogOpen = false;
+      input.blur();
+      backdrop.remove();
+      if (window.quranReader) window.quranReader._dialogOpen = false;
+      window.dispatchEvent(new CustomEvent("quran:overlayClosed"));
+    };
+
+    const confirm = () => {
+      if (closed) return;
+      const pageNum = parseInt(input.value, 10);
+      if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= 604) {
+        this.goToPage(pageNum);
+        close();
+      } else {
+        this.showToast("❌ الرجاء إدخال رقم صفحة صحيح (1-604)");
+        input.focus();
+      }
+    };
+
+    const isTouch = "ontouchstart" in window;
+    goBtn.addEventListener("touchend", (e) => {
       e.preventDefault();
       confirm();
-    }
-  });
-}
+    });
+    goBtn.addEventListener("click", () => {
+      if (!isTouch) confirm();
+    });
+    closeBtn.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      close();
+    });
+    closeBtn.addEventListener("click", () => {
+      if (!isTouch) close();
+    });
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop) close();
+    });
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        confirm();
+      }
+    });
+  }
 
   // ============================================
   // TOAST
@@ -595,6 +602,71 @@ showPageInputDialog() {
       window.quranApp?.showToast("⚠️ تم فقدان الاتصال بالإنترنت");
     window.addEventListener("online", this._onlineHandler);
     window.addEventListener("offline", this._offlineHandler);
+  }
+
+  // ============================================
+  // DESTROY (NETTOYAGE COMPLET)
+  // ============================================
+
+  destroy() {
+    // Annuler le timeout du toast
+    if (this._toastTimeout) {
+      clearTimeout(this._toastTimeout);
+      this._toastTimeout = null;
+    }
+
+    // Retirer tous les écouteurs d'événements
+    const events = [
+      {
+        target: window,
+        type: "quran:pageChanged",
+        handler: this._pageChangedHandler,
+      },
+      {
+        target: window,
+        type: "quran:bookmarkChanged",
+        handler: this._bookmarkChangedHandler,
+      },
+      {
+        target: window,
+        type: "quran:readingModeChanged",
+        handler: this._readingModeChangedHandler,
+      },
+      { target: document, type: "keydown", handler: this._keyDownHandler },
+      {
+        target: window,
+        type: "beforeunload",
+        handler: this._beforeUnloadHandler,
+      },
+      { target: window, type: "pagehide", handler: this._pageHideHandler },
+      {
+        target: document,
+        type: "visibilitychange",
+        handler: this._visibilityChangeHandler,
+      },
+      { target: window, type: "online", handler: this._onlineHandler },
+      { target: window, type: "offline", handler: this._offlineHandler },
+    ];
+
+    events.forEach(({ target, type, handler }) => {
+      if (handler) {
+        target.removeEventListener(type, handler);
+      }
+    });
+
+    // Remettre les propriétés à null
+    this._pageChangedHandler = null;
+    this._bookmarkChangedHandler = null;
+    this._readingModeChangedHandler = null;
+    this._keyDownHandler = null;
+    this._beforeUnloadHandler = null;
+    this._pageHideHandler = null;
+    this._visibilityChangeHandler = null;
+    this._onlineHandler = null;
+    this._offlineHandler = null;
+
+    // L'application n'est plus initialisée
+    this.isInitialized = false;
   }
 }
 
