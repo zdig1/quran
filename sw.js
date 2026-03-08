@@ -1,4 +1,4 @@
-const CACHE_NAME = "quran-v1.0.6";
+const CACHE_NAME = "quran-1.0.7";
 
 const CORE_ASSETS = [
   "./index.html",
@@ -9,7 +9,6 @@ const CORE_ASSETS = [
   "./tafsir-search.js",
   "./overlays-manager.js",
   "./version.js",
-  "./manifest.json",
   "./data/quran.json",
   "./data/tafsir.json",
   "./media/icon-192.png",

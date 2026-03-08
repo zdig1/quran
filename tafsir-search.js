@@ -319,44 +319,48 @@ class TafsirSearchManager {
       : "<div></div>";
   }
 
-  _renderSearchResults(resultsEl, results, query, onAyaClick) {
-    if (results.length === 0) {
-      resultsEl.innerHTML = `<div class="search-empty">
-        <p><b>لا توجد نتائج لــ :</b></p>
-        <p>"${this.escapeHtml(query)}"</p>
-        <p>جرب 🔍 كلمة بحث أخرى</p>
-      </div>`;
-      this.lastResults = resultsEl.innerHTML;
-      return;
-    }
-
-    let html = "";
-    results.forEach((item, index) => {
-      html += `<div class="item-container item-search" data-sura="${item.sura_n}" data-aya="${item.aya_n}">
-        <div class="item-line-1">
-          <div class="item-right">
-            <span class="item-badge">${index + 1}</span>
-            <span class="item-title">${item.sura_n}. ${this.escapeHtml(item.sura)}</span>
-          </div>
-          <div class="item-left">
-            <span class="item-tag">ص ${item.page}</span>
-          </div>
-        </div>
-        <div class="item-line-2 item-search-text">${this.escapeHtml(item.text)}</div>
-      </div>`;
-    });
-
-    resultsEl.innerHTML = html;
-    this.lastResults = html;
-
-    resultsEl.querySelectorAll(".item-container").forEach((el) => {
-      el.addEventListener("click", () => {
-        const sura = el.getAttribute("data-sura");
-        const aya = el.getAttribute("data-aya");
-        if (onAyaClick) onAyaClick(sura, aya);
-      });
-    });
+_renderSearchResults(resultsEl, results, query, onAyaClick) {
+  if (results.length === 0) {
+    resultsEl.innerHTML = `<div class="search-empty">
+      <p><b>لا توجد نتائج لــ :</b></p>
+      <p>"${this.escapeHtml(query)}"</p>
+      <p>جرب 🔍 كلمة بحث أخرى</p>
+    </div>`;
+    this.lastResults = resultsEl.innerHTML;
+    return;
   }
+
+  let html = "";
+  results.forEach((item, index) => {
+    html += `<div class="item-container item-search" data-sura="${item.sura_n}" data-aya="${item.aya_n}">
+      <div class="item-line-1">
+        <div class="item-right">
+          <span class="item-badge">${index + 1}</span>
+          <span class="item-title">${item.sura_n}. ${this.escapeHtml(item.sura)}</span>
+        </div>
+        <div class="item-left">
+          <span class="item-tag">ص ${item.page}</span>
+        </div>
+      </div>
+      <div class="item-line-2 item-search-text" data-clickable="true">${this.escapeHtml(item.text)}</div>
+    </div>`;
+  });
+
+  resultsEl.innerHTML = html;
+  this.lastResults = html;
+
+  // Attacher l'écouteur uniquement sur les éléments cliquables (ligne 2)
+  resultsEl.querySelectorAll('[data-clickable="true"]').forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation(); // Empêche toute propagation inutile
+      const container = el.closest('.item-container');
+      if (!container) return;
+      const sura = container.getAttribute("data-sura");
+      const aya = container.getAttribute("data-aya");
+      if (onAyaClick) onAyaClick(sura, aya);
+    });
+  });
+}
 
   setupSearchUI(inputEl, resultsEl, onAyaClick) {
     if (!inputEl || !resultsEl) return null;

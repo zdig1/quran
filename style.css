@@ -1569,3 +1569,17 @@ body {
 .item-container {
   padding: 0
 }
+
+.item-search .item-line-2[data-clickable="true"] {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.item-search .item-line-2[data-clickable="true"]:hover {
+  background-color: var(--primary-light);
+}
+
+/* Pour le mode nuit */
+.night-mode .item-search .item-line-2[data-clickable="true"]:hover {
+  background-color: rgba(76, 175, 80, 0.2);
+}
