@@ -823,7 +823,7 @@ class OverlayManager {
     if (!overlay?.content) return;
     overlay.content.innerHTML = `<div class="about-content">
       <p class="about-title">
-        <strong>مصحف التجويد – حفص</strong>
+        <strong>مصحف التجويد - حفص</strong>
         <span class="about-version">v1.0.7</span>
       </p>
       <p class="about-desc">

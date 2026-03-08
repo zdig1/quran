@@ -20,9 +20,9 @@
   "background_color": "#ffffff",
   "theme_color": "#1a5e25",
   "categories": [
-    "education",
     "books",
-    "religion"
+    "religion",
+    "education"    
   ],
   "icons": [
     {

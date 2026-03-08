@@ -1041,7 +1041,7 @@ body {
 }
 
 .item-search {
-  padding: var(--space-lg);
+    padding: 0 var(--overlay-padding-x);
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background-color .2s
@@ -1051,7 +1051,7 @@ body {
 .item-search .item-line-2.item-search-text {
   font-family: 'MyNotoKufi', sans-serif;
   font-weight: bold;
-  font-size: 14px;
+    font-size: 14px;
   color: var(--search-text-color);
   text-align: justify !important;
   text-align-last: right !important;
@@ -1061,6 +1061,7 @@ body {
 }
 
 #searchResults {
+  padding: 0;
   text-align: center !important
 }
 
@@ -1164,7 +1165,7 @@ body {
   text-align: justify !important;
   text-align-last: right !important;
   line-height: 1.5 !important;
-  font-size: 16px
+  font-size: 1.0625em
 }
 
 .tafsir-content-container {
