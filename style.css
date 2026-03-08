@@ -517,7 +517,8 @@ body {
   background: var(--overlay-bg);
   z-index: 9999;
   display: none;
-  align-items: center;
+  align-items: flex-start;
+padding-top: 10vh;
   justify-content: center;
   padding: 5px
 }
