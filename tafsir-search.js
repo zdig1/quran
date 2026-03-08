@@ -857,33 +857,22 @@ class TafsirSearchManager {
     if (!container || this.isScrolling) return;
     const ayaEls = container.querySelectorAll(".tafsir-aya-container");
     if (!ayaEls.length) return;
-
     const rect = container.getBoundingClientRect();
     const top = rect.top;
-    const threshold = top + rect.height * 0.4;
     let visible = null;
-
-    for (let i = ayaEls.length - 1; i >= 0; i--) {
+    for (let i = 0; i < ayaEls.length; i++) {
       const el = ayaEls[i];
       const elRect = el.getBoundingClientRect();
-      const mid = elRect.top + elRect.height / 2;
-      if (mid >= top && mid <= threshold) {
+      if (elRect.bottom > top) {
         visible = el;
         break;
       }
-      if (elRect.bottom <= top) {
-        visible = visible || el;
-        break;
-      }
     }
-
-    if (!visible && ayaEls.length) visible = ayaEls[0];
+    if (!visible) visible = ayaEls[ayaEls.length - 1];
     if (!visible) return;
-
     const sura_n = parseInt(visible.dataset.sura);
     const aya_n = parseInt(visible.dataset.aya);
     const page = parseInt(visible.dataset.page);
-
     clearTimeout(this.scrollUpdateTimeout);
     this.scrollUpdateTimeout = setTimeout(() => {
       requestAnimationFrame(() => {
@@ -892,7 +881,6 @@ class TafsirSearchManager {
       });
     }, 100);
   }
-
   async checkAndLoadMorePages(container) {
     if (this.isScrolling || this.isLoadingMore) return;
     const { scrollTop, scrollHeight, clientHeight } = container;
