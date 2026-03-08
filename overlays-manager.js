@@ -824,7 +824,7 @@ class OverlayManager {
     overlay.content.innerHTML = `<div class="about-content">
       <p class="about-title">
         <strong>مصحف التجويد – حفص</strong>
-        <span class="about-version">v1.0.6</span>
+        <span class="about-version">v1.0.7</span>
       </p>
       <p class="about-desc">
         تطبيق لقراءة القرآن الكريم كاملاً بجودة عالية ودون اتصال بالإنترنت، مطابق للمصحف الورقي المعتمد :

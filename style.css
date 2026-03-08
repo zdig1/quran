@@ -49,9 +49,11 @@
   --icon-size-secondary: var(--text-md);
   --bookmark-color: gold;
   --border-width: 2px;
+  --overlay-padding-x: 5px;
   --transition-default: opacity .3s ease;
   --current-item-bg: rgb(146, 178, 152);
   --tafsir-select-bg: #d32f2f;
+  --tafsir-content-padding: 5px;
   --tafsir-select-text: #ffffff
 }
 
@@ -347,7 +349,7 @@ body {
   font-size: var(--text-md);
   cursor: pointer;
   padding: 0;
-  margin: 0;
+  margin: 0px 5px -20px 0px;
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -518,9 +520,8 @@ body {
   z-index: 9999;
   display: none;
   align-items: flex-start;
-padding-top: 10vh;
   justify-content: center;
-  padding: 5px
+  padding: 15vh 5px 5px 5px
 }
 
 .menu-overlay {
@@ -688,7 +689,7 @@ padding-top: 10vh;
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  margin-left: auto;
+  margin-left: 5px;
   flex-shrink: 0
 }
 
@@ -725,7 +726,8 @@ padding-top: 10vh;
   font-weight: bold;
   flex-shrink: 0;
   color: white;
-  background: var(--badge-bg, var(--primary))
+  background: var(--badge-bg, var(--primary));
+  margin-right: 5px
 }
 
 .item-search .item-badge {
@@ -1054,7 +1056,8 @@ padding-top: 10vh;
   text-align: justify !important;
   text-align-last: right !important;
   line-height: 2.2 !important;
-  word-spacing: -1px !important
+  word-spacing: -1px !important;
+  padding: 0 var(--overlay-padding-x)
 }
 
 #searchResults {
@@ -1083,7 +1086,7 @@ padding-top: 10vh;
 .empty-message {
   text-align: center;
   color: var(--text-light);
-  padding: 15px
+  padding: var(--overlay-padding-x)
 }
 
 /* ============================================
@@ -1165,7 +1168,7 @@ padding-top: 10vh;
 }
 
 .tafsir-content-container {
-  padding: 20px !important;
+  padding: 0 var(--overlay-padding-x) !important;
   direction: rtl !important;
   line-height: 1.8;
   scroll-behavior: auto !important;
@@ -1365,35 +1368,6 @@ padding-top: 10vh;
 /* ============================================
    DIALOGS
    ============================================ */
-
-.confirm-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, .5);
-  z-index: 100000;
-  display: flex;
-  align-items: center;
-  justify-content: center
-}
-
-.confirm-dialog {
-  background: var(--surface);
-  color: var(--text);
-  border-radius: 12px;
-  padding: 24px;
-  max-width: 320px;
-  width: 90%;
-  text-align: center;
-  direction: rtl;
-  box-shadow: var(--shadow-heavy);
-  z-index: 100001
-}
-
-.confirm-dialog p {
-  margin: 0 0 20px;
-  font-size: 1rem;
-  line-height: 1.5
-}
 
 .confirm-buttons {
   display: flex;

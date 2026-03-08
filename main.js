@@ -316,21 +316,39 @@ class QuranApp {
     if (window.quranReader) window.quranReader._dialogOpen = true;
     window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
 
+    // Backdrop = réutilise la classe .overlay (même comportement 15vh que bookmarks)
     const backdrop = document.createElement("div");
-    backdrop.className = "confirm-backdrop";
-    backdrop.style.alignItems = "flex-start";
-    backdrop.style.paddingTop = "10vh";
+    backdrop.className = "overlay show";
     backdrop.style.zIndex = "100000";
 
+    // Dialog = réutilise .overlay-content (même style que bookmarks)
     const dialog = document.createElement("div");
-    dialog.className = "confirm-dialog";
+    dialog.className = "overlay-content";
     dialog.style.maxWidth = "300px";
-    dialog.style.direction = "rtl";
+
+    // Header = réutilise .overlay-header avec titre + bouton ✕
+    const header = document.createElement("div");
+    header.className = "overlay-header";
+
+    const title = document.createElement("h2");
+    title.textContent = "📄 الانتقال إلى صفحة";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "btn close-btn";
+    closeBtn.textContent = "✕";
+    closeBtn.setAttribute("aria-label", "إغلاق");
+
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    dialog.appendChild(header);
 
     const label = document.createElement("p");
-    label.textContent = "أدخل رقم الصفحة (1-604):";
-    label.style.textAlign = "center";
-    dialog.appendChild(label);
+    label.textContent = "أدخل رقم الصفحة (1-604)";
+    label.style.cssText = "text-align:right;margin:5px;";
+
+    // Corps : input + bouton اذهب
+    const body = document.createElement("div");
+    body.style.cssText = "padding:16px;";
 
     const input = document.createElement("input");
     input.type = "tel";
@@ -338,25 +356,22 @@ class QuranApp {
     input.pattern = "[0-9]*";
     input.placeholder = "1-604";
     input.value = this.lastPage;
-    input.style.cssText =
-      "width:100%;padding:8px;margin-bottom:15px;border-radius:4px;border:1px solid #ccc;box-sizing:border-box;direction:ltr;text-align:right;font-size:16px;";
-    dialog.appendChild(input);
+    input.className = "search-input";
+    input.style.cssText = "direction:ltr;text-align:right;margin-bottom:12px;";
 
     const btnRow = document.createElement("div");
     btnRow.className = "confirm-buttons";
-    btnRow.style.justifyContent = "center";
 
     const goBtn = document.createElement("button");
     goBtn.className = "confirm-btn ok";
     goBtn.textContent = "اذهب";
 
-    const cancelBtn = document.createElement("button");
-    cancelBtn.className = "confirm-btn cancel";
-    cancelBtn.textContent = "إلغاء";
-
     btnRow.appendChild(goBtn);
-    btnRow.appendChild(cancelBtn);
-    dialog.appendChild(btnRow);
+    dialog.appendChild(label);
+    body.appendChild(input);
+    body.appendChild(btnRow);
+    dialog.appendChild(body);
+
     backdrop.appendChild(dialog);
     document.body.appendChild(backdrop);
 
@@ -396,11 +411,11 @@ class QuranApp {
     goBtn.addEventListener("click", () => {
       if (!isTouchDevice) confirm();
     });
-    cancelBtn.addEventListener("touchend", (e) => {
+    closeBtn.addEventListener("touchend", (e) => {
       e.preventDefault();
       close();
     });
-    cancelBtn.addEventListener("click", () => {
+    closeBtn.addEventListener("click", () => {
       if (!isTouchDevice) close();
     });
     backdrop.addEventListener("click", (e) => {
