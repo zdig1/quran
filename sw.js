@@ -3,6 +3,7 @@ const CACHE_NAME = "quran-1.0.7";
 const CORE_ASSETS = [
   "./index.html",
   "./style.css",
+  "./manifest.webmanifest",
   "./main.js",
   "./quran-reader.js",
   "./quran-calculator.js",
