@@ -608,7 +608,6 @@ class OverlayManager {
   setupBookmarkFormHandlers(currentPage) {
     if (!this.bookmarkFormInput || !this.bookmarkFormButton) return;
 
-    // Supprimer les lignes de clonage (newButton, replaceChild, etc.)
     this.bookmarkFormButton.addEventListener("click", () => {
       if (this.editingBookmarkId) {
         const newName = this.bookmarkFormInput.value.trim();
@@ -793,7 +792,6 @@ class OverlayManager {
     const clearBtn = document.getElementById("clearSearchBtn");
     if (!clearBtn) return;
 
-    // Supprimer l'ancien écouteur s'il existe
     if (this._clearSearchHandler) {
       clearBtn.removeEventListener("click", this._clearSearchHandler);
     }
@@ -802,7 +800,6 @@ class OverlayManager {
       clearBtn.style.display = overlay.input.value ? "block" : "none";
     };
 
-    // Nouvel écouteur
     this._clearSearchHandler = () => {
       overlay.input.value = "";
       updateVisibility();
