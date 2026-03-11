@@ -337,7 +337,7 @@ body {
 
 .icon-btn--edit,
 .icon-btn--remove,
-.icon-btn--recycle {
+.icon-btn--replace {
   color: var(--primary);
   border-color: var(--border)
 }
@@ -1424,6 +1424,16 @@ body {
 .confirm-btn.cancel {
   background: #6c757d;
   color: white
+}
+
+.confirm-btn.blue {
+  background: #1565c0;
+  color: white;
+}
+
+.confirm-btn.brown {
+  background: #6d4c41;
+  color: white;
 }
 
 .confirm-btn.ok:hover {

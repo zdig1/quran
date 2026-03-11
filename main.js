@@ -241,6 +241,65 @@ class QuranApp {
     icon.title = hasBookmark ? "علامة مرجعية موجودة" : "إضافة علامة مرجعية";
   }
 
+  // Dans la classe QuranApp
+
+  /**
+   * Exporte les signets au format JSON (chaîne)
+   * @returns {string} JSON formaté
+   */
+  exportBookmarks() {
+    return JSON.stringify(this.bookmarks, null, 2);
+  }
+
+  /**
+   * Importe des signets depuis une chaîne JSON
+   * @param {string} jsonString - Le contenu du fichier JSON
+   * @param {boolean} merge - true pour fusionner, false pour remplacer
+   * @returns {boolean} Succès ou échec
+   */
+  importBookmarks(jsonString, merge = false) {
+    try {
+      const imported = JSON.parse(jsonString);
+      if (!Array.isArray(imported)) throw new Error("Format invalide");
+
+      // Validation basique de chaque signet
+      const valid = imported.every(
+        (b) =>
+          b &&
+          typeof b === "object" &&
+          typeof b.page === "number" &&
+          b.page >= 1 &&
+          b.page <= 604 &&
+          typeof b.name === "string" &&
+          (!b.id || typeof b.id === "string"),
+      );
+      if (!valid) throw new Error("Certains signets sont invalides");
+
+      let newBookmarks;
+      if (merge) {
+        // Fusion : on évite les doublons par id (si présent)
+        const existingIds = new Set(this.bookmarks.map((b) => b.id));
+        const toAdd = imported.filter((b) => !existingIds.has(b.id));
+        newBookmarks = [...this.bookmarks, ...toAdd];
+      } else {
+        // Remplacement : on s'assure que chaque élément a un id unique
+        newBookmarks = imported.map((b) => ({
+          ...b,
+          id: b.id || `bookmark_${b.page}_${Date.now()}_${Math.random()}`,
+        }));
+      }
+      // Tri par page
+      newBookmarks.sort((a, b) => a.page - b.page);
+
+      this.bookmarks = newBookmarks;
+      this.saveToLocalStorage();
+      window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
+      return true;
+    } catch (err) {
+      console.error("Import error:", err);
+      return false;
+    }
+  }
   // ============================================
   // TAFSIR
   // ============================================

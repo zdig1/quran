@@ -559,9 +559,11 @@ class OverlayManager {
     const container = document.createElement("div");
     container.className = "bookmarks-overlay-content";
 
+    // Liste des signets
     const listContainer = document.createElement("div");
     listContainer.className = "bookmarks-list";
 
+    // Formulaire d'ajout / édition
     const formContainer = document.createElement("div");
     formContainer.className = "bookmarks-add-form";
 
@@ -571,23 +573,54 @@ class OverlayManager {
     input.placeholder = "اسم العلامة";
     input.value = `صفحة ${currentPage}`;
 
+    // Conteneur pour les boutons
+    const buttonContainer = document.createElement("div");
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.gap = "12px";
+    buttonContainer.style.justifyContent = "center";
+    buttonContainer.style.marginTop = "8px";
+    buttonContainer.style.flexWrap = "wrap";
+    buttonContainer.style.width = "100%"; // ← ajout essentiel
+
+    // Bouton Ajouter (vert)
     const addBtn = document.createElement("button");
-    addBtn.className = "btn btn-add";
+    addBtn.className = "confirm-btn ok";
     addBtn.textContent = "إضافة";
 
+    // Bouton Importer (gris)
+    const importBtn = document.createElement("button");
+    importBtn.className = "confirm-btn blue";
+    importBtn.textContent = "استيراد";
+    importBtn.title = "استيراد علامات من ملف";
+    importBtn.addEventListener("click", () => this.importBookmarks());
+
+    // Bouton Exporter (gris)
+    const exportBtn = document.createElement("button");
+    exportBtn.className = "confirm-btn brown";
+    exportBtn.textContent = "تصدير";
+    exportBtn.title = "تصدير العلامات إلى ملف";
+    exportBtn.addEventListener("click", () => this.exportBookmarks());
+
+    // Bouton Annuler (gris, masqué par défaut)
     const cancelBtn = document.createElement("button");
-    cancelBtn.className = "btn btn-cancel";
+    cancelBtn.className = "confirm-btn cancel";
     cancelBtn.textContent = "لا";
     cancelBtn.style.display = "none";
 
+    // Assemblage : import puis export (de droite à gauche)
+    buttonContainer.appendChild(addBtn);
+    buttonContainer.appendChild(importBtn);
+    buttonContainer.appendChild(exportBtn);
+    buttonContainer.appendChild(cancelBtn);
+
     formContainer.appendChild(input);
-    formContainer.appendChild(addBtn);
-    formContainer.appendChild(cancelBtn);
+    formContainer.appendChild(buttonContainer);
 
     this.bookmarkFormInput = input;
     this.bookmarkFormButton = addBtn;
     this.bookmarkFormCancel = cancelBtn;
 
+    // Remplissage de la liste
     if (bookmarks.length === 0) {
       const emptyMsg = document.createElement("div");
       emptyMsg.className = "empty-message";
@@ -602,6 +635,7 @@ class OverlayManager {
     container.appendChild(listContainer);
     container.appendChild(formContainer);
     overlay.content.appendChild(container);
+
     this.setupBookmarkFormHandlers(currentPage);
   }
 
@@ -643,6 +677,17 @@ class OverlayManager {
   startEditingBookmark(bookmark) {
     if (this.editingBookmarkId) this.resetBookmarkForm();
     this.editingBookmarkId = bookmark.id;
+
+    // Masquer les boutons d'import/export (classes blue et brown)
+    const importBtn = document.querySelector(
+      ".bookmarks-add-form .confirm-btn.blue",
+    );
+    const exportBtn = document.querySelector(
+      ".bookmarks-add-form .confirm-btn.brown",
+    );
+    if (importBtn) importBtn.style.display = "none";
+    if (exportBtn) exportBtn.style.display = "none";
+
     this.bookmarkFormInput.value = bookmark.name;
     this.bookmarkFormButton.textContent = "حفظ";
     this.bookmarkFormCancel.style.display = "inline-block";
@@ -656,6 +701,17 @@ class OverlayManager {
 
   resetBookmarkForm() {
     this.editingBookmarkId = null;
+
+    // Réafficher les boutons d'import/export
+    const importBtn = document.querySelector(
+      ".bookmarks-add-form .confirm-btn.blue",
+    );
+    const exportBtn = document.querySelector(
+      ".bookmarks-add-form .confirm-btn.brown",
+    );
+    if (importBtn) importBtn.style.display = "";
+    if (exportBtn) exportBtn.style.display = "";
+
     this.bookmarkFormInput.value = `صفحة ${this.getCurrentPage()}`;
     this.bookmarkFormCancel.style.display = "none";
     this.bookmarkFormButton.textContent = "إضافة";
@@ -680,7 +736,7 @@ class OverlayManager {
       </div>
       <div class="item-left">
         <span class="item-tag">ص ${bookmark.page}</span>
-        <button class="icon-btn icon-btn--recycle" data-id="${bookmark.id}" title="استبدال الصفحة بالصفحة الحالية">♻️</button>
+        <button class="icon-btn icon-btn--replace" data-id="${bookmark.id}" title="استبدال الصفحة بالصفحة الحالية">♻️</button>
         <button class="icon-btn icon-btn--remove" data-id="${bookmark.id}" title="حذف">🗑️</button>
       </div>
     </div>`;
@@ -694,7 +750,7 @@ class OverlayManager {
     });
 
     item
-      .querySelector(".icon-btn--recycle")
+      .querySelector(".icon-btn--replace")
       ?.addEventListener("click", async (e) => {
         e.stopPropagation();
         const currentPage = this.getCurrentPage();
@@ -732,6 +788,134 @@ class OverlayManager {
         window.quranApp?.goToPage(bookmark.page);
         this.closeOverlay("bookmarks");
       }
+    });
+  }
+
+  async exportBookmarks() {
+    const data = window.quranApp.exportBookmarks();
+    const date = new Date().toISOString().slice(2, 10);
+    const fileName = `quran_${date}`;
+    const bytes = new TextEncoder().encode(data);
+    let binary = "";
+    bytes.forEach((b) => (binary += String.fromCharCode(b)));
+    const base64 = btoa(binary);
+
+    if (typeof cordova !== "undefined" && window.plugins?.socialsharing) {
+      window.plugins.socialsharing.shareWithOptions(
+        {
+          message: "نسخة احتياطية من العلامات المرجعية",
+          subject: fileName,
+          files: ["data:application/json;base64," + base64],
+          chooserTitle: "حفظ أو مشاركة الملف",
+        },
+        () => window.quranApp.showToast("✅ تم التصدير"),
+        (err) => window.quranApp.showToast("❌ " + err),
+      );
+    } else {
+      const file = new File([data], fileName, { type: "application/json" });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        navigator
+          .share({ files: [file] })
+          .then(() => window.quranApp.showToast("✅ تم التصدير"))
+          .catch((err) => window.quranApp.showToast("❌ " + err));
+      } else {
+        const a = document.createElement("a");
+        a.href = "data:application/json;base64," + base64;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.quranApp.showToast("✅ تم التصدير");
+      }
+    }
+  }
+
+  importBookmarks() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json,application/json";
+    input.style.display = "none";
+    document.body.appendChild(input);
+
+    input.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) {
+        input.remove(); // ← remplace document.body.removeChild(input)
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const json = ev.target.result;
+          const choice = await this.showImportChoice();
+          if (!choice) {
+            input.remove(); // ← idem, au cas où l'utilisateur annule
+            return;
+          }
+
+          const success = window.quranApp.importBookmarks(
+            json,
+            choice === "merge",
+          );
+          if (success) {
+            window.quranApp?.showToast("✅ تم استيراد العلامات");
+            this.refreshBookmarksDisplay();
+          } else {
+            window.quranApp?.showToast("❌ فشل الاستيراد: الملف غير صالح");
+          }
+        } catch (err) {
+          window.quranApp?.showToast("❌ خطأ في قراءة الملف");
+        } finally {
+          input.remove(); // ← ici aussi, plus sûr
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    input.click();
+  }
+
+  /**
+   * Affiche une boîte de dialogue pour choisir entre fusion et remplacement
+   * @returns {Promise<string|null>} 'merge', 'replace' ou null si annulé
+   */
+  showImportChoice() {
+    return new Promise((resolve) => {
+      const backdrop = document.createElement("div");
+      backdrop.className = "confirm-backdrop";
+      const dialog = document.createElement("div");
+      dialog.className = "confirm-dialog";
+      dialog.innerHTML = `
+      <p>كيف تريد استيراد العلامات؟</p>
+      <div class="confirm-buttons">
+        <button class="confirm-btn ok" id="mergeBtn">دمج</button>
+        <button class="confirm-btn blue" id="replaceBtn">استبدال</button>
+        <button class="confirm-btn cancel" id="cancelBtn">إلغاء</button>
+      </div>
+    `;
+      backdrop.appendChild(dialog);
+      document.body.appendChild(backdrop);
+      window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
+
+      const cleanup = (result) => {
+        backdrop.remove();
+        window.dispatchEvent(new CustomEvent("quran:overlayClosed"));
+        resolve(result);
+      };
+
+      dialog
+        .querySelector("#mergeBtn")
+        .addEventListener("click", () => cleanup("merge"));
+      dialog
+        .querySelector("#replaceBtn")
+        .addEventListener("click", () => cleanup("replace"));
+      dialog
+        .querySelector("#cancelBtn")
+        .addEventListener("click", () => cleanup(null));
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) cleanup(null);
+      });
     });
   }
 
