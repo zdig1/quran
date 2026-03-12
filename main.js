@@ -78,50 +78,58 @@ class QuranApp {
   // PERSISTANCE
   // ============================================
 
-  restoreFromLocalStorage() {
-    try {
-      const rawBookmarks = localStorage.getItem("quran_bookmarks");
-      this.bookmarks = rawBookmarks ? JSON.parse(rawBookmarks) : [];
-      if (!Array.isArray(this.bookmarks)) this.bookmarks = [];
-      this.bookmarks = this.bookmarks.map((b, i) =>
-        typeof b === "number"
-          ? {
-              page: b,
-              name: `صفحة ${b}`,
-              date: new Date().toISOString(),
-              id: `bookmark_${b}_${Date.now()}_${i}`,
-            }
-          : { ...b, id: b.id || `bookmark_${b.page}_${Date.now()}_${i}` },
-      );
+restoreFromLocalStorage() {
+  try {
+    const rawBookmarks = localStorage.getItem("quran_bookmarks");
+    this.bookmarks = rawBookmarks ? JSON.parse(rawBookmarks) : [];
+    if (!Array.isArray(this.bookmarks)) this.bookmarks = [];
+    this.bookmarks = this.bookmarks.map((b, i) => {
+      // Si c'est un ancien format (nombre), on le convertit
+      if (typeof b === "number") {
+        return {
+          page: b,
+          name: `صفحة ${b}`,
+          date: new Date().toISOString(),
+          lastModified: new Date().toISOString(), // Ajout de lastModified
+          id: `bookmark_${b}_${Date.now()}_${i}`,
+        };
+      }
+      // Sinon, on s'assure que lastModified existe
+      return { 
+        ...b, 
+        id: b.id || `bookmark_${b.page}_${Date.now()}_${i}`,
+        lastModified: b.lastModified || b.date || new Date().toISOString() // Utilise date existante ou new Date()
+      };
+    });
 
-      const rawPage = localStorage.getItem("quran_lastPage");
-      this.lastPage = rawPage ? parseInt(rawPage) : 1;
-      if (isNaN(this.lastPage) || this.lastPage < 1 || this.lastPage > 604)
-        this.lastPage = 1;
-
-      this.theme = localStorage.getItem("quran_theme") || "light";
-
-      const rawPinned = localStorage.getItem("quran_pinnedSurahs");
-      this.pinnedSurahs = rawPinned ? JSON.parse(rawPinned) : [];
-    } catch (err) {
-      this.bookmarks = [];
+    const rawPage = localStorage.getItem("quran_lastPage");
+    this.lastPage = rawPage ? parseInt(rawPage) : 1;
+    if (isNaN(this.lastPage) || this.lastPage < 1 || this.lastPage > 604)
       this.lastPage = 1;
-      this.theme = "light";
-      this.pinnedSurahs = [];
-      [
-        "quran_bookmarks",
-        "quran_lastPage",
-        "quran_theme",
-        "quran_pinnedSurahs",
-        "quran_readingMode",
-        "quran_lastMode",
-      ].forEach((key) => localStorage.removeItem(key));
-      localStorage.setItem("quran_lastPage", "1");
-      localStorage.setItem("quran_theme", "light");
-      localStorage.setItem("quran_bookmarks", "[]");
-      localStorage.setItem("quran_pinnedSurahs", "[]");
-    }
+
+    this.theme = localStorage.getItem("quran_theme") || "light";
+
+    const rawPinned = localStorage.getItem("quran_pinnedSurahs");
+    this.pinnedSurahs = rawPinned ? JSON.parse(rawPinned) : [];
+  } catch (err) {
+    this.bookmarks = [];
+    this.lastPage = 1;
+    this.theme = "light";
+    this.pinnedSurahs = [];
+    [
+      "quran_bookmarks",
+      "quran_lastPage",
+      "quran_theme",
+      "quran_pinnedSurahs",
+      "quran_readingMode",
+      "quran_lastMode",
+    ].forEach((key) => localStorage.removeItem(key));
+    localStorage.setItem("quran_lastPage", "1");
+    localStorage.setItem("quran_theme", "light");
+    localStorage.setItem("quran_bookmarks", "[]");
+    localStorage.setItem("quran_pinnedSurahs", "[]");
   }
+}
 
   saveToLocalStorage() {
     try {
@@ -193,26 +201,31 @@ class QuranApp {
     return [...this.bookmarks];
   }
 
-  addBookmark(bookmark) {
-    this.bookmarks.push(bookmark);
-    this.bookmarks.sort((a, b) => a.page - b.page);
-    this.saveToLocalStorage();
-    this.updateBookmarkIcon(bookmark.page);
-    window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
+addBookmark(bookmark) {
+  // Ajouter lastModified si non présent
+  if (!bookmark.lastModified) {
+    bookmark.lastModified = new Date().toISOString();
   }
+  this.bookmarks.push(bookmark);
+  this.bookmarks.sort((a, b) => a.page - b.page);
+  this.saveToLocalStorage();
+  this.updateBookmarkIcon(bookmark.page);
+  window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
+}
 
-  replaceBookmarkPage(bookmarkId, newPage) {
-    const bookmark = this.bookmarks.find((b) => b.id === bookmarkId);
-    if (!bookmark || newPage < 1 || newPage > 604) return false;
-    const oldPage = bookmark.page;
-    bookmark.page = newPage;
-    this.bookmarks.sort((a, b) => a.page - b.page);
-    this.saveToLocalStorage();
-    this.updateBookmarkIcon(oldPage);
-    this.updateBookmarkIcon(newPage);
-    window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
-    return true;
-  }
+replaceBookmarkPage(bookmarkId, newPage) {
+  const bookmark = this.bookmarks.find((b) => b.id === bookmarkId);
+  if (!bookmark || newPage < 1 || newPage > 604) return false;
+  const oldPage = bookmark.page;
+  bookmark.page = newPage;
+  bookmark.lastModified = new Date().toISOString(); // Mise à jour de la date
+  this.bookmarks.sort((a, b) => a.page - b.page);
+  this.saveToLocalStorage();
+  this.updateBookmarkIcon(oldPage);
+  this.updateBookmarkIcon(newPage);
+  window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
+  return true;
+}
 
   removeBookmarkById(bookmarkId) {
     const idx = this.bookmarks.findIndex((b) => b.id === bookmarkId);
@@ -224,14 +237,15 @@ class QuranApp {
     return true;
   }
 
-  updateBookmark(bookmarkId, newName) {
-    const bookmark = this.bookmarks.find((b) => b.id === bookmarkId);
-    if (!bookmark) return false;
-    bookmark.name = newName.trim() || `صفحة ${bookmark.page}`;
-    this.saveToLocalStorage();
-    window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
-    return true;
-  }
+updateBookmark(bookmarkId, newName) {
+  const bookmark = this.bookmarks.find((b) => b.id === bookmarkId);
+  if (!bookmark) return false;
+  bookmark.name = newName.trim() || `صفحة ${bookmark.page}`;
+  bookmark.lastModified = new Date().toISOString(); // Mise à jour de la date
+  this.saveToLocalStorage();
+  window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
+  return true;
+}
 
   updateBookmarkIcon(page) {
     const icon = document.getElementById("bookmarkIcon");

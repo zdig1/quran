@@ -729,17 +729,35 @@ class OverlayManager {
   }
 
   renderBookmarkDisplayMode(item, bookmark) {
+    // Formater la date
+    let dateDisplay = "";
+    if (bookmark.lastModified) {
+      const date = new Date(bookmark.lastModified);
+      const year = date.getFullYear().toString().slice(-2); // 2 derniers chiffres
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      dateDisplay = `${year}-${month}-${day}`;
+    }
+
     item.innerHTML = `<div class="item-line-1">
-      <div class="item-right">
-        <button class="icon-btn icon-btn--edit" data-id="${bookmark.id}" title="تعديل الاسم">✏️</button>
-        <span class="item-title bookmark-name" data-id="${bookmark.id}">${this.escapeHtml(bookmark.name)}</span>
-      </div>
-      <div class="item-left">
-        <span class="item-tag">ص ${bookmark.page}</span>
-        <button class="icon-btn icon-btn--replace" data-id="${bookmark.id}" title="استبدال الصفحة بالصفحة الحالية">♻️</button>
-        <button class="icon-btn icon-btn--remove" data-id="${bookmark.id}" title="حذف">🗑️</button>
-      </div>
-    </div>`;
+    <div class="item-right">
+      <button class="icon-btn icon-btn--edit" data-id="${bookmark.id}" title="تعديل الاسم">✏️</button>
+      <span class="item-title bookmark-name" data-id="${bookmark.id}">${this.escapeHtml(bookmark.name)}</span>
+    </div>
+    <div class="item-left">
+      <span class="item-tag">ص ${bookmark.page}</span>
+      <button class="icon-btn icon-btn--replace" data-id="${bookmark.id}" title="استبدال الصفحة بالصفحة الحالية">♻️</button>
+      <button class="icon-btn icon-btn--remove" data-id="${bookmark.id}" title="حذف">🗑️</button>
+    </div>
+  </div>
+  <div class="item-line-2" style="margin-top: 4px; padding-right: 45px;">
+    <div class="item-right">
+<span class="item-tertiary" style="font-size: 0.75rem; color: var(--text-lighter);">
+  ${dateDisplay || "غير معروف"}
+</span>
+    </div>
+  </div>`;
+
     this.attachBookmarkEvents(item, bookmark);
   }
 
@@ -1129,6 +1147,60 @@ class OverlayManager {
   // 8. ABOUT OVERLAY
   // ============================================
 
+  /**
+   * Partage l'application via les services disponibles
+   */
+  shareApp() {
+    const appName = "مصحف التجويد - حفص";
+    const appUrl = "https://zdig1.gitlab.io/quran/";
+    const message = `📖 ${appName}\n\nتطبيق متكامل لقراءة القرآن الكريم مع التفسير والبحث بدون إنترنت\n\nرابط التطبيق: ${appUrl}`;
+    const shortMessage = `📖 ${appName} - تطبيق قرآن كامل بدون إنترنت: ${appUrl}`;
+
+    // Utiliser socialsharing si disponible (Cordova)
+    if (typeof cordova !== "undefined" && window.plugins?.socialsharing) {
+      window.plugins.socialsharing.shareWithOptions(
+        {
+          message: shortMessage,
+          subject: appName,
+          url: appUrl,
+          chooserTitle: "مشاركة التطبيق",
+        },
+        () => window.quranApp?.showToast("✅ تم فتح المشاركة"),
+        (err) => {
+          console.error("Share error:", err);
+          window.quranApp?.showToast("❌ تعذر فتح المشاركة");
+        },
+      );
+    }
+    // Utiliser Web Share API si disponible
+    else if (navigator.share) {
+      navigator
+        .share({
+          title: appName,
+          text: shortMessage,
+          url: appUrl,
+        })
+        .then(() => window.quranApp?.showToast("✅ تمت المشاركة"))
+        .catch((err) => {
+          if (err.name !== "AbortError") {
+            window.quranApp?.showToast("❌ تعذرت المشاركة");
+          }
+        });
+    }
+    // Fallback : copier le lien dans le presse-papier
+    else {
+      navigator.clipboard
+        .writeText(appUrl)
+        .then(() => {
+          window.quranApp?.showToast("📋 تم نسخ رابط التطبيق");
+        })
+        .catch(() => {
+          // Dernier recours : ouvrir une boîte de dialogue avec le lien
+          prompt("انسخ رابط التطبيق:", appUrl);
+        });
+    }
+  }
+
   showAbout() {
     this.closeMenu();
     const overlay = this.lazyLoadOverlay("about");
@@ -1150,6 +1222,21 @@ class OverlayManager {
         تطبيق لقراءة القرآن الكريم كاملاً بجودة عالية ودون اتصال بالإنترنت، مطابق للمصحف الورقي المعتمد :
         <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (الصادر عن دار المعرفة)
       </p>
+
+ <div style="display: flex; gap: 10px; margin: 15px 0;">
+      <div style="flex: 1;">
+        <button id="shareAppBtn" class="confirm-btn ok" style="width:100%; padding:12px; font-size:1rem;">
+          🔗 شارك التطبيق
+        </button>
+      </div>
+      <div style="flex: 1;">
+        <a href="mailto:zdig1.0@gmail.com?subject=quran" class="confirm-btn blue" style="display:flex; align-items:center; justify-content:center; width:100%; padding:12px; font-size:1rem; text-decoration:none; box-sizing:border-box;">
+          📧 للتواصل
+        </a>
+      </div>
+    </div>
+    
+   
       <div class="about-stats">
         <div class="about-stat"><span>السور</span><strong>114</strong></div>
         <div class="about-stat"><span>الآيات</span><strong>6236</strong></div>
@@ -1161,8 +1248,14 @@ class OverlayManager {
       <p class="about-footer">
         جميع الحقوق محفوظة © 2026<br>
         <a href="https://zdig1.gitlab.io/quran/" target="_blank" rel="noopener noreferrer"><u>GDZ</u></a> 🍉
-      </p>
+        </p>
     </div>`;
+
+    // Ajouter l'écouteur d'événement pour le partage
+    const shareBtn = document.getElementById("shareAppBtn");
+    if (shareBtn) {
+      shareBtn.addEventListener("click", () => this.shareApp());
+    }
   }
 
   // ============================================
