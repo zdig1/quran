@@ -102,8 +102,13 @@
 
     <link rel="stylesheet" href="./style.css" />
 
+    <!-- = 
+
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self' file: data:; script-src 'self' file: 'unsafe-inline'; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data:; connect-src 'self' file: https://quran-58c7cd.gitlab.io;">
+    content="default-src 'self' file: data:; script-src 'self' file: 'unsafe-inline'; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data:; connect-src 'self' file: https://quran-58c7cd.gitlab.io https://mp3quran.net https://*.mp3quran.net; media-src https://server*.mp3quran.net https://*.mp3quran.net;">
+     
+    = -->
+
 </head>
 
 <body>
@@ -203,6 +208,14 @@
                             <span class="menu-text">دعاء ختم القرآن</span>
                         </button>
 
+                        <button class="btn menu-item" id="audioBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24">
+                                <path
+                                    d="M12 3c-4.97 0-9 4.03-9 9v7c0 1.1.9 2 2 2h4v-8H5v-1c0-3.87 3.13-7 7-7s7 3.13 7 7v1h-4v8h4c1.1 0 2-.9 2-2v-7c0-4.97-4.03-9-9-9z" />
+                            </svg>
+                            <span class="menu-text">الاستماع إلى القرآن</span>
+                        </button>
+
                         <button class="btn menu-item" id="searchBtn">
                             <svg class="menu-icon-svg" viewBox="0 0 24 24">
                                 <path
@@ -284,11 +297,22 @@
             </div>
         </div>
 
+        <!-- audio Overlay -->
+        <div id="audioOverlay" class="overlay" role="dialog" aria-label="الاستماع إلى القرآن">
+            <div class="overlay-content fullscreen">
+                <div class="overlay-header">
+                    <h2>🎧 الاستماع إلى القرآن</h2>
+                    <button class="btn close-btn" id="closeAudioBtn">✕</button>
+                </div>
+                <div id="audioContent" class="overlay-body audio-body"></div>
+            </div>
+        </div>
+
         <!-- 4. KHATM (Fullscreen) -->
         <div id="khatmOverlay" class="overlay" role="dialog" aria-label="دعاء ختم القرآن">
             <div class="overlay-content fullscreen">
                 <div class="overlay-header">
-                    <h2>🕌 دعاء ختم القرآن</h2>
+                    <h2>🤲 دعاء ختم القرآن</h2>
                     <button class="btn close-btn" id="closeKhatmBtn">✕</button>
                 </div>
                 <div id="khatmContent" class="overlay-body khatm-content"></div>
@@ -387,7 +411,7 @@
     </noscript>
 
     <script src="cordova.js"></script>
-    
+
     <!-- ===== SCRIPT OPTIMISÉ ===== -->
     <script>
         (function () {
@@ -396,6 +420,7 @@
                 './quran-reader.js',
                 './overlays-manager.js',
                 './tafsir-search.js',
+                './quran-audio.js',
                 './main.js'
             ];
 

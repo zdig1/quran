@@ -86,6 +86,10 @@ class OverlayManager {
       closeBtn: "closeBookmarksBtn",
       content: "bookmarksList",
     },
+    audio: {
+      element: "audioOverlay",
+      closeBtn: "closeAudioBtn",
+    },
     khatm: {
       element: "khatmOverlay",
       closeBtn: "closeKhatmBtn",
@@ -192,6 +196,10 @@ class OverlayManager {
       { btn: this.elements.surahsBtn, action: () => this.showSurahs() },
       { btn: this.elements.juzHizbBtn, action: () => this.showJuzHizb() },
       { btn: this.elements.bookmarksBtn, action: () => this.showBookmarks() },
+      {
+        btn: document.getElementById("audioBtn"),
+        action: () => this.showAudio(),
+      },
       { btn: this.elements.khatmBtn, action: () => this.showKhatm() },
       { btn: this.elements.searchBtn, action: () => this.showSearch() },
       { btn: this.elements.tafsirBtn, action: () => this.showTafsir() },
@@ -573,28 +581,22 @@ class OverlayManager {
     input.placeholder = "اسم العلامة";
     input.value = `صفحة ${currentPage}`;
 
-    // Conteneur pour les boutons
     const buttonContainer = document.createElement("div");
-    buttonContainer.style.display = "flex";
-    buttonContainer.style.gap = "12px";
-    buttonContainer.style.justifyContent = "center";
-    buttonContainer.style.marginTop = "8px";
-    buttonContainer.style.flexWrap = "wrap";
-    buttonContainer.style.width = "100%"; // ← ajout essentiel
+    buttonContainer.className = "bookmarks-button-container";
 
     // Bouton Ajouter (vert)
     const addBtn = document.createElement("button");
     addBtn.className = "confirm-btn ok";
     addBtn.textContent = "إضافة";
 
-    // Bouton Importer (gris)
+    // Bouton Importer (blue)
     const importBtn = document.createElement("button");
     importBtn.className = "confirm-btn blue";
     importBtn.textContent = "استيراد";
     importBtn.title = "استيراد علامات من ملف";
     importBtn.addEventListener("click", () => this.importBookmarks());
 
-    // Bouton Exporter (gris)
+    // Bouton Exporter (brown)
     const exportBtn = document.createElement("button");
     exportBtn.className = "confirm-btn brown";
     exportBtn.textContent = "تصدير";
@@ -690,7 +692,7 @@ class OverlayManager {
 
     this.bookmarkFormInput.value = bookmark.name;
     this.bookmarkFormButton.textContent = "حفظ";
-    this.bookmarkFormCancel.style.display = "inline-block";
+    this.bookmarkFormCancel.style.display = "inline-flex";
     document.querySelectorAll(".item-bookmark").forEach((item) => {
       item.classList.toggle(
         "editing-bookmark",
@@ -936,6 +938,86 @@ class OverlayManager {
       });
     });
   }
+
+  // ============================================
+  // audio OVERLAY
+  // ============================================
+
+  // ============================================
+  // audio OVERLAY
+  // ============================================
+
+  renderAudioContent(overlay) {
+    const contentContainer = document.getElementById("audioContent");
+    if (!contentContainer) return;
+
+    // Riwaya active (depuis la variable du script)
+    const riwayaLabel =
+      window.RIWAYAT_CONFIG?.[window.quranAudioPlayer?.currentRiwaya]?.label ||
+      "";
+
+    contentContainer.innerHTML = `
+      <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} — البيانات عبر الإنترنت</div>
+
+      <select id="reciterSelect" class="audio-select" aria-label="اختر القارئ">
+        <option value="">اختر القارئ</option>
+      </select>
+
+      <select id="surahSelectAudio" class="audio-select" aria-label="اختر السورة">
+        <option value="">اختر السورة</option>
+      </select>
+
+      <div id="currentSurahDisplay" class="audio-current-display"></div>
+
+      <div class="audio-progress-wrap">
+        <span id="audioCurrentTime">0:00</span>
+        <input type="range" id="audioProgress" class="audio-progress" value="0" min="0" max="100" step="0.1">
+        <span id="audioDuration">0:00</span>
+      </div>
+
+      <div class="audio-controls">
+        <select id="rateSelect" class="audio-rate-select" title="السرعة">
+          <option value="0.75">0.75×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.25">1.25×</option>
+          <option value="1.5">1.5×</option>
+          <option value="2">2×</option>
+        </select>
+        <button class="btn audio-btn" id="repeatBtn"    title="تكرار">🔁</button>
+        <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">⏭</button>
+        <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">▶</button>
+        <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">⏮</button>
+        <button class="btn audio-btn" id="stopBtn"      title="إيقاف">⏹</button>
+      </div>
+
+      <div id="audioStatus" class="audio-status"></div>
+
+      <audio id="quranAudioPlayer" preload="none" style="display:none;"></audio>
+    `;
+
+    overlay.contentGenerated = true;
+    return overlay;
+  }
+
+async showAudio() {
+  this.closeMenu();
+  const overlay = this.lazyLoadOverlay("audio");
+  if (overlay?.element) {
+    if (!overlay.contentGenerated) {
+      this.renderAudioContent(overlay);
+      await window.quranAudioPlayer.init();
+    }
+    this.showOverlay("audio");
+    const player = window.quranAudioPlayer;
+    if (player.isPlaying) {
+      // Lecture en cours → juste resync l'overlay sans changer la position
+      player._syncOverlay();
+    } else {
+      // Pas de lecture → synchroniser avec la page affichée
+      player.setCurrentSurahFromPage();
+    }
+  }
+}
 
   // ============================================
   // 4. KHATM OVERLAY
@@ -1292,6 +1374,9 @@ class OverlayManager {
     const overlay = this.overlays[name];
     if (!overlay?.element) return;
     overlay.element.classList.remove("show");
+    if (name === "audio" && !window.quranAudioPlayer?.isStopped) {
+      window.quranAudioPlayer?._showMiniBar();
+    }
     if (this.currentOverlay === name) this.currentOverlay = null;
     if (!this.currentOverlay) document.body.style.overflow = "";
     if (name === "tafsir") {

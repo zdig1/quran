@@ -270,7 +270,7 @@ body {
 }
 
 /* ============================================
-   BOUTONS
+   BOUTONS (version inversée : fond clair, texte couleur)
    ============================================ */
 
 .btn {
@@ -283,6 +283,7 @@ body {
   font-family: inherit
 }
 
+/* Boutons principaux du header */
 .header-btn {
   width: var(--button-size);
   height: var(--button-size);
@@ -298,6 +299,7 @@ body {
   color: var(--success)
 }
 
+/* Bouton de fermeture (overlays) */
 .close-btn {
   background: none;
   color: var(--error);
@@ -314,9 +316,14 @@ body {
   border: 2px solid transparent;
   line-height: 1;
   padding: 0;
-  margin: 0
+  margin: 0;
 }
 
+.night-mode .close-btn {
+  color: #ff6b6b;
+}
+
+/* Boutons d'icônes (édition, suppression, remplacement) */
 .icon-btn {
   width: 2rem;
   height: 2rem;
@@ -342,6 +349,17 @@ body {
   border-color: var(--border)
 }
 
+.night-mode .icon-btn--edit,
+.night-mode .icon-btn--remove,
+.night-mode .icon-btn--replace {
+  color: var(--success);
+}
+
+.icon-btn:hover {
+  background: var(--primary-light);
+}
+
+/* Bouton d'épinglage (pinned) */
 .pin-btn {
   background: none;
   border: none;
@@ -354,7 +372,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: color .2s ease
+  transition: color .2s ease;
 }
 
 .pin-btn:hover {
@@ -362,7 +380,209 @@ body {
 }
 
 .pin-btn.pinned {
-  color: var(--bookmark-color)
+  color: var(--bookmark-color);
+}
+
+/* Boutons de confirmation (dialogues) */
+.confirm-btn {
+  min-width: 80px;
+  padding: 0.75rem 1.2rem;
+  border-radius: var(--border-radius);
+  font-weight: bold;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  line-height: 1.2;
+  margin: 0 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.confirm-btn.ok {
+  background: #ffffff;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.confirm-btn.ok:hover {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.night-mode .confirm-btn.ok {
+  background: #2d2d2d;
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.confirm-btn.cancel {
+  background: #ffffff;
+  color: #6c757d;
+  border-color: #6c757d;
+}
+
+.confirm-btn.cancel:hover {
+  background: #f8f9fa;
+  color: #5a6268;
+}
+
+.night-mode .confirm-btn.cancel {
+  background: #2d2d2d;
+  color: #a0a0a0;
+  border-color: #6c757d;
+}
+
+.confirm-btn.blue {
+  background: #ffffff;
+  color: #1565c0;
+  border-color: #1565c0;
+}
+
+.confirm-btn.blue:hover {
+  background: #e3f2fd;
+}
+
+.night-mode .confirm-btn.blue {
+  background: #2d2d2d;
+  color: #64b5f6;
+  border-color: #64b5f6;
+}
+
+.confirm-btn.brown {
+  background: #ffffff;
+  color: #6d4c41;
+  border-color: #6d4c41;
+}
+
+.confirm-btn.brown:hover {
+  background: #efebe9;
+}
+
+.night-mode .confirm-btn.brown {
+  background: #2d2d2d;
+  color: #bcaaa4;
+  border-color: #8d6e63;
+}
+
+/* Boutons de vitesse d'auto-scroll */
+.autoscroll-speed-btn {
+  font-size: 1.3rem;
+  font-weight: 900;
+  background: #ffffff !important;
+  color: var(--primary) !important;
+  border: 1px solid var(--border) !important;
+  opacity: 0;
+  transform: scale(.7);
+  transition: opacity .2s ease, transform .2s ease;
+  pointer-events: none;
+}
+
+.night-mode .autoscroll-speed-btn {
+  background: #2d2d2d !important;
+  color: var(--success) !important;
+  border-color: var(--border-dark) !important;
+}
+
+.autoscroll-speed-btn.visible {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.autoscroll-speed-btn:disabled {
+  opacity: .3 !important;
+  pointer-events: none;
+}
+
+/* Bouton du menu items (menu latéral) */
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--menu-border);
+  padding: .75rem var(--space-lg);
+  width: 100%;
+  cursor: pointer;
+  color: white;
+  transition: background-color .2s;
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Bouton de thème dans le tafsir */
+.tafsir-font-btn {
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--primary);
+  border-radius: 50%;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.night-mode .tafsir-font-btn {
+  background: #2d2d2d;
+  color: var(--success);
+  border-color: var(--border-dark);
+}
+
+.tafsir-font-btn:hover {
+  background: var(--primary-light);
+}
+
+/* Bouton de partage dans About */
+#shareAppBtn {
+  background: #ffffff !important;
+  color: var(--primary) !important;
+  border: 1px solid var(--primary) !important;
+}
+
+#shareAppBtn:hover {
+  background: var(--primary-light) !important;
+}
+
+.night-mode #shareAppBtn {
+  background: #2d2d2d !important;
+  color: var(--success) !important;
+  border-color: var(--success) !important;
+}
+
+/* Lien email dans About (transformé en bouton) */
+a.confirm-btn.blue {
+  background: #ffffff;
+  color: #1565c0 !important;
+  border: 1px solid #1565c0 !important;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.2rem;
+  border-radius: var(--border-radius);
+  font-weight: bold;
+  transition: background .2s;
+}
+
+a.confirm-btn.blue:hover {
+  background: #e3f2fd;
+}
+
+.night-mode a.confirm-btn.blue {
+  background: #2d2d2d;
+  color: #64b5f6 !important;
+  border-color: #64b5f6 !important;
 }
 
 /* ============================================
@@ -426,7 +646,7 @@ body {
 }
 
 /* ============================================
-   LECTEUR DE PAGES MODE PORTRAIT
+   LECTEUR DE PAGES MODE PORTRAIT (book)
    ============================================ */
 
 .mode-portrait .page-scroll {
@@ -482,7 +702,7 @@ body {
 }
 
 /* ============================================
-   LECTEUR DE PAGES MODE LANDSCAPE
+   LECTEUR DE PAGES MODE LANDSCAPE (scroll)
    ============================================ */
 
 .mode-landscape .page-scroll {
@@ -622,17 +842,6 @@ body {
   gap: 1px
 }
 
-.menu-item {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  background: transparent;
-  border-bottom: 1px solid var(--menu-border);
-  padding: .75rem var(--space-lg);
-  width: 100%;
-  cursor: pointer
-}
-
 .menu-icon-svg {
   width: 1.375rem;
   height: 1.375rem;
@@ -651,7 +860,7 @@ body {
 }
 
 /* ============================================
-   ITEMS LISTES
+   ITEMS LISTES (sourates, juz, etc.)
    ============================================ */
 
 .item-container {
@@ -888,7 +1097,7 @@ body {
 }
 
 /* ============================================
-   MARQUE-PAGES
+   MARQUE-PAGES (bookmarks)
    ============================================ */
 
 .bookmarks-overlay-content {
@@ -921,10 +1130,6 @@ body {
   width: 100%
 }
 
-/* ============================================
-   BOUTONS BOOKMARKS
-   ============================================ */
-
 .bookmarks-add-form .btn {
   flex: 0 0 auto;
   padding: 10px 20px;
@@ -950,6 +1155,23 @@ body {
   border: 2px solid var(--primary);
   border-radius: 8px
 }
+
+/* Conteneur des boutons dans bookmarks (utilisé par overlays-manager) */
+.bookmarks-button-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  margin: 8px 0 0 0;
+  padding: 0;
+  width: 100%;
+  min-height: 48px;
+}
+
+/* ============================================
+   KHATM
+   ============================================ */
 
 .khatm-content {
   flex: 1;
@@ -1079,15 +1301,34 @@ body {
   text-align: center
 }
 
-/* ============================================
-   UTILITAIRES
-   ============================================ */
-
-.loading-placeholder,
-.empty-message {
-  text-align: center;
+.clear-search-btn {
+  position: absolute;
+  left: 5px;
+  top: 0;
+  margin: auto 0;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
   color: var(--text-light);
-  padding: var(--overlay-padding-x)
+  padding: 0;
+  line-height: 1;
+  z-index: 10;
+  transition: color .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center
+}
+
+.clear-search-btn:hover {
+  color: var(--text)
+}
+
+#searchInput {
+  padding-left: 40px !important;
+  box-sizing: border-box
 }
 
 /* ============================================
@@ -1117,23 +1358,6 @@ body {
   font-size: .9rem;
   font-weight: bold;
   cursor: pointer
-}
-
-.tafsir-font-btn {
-  flex: 0 0 auto;
-  width: 2.5rem;
-  height: 2.5rem;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 50%;
-  font-size: 1.2rem;
-  font-weight: bold;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background .2s
 }
 
 .tafsir-container {
@@ -1234,24 +1458,6 @@ body {
   color: var(--success)
 }
 
-.tafsir-font-btn:hover {
-  background: var(--primary-light);
-  border-color: var(--primary)
-}
-
-.night-mode .tafsir-font-btn {
-  color: var(--text);
-  border-color: var(--border-dark)
-}
-
-.night-mode .tafsir-font-btn:hover {
-  background: rgba(76, 175, 80, .2)
-}
-
-.tajweed-image img {
-  box-shadow: var(--shadow)
-}
-
 /* ============================================
    TAJWEED
    ============================================ */
@@ -1274,208 +1480,8 @@ body {
   padding-right: 10px !important
 }
 
-.about-content strong {
-  color: var(--primary)
-}
-
-.night-mode .about-content strong {
-  color: var(--success)
-}
-
-.loading-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%
-}
-
-/* ============================================
-   SPINNER
-   ============================================ */
-
-.spinner {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 3px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: var(--space-lg) auto
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg)
-  }
-
-}
-
-/* ============================================
-   TOAST
-   ============================================ */
-
-.toast {
-  position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, .9);
-  color: white;
-  padding: 12px 20px;
-  border-radius: 10px;
-  z-index: 10000;
-  max-width: 80%;
-  text-align: center;
-  display: none;
-  font-size: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
-  white-space: pre-line;
-  line-height: 1.5;
-  font-weight: 500
-}
-
-.autoscroll-group {
-  display: flex;
-  align-items: center;
-  gap: .25rem
-}
-
-.autoscroll-speed-btn {
-  font-size: 1.3rem;
-  font-weight: 900;
-  opacity: 0;
-  transform: scale(.7);
-  transition: opacity .2s ease, transform .2s ease;
-  pointer-events: none
-}
-
-.autoscroll-speed-btn.visible {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto
-}
-
-.autoscroll-speed-btn:disabled {
-  opacity: .3 !important;
-  pointer-events: none
-}
-
-::-webkit-scrollbar {
-  width: 0;
-  background: transparent
-}
-
-/* ============================================
-   DIALOGS
-   ============================================ */
-
-.confirm-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, .6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-}
-
-.confirm-dialog {
-  background: var(--surface);
-  border-radius: var(--border-radius-lg);
-  padding: var(--space-lg);
-  max-width: 20rem;
-  width: 90%;
-  text-align: center;
-  box-shadow: var(--shadow-heavy);
-  direction: rtl;
-}
-
-.confirm-dialog p {
-  color: var(--text);
-  margin-bottom: var(--space-lg);
-  font-size: var(--text-md);
-}
-
-.confirm-buttons {
-  display: flex;
-  gap: 12px;
-  justify-content: center
-}
-
-.confirm-btn {
-  min-width: 80px;
-  padding: .75rem 1.2rem;
-  border-radius: var(--border-radius);
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-  transition: background .2s;
-  text-align: center;
-  line-height: 1.2;
-  margin: 0 .25rem
-}
-
-.confirm-btn.ok {
-  background: var(--primary);
-  color: white
-}
-
-.confirm-btn.cancel {
-  background: #6c757d;
-  color: white
-}
-
-.confirm-btn.blue {
-  background: #1565c0;
-  color: white;
-}
-
-.confirm-btn.brown {
-  background: #6d4c41;
-  color: white;
-}
-
-.confirm-btn.ok:hover {
-  background: var(--primary-dark)
-}
-
-.confirm-btn.cancel:hover {
-  background: #5a6268
-}
-
-.item-surah .item-title {
-  font-family: 'MyNotoKufi', sans-serif
-}
-
-.clear-search-btn {
-  position: absolute;
-  left: 5px;
-  top: 0;
-  margin: auto 0;
-  width: 40px;
-  height: 40px;
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: var(--text-light);
-  padding: 0;
-  line-height: 1;
-  z-index: 10;
-  transition: color .2s;
-  display: flex;
-  align-items: center;
-  justify-content: center
-}
-
-.clear-search-btn:hover {
-  color: var(--text)
-}
-
-#searchInput {
-  padding-left: 40px !important;
-  box-sizing: border-box
+.tajweed-image img {
+  box-shadow: var(--shadow)
 }
 
 /* ============================================
@@ -1495,6 +1501,14 @@ body {
   color: var(--text);
   text-align: justify;
   text-align-last: right
+}
+
+.about-content strong {
+  color: var(--primary)
+}
+
+.night-mode .about-content strong {
+  color: var(--success)
 }
 
 .about-title {
@@ -1574,8 +1588,127 @@ body {
 }
 
 /* ============================================
-   ITEMS LISTES
+   UTILITAIRES
    ============================================ */
+
+.loading-placeholder,
+.empty-message {
+  text-align: center;
+  color: var(--text-light);
+  padding: var(--overlay-padding-x)
+}
+
+.loading-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%
+}
+
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: var(--space-lg) auto
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg)
+  }
+}
+
+/* ============================================
+   TOAST
+   ============================================ */
+
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, .9);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  z-index: 10000;
+  max-width: 80%;
+  text-align: center;
+  display: none;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
+  white-space: pre-line;
+  line-height: 1.5;
+  font-weight: 500
+}
+
+/* ============================================
+   AUTO SCROLL
+   ============================================ */
+
+.autoscroll-group {
+  display: flex;
+  align-items: center;
+  gap: .25rem
+}
+
+/* ============================================
+   SCROLLBAR (masquée)
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 0;
+  background: transparent
+}
+
+/* ============================================
+   DIALOGS
+   ============================================ */
+
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.confirm-dialog {
+  background: var(--surface);
+  border-radius: var(--border-radius-lg);
+  padding: var(--space-lg);
+  max-width: 20rem;
+  width: 90%;
+  text-align: center;
+  box-shadow: var(--shadow-heavy);
+  direction: rtl;
+}
+
+.confirm-dialog p {
+  color: var(--text);
+  margin-bottom: var(--space-lg);
+  font-size: var(--text-md);
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center
+}
+
+/* ============================================
+   ITEMS LISTES (supplément)
+   ============================================ */
+
+.item-surah .item-title {
+  font-family: 'MyNotoKufi', sans-serif
+}
 
 .item-search .item-line-2[data-clickable="true"] {
   cursor: pointer;
@@ -1586,7 +1719,280 @@ body {
   background-color: var(--primary-light);
 }
 
-/* Pour le mode nuit */
 .night-mode .item-search .item-line-2[data-clickable="true"]:hover {
   background-color: rgba(76, 175, 80, 0.2);
+}
+
+/* ============================================
+   AUDIO
+   ============================================ */
+
+.audio-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Info riwaya en tête overlay */
+.audio-riwaya-info {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  padding: 0.3rem;
+  border-radius: var(--border-radius);
+  background: var(--surface-alt);
+  direction: rtl;
+}
+
+/* Info aya en cours */
+.audio-current-display {
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+  border-radius: var(--border-radius);
+  padding: 0.6rem 1rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--primary);
+  direction: rtl;
+}
+.night-mode .audio-current-display {
+  background: rgba(76,175,80,0.15);
+  color: var(--success);
+  border-color: var(--success);
+}
+
+/* Selects — base commune audio + rate */
+.audio-select,
+.audio-rate-select {
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  direction: rtl;
+}
+.audio-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+}
+.audio-rate-select {
+  padding: 0.3rem 0.4rem;
+  font-size: 0.85rem;
+}
+.audio-select:focus,
+.audio-rate-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+.night-mode .audio-select,
+.night-mode .audio-rate-select {
+  background: #2d2d2d;
+  border-color: #444;
+  color: #eee;
+}
+
+/* Barre de progression overlay */
+.audio-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+.audio-progress {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* Boutons contrôles overlay */
+.audio-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Base commune audio-btn et mini-btn */
+.audio-btn,
+.mini-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+  border-radius: 50%;
+  color: var(--text);
+  line-height: 1;
+}
+.audio-btn:active,
+.mini-btn:active { transform: scale(0.92); }
+.audio-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Taille overlay */
+.audio-btn {
+  width: 2.6rem;
+  height: 2.6rem;
+  font-size: 1.1rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.audio-btn.active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.night-mode .audio-btn {
+  background: #2d2d2d;
+  border-color: #444;
+  color: #eee;
+}
+
+/* Taille mini-bar */
+.mini-btn {
+  font-size: 1.1rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: var(--border-radius);
+}
+.mini-btn.active {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+.night-mode .mini-btn { color: #eee; }
+
+/* Bouton play principal — partagé overlay + mini-bar */
+.audio-btn.main-btn,
+.mini-btn.main-btn {
+  font-size: 1.3rem;
+  color: var(--text);
+}
+
+/* Status */
+.audio-status {
+  text-align: center;
+  min-height: 1.5rem;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  padding: 0.3rem;
+}
+
+/* ============================================
+   MINI-BAR AUDIO
+   ============================================ */
+.audio-mini-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.12);
+  padding: 0.3rem 0.5rem 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.audio-mini-bar.hidden { display: none; }
+.night-mode .audio-mini-bar {
+  background: #1e1e1e;
+  border-color: #333;
+}
+
+/* Ligne 1 : temps + progression */
+.mini-bar-top {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.25rem;
+}
+.mini-bar-time {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  min-width: 2.5rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+.mini-bar-progress {
+  flex: 1;
+  height: 3px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  display: block;
+}
+
+/* Ligne 2 : ⚙️ | nom sourate | contrôles | 🔽 */
+.mini-bar-bottom {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.mini-bar-surah {
+  flex: 1;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 0.3rem;
+  direction: rtl;
+}
+.mini-bar-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+/* ============================================
+   FAB 🎧
+   ============================================ */
+.audio-fab {
+  position: fixed;
+  bottom: 1.2rem;
+  left: 1rem;
+  z-index: 1100;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 1.3rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-heavy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+}
+.audio-fab:active { transform: scale(0.92); }
+.audio-fab.hidden { display: none; }
+.night-mode .audio-fab { background: var(--success); }
+
+/* ============================================
+   HIGHLIGHT AYA
+   ============================================ */
+.page-wrapper {
+  position: relative; /* nécessaire pour positionner le highlight */
+}
+.aya-highlight {
+  position: absolute;
+  background: rgba(255, 213, 0, 0.2);
+  border-radius: 4px;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+.night-mode .aya-highlight {
+  background: rgba(255, 213, 0, 0.2);
 }
