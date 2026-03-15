@@ -800,14 +800,10 @@ class OverlayManager {
       });
 
     item.addEventListener("click", (e) => {
-      if (
-        e.target === item ||
-        e.target.classList.contains("bookmark-name") ||
-        e.target.classList.contains("item-tag")
-      ) {
+     
         window.quranApp?.goToPage(bookmark.page);
         this.closeOverlay("bookmarks");
-      }
+      
     });
   }
 
@@ -943,10 +939,6 @@ class OverlayManager {
   // audio OVERLAY
   // ============================================
 
-  // ============================================
-  // audio OVERLAY
-  // ============================================
-
   renderAudioContent(overlay) {
     const contentContainer = document.getElementById("audioContent");
     if (!contentContainer) return;
@@ -996,28 +988,34 @@ class OverlayManager {
     `;
 
     overlay.contentGenerated = true;
+    document.getElementById("playPauseBtn")?.addEventListener("click", () => {
+      setTimeout(() => {
+        if (window.quranAudioPlayer?.isPlaying) this.closeOverlay("audio");
+      }, 100);
+    });
+
     return overlay;
   }
 
-async showAudio() {
-  this.closeMenu();
-  const overlay = this.lazyLoadOverlay("audio");
-  if (overlay?.element) {
-    if (!overlay.contentGenerated) {
-      this.renderAudioContent(overlay);
-      await window.quranAudioPlayer.init();
-    }
-    this.showOverlay("audio");
-    const player = window.quranAudioPlayer;
-    if (player.isPlaying) {
-      // Lecture en cours → juste resync l'overlay sans changer la position
-      player._syncOverlay();
-    } else {
-      // Pas de lecture → synchroniser avec la page affichée
-      player.setCurrentSurahFromPage();
+  async showAudio() {
+    this.closeMenu();
+    const overlay = this.lazyLoadOverlay("audio");
+    if (overlay?.element) {
+      if (!overlay.contentGenerated) {
+        this.renderAudioContent(overlay);
+        await window.quranAudioPlayer.init();
+      }
+      this.showOverlay("audio");
+      const player = window.quranAudioPlayer;
+      if (player.isPlaying) {
+        // Lecture en cours → juste resync l'overlay sans changer la position
+        player._syncOverlay();
+      } else {
+        // Pas de lecture → synchroniser avec la page affichée
+        player.setCurrentSurahFromPage();
+      }
     }
   }
-}
 
   // ============================================
   // 4. KHATM OVERLAY

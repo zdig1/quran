@@ -16,13 +16,50 @@ const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
   hafs: {
     label: "حفص",
     reciters: [
-      { id: "Alafasy_128kbps", name: "مشاري العفاسي" },
-      { id: "Abdul_Basit_Murattal_192kbps", name: "عبد الباسط عبد الصمد" },
-      { id: "Maher_Al_Muaiqly_128kbps", name: "ماهر المعيقلي" },
-      { id: "Saad_Al-Ghamdi_128kbps", name: "سعد الغامدي" },
-      { id: "Husary_128kbps", name: "محمود خليل الحصري" },
-      { id: "Muhammad_Jibreel_128kbps", name: "محمد جبريل" },
+      { id: "Alafasy_64kbps", name: "مشاري العفاسي" },
+      { id: "Abdul_Basit_Murattal_64kbps", name: "عبد الباسط — مرتل" },
+      { id: "Abdul_Basit_Mujawwad_128kbps", name: "عبد الباسط — مجوّد" },
+      { id: "AbdulSamad_64kbps_QuranExplorer.Com", name: "عبد الصمد" },
+      { id: "Abdurrahmaan_As-Sudais_64kbps", name: "عبد الرحمن السديس" },
+      { id: "Abu_Bakr_Ash-Shaatree_64kbps", name: "أبو بكر الشاطري" },
+      { id: "Abdullah_Basfar_64kbps", name: "عبدالله بصفر" },
+      { id: "Abdullah_Matroud_128kbps", name: "عبدالله مطرود" },
+      { id: "Abdullaah_3awwaad_Al-Juhaynee_128kbps", name: "عبدالله الجهني" },
+      {
+        id: "Ahmed_ibn_Ali_al-Ajamy_64kbps_QuranExplorer.Com",
+        name: "أحمد العجمي",
+      },
+      { id: "Akram_AlAlaqimy_128kbps", name: "أكرم العلاقمي" },
+      { id: "Ali_Hajjaj_AlSuesy_128kbps", name: "علي حجاج السويسي" },
+      { id: "Ali_Jaber_64kbps", name: "علي جابر" },
+      { id: "Ayman_Sowaid_64kbps", name: "أيمن سويد" },
+      { id: "Fares_Abbad_64kbps", name: "فارس عباد" },
+      { id: "Ghamadi_40kbps", name: "سعد الغامدي" },
+      { id: "Hani_Rifai_64kbps", name: "هاني الرفاعي" },
+      { id: "Hudhaify_64kbps", name: "علي الحذيفي" },
+      { id: "Husary_64kbps", name: "محمود خليل الحصري — مرتل" },
+      { id: "Husary_Mujawwad_64kbps", name: "محمود خليل الحصري — مجوّد" },
+      { id: "Husary_Muallim_128kbps", name: "الحصري — معلم" },
+      { id: "Ibrahim_Akhdar_64kbps", name: "إبراهيم الأخضر" },
+      { id: "Karim_Mansoori_40kbps", name: "كريم منصوري" },
+      { id: "Maher_AlMuaiqly_64kbps", name: "ماهر المعيقلي" },
+      { id: "Menshawi_32kbps", name: "محمد صديق المنشاوي — مرتل" },
+      { id: "Minshawy_Mujawwad_64kbps", name: "المنشاوي — مجوّد" },
+      { id: "Minshawy_Teacher_128kbps", name: "المنشاوي — معلم" },
+      { id: "Mohammad_al_Tablaway_64kbps", name: "محمد الطبلاوي" },
+      { id: "Muhammad_Ayyoub_64kbps", name: "محمد أيوب" },
+      { id: "Muhammad_Jibreel_64kbps", name: "محمد جبريل" },
+      { id: "Mustafa_Ismail_48kbps", name: "مصطفى إسماعيل" },
+      { id: "Nabil_Rifa3i_48kbps", name: "نبيل الرفاعي" },
+      { id: "Nasser_Alqatami_128kbps", name: "ناصر القطامي" },
+      { id: "Saood_ash-Shuraym_64kbps", name: "سعود الشريم" },
       { id: "Sahl_Yassin_128kbps", name: "سهل ياسين" },
+      { id: "Salaah_AbdulRahman_Bukhatir_128kbps", name: "صلاح بوخاطر" },
+      { id: "Salah_Al_Budair_128kbps", name: "صالح البدير" },
+      { id: "Yaser_Salamah_128kbps", name: "ياسر سلامة" },
+      { id: "Yasser_Ad-Dussary_128kbps", name: "ياسر الدوسري" },
+      { id: "khalefa_al_tunaiji_64kbps", name: "خليفة الطنيجي" },
+      { id: "mahmoud_ali_al_banna_32kbps", name: "محمود علي البنا" },
     ],
   },
   warsh: {
@@ -34,12 +71,9 @@ const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
   },
   qaloun: {
     label: "قالون",
-    reciters: [
-      // À compléter quand les dossiers everyayah.com seront disponibles
-    ],
+    reciters: [],
   },
 });
-
 // ============================================
 // CLASSE PRINCIPALE
 // ============================================
@@ -230,39 +264,95 @@ class QuranAudioPlayer {
     if (!this.currentReciter || !this.currentSurah || !this.currentAyah) return;
     const url = this._buildAyahUrl(this.currentSurah, this.currentAyah);
     if (!url) return;
+
+    const needsBasmala =
+      this.currentAyah === 1 &&
+      this.currentSurah !== 1 &&
+      this.currentSurah !== 9;
+
     if (this.audioElement.src !== url) {
-      this.audioElement.src = url;
-      this.audioElement.load();
+      if (needsBasmala) {
+        const basmalaUrl = `${EVERYAYAH_BASE}bismillah.mp3`;
+        this.audioElement.src = basmalaUrl;
+        this.audioElement.dataset.basmala = "true";
+        this.audioElement.load();
+        this.audioElement.playbackRate = this.playbackRate;
+        this.audioElement.play().catch((e) => {
+          console.error("basmala error:", e);
+        });
+        this.audioElement.addEventListener(
+          "ended",
+          () => {
+            this.audioElement.dataset.basmala = "false";
+            this.audioElement.src = url;
+            this.audioElement.load();
+            this.audioElement.playbackRate = this.playbackRate;
+            this.audioElement.play().catch((e) => {
+              console.error("play error:", e);
+              this._showStatus("❌ تعذر التشغيل", true);
+            });
+            if (!this.ayaCoords) {
+              this._loadAyaCoords().then(() => this._applyHighlight());
+            } else {
+              this._applyHighlight();
+            }
+          },
+          { once: true },
+        );
+      } else {
+        this.audioElement.src = url;
+        this.audioElement.load();
+      }
     }
-    this.audioElement.playbackRate = this.playbackRate;
-    this.audioElement.play().catch((e) => {
-      console.error("play error:", e);
-      this._showStatus("❌ تعذر التشغيل", true);
-    });
+
+    if (!needsBasmala) {
+      this.audioElement.playbackRate = this.playbackRate;
+      this.audioElement.play().catch((e) => {
+        console.error("play error:", e);
+        this._showStatus("❌ تعذر التشغيل", true);
+      });
+      if (!this.ayaCoords) {
+        this._loadAyaCoords().then(() => this._applyHighlight());
+      } else {
+        this._applyHighlight();
+      }
+    }
+
     this.isStopped = false;
-    this._showMiniBar();
+    if (!this.miniBar?.classList.contains("hidden")) this._showMiniBar();
+    else this._syncMiniBar();
     this._updateCurrentDisplay();
-    // Highlight — charger coords si pas encore fait
-    if (!this.ayaCoords) {
-      this._loadAyaCoords().then(() => this._applyHighlight());
-    } else {
-      this._applyHighlight();
-    }
   }
 
   _applyHighlight() {
     const rects = this._getAyaRects(this.currentSurah, this.currentAyah);
-    if (rects?.length)
-      window.quranReader?.highlightAya(
-        this.currentSurah,
-        this.currentAyah,
-        rects,
-      );
-    else window.quranReader?.clearHighlight();
+    if (!rects?.length) {
+      window.quranReader?.clearHighlight();
+      return;
+    }
     const ayaPage = rects[0]?.p;
     if (ayaPage && ayaPage !== window.quranReader?.currentPage) {
       window.quranApp?.goToPage(ayaPage);
+      setTimeout(
+        () =>
+          window.quranReader?.highlightAya(
+            this.currentSurah,
+            this.currentAyah,
+            rects,
+          ),
+        300,
+      );
+      const wrapper = window.quranReader?.wrapperPool?.find(
+        (w) => parseInt(w.dataset.page) === ayaPage,
+      );
+      wrapper?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
     }
+    window.quranReader?.highlightAya(
+      this.currentSurah,
+      this.currentAyah,
+      rects,
+    );
   }
 
   pause() {
@@ -480,9 +570,9 @@ class QuranAudioPlayer {
     });
 
     audio.addEventListener("ended", () => {
+      if (this.audioElement.dataset.basmala === "true") return;
       this.isPlaying = false;
-      if (this.repeatMode === 1)
-        this.play(); // répéter l'aya
+      if (this.repeatMode === 1) this.play();
       else this.nextAyah();
     });
 
