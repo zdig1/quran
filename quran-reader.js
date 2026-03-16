@@ -1235,61 +1235,59 @@ class QuranReader {
   // HIGHLIGHT AYA
   // ============================================
 
-  highlightAya(surah, ayah, rects) {
-    document.querySelectorAll(".aya-highlight").forEach((el) => el.remove());
-    if (!rects?.length) return;
+highlightAya(surah, ayah, rects) {
+  document.querySelectorAll(".aya-highlight").forEach((el) => el.remove());
+  if (!rects?.length) return;
 
-    const page = this.currentPage;
-    const wrapper =
-      this.readingMode === "scroll"
-        ? this.wrapperPool.find((w) => parseInt(w.dataset.page) === page)
-        : this.elements.pageScroll.querySelector(
-            `.page-wrapper[data-page="${page}"]`,
-          );
-    if (!wrapper) return;
+  const page = this.currentPage;
+  const wrapper =
+    this.readingMode === "scroll"
+      ? this.wrapperPool.find((w) => parseInt(w.dataset.page) === page)
+      : this.elements.pageScroll.querySelector(
+          `.page-wrapper[data-page="${page}"]`,
+        );
+  if (!wrapper) return;
 
-    const img = wrapper.querySelector("img");
-    if (!img) return;
+  const img = wrapper.querySelector("img");
+  if (!img) return;
 
-    const wRect = wrapper.getBoundingClientRect();
-    const iRect = img.getBoundingClientRect();
-    const imgW = iRect.width;
-    const imgH = imgW * (1100 / 700);
-    const topGap = (iRect.height - imgH) / 2;
-    if (!imgW || !imgH) return;
+  const offX = img.offsetLeft;
+  const offY = img.offsetTop;
+  const imgW = img.offsetWidth;
+  const imgH = img.offsetHeight;
+  if (!imgW || !imgH) return;
 
-    const pageCoords = (window.quranAudioPlayer?.ayaCoords || []).filter(
-      (r) => r.p === page,
-    );
-    const dbMinX = pageCoords.length
-      ? Math.min(...pageCoords.map((r) => r.x1))
-      : 32;
-    const dbMaxX = pageCoords.length
-      ? Math.max(...pageCoords.map((r) => r.x2))
-      : 1304;
-    const dbMaxY = pageCoords.length
-      ? Math.max(...pageCoords.map((r) => r.y2))
-      : 1890;
+  // Bornes DB de la page courante
+  const pageCoords = (window.quranAudioPlayer?.ayaCoords || []).filter(
+    (r) => r.p === page,
+  );
+  const dbMinX = pageCoords.length     ? Math.min(...pageCoords.map((r) => r.x1))     : 32;
+  const dbMaxX = pageCoords.length     ? Math.max(...pageCoords.map((r) => r.x2))     : 1304;
+  const dbMinY = pageCoords.length     ? Math.min(...pageCoords.map((r) => r.y1))     : 0;
+  const dbMaxY = pageCoords.length     ? Math.max(...pageCoords.map((r) => r.y2))     : 1890;
 
-    const sx = imgW / (dbMaxX - dbMinX);
-    const offX = iRect.left - wRect.left;
-    const offY =
-      iRect.top - wRect.top + topGap + (this.readingMode === "scroll" ? 0 : 22);
+  const sx = imgW / (dbMaxX - dbMinX);
+  const sy = imgH / (dbMaxY - dbMinY);
 
-    rects.forEach((r) => {
-      const div = document.createElement("div");
-      div.className = "aya-highlight";
-      div.style.left = offX + (r.x1 - dbMinX) * sx + "px";
-      div.style.width = (r.x2 - r.x1) * sx + "px";
-      const yCorrect =
-        this.readingMode === "scroll"
-          ? 30 - (r.y1 / dbMaxY) * 30
-          : -30 + (r.y1 / dbMaxY) * 15;
-      div.style.top = offY + (r.y1 * imgH) / 1890 + yCorrect + "px";
-      div.style.height = ((r.y2 - r.y1) * imgH) / 1890 + "px";
-      wrapper.appendChild(div);
-    });
-  }
+  // mesurées empiriquement : ajuster si décalage résiduel constant
+  const WEBP_TOP = 33; 
+  const WEBP_BOT = 23; 
+
+  rects.forEach((r) => {
+    const t = (r.y1 - dbMinY) / (dbMaxY - dbMinY); // 0=haut, 1=bas
+    const yCorrect =
+      this.readingMode === "scroll"        ? 30 - (r.y1 / dbMaxY) * 45
+        : (WEBP_TOP - t * (WEBP_TOP + WEBP_BOT)) * (imgH / 1100);
+
+    const div = document.createElement("div");
+    div.className = "aya-highlight";
+    div.style.left  = offX + (r.x1 - dbMinX) * sx + "px";
+    div.style.width = (r.x2 - r.x1) * sx + "px";
+    div.style.top   = offY + (r.y1 - dbMinY) * sy + yCorrect + "px";
+    div.style.height = (r.y2 - r.y1) * sy + "px";
+    wrapper.appendChild(div);
+  });
+}
 
   clearHighlight() {
     document.querySelectorAll(".aya-highlight").forEach((el) => el.remove());
