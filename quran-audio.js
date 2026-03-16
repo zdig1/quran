@@ -124,6 +124,7 @@ class QuranAudioPlayer {
       window: {},
     };
   }
+  F;
 
   // ============================================
   // INIT
@@ -631,29 +632,29 @@ class QuranAudioPlayer {
     this._applyRate(newSpeed);
   }
 
-_applyRate(rate) {
-  // S'assurer que rate est un nombre
-  const numRate = parseFloat(rate);
-  if (isNaN(numRate)) return;
-  
-  this.playbackRate = numRate;
-  if (this.audioElement) this.audioElement.playbackRate = this.playbackRate;
-  
-  // Mettre à jour le bouton de la mini-barre
-  const speedBtn = document.getElementById('miniBarSpeed');
-  if (speedBtn) speedBtn.textContent = numRate.toFixed(1) + '×';
-  
-  // Mettre à jour le bouton de l'overlay
-  if (this.elements.overlaySpeedBtn) {
-    this.elements.overlaySpeedBtn.textContent = numRate.toFixed(1) + '×';
+  _applyRate(rate) {
+    // S'assurer que rate est un nombre
+    const numRate = parseFloat(rate);
+    if (isNaN(numRate)) return;
+
+    this.playbackRate = numRate;
+    if (this.audioElement) this.audioElement.playbackRate = this.playbackRate;
+
+    // Mettre à jour le bouton de la mini-barre
+    const speedBtn = document.getElementById("miniBarSpeed");
+    if (speedBtn) speedBtn.textContent = numRate.toFixed(1) + "×";
+
+    // Mettre à jour le bouton de l'overlay
+    if (this.elements.overlaySpeedBtn) {
+      this.elements.overlaySpeedBtn.textContent = numRate.toFixed(1) + "×";
+    }
+
+    // Mettre à jour l'index courant
+    const index = this.speedOptions.indexOf(numRate);
+    if (index !== -1) this.currentSpeedIndex = index;
+
+    this._savePref("rate", numRate);
   }
-  
-  // Mettre à jour l'index courant
-  const index = this.speedOptions.indexOf(numRate);
-  if (index !== -1) this.currentSpeedIndex = index;
-  
-  this._savePref("rate", numRate);
-}
 
   // ============================================
   // MINI-BAR
@@ -665,27 +666,30 @@ _applyRate(rate) {
     bar.id = "audioMiniBar";
     bar.className = "audio-mini-bar hidden";
     bar.innerHTML = `
-      <div class="mini-bar-top">
-        <span id="miniBarTimeLeft"  class="mini-bar-time">0:00</span>
-        <input type="range" id="miniBarProgress" class="mini-bar-progress" value="0" min="0" max="100" step="0.1">
-        <span id="miniBarTimeRight" class="mini-bar-time">0:00</span>
+    <div class="mini-bar-bottom">
+      <button id="miniBarOptions"  class="mini-btn" title="خيارات">⚙️</button>
+      <div class="mini-bar-controls">
+        <button id="miniBarSpeed" class="mini-btn" title="السرعة">1.0×</button>
+        <button id="miniBarRepeat" class="mini-btn" title="تكرار">🔁</button>
+               <button id="miniBarNextSurah" class="mini-btn" title="السورة التالية">⏭</button>
+
+               <button id="miniBarPlayPause" class="mini-btn main-btn" title="تشغيل">▶</button>
+               <button id="miniBarPrevSurah" class="mini-btn" title="السورة السابقة">⏮</button>
+
+               <button id="miniBarStop"      class="mini-btn" title="إيقاف">⏹</button>
       </div>
-      <div class="mini-bar-bottom">
-        <button id="miniBarOptions"  class="mini-btn" title="خيارات">⚙️</button>
-        <span   id="miniBarSurahName" class="mini-bar-surah"></span>
-        <div class="mini-bar-controls">
-          <button id="miniBarSpeed" class="mini-btn" title="السرعة">1.0×</button>
-          <button id="miniBarRepeat" class="mini-btn" title="تكرار">🔁</button>
-          <button id="miniBarNextSurah" class="mini-btn" title="السورة التالية">⏭</button>
-          <button id="miniBarPlayPause" class="mini-btn main-btn" title="تشغيل">▶</button>
-          <button id="miniBarPrevSurah" class="mini-btn" title="السورة السابقة">⏮</button>
-          <button id="miniBarStop"      class="mini-btn" title="إيقاف">⏹</button>
-        </div>
-        <button id="miniBarHide" class="mini-btn" title="إخفاء">🔽</button>
-      </div>
-    `;
+      <button id="miniBarHide" class="mini-btn" title="إخفاء">🔽</button>
+    </div>
+  `;
     document.body.appendChild(bar);
     this.miniBar = bar;
+  }
+
+  _syncMiniBar() {
+    this._updateMiniPlayBtn();
+    this._updateRepeatBtn();
+    const speedBtn = document.getElementById("miniBarSpeed");
+    if (speedBtn) speedBtn.textContent = this.playbackRate.toFixed(1) + "×";
   }
 
   _buildFab() {
@@ -709,19 +713,6 @@ _applyRate(rate) {
   _hideMiniBar() {
     this.miniBar?.classList.add("hidden");
     if (!this.isStopped) this.fabBtn?.classList.remove("hidden");
-  }
-
-  _syncMiniBar() {
-    const surah = this.surahs.find((s) => s.s_id === this.currentSurah);
-    const nameEl = document.getElementById("miniBarSurahName");
-    if (nameEl)
-      nameEl.textContent = surah
-        ? `${surah.s_id}. ${surah.name} : ${this.currentAyah} / ${this.totalAyahs}`
-        : "";
-    this._updateMiniPlayBtn();
-    this._updateRepeatBtn();
-    const speedBtn = document.getElementById("miniBarSpeed");
-    if (speedBtn) speedBtn.textContent = this.playbackRate.toFixed(1) + "×";
   }
 
   _updateMiniPlayBtn() {

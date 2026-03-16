@@ -1724,9 +1724,10 @@ a.confirm-btn.blue:hover {
 }
 
 /* ============================================
-   AUDIO
+   AUDIO – OVERLAY ET MINI-BAR
    ============================================ */
 
+/* --- Overlay audio --- */
 .audio-body {
   padding: 1rem;
   display: flex;
@@ -1734,7 +1735,6 @@ a.confirm-btn.blue:hover {
   gap: 1rem;
 }
 
-/* Info riwaya en tête overlay */
 .audio-riwaya-info {
   text-align: center;
   font-size: 0.85rem;
@@ -1745,7 +1745,6 @@ a.confirm-btn.blue:hover {
   direction: rtl;
 }
 
-/* Info aya en cours */
 .audio-current-display {
   background: var(--primary-light);
   border: 1px solid var(--primary);
@@ -1763,9 +1762,10 @@ a.confirm-btn.blue:hover {
   border-color: var(--success);
 }
 
-/* Selects — base commune audio + rate */
+/* Sélecteurs (reciter, surah, aya) */
 .audio-select,
-.audio-rate-select {
+.audio-rate-select,
+.mini-rate-select {
   border-radius: var(--border-radius);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -1780,26 +1780,29 @@ a.confirm-btn.blue:hover {
   font-size: 1rem;
 }
 
-.audio-rate-select {
+.audio-rate-select,
+.mini-rate-select {
   padding: 0.3rem 0.4rem;
   font-size: 0.85rem;
 }
 
 .audio-select:focus,
-.audio-rate-select:focus {
+.audio-rate-select:focus,
+.mini-rate-select:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 2px var(--primary-light);
 }
 
 .night-mode .audio-select,
-.night-mode .audio-rate-select {
+.night-mode .audio-rate-select,
+.night-mode .mini-rate-select {
   background: #2d2d2d;
   border-color: #444;
   color: #eee;
 }
 
-/* Barre de progression overlay */
+/* Barre de progression */
 .audio-progress-wrap {
   display: flex;
   align-items: center;
@@ -1815,7 +1818,7 @@ a.confirm-btn.blue:hover {
   cursor: pointer;
 }
 
-/* Boutons contrôles overlay */
+/* Boutons de contrôle overlay */
 .audio-controls {
   display: flex;
   justify-content: center;
@@ -1823,7 +1826,7 @@ a.confirm-btn.blue:hover {
   gap: 0.5rem;
 }
 
-/* Base commune audio-btn et mini-btn */
+/* --- Styles communs aux boutons audio et mini-bar --- */
 .audio-btn,
 .mini-btn {
   border: none;
@@ -1843,12 +1846,13 @@ a.confirm-btn.blue:hover {
   transform: scale(0.92);
 }
 
-.audio-btn:disabled {
+.audio-btn:disabled,
+.mini-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-/* Taille overlay */
+/* Boutons overlay (taille spécifique) */
 .audio-btn {
   width: 2.6rem;
   height: 2.6rem;
@@ -1869,7 +1873,7 @@ a.confirm-btn.blue:hover {
   color: #eee;
 }
 
-/* Taille mini-bar */
+/* Boutons mini-bar (taille spécifique) */
 .mini-btn {
   font-size: 1rem;
   padding: 0.3rem 0.4rem;
@@ -1885,14 +1889,14 @@ a.confirm-btn.blue:hover {
   color: #eee;
 }
 
-/* Bouton play principal — partagé overlay + mini-bar */
+/* Bouton principal (play) plus grand */
 .audio-btn.main-btn,
 .mini-btn.main-btn {
   font-size: 1.3rem;
   color: var(--text);
 }
 
-/* Status */
+/* Statut (messages d'erreur/info) */
 .audio-status {
   text-align: center;
   min-height: 1.5rem;
@@ -1901,9 +1905,23 @@ a.confirm-btn.blue:hover {
   padding: 0.3rem;
 }
 
-/* ============================================
-   MINI-BAR AUDIO
-   ============================================ */
+/* Avertissement (coordonnées manquantes) */
+.audio-warning {
+  background: rgba(255, 193, 7, 0.2);
+  color: #b45f06;
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.night-mode .audio-warning {
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffb74d;
+}
+
+/* --- Mini-bar audio (version simplifiée) --- */
 .audio-mini-bar {
   position: fixed;
   bottom: 0;
@@ -1913,10 +1931,7 @@ a.confirm-btn.blue:hover {
   background: var(--surface);
   border-top: 1px solid var(--border);
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.12);
-  padding: 0.3rem 0.5rem 0.4rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  padding: 0.3rem 0.5rem;
 }
 
 .audio-mini-bar.hidden {
@@ -1928,58 +1943,55 @@ a.confirm-btn.blue:hover {
   border-color: #333;
 }
 
-/* Ligne 1 : temps + progression */
-.mini-bar-top {
+/* Ligne principale (boutons) */
+.audio-mini-bar .mini-bar-bottom {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0 0.25rem;
-}
-
-.mini-bar-time {
-  font-size: 0.75rem;
-  color: var(--text-light);
-  min-width: 2.5rem;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.mini-bar-progress {
-  flex: 1;
-  height: 3px;
-  accent-color: var(--primary);
-  cursor: pointer;
-  display: block;
-}
-
-/* Ligne 2 : ⚙️ | nom sourate | contrôles | 🔽 */
-.mini-bar-bottom {
-  display: flex;
-  align-items: center;
+  justify-content: space-between;
   gap: 0.3rem;
 }
 
-.mini-bar-surah {
-  flex: 1;
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0 0.3rem;
-  direction: rtl;
-}
-
-.mini-bar-controls {
+.audio-mini-bar .mini-bar-controls {
   display: flex;
-  align-items: center;
   gap: 0.2rem;
+  flex: 1;
+  justify-content: center;
 }
 
-/* ============================================
-   FAB 🎧
-   ============================================ */
+.audio-mini-bar .mini-btn {
+  font-size: 1rem;
+  padding: 0.3rem 0.4rem;
+  min-width: 2.2rem;
+  border: none;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  transition: background 0.2s;
+}
+
+.audio-mini-bar .mini-btn:active {
+  background: var(--primary-light);
+}
+
+.audio-mini-bar .mini-btn.main-btn {
+  font-size: 1.2rem;
+}
+
+/* Adaptation très petits écrans */
+@media (max-width: 360px) {
+  .audio-mini-bar .mini-btn {
+    font-size: 0.85rem;
+    min-width: 1.8rem;
+    padding: 0.2rem 0.25rem;
+  }
+
+  .audio-mini-bar .mini-btn.main-btn {
+    font-size: 1rem;
+  }
+}
+
+/* --- FAB (floating action button) --- */
 .audio-fab {
   position: fixed;
   bottom: 1.2rem;
@@ -1988,8 +2000,7 @@ a.confirm-btn.blue:hover {
   width: 3rem;
   height: 3rem;
   border-radius: 50%;
-  background: var(--primary);
-  color: #fff;
+  background: #1a5e48f0;
   font-size: 1.3rem;
   border: none;
   cursor: pointer;
@@ -2012,12 +2023,44 @@ a.confirm-btn.blue:hover {
   background: var(--success);
 }
 
-/* ============================================
-   HIGHLIGHT AYA
-   ============================================ */
+.select-ok {
+  background-color: #ffffff;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.select-blue {
+  background-color: #ffffff;
+  color: #1565c0;
+  border-color: #1565c0;
+}
+
+.select-brown {
+  background-color: #ffffff;
+  color: #6d4c41;
+  border-color: #6d4c41;
+}
+
+.night-mode .select-ok {
+  background-color: #2d2d2d;
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.night-mode .select-blue {
+  background-color: #2d2d2d;
+  color: #64b5f6;
+  border-color: #64b5f6;
+}
+
+.night-mode .select-brown {
+  background-color: #2d2d2d;
+  color: #bcaaa4;
+  border-color: #8d6e63;
+}
+
 .page-wrapper {
   position: relative;
-  /* nécessaire pour positionner le highlight */
 }
 
 .aya-highlight {
@@ -2031,78 +2074,4 @@ a.confirm-btn.blue:hover {
 
 .night-mode .aya-highlight {
   background: rgba(255, 213, 0, 0.2);
-}
-
-/* ============================================
-   AUDIO WARNING (point 9)
-   ============================================ */
-.audio-warning {
-  background: rgba(255, 193, 7, 0.2);
-  color: #b45f06;
-  padding: 0.5rem;
-  border-radius: var(--border-radius);
-  font-size: 0.85rem;
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-
-.night-mode .audio-warning {
-  background: rgba(255, 193, 7, 0.1);
-  color: #ffb74d;
-}
-
-/* ============================================
-   MINI-BAR RATE SELECT (point 6)
-   ============================================ */
-.mini-rate-select {
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  padding: 0.2rem 0.3rem;
-  font-size: 0.75rem;
-  cursor: pointer;
-  margin: 0 0.2rem;
-}
-
-.mini-rate-select:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.night-mode .mini-rate-select {
-  background: #2d2d2d;
-  border-color: #444;
-  color: #eee;
-}
-.select-ok {
-  background-color: #ffffff;
-  color: var(--primary);
-  border-color: var(--primary);
-}
-.select-blue {
-  background-color: #ffffff;
-  color: #1565c0;
-  border-color: #1565c0;
-}
-.select-brown {
-  background-color: #ffffff;
-  color: #6d4c41;
-  border-color: #6d4c41;
-}
-
-.night-mode .select-ok {
-  background-color: #2d2d2d;
-  color: var(--success);
-  border-color: var(--success);
-}
-.night-mode .select-blue {
-  background-color: #2d2d2d;
-  color: #64b5f6;
-  border-color: #64b5f6;
-}
-.night-mode .select-brown {
-  background-color: #2d2d2d;
-  color: #bcaaa4;
-  border-color: #8d6e63;
 }
