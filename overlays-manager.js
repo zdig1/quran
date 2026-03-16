@@ -939,63 +939,59 @@ class OverlayManager {
   // audio OVERLAY
   // ============================================
 
-  renderAudioContent(overlay) {
-    const contentContainer = document.getElementById("audioContent");
-    if (!contentContainer) return;
+renderAudioContent(overlay) {
+  const contentContainer = document.getElementById("audioContent");
+  if (!contentContainer) return;
 
-    // Riwaya active (depuis la variable du script)
-    const riwayaLabel =
-      window.RIWAYAT_CONFIG?.[window.quranAudioPlayer?.currentRiwaya]?.label ||
-      "";
+  const riwayaLabel =
+    window.RIWAYAT_CONFIG?.[window.quranAudioPlayer?.currentRiwaya]?.label || "";
 
-    contentContainer.innerHTML = `
-      <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} — البيانات عبر الإنترنت</div>
+  // Avertissement si les coordonnées ne sont pas chargées
+  const coordsStatus = window.quranAudioPlayer?.ayaCoordsLoaded === false 
+    ? '<div class="audio-warning">⚠️ بيانات تحديد الآيات غير متوفرة، لن يظهر التظليل</div>' 
+    : '';
 
-      <select id="reciterSelect" class="audio-select" aria-label="اختر القارئ">
-        <option value="">اختر القارئ</option>
-      </select>
-
-      <select id="surahSelectAudio" class="audio-select" aria-label="اختر السورة">
+  contentContainer.innerHTML = `
+    <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} — البيانات عبر الإنترنت</div>
+    ${coordsStatus}
+    <select id="reciterSelect" class="audio-select select-ok" aria-label="اختر القارئ">
+      <option value="">اختر القارئ</option>
+    </select>
+    <div style="display: flex; gap: 0.5rem;">
+      <select id="surahSelectAudio" class="audio-select select-blue" style="flex:1;" aria-label="اختر السورة">
         <option value="">اختر السورة</option>
       </select>
+      <select id="ayaSelectAudio" class="audio-select select-brown" style="flex:1;" aria-label="اختر الآية">
+        <option value="">اختر الآية</option>
+      </select>
+    </div>
+    <div id="currentSurahDisplay" class="audio-current-display"></div>
+    <div class="audio-progress-wrap">
+      <span id="audioCurrentTime">0:00</span>
+      <input type="range" id="audioProgress" class="audio-progress" value="0" min="0" max="100" step="0.1">
+      <span id="audioDuration">0:00</span>
+    </div>
+    <div class="audio-controls">
+      <button class="btn audio-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
+      <button class="btn audio-btn" id="repeatBtn"    title="تكرار">🔁</button>
+      <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">⏭</button>
+      <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">▶</button>
+      <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">⏮</button>
+      <button class="btn audio-btn" id="stopBtn"      title="إيقاف">⏹</button>
+    </div>
+    <div id="audioStatus" class="audio-status"></div>
+    <audio id="quranAudioPlayer" preload="none" style="display:none;"></audio>
+  `;
 
-      <div id="currentSurahDisplay" class="audio-current-display"></div>
+  overlay.contentGenerated = true;
+  document.getElementById("playPauseBtn")?.addEventListener("click", () => {
+    setTimeout(() => {
+      if (window.quranAudioPlayer?.isPlaying) this.closeOverlay("audio");
+    }, 100);
+  });
 
-      <div class="audio-progress-wrap">
-        <span id="audioCurrentTime">0:00</span>
-        <input type="range" id="audioProgress" class="audio-progress" value="0" min="0" max="100" step="0.1">
-        <span id="audioDuration">0:00</span>
-      </div>
-
-      <div class="audio-controls">
-        <select id="rateSelect" class="audio-rate-select" title="السرعة">
-          <option value="0.75">0.75×</option>
-          <option value="1" selected>1×</option>
-          <option value="1.25">1.25×</option>
-          <option value="1.5">1.5×</option>
-          <option value="2">2×</option>
-        </select>
-        <button class="btn audio-btn" id="repeatBtn"    title="تكرار">🔁</button>
-        <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">⏭</button>
-        <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">▶</button>
-        <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">⏮</button>
-        <button class="btn audio-btn" id="stopBtn"      title="إيقاف">⏹</button>
-      </div>
-
-      <div id="audioStatus" class="audio-status"></div>
-
-      <audio id="quranAudioPlayer" preload="none" style="display:none;"></audio>
-    `;
-
-    overlay.contentGenerated = true;
-    document.getElementById("playPauseBtn")?.addEventListener("click", () => {
-      setTimeout(() => {
-        if (window.quranAudioPlayer?.isPlaying) this.closeOverlay("audio");
-      }, 100);
-    });
-
-    return overlay;
-  }
+  return overlay;
+}
 
   async showAudio() {
     this.closeMenu();
