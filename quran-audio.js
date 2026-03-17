@@ -93,10 +93,10 @@ class QuranAudioPlayer {
 
     // Options
     this.repeatMode = 0; // 0=off 1=aya 2=surah 3=all
-    this.playbackRate = 1.0;
+    this.playbackRate = 1;
 
     // Vitesse cyclique
-    this.speedOptions = [0.75, 1.0, 1.25, 1.5, 2.0];
+    this.speedOptions = [0.75, 1, 1.25, 1.5, 2.0];
     this.currentSpeedIndex = 1; // index de 1.0
 
     // DOM
@@ -642,11 +642,11 @@ class QuranAudioPlayer {
 
     // Mettre à jour le bouton de la mini-barre
     const speedBtn = document.getElementById("miniBarSpeed");
-    if (speedBtn) speedBtn.textContent = numRate.toFixed(1) + "×";
+    if (speedBtn) speedBtn.textContent = numRate + "×";
 
     // Mettre à jour le bouton de l'overlay
     if (this.elements.overlaySpeedBtn) {
-      this.elements.overlaySpeedBtn.textContent = numRate.toFixed(1) + "×";
+      this.elements.overlaySpeedBtn.textContent = numRate + "×";
     }
 
     // Mettre à jour l'index courant
@@ -689,7 +689,7 @@ class QuranAudioPlayer {
     this._updateMiniPlayBtn();
     this._updateRepeatBtn();
     const speedBtn = document.getElementById("miniBarSpeed");
-    if (speedBtn) speedBtn.textContent = this.playbackRate.toFixed(1) + "×";
+    if (speedBtn) speedBtn.textContent = this.playbackRate + "×";
   }
 
   _buildFab() {
@@ -792,15 +792,13 @@ class QuranAudioPlayer {
         this._preloadNextAyah();
       }
     };
-    this._boundListeners.audio.error = (e) => {
-      let errorMsg = "❌ فشل تحميل الملف";
+    this._boundListeners.audio.error = () => {
       if (!navigator.onLine) {
-        errorMsg = "❌ لا يوجد اتصال بالإنترنت";
-      } else {
-        this._handlePlayError();
+        this._showStatus("❌ لا يوجد اتصال بالإنترنت", true);
         return;
       }
-      this._showStatus(errorMsg, true);
+      this._showStatus("❌ فشل تحميل الملف", true);
+      this._handlePlayError(); // Tentative de récupération
     };
 
     audio.addEventListener("play", this._boundListeners.audio.play);
@@ -1062,13 +1060,15 @@ class QuranAudioPlayer {
   _savePref(key, val) {
     try {
       localStorage.setItem(`quran_audio_${key}`, val);
-    } catch (e) {}
+    } catch {
+      // Ignorer
+    }
   }
 
   _loadPref(key) {
     try {
       return localStorage.getItem(`quran_audio_${key}`);
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -1211,21 +1211,6 @@ class QuranAudioPlayer {
 
     // Vider le cache (si utilisé)
     // this.imageCache?.clear();
-  }
-
-  // ============================================
-  // RESET
-  // ============================================
-
-  reset() {
-    this.stop();
-    this._hideMiniBar();
-    this.fabBtn?.classList.add("hidden");
-    this.currentSurah = null;
-    this.currentAyah = null;
-    if (this.elements.surahSelect) this.elements.surahSelect.value = "";
-    if (this.elements.reciterSelect) this.elements.reciterSelect.value = "";
-    this._updateUI();
   }
 }
 

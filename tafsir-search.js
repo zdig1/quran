@@ -91,7 +91,6 @@ class TafsirSearchManager {
   // ============================================
   // CHARGEMENT DES DONNÉES
   // ============================================
-
   async preload() {
     if (this.isLoaded) return;
     if (!this.loadPromise) {
@@ -101,8 +100,6 @@ class TafsirSearchManager {
           await this.loadData();
           this.isLoaded = true;
           this.buildSurahsIndex();
-        } catch (err) {
-          throw err;
         } finally {
           this.isLoading = false;
           this.loadPromise = null;
@@ -125,7 +122,8 @@ class TafsirSearchManager {
       );
       return this.data;
     } catch (err) {
-      throw err;
+      console.error("Erreur de chargement des données Tafsir:", err);
+      throw err; // On relance après avoir loggé
     }
   }
 
@@ -293,10 +291,6 @@ class TafsirSearchManager {
     return cached;
   }
 
-  search(query) {
-    return this.searchWithStats(query).results;
-  }
-
   getSearchStats(query) {
     return this.searchWithStats(query).stats;
   }
@@ -427,7 +421,9 @@ class TafsirSearchManager {
     setTimeout(() => {
       try {
         inputEl.focus();
-      } catch (e) {}
+      } catch {
+        // Ignorer
+      }
     }, 100);
     updateStats();
     if (inputEl.value.trim().length > 0) performSearch();
@@ -444,7 +440,9 @@ class TafsirSearchManager {
       focus: () => {
         try {
           inputEl.focus();
-        } catch (e) {}
+        } catch {
+          // Ignorer
+        }
       },
     };
 
@@ -909,7 +907,9 @@ class TafsirSearchManager {
         this.nextTafsirPage = Math.min(604, page + 1);
         this.cleanupDistantPages();
       }
-    } catch (err) {}
+    } catch {
+      // Ignorer
+    }
     setTimeout(() => {
       this.isLoadingMore = false;
     }, 100);
@@ -934,7 +934,9 @@ class TafsirSearchManager {
         this.previousTafsirPage = Math.max(1, page - 1);
         this.cleanupDistantPages();
       }
-    } catch (err) {}
+    } catch {
+      // Ignorer
+    }
     setTimeout(() => {
       this.isLoadingMore = false;
     }, 100);

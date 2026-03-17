@@ -293,7 +293,7 @@ class OverlayManager {
     }
   }
 
-  _createSurahItem(surah, isPinned, bookmarkedSurahIds, pinnedIds) {
+  _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
     const hasBookmark = bookmarkedSurahIds.has(surah.s_id);
     const revelationIcon = surah.type === "مدنية" ? "🕌" : "🕋";
     const juzStarts =
@@ -799,11 +799,9 @@ class OverlayManager {
         }
       });
 
-    item.addEventListener("click", (e) => {
-     
-        window.quranApp?.goToPage(bookmark.page);
-        this.closeOverlay("bookmarks");
-      
+    item.addEventListener("click", () => {
+      window.quranApp?.goToPage(bookmark.page);
+      this.closeOverlay("bookmarks");
     });
   }
 
@@ -880,7 +878,7 @@ class OverlayManager {
           } else {
             window.quranApp?.showToast("❌ فشل الاستيراد: الملف غير صالح");
           }
-        } catch (err) {
+        } catch {
           window.quranApp?.showToast("❌ خطأ في قراءة الملف");
         } finally {
           input.remove(); // ← ici aussi, plus sûr
@@ -939,19 +937,21 @@ class OverlayManager {
   // audio OVERLAY
   // ============================================
 
-renderAudioContent(overlay) {
-  const contentContainer = document.getElementById("audioContent");
-  if (!contentContainer) return;
+  renderAudioContent(overlay) {
+    const contentContainer = document.getElementById("audioContent");
+    if (!contentContainer) return;
 
-  const riwayaLabel =
-    window.RIWAYAT_CONFIG?.[window.quranAudioPlayer?.currentRiwaya]?.label || "";
+    const riwayaLabel =
+      window.RIWAYAT_CONFIG?.[window.quranAudioPlayer?.currentRiwaya]?.label ||
+      "";
 
-  // Avertissement si les coordonnées ne sont pas chargées
-  const coordsStatus = window.quranAudioPlayer?.ayaCoordsLoaded === false 
-    ? '<div class="audio-warning">⚠️ بيانات تحديد الآيات غير متوفرة، لن يظهر التظليل</div>' 
-    : '';
+    // Avertissement si les coordonnées ne sont pas chargées
+    const coordsStatus =
+      window.quranAudioPlayer?.ayaCoordsLoaded === false
+        ? '<div class="audio-warning">⚠️ بيانات تحديد الآيات غير متوفرة، لن يظهر التظليل</div>'
+        : "";
 
-  contentContainer.innerHTML = `
+    contentContainer.innerHTML = `
     <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} — البيانات عبر الإنترنت</div>
     ${coordsStatus}
     <select id="reciterSelect" class="audio-select select-ok" aria-label="اختر القارئ">
@@ -972,7 +972,7 @@ renderAudioContent(overlay) {
       <span id="audioDuration">0:00</span>
     </div>
     <div class="audio-controls">
-      <button class="btn audio-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
+      <button class="btn audio-btn" id="overlaySpeedBtn" title="السرعة">1×</button>
       <button class="btn audio-btn" id="repeatBtn"    title="تكرار">🔁</button>
       <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">⏭</button>
       <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">▶</button>
@@ -983,15 +983,15 @@ renderAudioContent(overlay) {
     <audio id="quranAudioPlayer" preload="none" style="display:none;"></audio>
   `;
 
-  overlay.contentGenerated = true;
-  document.getElementById("playPauseBtn")?.addEventListener("click", () => {
-    setTimeout(() => {
-      if (window.quranAudioPlayer?.isPlaying) this.closeOverlay("audio");
-    }, 100);
-  });
+    overlay.contentGenerated = true;
+    document.getElementById("playPauseBtn")?.addEventListener("click", () => {
+      setTimeout(() => {
+        if (window.quranAudioPlayer?.isPlaying) this.closeOverlay("audio");
+      }, 100);
+    });
 
-  return overlay;
-}
+    return overlay;
+  }
 
   async showAudio() {
     this.closeMenu();
@@ -1229,7 +1229,6 @@ renderAudioContent(overlay) {
   shareApp() {
     const appName = "مصحف التجويد - حفص";
     const appUrl = "https://zdig1.gitlab.io/quran/";
-    const message = `📖 ${appName}\n\nتطبيق متكامل لقراءة القرآن الكريم مع التفسير والبحث بدون إنترنت\n\nرابط التطبيق: ${appUrl}`;
     const shortMessage = `📖 ${appName} - تطبيق قرآن كامل بدون إنترنت: ${appUrl}`;
 
     // Utiliser socialsharing si disponible (Cordova)

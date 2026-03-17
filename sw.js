@@ -118,7 +118,7 @@ async function handleFetch(request) {
       cache.put(request, response.clone());
     }
     return response;
-  } catch (err) {
+  } catch {
     // Erreur réseau : fallback pour images
     if (request.destination === "image") {
       return new Response(OFFLINE_SVG, {
