@@ -954,20 +954,27 @@ class OverlayManager {
     contentContainer.innerHTML = `
     <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} — البيانات عبر الإنترنت</div>
     ${coordsStatus}
-    <select id="reciterSelect" class="audio-select select-ok" aria-label="اختر القارئ">
+    <select id="reciterSelect" class="audio-select select-violet" aria-label="اختر القارئ">
       <option value="">اختر القارئ</option>
     </select>
-    <div style="display: flex; gap: 0.5rem;">
+
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
       <select id="surahSelectAudio" class="audio-select select-blue" style="flex:1;" aria-label="اختر السورة">
         <option value="">اختر السورة</option>
       </select>
       <select id="ayaSelectAudio" class="audio-select select-brown" style="flex:1;" aria-label="اختر الآية">
         <option value="">اختر الآية</option>
       </select>
+      <select id="pageSelectAudio" class="audio-select select-ok" style="flex:1;" aria-label="اختر الصفحة">
+        <option value="">اختر الصفحة</option>
+      </select>
     </div>
-    <div id="currentSurahDisplay" class="audio-current-display"></div>
-    <div class="audio-progress-wrap">
-      <span id="audioCurrentTime">0:00</span>
+  <div class="audio-riwaya-info" style="display: flex; align-items: center; justify-content space-between; gap: 8px; margin-bottom: 8px;">
+  <span style="white-space: nowrap;">أنت تستمع إلى :</span>
+  <div id="currentSurahDisplay" class="audio-current-display" style="flex: 1; margin: 0; background: transparent; border: none; color: inherit;"></div>
+</div>
+    <div class="audio-progress-wrap">  
+    <span id="audioCurrentTime">0:00</span>
       <input type="range" id="audioProgress" class="audio-progress" value="0" min="0" max="100" step="0.1">
       <span id="audioDuration">0:00</span>
     </div>

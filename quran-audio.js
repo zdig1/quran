@@ -130,33 +130,28 @@ class QuranAudioPlayer {
   // INIT
   // ============================================
 
-  async init() {
-    this._buildMiniBar();
-    this._buildFab();
-    await this._loadAyaCoords();
-    this.surahs = window.quranCalculator?.getAllSurahs() || [];
-    // Les éléments injectés par renderAudioContent sont maintenant dans le DOM
-    this.audioElement = document.getElementById("quranAudioPlayer");
-    this._cacheElements();
-    this._populateSurahSelect();
-    this._populateReciterSelect(ACTIVE_RIWAYA);
-    this._selectReciter(
-      this._loadPref(`reciter_${ACTIVE_RIWAYA}`) || null,
-      false,
-    );
-    this._setupAudioEvents();
-    this._setupOverlayEvents();
-    this._setupMiniBarEvents();
-    // Appliquer la vitesse sauvegardée
-    const savedRate = this._loadPref("rate") || 1.0;
-    this._applyRate(savedRate);
-    // Ajuster l'index en fonction de la vitesse chargée
-    const index = this.speedOptions.indexOf(parseFloat(savedRate));
-    this.currentSpeedIndex = index !== -1 ? index : 1;
-    this.repeatMode = parseInt(this._loadPref("repeat") || "0");
-    this._updateRepeatBtn();
-    this._setupOnlineOffline();
-  }
+async init() {
+  this._buildMiniBar();
+  this._buildFab();
+  await this._loadAyaCoords();
+  this.surahs = window.quranCalculator?.getAllSurahs() || [];
+  this.audioElement = document.getElementById("quranAudioPlayer");
+  this._cacheElements();               // <- D'abord on remplit this.elements
+  this._populatePageSelect();           // <- Ensuite on utilise this.elements.pageSelect
+  this._populateSurahSelect();
+  this._populateReciterSelect(ACTIVE_RIWAYA);
+  this._selectReciter(this._loadPref(`reciter_${ACTIVE_RIWAYA}`) || null, false);
+  this._setupAudioEvents();
+  this._setupOverlayEvents();
+  this._setupMiniBarEvents();
+  const savedRate = this._loadPref("rate") || 1.0;
+  this._applyRate(savedRate);
+  const index = this.speedOptions.indexOf(parseFloat(savedRate));
+  this.currentSpeedIndex = index !== -1 ? index : 1;
+  this.repeatMode = parseInt(this._loadPref("repeat") || "0");
+  this._updateRepeatBtn();
+  this._setupOnlineOffline();
+}
 
   _cacheElements() {
     const g = (id) => document.getElementById(id);
@@ -166,6 +161,7 @@ class QuranAudioPlayer {
       reciterSelect: g("reciterSelect"),
       surahSelect: g("surahSelectAudio"),
       ayaSelect: g("ayaSelectAudio"),
+      pageSelect: g("pageSelectAudio"),
       overlaySpeedBtn: g("overlaySpeedBtn"),
       playPauseBtn: g("playPauseBtn"),
       stopBtn: g("stopBtn"),
@@ -280,6 +276,10 @@ class QuranAudioPlayer {
     if (!s) return;
     this.currentSurah = parseInt(surahId);
     this.currentAyah = parseInt(ayah);
+    const page = this._getPageForAya(this.currentSurah, this.currentAyah);
+    if (page && this.elements.pageSelect) {
+      this.elements.pageSelect.value = page;
+    }
     this.totalAyahs = s.verses_count;
     if (this.elements.surahSelect) this.elements.surahSelect.value = surahId;
 
@@ -318,6 +318,24 @@ class QuranAudioPlayer {
       opt.textContent = `الآية ${i}`;
       select.appendChild(opt);
     }
+  }
+
+  _populatePageSelect() {
+    const sel = this.elements.pageSelect;
+    if (!sel) return;
+    sel.innerHTML = '<option value="">اختر الصفحة</option>';
+    for (let p = 1; p <= 604; p++) {
+      const opt = document.createElement("option");
+      opt.value = p;
+      opt.textContent = `الصفحة ${p}`;
+      sel.appendChild(opt);
+    }
+  }
+
+  _getPageForAya(surah, ayah) {
+    if (!this.ayaCoords) return null;
+    const found = this.ayaCoords.find((r) => r.s === surah && r.a === ayah);
+    return found ? found.p : null;
   }
   // ============================================
   // URL AUDIO
@@ -840,6 +858,12 @@ class QuranAudioPlayer {
       this._applyRate(e.target.value);
     this._boundListeners.overlay.speedClick = () => this.cycleSpeed();
 
+    this._boundListeners.overlay.pageChange = (e) => this._handlePageChange(e);
+    this.elements.pageSelect?.addEventListener(
+      "change",
+      this._boundListeners.overlay.pageChange,
+    );
+
     this.elements.reciterSelect?.addEventListener(
       "change",
       this._boundListeners.overlay.reciterChange,
@@ -947,6 +971,17 @@ class QuranAudioPlayer {
       "click",
       this._boundListeners.miniBar.repeatClick,
     );
+  }
+
+  _handlePageChange(e) {
+    const page = parseInt(e.target.value);
+    if (!page) return;
+    const first = this._getFirstAyahOfPage(page); // déjà existante
+    if (first) {
+      this._setSurah(first.surah, first.ayah);
+      // Optionnel : lancer la lecture automatiquement
+      // if (!this.isStopped) this.play();
+    }
   }
 
   // ============================================
@@ -1111,6 +1146,12 @@ class QuranAudioPlayer {
       this.elements.ayaSelect.removeEventListener(
         "change",
         this._boundListeners.overlay.ayaChange,
+      );
+    }
+    if (this.elements.pageSelect) {
+      this.elements.pageSelect.removeEventListener(
+        "change",
+        this._boundListeners.overlay.pageChange,
       );
     }
     if (this.elements.overlaySpeedBtn) {

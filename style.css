@@ -54,12 +54,8 @@
   --current-item-bg: rgb(146, 178, 152);
   --tafsir-select-bg: #d32f2f;
   --tafsir-content-padding: 5px;
-  --tafsir-select-text: #ffffff
+  --tafsir-select-text: #ffffff;
 }
-
-/* ============================================
-   THÈME NUIT
-   ============================================ */
 
 .night-mode {
   --primary: #4caf50;
@@ -89,11 +85,11 @@
   --remove-btn-border: #5a2a2a;
   --current-item-bg: #2a4a2a;
   --tafsir-select-bg: #8b3a3a;
-  --tafsir-select-text: #ffffff
+  --tafsir-select-text: #ffffff;
 }
 
 /* ============================================
-   RESET
+   RESET & BASE
    ============================================ */
 
 * {
@@ -101,27 +97,22 @@
   padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
-  -webkit-text-size-adjust: none
+  -webkit-text-size-adjust: none;
 }
 
 html {
-  font-size: 16px
+  font-size: 16px;
 }
 
-html,
-body {
+html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
   font-family: 'Segoe UI', Tahoma, sans-serif;
   direction: rtl;
   background: var(--bg);
-  color: var(--text)
+  color: var(--text);
 }
-
-/* ============================================
-   LAYOUT PRINCIPAL
-   ============================================ */
 
 #app {
   width: 100vw;
@@ -129,7 +120,7 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden
+  overflow: hidden;
 }
 
 .page-container {
@@ -139,22 +130,21 @@ body {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  margin-bottom: env(safe-area-inset-bottom)
+  margin-bottom: env(safe-area-inset-bottom);
 }
 
 @font-face {
   font-family: 'MyNotoKufi';
   src: url('media/NotoKufiArabic-Bold.woff2') format('woff2');
   font-weight: bold;
-  font-display: swap
+  font-display: swap;
 }
 
 /* ============================================
-   HEADER / FOOTER
+   HEADER / FOOTER (communs)
    ============================================ */
 
-.header,
-.footer {
+.header, .footer {
   position: fixed;
   left: 0;
   right: 0;
@@ -162,21 +152,19 @@ body {
   background: transparent;
   display: flex;
   align-items: center;
-  transition: var(--transition-default), visibility .3s ease
+  transition: var(--transition-default), visibility .3s ease;
 }
 
-.header.hidden,
-.footer.hidden {
+.header.hidden, .footer.hidden {
   opacity: 0;
   visibility: hidden;
-  pointer-events: none
+  pointer-events: none;
 }
 
-.header:not(.hidden),
-.footer:not(.hidden) {
+.header:not(.hidden), .footer:not(.hidden) {
   opacity: 1;
   visibility: visible;
-  pointer-events: auto
+  pointer-events: auto;
 }
 
 .header {
@@ -193,14 +181,13 @@ body {
   grid-template-columns: 1fr auto 1fr;
   padding-bottom: 0;
   pointer-events: auto !important;
-  transform: translateZ(0)
+  transform: translateZ(0);
 }
 
-/* En PWA standalone iOS, garder bottom à 0 */
 @media (display-mode: standalone) {
   .footer {
     bottom: 0 !important;
-    padding-bottom: 0 !important
+    padding-bottom: 0 !important;
   }
 }
 
@@ -209,19 +196,13 @@ body {
   align-items: center;
   visibility: visible !important;
   opacity: 1 !important;
-  min-height: 30px
+  min-height: 30px;
 }
 
-.footer-item:first-child {
-  justify-content: flex-start
-}
+.footer-item:first-child { justify-content: flex-start; }
+.footer-item:last-child { justify-content: flex-end; }
 
-.footer-item:last-child {
-  justify-content: flex-end
-}
-
-.footer-surah,
-.footer-value {
+.footer-surah, .footer-value {
   background: rgba(255, 255, 255, .7);
   border-radius: 1.25rem;
   padding: 8px 12px !important;
@@ -234,43 +215,41 @@ body {
   font-size: 14px !important;
   line-height: 1.5 !important;
   visibility: visible !important;
-  opacity: 1 !important
+  opacity: 1 !important;
 }
 
-.night-mode .footer-surah,
-.night-mode .footer-value {
-  background: rgba(30, 30, 30, .7)
+.night-mode .footer-surah, .night-mode .footer-value {
+  background: rgba(30, 30, 30, .7);
 }
 
 .footer-surah {
   font-size: var(--text-sm);
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap
+  white-space: nowrap;
 }
 
 .footer-value {
   font-size: var(--text-lg);
   font-weight: bold;
-  color: var(--primary)
+  color: var(--primary);
 }
 
 .night-mode .footer-value {
-  color: var(--success)
+  color: var(--success);
 }
 
-.sajda-icon,
-.item-sajda-icon {
+.sajda-icon, .item-sajda-icon {
   font-size: 1.25em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
-  color: var(--primary)
+  color: var(--primary);
 }
 
 /* ============================================
-   BOUTONS (version inversée : fond clair, texte couleur)
+   BOUTONS (styles de base)
    ============================================ */
 
 .btn {
@@ -280,10 +259,9 @@ body {
   cursor: pointer;
   border: none;
   outline: none;
-  font-family: inherit
+  font-family: inherit;
 }
 
-/* Boutons principaux du header */
 .header-btn {
   width: var(--button-size);
   height: var(--button-size);
@@ -291,15 +269,14 @@ body {
   border-radius: 50%;
   color: var(--primary);
   font-size: var(--text-lg);
-  box-shadow: var(--shadow)
+  box-shadow: var(--shadow);
 }
 
 .night-mode .header-btn {
   background: rgba(30, 30, 30, .7);
-  color: var(--success)
+  color: var(--success);
 }
 
-/* Bouton de fermeture (overlays) */
 .close-btn {
   background: none;
   color: var(--error);
@@ -319,11 +296,8 @@ body {
   margin: 0;
 }
 
-.night-mode .close-btn {
-  color: #ff6b6b;
-}
+.night-mode .close-btn { color: #ff6b6b; }
 
-/* Boutons d'icônes (édition, suppression, remplacement) */
 .icon-btn {
   width: 2rem;
   height: 2rem;
@@ -335,31 +309,14 @@ body {
   cursor: pointer;
   border: 1px solid transparent;
   background: var(--surface-alt);
-  transition: background .2s
-}
-
-.icon-btn:hover {
-  background: var(--primary-light)
-}
-
-.icon-btn--edit,
-.icon-btn--remove,
-.icon-btn--replace {
+  transition: background .2s;
   color: var(--primary);
-  border-color: var(--border)
+  border-color: var(--border);
 }
 
-.night-mode .icon-btn--edit,
-.night-mode .icon-btn--remove,
-.night-mode .icon-btn--replace {
-  color: var(--success);
-}
+.night-mode .icon-btn { color: var(--success); }
+.icon-btn:hover { background: var(--primary-light); }
 
-.icon-btn:hover {
-  background: var(--primary-light);
-}
-
-/* Bouton d'épinglage (pinned) */
 .pin-btn {
   background: none;
   border: none;
@@ -375,15 +332,10 @@ body {
   transition: color .2s ease;
 }
 
-.pin-btn:hover {
-  opacity: .8
-}
+.pin-btn:hover { opacity: .8; }
+.pin-btn.pinned { color: var(--bookmark-color); }
 
-.pin-btn.pinned {
-  color: var(--bookmark-color);
-}
-
-/* Boutons de confirmation (dialogues) */
+/* Boutons de confirmation (formulaires, dialogues) */
 .confirm-btn {
   min-width: 80px;
   padding: 0.75rem 1.2rem;
@@ -406,10 +358,7 @@ body {
   border-color: var(--primary);
 }
 
-.confirm-btn.ok:hover {
-  background: var(--primary-light);
-  color: var(--primary-dark);
-}
+.confirm-btn.ok:hover { background: var(--primary-light); color: var(--primary-dark); }
 
 .night-mode .confirm-btn.ok {
   background: #2d2d2d;
@@ -423,10 +372,7 @@ body {
   border-color: #6c757d;
 }
 
-.confirm-btn.cancel:hover {
-  background: #f8f9fa;
-  color: #5a6268;
-}
+.confirm-btn.cancel:hover { background: #f8f9fa; color: #5a6268; }
 
 .night-mode .confirm-btn.cancel {
   background: #2d2d2d;
@@ -440,9 +386,7 @@ body {
   border-color: #1565c0;
 }
 
-.confirm-btn.blue:hover {
-  background: #e3f2fd;
-}
+.confirm-btn.blue:hover { background: #e3f2fd; }
 
 .night-mode .confirm-btn.blue {
   background: #2d2d2d;
@@ -456,9 +400,7 @@ body {
   border-color: #6d4c41;
 }
 
-.confirm-btn.brown:hover {
-  background: #efebe9;
-}
+.confirm-btn.brown:hover { background: #efebe9; }
 
 .night-mode .confirm-btn.brown {
   background: #2d2d2d;
@@ -466,7 +408,7 @@ body {
   border-color: #8d6e63;
 }
 
-/* Boutons de vitesse d'auto-scroll */
+/* Boutons spécifiques auto-scroll, menu, tafsir, partage */
 .autoscroll-speed-btn {
   font-size: 1.3rem;
   font-weight: 900;
@@ -496,7 +438,6 @@ body {
   pointer-events: none;
 }
 
-/* Bouton du menu items (menu latéral) */
 .menu-item {
   display: flex;
   align-items: center;
@@ -511,11 +452,8 @@ body {
   transition: background-color .2s;
 }
 
-.menu-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
+.menu-item:hover { background: rgba(255, 255, 255, 0.1); }
 
-/* Bouton de thème dans le tafsir */
 .tafsir-font-btn {
   flex: 0 0 auto;
   width: 2.5rem;
@@ -539,20 +477,15 @@ body {
   border-color: var(--border-dark);
 }
 
-.tafsir-font-btn:hover {
-  background: var(--primary-light);
-}
+.tafsir-font-btn:hover { background: var(--primary-light); }
 
-/* Bouton de partage dans About */
 #shareAppBtn {
   background: #ffffff !important;
   color: var(--primary) !important;
   border: 1px solid var(--primary) !important;
 }
 
-#shareAppBtn:hover {
-  background: var(--primary-light) !important;
-}
+#shareAppBtn:hover { background: var(--primary-light) !important; }
 
 .night-mode #shareAppBtn {
   background: #2d2d2d !important;
@@ -560,7 +493,6 @@ body {
   border-color: var(--success) !important;
 }
 
-/* Lien email dans About (transformé en bouton) */
 a.confirm-btn.blue {
   background: #ffffff;
   color: #1565c0 !important;
@@ -575,9 +507,7 @@ a.confirm-btn.blue {
   transition: background .2s;
 }
 
-a.confirm-btn.blue:hover {
-  background: #e3f2fd;
-}
+a.confirm-btn.blue:hover { background: #e3f2fd; }
 
 .night-mode a.confirm-btn.blue {
   background: #2d2d2d;
@@ -601,7 +531,7 @@ a.confirm-btn.blue:hover {
   overscroll-behavior-y: none;
   touch-action: pan-y;
   padding: 0 !important;
-  margin: 0 !important
+  margin: 0 !important;
 }
 
 .page-wrapper {
@@ -610,7 +540,7 @@ a.confirm-btn.blue:hover {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  background: var(--bg)
+  background: var(--bg);
 }
 
 .page-image {
@@ -622,33 +552,28 @@ a.confirm-btn.blue:hover {
   aspect-ratio: 700/1100;
   margin: 0;
   padding: 0;
-  background-color: #fff
+  background-color: #fff;
 }
 
 .page-image[data-loaded="false"] {
   opacity: 0;
-  transition: opacity .3s ease
+  transition: opacity .3s ease;
 }
 
-.page-image[data-loaded="true"] {
-  opacity: 1
-}
+.page-image[data-loaded="true"] { opacity: 1; }
 
 .night-mode .page-image {
   filter: invert(1) hue-rotate(-30deg);
-  content-visibility: auto
+  content-visibility: auto;
 }
 
 .night-mode .tajweed-image img,
 .night-mode .khatm-page img {
   filter: invert(.93) hue-rotate(180deg) brightness(.9) contrast(1.1);
-  background-color: var(--bg)
+  background-color: var(--bg);
 }
 
-/* ============================================
-   LECTEUR DE PAGES MODE PORTRAIT (book)
-   ============================================ */
-
+/* Mode portrait (book) */
 .mode-portrait .page-scroll {
   overflow: hidden;
   display: block;
@@ -657,7 +582,7 @@ a.confirm-btn.blue:hover {
   position: relative;
   transition: all .3s ease;
   background: var(--bg);
-  z-index: 1
+  z-index: 1;
 }
 
 .mode-portrait .page-wrapper {
@@ -672,7 +597,7 @@ a.confirm-btn.blue:hover {
   left: 0;
   transition: opacity .2s ease;
   background: var(--bg);
-  opacity: 1
+  opacity: 1;
 }
 
 .mode-portrait .page-wrapper.active {
@@ -682,7 +607,7 @@ a.confirm-btn.blue:hover {
   height: 100vh;
   height: 100dvh;
   background: var(--bg);
-  opacity: 1
+  opacity: 1;
 }
 
 .mode-portrait .portrait-image {
@@ -691,32 +616,28 @@ a.confirm-btn.blue:hover {
   object-fit: fill;
 }
 
-/* En PWA standalone iOS, utiliser 100% de l'espace */
 @media (display-mode: standalone) {
   .mode-portrait .portrait-image {
     height: calc(100vh - var(--header-height) - var(--footer-height)) !important;
     height: calc(100dvh - var(--header-height) - var(--footer-height)) !important;
     max-height: calc(100vh - var(--header-height) - var(--footer-height)) !important;
-    max-height: calc(100dvh - var(--header-height) - var(--footer-height)) !important
+    max-height: calc(100dvh - var(--header-height) - var(--footer-height)) !important;
   }
 }
 
-/* ============================================
-   LECTEUR DE PAGES MODE LANDSCAPE (scroll)
-   ============================================ */
-
+/* Mode paysage (scroll) */
 .mode-landscape .page-scroll {
   overflow-x: hidden !important;
   overflow-y: auto !important;
   display: block !important;
   scroll-behavior: smooth;
-  transition: all .3s ease
+  transition: all .3s ease;
 }
 
 .mode-landscape .page-wrapper {
   width: 100vw !important;
   display: flex !important;
-  transition: none !important
+  transition: none !important;
 }
 
 .mode-landscape .landscape-image {
@@ -725,33 +646,29 @@ a.confirm-btn.blue:hover {
   aspect-ratio: 700 / 1100 !important;
   object-fit: contain !important;
   display: block;
-  transition: none !important
+  transition: none !important;
 }
 
 /* ============================================
-   OVERLAYS
+   OVERLAYS (générique)
    ============================================ */
 
 .overlay,
 .menu-overlay {
   position: fixed;
   inset: 0;
-  background: var(--overlay-bg);
   z-index: 9999;
   display: none;
   align-items: flex-start;
   justify-content: center;
-  padding: 15vh 5px 5px 5px
+  padding: 15vh 5px 5px 5px;
 }
 
-.menu-overlay {
-  background: rgba(0, 0, 0, .5)
-}
+.overlay { background: var(--overlay-bg); }
+.menu-overlay { background: rgba(0, 0, 0, .5); }
 
 .overlay.show,
-.menu-overlay.show {
-  display: flex
-}
+.menu-overlay.show { display: flex; }
 
 .overlay-content {
   background: var(--surface);
@@ -762,7 +679,7 @@ a.confirm-btn.blue:hover {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: var(--shadow-heavy)
+  box-shadow: var(--shadow-heavy);
 }
 
 .overlay-content.fullscreen {
@@ -773,7 +690,7 @@ a.confirm-btn.blue:hover {
   border-radius: 0;
   position: absolute;
   inset: 0;
-  z-index: 10000
+  z-index: 10000;
 }
 
 .overlay-header {
@@ -784,7 +701,7 @@ a.confirm-btn.blue:hover {
   justify-content: space-between;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  flex-shrink: 0
+  flex-shrink: 0;
 }
 
 .overlay-header h2 {
@@ -792,7 +709,7 @@ a.confirm-btn.blue:hover {
   font-size: var(--text-lg);
   font-weight: 600;
   color: var(--text);
-  margin: 0
+  margin: 0;
 }
 
 .overlay-body {
@@ -801,13 +718,10 @@ a.confirm-btn.blue:hover {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: auto !important;
   text-align: justify !important;
-  text-align-last: right !important
+  text-align-last: right !important;
 }
 
-/* ============================================
-   MENU
-   ============================================ */
-
+/* Menu spécifique */
 .menu-content {
   width: 15.625rem;
   position: absolute;
@@ -818,7 +732,7 @@ a.confirm-btn.blue:hover {
   box-shadow: 2px 0 10px rgba(0, 0, 0, .5);
   overflow-y: auto;
   display: flex;
-  flex-direction: column
+  flex-direction: column;
 }
 
 .menu-header {
@@ -826,20 +740,14 @@ a.confirm-btn.blue:hover {
   border-bottom: 1px solid var(--menu-border);
   display: flex;
   align-items: center;
-  justify-content: space-between
+  justify-content: space-between;
 }
 
 .menu-header h2 {
   color: var(--menu-text);
   font-size: var(--text-lg);
   margin: 0;
-  font-family: 'MyNotoKufi', sans-serif
-}
-
-.menu-items {
-  display: flex;
-  flex-direction: column;
-  gap: 1px
+  font-family: 'MyNotoKufi', sans-serif;
 }
 
 .menu-icon-svg {
@@ -847,7 +755,7 @@ a.confirm-btn.blue:hover {
   height: 1.375rem;
   fill: white;
   stroke: white;
-  flex-shrink: 0
+  flex-shrink: 0;
 }
 
 .menu-text {
@@ -856,11 +764,11 @@ a.confirm-btn.blue:hover {
   text-align: right;
   font-size: var(--text-md);
   font-family: 'MyNotoKufi', sans-serif;
-  padding-right: var(--space-md)
+  padding-right: var(--space-md);
 }
 
 /* ============================================
-   ITEMS LISTES (sourates, juz, etc.)
+   ITEMS DE LISTE (sourates, juz, bookmarks, etc.)
    ============================================ */
 
 .item-container {
@@ -870,12 +778,10 @@ a.confirm-btn.blue:hover {
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-height: auto
+  min-height: auto;
 }
 
-.item-container:last-child {
-  border-bottom: none
-}
+.item-container:last-child { border-bottom: none; }
 
 .item-line-1,
 .item-line-2 {
@@ -883,7 +789,7 @@ a.confirm-btn.blue:hover {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  direction: rtl
+  direction: rtl;
 }
 
 .item-right {
@@ -891,7 +797,7 @@ a.confirm-btn.blue:hover {
   align-items: center;
   gap: var(--space-md);
   flex: 1;
-  justify-content: flex-start
+  justify-content: flex-start;
 }
 
 .item-left {
@@ -899,29 +805,23 @@ a.confirm-btn.blue:hover {
   align-items: center;
   gap: var(--space-sm);
   margin-left: 5px;
-  flex-shrink: 0
+  flex-shrink: 0;
 }
 
 .item-title {
   font-size: var(--text-lg);
   font-weight: 700;
   color: var(--text);
-  line-height: 1.4
+  line-height: 1.4;
 }
 
 .item-subtitle,
 .item-tertiary {
-  font-size: var(--text-sm)
+  font-size: var(--text-sm);
 }
 
-.item-subtitle {
-  color: var(--text-light);
-  line-height: 1.3
-}
-
-.item-tertiary {
-  color: var(--text-lighter)
-}
+.item-subtitle { color: var(--text-light); line-height: 1.3; }
+.item-tertiary { color: var(--text-lighter); }
 
 .item-badge {
   min-width: 2.2rem;
@@ -936,41 +836,22 @@ a.confirm-btn.blue:hover {
   flex-shrink: 0;
   color: white;
   background: var(--badge-bg, var(--primary));
-  margin-right: 5px
+  margin-right: 5px;
 }
 
-.item-search .item-badge {
-  --badge-bg: var(--badge-search)
-}
-
-.item-surah .item-badge {
-  --badge-bg: var(--primary)
-}
-
-.item-juzhizb .item-badge {
-  --badge-bg: var(--badge-juzhizb)
-}
+.item-search .item-badge { --badge-bg: var(--badge-search); }
+.item-surah .item-badge { --badge-bg: var(--primary); }
+.item-juzhizb .item-badge { --badge-bg: var(--badge-juzhizb); }
 
 .juzhizb-grid {
   display: grid;
   grid-template-columns: 2.5rem 1fr;
   align-items: center;
-  gap: var(--space-md)
+  gap: var(--space-md);
 }
 
-.juzhizb-grid-col1 {
-  grid-column: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem
-}
-
-.juzhizb-grid-col2 {
-  grid-column: 2;
-  min-width: 0;
-  overflow: hidden
-}
+.juzhizb-grid-col1 { grid-column: 1; display: flex; align-items: center; justify-content: center; width: 2.5rem; }
+.juzhizb-grid-col2 { grid-column: 2; min-width: 0; overflow: hidden; }
 
 .aya-text {
   display: block;
@@ -980,20 +861,20 @@ a.confirm-btn.blue:hover {
   color: #d32f2f;
   font-family: 'MyNotoKufi', sans-serif;
   font-size: 14px;
-  margin-bottom: 4px
+  margin-bottom: 4px;
 }
 
 .aya-prefix {
   color: var(--text-light);
   font-size: 12px;
-  display: block
+  display: block;
 }
 
 .juzhizb-grid-col1.item-badge {
   width: 100%;
   height: auto;
   aspect-ratio: 1 / 1;
-  min-width: unset
+  min-width: unset;
 }
 
 .item-icon {
@@ -1001,17 +882,11 @@ a.confirm-btn.blue:hover {
   align-items: center;
   justify-content: center;
   min-width: 2rem;
-  font-size: var(--text-md)
+  font-size: var(--text-md);
 }
 
-.item-bookmark-indicator {
-  color: var(--bookmark-color)
-}
-
-.item-sajda-icon {
-  color: var(--primary);
-  min-width: 1rem
-}
+.item-bookmark-indicator { color: var(--bookmark-color); }
+.item-sajda-icon { color: var(--primary); min-width: 1rem; }
 
 .item-tag {
   background: var(--tag-bg);
@@ -1020,41 +895,39 @@ a.confirm-btn.blue:hover {
   border-radius: var(--border-radius);
   font-weight: 600;
   font-size: var(--text-sm);
-  white-space: nowrap
+  white-space: nowrap;
 }
 
 .item-revelation-icon {
   font-size: var(--text-md);
   display: inline-block;
   width: 1.8em;
-  text-align: center
-}
-
-.item-left-icon-col,
-.item-left-tag-col {
-  display: inline-flex;
-  align-items: center
+  text-align: center;
 }
 
 .item-left-icon-col {
+  display: inline-flex;
+  align-items: center;
   min-width: 2rem;
-  justify-content: center
+  justify-content: center;
 }
 
 .item-left-tag-col {
+  display: inline-flex;
+  align-items: center;
   justify-content: flex-end;
   width: 4rem;
-  flex-shrink: 0
+  flex-shrink: 0;
 }
 
 .item-left-tag-col .item-tag,
 .item-left-tag-col .item-tertiary {
   width: 100%;
-  text-align: right
+  text-align: right;
 }
 
 .item-container.current-item {
-  background-color: var(--current-item-bg)
+  background-color: var(--current-item-bg);
 }
 
 .item-container.current-item .item-title,
@@ -1064,11 +937,11 @@ a.confirm-btn.blue:hover {
 .item-container.current-item .item-revelation-icon,
 .item-container.current-item .item-sajda-icon,
 .item-container.current-item .item-bookmark-indicator {
-  color: var(--quran-text-red) !important
+  color: var(--quran-text-red) !important;
 }
 
 .surah-section {
-  margin-bottom: var(--space-lg)
+  margin-bottom: var(--space-lg);
 }
 
 .surah-section .section-title {
@@ -1082,18 +955,18 @@ a.confirm-btn.blue:hover {
   position: sticky;
   top: 0;
   z-index: 1;
-  backdrop-filter: blur(4px)
+  backdrop-filter: blur(4px);
 }
 
 .item-surah .item-line-2 .item-right {
-  margin-right: calc(1.875rem + var(--space-md))
+  margin-right: calc(1.875rem + var(--space-md));
 }
 
 .order-value {
   display: inline-block;
   min-width: 1.8em;
   text-align: left;
-  direction: ltr
+  direction: ltr;
 }
 
 /* ============================================
@@ -1103,13 +976,10 @@ a.confirm-btn.blue:hover {
 .bookmarks-overlay-content {
   width: 100%;
   padding: 10px;
-  margin: 0
+  margin: 0;
 }
 
-.bookmarks-list {
-  flex: 1;
-  overflow-y: auto
-}
+.bookmarks-list { flex: 1; overflow-y: auto; }
 
 .bookmarks-add-form {
   display: flex;
@@ -1118,7 +988,7 @@ a.confirm-btn.blue:hover {
   gap: 10px;
   justify-content: flex-start;
   margin-top: 15px;
-  padding: 0
+  padding: 0;
 }
 
 .bookmarks-add-form .search-input {
@@ -1127,7 +997,7 @@ a.confirm-btn.blue:hover {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: var(--border-radius);
-  width: 100%
+  width: 100%;
 }
 
 .bookmarks-add-form .btn {
@@ -1136,27 +1006,18 @@ a.confirm-btn.blue:hover {
   border: none;
   border-radius: var(--border-radius);
   font-weight: bold;
-  cursor: pointer
+  cursor: pointer;
 }
 
-.bookmarks-add-form .btn-add {
-  background-color: var(--primary);
-  color: white
-}
-
-.bookmarks-add-form .btn-cancel {
-  background-color: #6c757d;
-  color: white;
-  display: none
-}
+.bookmarks-add-form .btn-add { background-color: var(--primary); color: white; }
+.bookmarks-add-form .btn-cancel { background-color: #6c757d; color: white; display: none; }
 
 .item-bookmark.editing-bookmark {
   background-color: var(--primary-light);
   border: 2px solid var(--primary);
-  border-radius: 8px
+  border-radius: 8px;
 }
 
-/* Conteneur des boutons dans bookmarks (utilisé par overlays-manager) */
 .bookmarks-button-container {
   display: flex;
   flex-wrap: wrap;
@@ -1182,14 +1043,14 @@ a.confirm-btn.blue:hover {
   background: var(--bg);
   padding: 0;
   gap: 0;
-  align-items: stretch
+  align-items: stretch;
 }
 
 .khatm-page {
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: stretch
+  align-items: stretch;
 }
 
 .khatm-page img,
@@ -1198,14 +1059,14 @@ a.confirm-btn.blue:hover {
   max-width: 100%;
   height: auto;
   display: block;
-  object-fit: contain
+  object-fit: contain;
 }
 
 .khatm-page img {
   border-radius: 0;
   box-shadow: none;
   margin: 0;
-  padding: 0
+  padding: 0;
 }
 
 /* ============================================
@@ -1215,7 +1076,7 @@ a.confirm-btn.blue:hover {
 .search-container {
   padding: var(--space-lg);
   background: var(--surface);
-  flex-shrink: 0
+  flex-shrink: 0;
 }
 
 .search-input {
@@ -1226,17 +1087,17 @@ a.confirm-btn.blue:hover {
   font-size: var(--text-md);
   background: var(--surface);
   color: var(--text);
-  text-align: right
+  text-align: right;
 }
 
 .search-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light)
+  box-shadow: 0 0 0 2px var(--primary-light);
 }
 
 .search-stats {
-  padding: var(--space-sm) 0
+  padding: var(--space-sm) 0;
 }
 
 .search-stats-content {
@@ -1246,27 +1107,18 @@ a.confirm-btn.blue:hover {
   direction: rtl;
   color: var(--text);
   font-size: var(--text-sm);
-  gap: var(--space-sm)
+  gap: var(--space-sm);
 }
 
-.stat-results,
-.stat-suras {
-  font-weight: bold
-}
-
-.stat-results {
-  color: var(--stat-results)
-}
-
-.stat-suras {
-  color: var(--stat-suras)
-}
+.stat-results, .stat-suras { font-weight: bold; }
+.stat-results { color: var(--stat-results); }
+.stat-suras { color: var(--stat-suras); }
 
 .item-search {
   padding: 0 var(--overlay-padding-x);
   border-bottom: 1px solid var(--border);
   cursor: pointer;
-  transition: background-color .2s
+  transition: background-color .2s;
 }
 
 .item-search-text,
@@ -1279,12 +1131,12 @@ a.confirm-btn.blue:hover {
   text-align-last: right !important;
   line-height: 2.2 !important;
   word-spacing: -1px !important;
-  padding: 0 var(--overlay-padding-x)
+  padding: 0 var(--overlay-padding-x);
 }
 
 #searchResults {
   padding: 0;
-  text-align: center !important
+  text-align: center !important;
 }
 
 #searchResults .search-empty {
@@ -1293,13 +1145,10 @@ a.confirm-btn.blue:hover {
   align-items: center;
   justify-content: center;
   width: 100%;
-  color: var(--text-light)
+  color: var(--text-light);
 }
 
-#searchResults .search-empty p {
-  margin: .5rem 0;
-  text-align: center
-}
+#searchResults .search-empty p { margin: .5rem 0; text-align: center; }
 
 .clear-search-btn {
   position: absolute;
@@ -1319,17 +1168,11 @@ a.confirm-btn.blue:hover {
   transition: color .2s;
   display: flex;
   align-items: center;
-  justify-content: center
+  justify-content: center;
 }
 
-.clear-search-btn:hover {
-  color: var(--text)
-}
-
-#searchInput {
-  padding-left: 40px !important;
-  box-sizing: border-box
-}
+.clear-search-btn:hover { color: var(--text); }
+#searchInput { padding-left: 40px !important; box-sizing: border-box; }
 
 /* ============================================
    TAFSIR
@@ -1343,7 +1186,7 @@ a.confirm-btn.blue:hover {
   padding: .5rem;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  direction: rtl
+  direction: rtl;
 }
 
 .tafsir-select {
@@ -1357,7 +1200,7 @@ a.confirm-btn.blue:hover {
   color: var(--tafsir-select-text);
   font-size: .9rem;
   font-weight: bold;
-  cursor: pointer
+  cursor: pointer;
 }
 
 .tafsir-container {
@@ -1365,7 +1208,7 @@ a.confirm-btn.blue:hover {
   border-radius: 0;
   box-shadow: none;
   border: none;
-  background: var(--surface)
+  background: var(--surface);
 }
 
 .tafsir-aya-container {
@@ -1374,12 +1217,10 @@ a.confirm-btn.blue:hover {
   border-radius: 0;
   overflow: visible;
   border-bottom: var(--border-width) solid var(--border);
-  scroll-margin-top: 70px
+  scroll-margin-top: 70px;
 }
 
-.tafsir-aya-container:last-child {
-  border-bottom: 1px solid var(--border)
-}
+.tafsir-aya-container:last-child { border-bottom: 1px solid var(--border); }
 
 .tafsir-explanation {
   color: var(--text);
@@ -1389,7 +1230,7 @@ a.confirm-btn.blue:hover {
   text-align: justify !important;
   text-align-last: right !important;
   line-height: 1.5 !important;
-  font-size: 1.0625em
+  font-size: 1.0625em;
 }
 
 .tafsir-content-container {
@@ -1399,12 +1240,12 @@ a.confirm-btn.blue:hover {
   scroll-behavior: auto !important;
   overflow-anchor: none !important;
   text-align: justify !important;
-  text-align-last: right !important
+  text-align-last: right !important;
 }
 
 #tafsirContent {
   scroll-behavior: auto !important;
-  overflow-anchor: none !important
+  overflow-anchor: none !important;
 }
 
 .sura-title-container {
@@ -1417,7 +1258,7 @@ a.confirm-btn.blue:hover {
   justify-content: center;
   gap: 1rem;
   direction: rtl;
-  position: relative
+  position: relative;
 }
 
 .sura-badge {
@@ -1431,7 +1272,7 @@ a.confirm-btn.blue:hover {
   font-size: .9rem;
   background: var(--primary);
   color: white;
-  flex-shrink: 0
+  flex-shrink: 0;
 }
 
 .sura-name-kufi {
@@ -1443,20 +1284,12 @@ a.confirm-btn.blue:hover {
   text-align: center !important;
   width: auto !important;
   display: block !important;
-  margin: 0 !important
+  margin: 0 !important;
 }
 
-.night-mode .sura-title-container {
-  border-bottom-color: var(--success)
-}
-
-.night-mode .sura-badge {
-  background: var(--success)
-}
-
-.night-mode .sura-name-kufi {
-  color: var(--success)
-}
+.night-mode .sura-title-container { border-bottom-color: var(--success); }
+.night-mode .sura-badge { background: var(--success); }
+.night-mode .sura-name-kufi { color: var(--success); }
 
 /* ============================================
    TAJWEED
@@ -1471,18 +1304,16 @@ a.confirm-btn.blue:hover {
   margin-right: 5px;
   gap: 15px;
   text-align: justify !important;
-  text-align-last: right !important
+  text-align-last: right !important;
 }
 
 .tajweed-text ul {
   text-align: justify !important;
   text-align-last: right !important;
-  padding-right: 10px !important
+  padding-right: 10px !important;
 }
 
-.tajweed-image img {
-  box-shadow: var(--shadow)
-}
+.tajweed-image img { box-shadow: var(--shadow); }
 
 /* ============================================
    À PROPOS
@@ -1500,45 +1331,38 @@ a.confirm-btn.blue:hover {
   gap: .4rem;
   color: var(--text);
   text-align: justify;
-  text-align-last: right
+  text-align-last: right;
 }
 
-.about-content strong {
-  color: var(--primary)
-}
-
-.night-mode .about-content strong {
-  color: var(--success)
-}
+.about-content strong { color: var(--primary); }
+.night-mode .about-content strong { color: var(--success); }
 
 .about-title {
   text-align: center;
   font-size: var(--text-lg);
   color: var(--primary);
-  line-height: 1.5
+  line-height: 1.5;
 }
 
-.night-mode .about-title {
-  color: var(--success)
-}
+.night-mode .about-title { color: var(--success); }
 
 .about-version {
   font-size: var(--text-sm);
-  color: var(--text-light)
+  color: var(--text-light);
 }
 
 .about-desc {
   font-size: var(--text-md);
   line-height: 1.7;
   color: var(--text);
-  text-align: justify
+  text-align: justify;
 }
 
 .about-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: .5rem;
-  margin: .5rem 0
+  margin: .5rem 0;
 }
 
 .about-stat {
@@ -1550,23 +1374,21 @@ a.confirm-btn.blue:hover {
   border: 1px solid var(--border);
   border-radius: var(--border-radius);
   padding: .5rem;
-  gap: .25rem
+  gap: .25rem;
 }
 
 .about-stat span {
   font-size: var(--text-sm);
-  color: var(--text-light)
+  color: var(--text-light);
 }
 
 .about-stat strong {
   font-size: var(--text-lg);
   font-weight: bold;
-  color: var(--primary)
+  color: var(--primary);
 }
 
-.night-mode .about-stat strong {
-  color: var(--success)
-}
+.night-mode .about-stat strong { color: var(--success); }
 
 .about-footer {
   text-align: center;
@@ -1575,17 +1397,15 @@ a.confirm-btn.blue:hover {
   color: var(--text-light);
   line-height: 1.8;
   margin-top: auto;
-  padding-top: .5rem
+  padding-top: .5rem;
 }
 
 .about-footer a {
   color: var(--primary);
-  text-decoration: none
+  text-decoration: none;
 }
 
-.night-mode .about-footer a {
-  color: var(--success)
-}
+.night-mode .about-footer a { color: var(--success); }
 
 /* ============================================
    UTILITAIRES
@@ -1595,7 +1415,7 @@ a.confirm-btn.blue:hover {
 .empty-message {
   text-align: center;
   color: var(--text-light);
-  padding: var(--overlay-padding-x)
+  padding: var(--overlay-padding-x);
 }
 
 .loading-placeholder {
@@ -1603,7 +1423,7 @@ a.confirm-btn.blue:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%
+  height: 100%;
 }
 
 .spinner {
@@ -1613,14 +1433,10 @@ a.confirm-btn.blue:hover {
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: var(--space-lg) auto
+  margin: var(--space-lg) auto;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg)
-  }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ============================================
    TOAST
@@ -1643,27 +1459,20 @@ a.confirm-btn.blue:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
   white-space: pre-line;
   line-height: 1.5;
-  font-weight: 500
+  font-weight: 500;
 }
 
 /* ============================================
    AUTO SCROLL
    ============================================ */
 
-.autoscroll-group {
-  display: flex;
-  align-items: center;
-  gap: .25rem
-}
+.autoscroll-group { display: flex; align-items: center; gap: .25rem; }
 
 /* ============================================
    SCROLLBAR (masquée)
    ============================================ */
 
-::-webkit-scrollbar {
-  width: 0;
-  background: transparent
-}
+::-webkit-scrollbar { width: 0; background: transparent; }
 
 /* ============================================
    DIALOGS
@@ -1699,41 +1508,29 @@ a.confirm-btn.blue:hover {
 .confirm-buttons {
   display: flex;
   gap: 12px;
-  justify-content: center
+  justify-content: center;
 }
 
 /* ============================================
    ITEMS LISTES (supplément)
    ============================================ */
 
-.item-surah .item-title {
-  font-family: 'MyNotoKufi', sans-serif
-}
+.item-surah .item-title { font-family: 'MyNotoKufi', sans-serif; }
 
 .item-search .item-line-2[data-clickable="true"] {
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
-.item-search .item-line-2[data-clickable="true"]:hover {
-  background-color: var(--primary-light);
-}
+.item-search .item-line-2[data-clickable="true"]:hover { background-color: var(--primary-light); }
 
-.night-mode .item-search .item-line-2[data-clickable="true"]:hover {
-  background-color: rgba(76, 175, 80, 0.2);
-}
+.night-mode .item-search .item-line-2[data-clickable="true"]:hover { background-color: rgba(76, 175, 80, 0.2); }
 
 /* ============================================
    AUDIO – OVERLAY ET MINI-BAR
    ============================================ */
 
-/* --- Overlay audio --- */
-.audio-body {
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+.audio-body { padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
 
 .audio-riwaya-info {
   text-align: center;
@@ -1762,7 +1559,7 @@ a.confirm-btn.blue:hover {
   border-color: var(--success);
 }
 
-/* Sélecteurs (reciter, surah, aya) */
+/* Sélecteurs audio */
 .audio-select,
 .audio-rate-select,
 .mini-rate-select {
@@ -1774,17 +1571,8 @@ a.confirm-btn.blue:hover {
   direction: rtl;
 }
 
-.audio-select {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-}
-
-.audio-rate-select,
-.mini-rate-select {
-  padding: 0.3rem 0.4rem;
-  font-size: 0.85rem;
-}
+.audio-select { width: 100%; padding: 0.75rem 1rem; font-size: 1rem; }
+.audio-rate-select, .mini-rate-select { padding: 0.3rem 0.4rem; font-size: 0.85rem; }
 
 .audio-select:focus,
 .audio-rate-select:focus,
@@ -1818,15 +1606,9 @@ a.confirm-btn.blue:hover {
   cursor: pointer;
 }
 
-/* Boutons de contrôle overlay */
-.audio-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-}
+.audio-controls { display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
 
-/* --- Styles communs aux boutons audio et mini-bar --- */
+/* Boutons audio et mini-bar (communs) */
 .audio-btn,
 .mini-btn {
   border: none;
@@ -1841,18 +1623,9 @@ a.confirm-btn.blue:hover {
   line-height: 1;
 }
 
-.audio-btn:active,
-.mini-btn:active {
-  transform: scale(0.92);
-}
+.audio-btn:active, .mini-btn:active { transform: scale(0.92); }
+.audio-btn:disabled, .mini-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.audio-btn:disabled,
-.mini-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* Boutons overlay (taille spécifique) */
 .audio-btn {
   width: 2.6rem;
   height: 2.6rem;
@@ -1873,7 +1646,6 @@ a.confirm-btn.blue:hover {
   color: #eee;
 }
 
-/* Boutons mini-bar (taille spécifique) */
 .mini-btn {
   font-size: 1rem;
   padding: 0.3rem 0.4rem;
@@ -1885,18 +1657,10 @@ a.confirm-btn.blue:hover {
   background: var(--primary-light);
 }
 
-.night-mode .mini-btn {
-  color: #eee;
-}
+.night-mode .mini-btn { color: #eee; }
 
-/* Bouton principal (play) plus grand */
-.audio-btn.main-btn,
-.mini-btn.main-btn {
-  font-size: 1.3rem;
-  color: var(--text);
-}
+.audio-btn.main-btn, .mini-btn.main-btn { font-size: 1.3rem; color: var(--text); }
 
-/* Statut (messages d'erreur/info) */
 .audio-status {
   text-align: center;
   min-height: 1.5rem;
@@ -1905,7 +1669,6 @@ a.confirm-btn.blue:hover {
   padding: 0.3rem;
 }
 
-/* Avertissement (coordonnées manquantes) */
 .audio-warning {
   background: rgba(255, 193, 7, 0.2);
   color: #b45f06;
@@ -1921,7 +1684,7 @@ a.confirm-btn.blue:hover {
   color: #ffb74d;
 }
 
-/* --- Mini-bar audio (version simplifiée) --- */
+/* Mini-bar */
 .audio-mini-bar {
   position: fixed;
   bottom: 0;
@@ -1931,24 +1694,21 @@ a.confirm-btn.blue:hover {
   background: var(--surface);
   border-top: 1px solid var(--border);
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.12);
-  padding: 0.5rem 0.5rem;
+  padding: 0.5rem;
 }
 
-.audio-mini-bar.hidden {
-  display: none;
-}
+.audio-mini-bar.hidden { display: none; }
 
 .night-mode .audio-mini-bar {
   background: #1e1e1e;
   border-color: #333;
 }
 
-/* Ligne principale (boutons) */
 .audio-mini-bar .mini-bar-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.3rem;
+  gap: 0.2rem;
 }
 
 .audio-mini-bar .mini-bar-controls {
@@ -1960,8 +1720,8 @@ a.confirm-btn.blue:hover {
 
 .audio-mini-bar .mini-btn {
   font-size: 1.4rem;
-  padding: 0.4rem 0.5rem;
-  min-width: 2.5rem;
+  padding: 0.4rem;
+  min-width: 2rem;
   border: none;
   background: none;
   color: var(--text);
@@ -1970,28 +1730,10 @@ a.confirm-btn.blue:hover {
   transition: background 0.2s;
 }
 
-.audio-mini-bar .mini-btn:active {
-  background: var(--primary-light);
-}
+.audio-mini-bar .mini-btn:active { background: var(--primary-light); }
+.audio-mini-bar .mini-btn.main-btn { font-size: 1.6rem; }
 
-.audio-mini-bar .mini-btn.main-btn {
-  font-size: 1.6rem;
-}
-
-/* Adaptation très petits écrans */
-@media (max-width: 360px) {
-  .audio-mini-bar .mini-btn {
-    font-size: 1.1rem;
-    min-width: 2.2rem;
-    padding: 0.3rem 0.4rem;
-  }
-
-  .audio-mini-bar .mini-btn.main-btn {
-    font-size: 1.3rem;
-  }
-}
-
-/* --- FAB (floating action button) --- */
+/* FAB */
 .audio-fab {
   position: fixed;
   bottom: 1.2rem;
@@ -2011,58 +1753,38 @@ a.confirm-btn.blue:hover {
   transition: transform 0.15s;
 }
 
-.audio-fab:active {
-  transform: scale(0.92);
-}
+.audio-fab:active { transform: scale(0.92); }
+.audio-fab.hidden { display: none; }
 
-.audio-fab.hidden {
-  display: none;
-}
+.night-mode .audio-fab { background: var(--success); }
 
-.night-mode .audio-fab {
-  background: var(--success);
-}
-
-.select-ok {
+/* Couleurs de sélecteurs spécifiques (pour tafsir et audio) */
+.select-ok,
+.select-blue,
+.select-brown,
+.select-violet {
   background-color: #ffffff;
-  color: var(--primary);
-  border-color: var(--primary);
+  border: 1px solid;
 }
 
-.select-blue {
-  background-color: #ffffff;
-  color: #1565c0;
-  border-color: #1565c0;
-}
+.select-ok { color: var(--primary); border-color: var(--primary); }
+.select-blue { color: #1565c0; border-color: #1565c0; }
+.select-brown { color: #6d4c41; border-color: #6d4c41; }
+.select-violet { color: #9c27b0; border-color: #9c27b0; }
 
-.select-brown {
-  background-color: #ffffff;
-  color: #6d4c41;
-  border-color: #6d4c41;
-}
-
-.night-mode .select-ok {
+.night-mode .select-ok,
+.night-mode .select-blue,
+.night-mode .select-brown,
+.night-mode .select-violet {
   background-color: #2d2d2d;
-  color: var(--success);
-  border-color: var(--success);
 }
 
-.night-mode .select-blue {
-  background-color: #2d2d2d;
-  color: #64b5f6;
-  border-color: #64b5f6;
-}
+.night-mode .select-ok { color: var(--success); border-color: var(--success); }
+.night-mode .select-blue { color: #64b5f6; border-color: #64b5f6; }
+.night-mode .select-brown { color: #bcaaa4; border-color: #8d6e63; }
+.night-mode .select-violet { color: #ce93d8; border-color: #ab47bc; }
 
-.night-mode .select-brown {
-  background-color: #2d2d2d;
-  color: #bcaaa4;
-  border-color: #8d6e63;
-}
-
-.page-wrapper {
-  position: relative;
-}
-
+/* Highlight des versets */
 .aya-highlight {
   position: absolute;
   background: rgba(255, 213, 0, 0.2);
@@ -2072,6 +1794,7 @@ a.confirm-btn.blue:hover {
   z-index: 10;
 }
 
-.night-mode .aya-highlight {
-  background: rgba(255, 213, 0, 0.2);
-}
+.night-mode .aya-highlight { background: rgba(255, 213, 0, 0.2); }
+
+/* Page wrapper pour positionnement relatif */
+.page-wrapper { position: relative; }
