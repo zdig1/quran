@@ -1239,54 +1239,69 @@ class QuranReader {
   // HIGHLIGHT AYA
   // ============================================
 
-highlightAya(surah, ayah, rects) {
-  document.querySelectorAll(".aya-highlight").forEach((el) => el.remove());
-  if (!rects?.length) return;
+  highlightAya(surah, ayah, rects) {
+    document.querySelectorAll(".aya-highlight").forEach((el) => el.remove());
+    if (!rects?.length) return;
 
-  const page = this.currentPage;
-  const wrapper =
-    this.readingMode === "scroll"
-      ? this.wrapperPool.find((w) => parseInt(w.dataset.page) === page)
-      : this.elements.pageScroll.querySelector(
-          `.page-wrapper[data-page="${page}"]`,
-        );
-  if (!wrapper) return;
-
-  const img = wrapper.querySelector("img");
-  if (!img) return;
-
-  const offX = img.offsetLeft;
-  const offY = img.offsetTop;
-  const imgW = img.offsetWidth;
-  const imgH = img.offsetHeight;
-  if (!imgW || !imgH) return;
-
-  // Échelle fixe sur les dimensions du JPG source (1080×1890)
-  // indépendant des bornes DB pour éviter l'erreur sur pages spéciales
-  // (pages avec cadre décoratif : 1, 2, 601...)
- const sx = imgW / 1259;
-  const sy = imgH / 1890;
-
-  // Correction marges intrinsèques WEBP (espace blanc haut/bas)
-  const WEBP_TOP = 23;
-  const WEBP_BOT = 23;
-
-  rects.forEach((r) => {
-    const t = r.y1 / 1890; // 0=haut, 1=bas
-    const yCorrect =
+    const page = this.currentPage;
+    const wrapper =
       this.readingMode === "scroll"
-        ? 30 - (r.y1 / 1890) * 45
-        : (WEBP_TOP - t * (WEBP_TOP + WEBP_BOT)) * (imgH / 1100);
+        ? this.wrapperPool.find((w) => parseInt(w.dataset.page) === page)
+        : this.elements.pageScroll.querySelector(
+            `.page-wrapper[data-page="${page}"]`,
+          );
+    if (!wrapper) return;
 
-    const div = document.createElement("div");
-    div.className = "aya-highlight";
-    div.style.left = offX + (r.x1 - 45) * sx + "px";
-    div.style.width  = (r.x2 - r.x1) * sx + "px";
-    div.style.top    = offY + r.y1 * sy + yCorrect + "px";
-    div.style.height = (r.y2 - r.y1) * sy + "px";
-    wrapper.appendChild(div);
-  });
-}
+    const img = wrapper.querySelector("img");
+    if (!img) return;
+
+    const offX = img.offsetLeft;
+    const offY = img.offsetTop;
+    const imgW = img.offsetWidth;
+    const imgH = img.offsetHeight;
+    if (!imgW || !imgH) return;
+
+    const sx = imgW / 1259;
+    const sy = imgH / 1890;
+
+    // Bornes réelles de chaque ligne depuis toute la page
+    const pageCoords = (window.quranAudioPlayer?.ayaCoords || []).filter(
+      (r) => r.p === page,
+    );
+    const lineMap = {};
+    pageCoords.forEach((r) => {
+      if (!r.l) return;
+      if (!lineMap[r.l]) {
+        lineMap[r.l] = { y1: r.y1, y2: r.y2 };
+      } else {
+        lineMap[r.l].y1 = Math.min(lineMap[r.l].y1, r.y1);
+        lineMap[r.l].y2 = Math.max(lineMap[r.l].y2, r.y2);
+      }
+    });
+
+    const WEBP_TOP = 23;
+    const WEBP_BOT = 23;
+
+    rects.forEach((r) => {
+      const lineData = r.l ? lineMap[r.l] : null;
+      const realY1 = lineData ? lineData.y1 : r.y1;
+      const realY2 = lineData ? lineData.y2 : r.y2;
+
+      const t = realY1 / 1890;
+      const yCorrect =
+        this.readingMode === "scroll"
+          ? 30 - (realY1 / 1890) * 45
+          : (WEBP_TOP - t * (WEBP_TOP + WEBP_BOT)) * (imgH / 1100);
+
+      const div = document.createElement("div");
+      div.className = "aya-highlight";
+      div.style.left = offX + (r.x1 - 45) * sx + "px";
+      div.style.width = (r.x2 - r.x1) * sx + "px";
+      div.style.top = offY + realY1 * sy + yCorrect + "px";
+      div.style.height = (realY2 - realY1) * sy + "px";
+      wrapper.appendChild(div);
+    });
+  }
 
   clearHighlight() {
     document.querySelectorAll(".aya-highlight").forEach((el) => el.remove());
