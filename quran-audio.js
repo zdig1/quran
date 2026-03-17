@@ -130,28 +130,31 @@ class QuranAudioPlayer {
   // INIT
   // ============================================
 
-async init() {
-  this._buildMiniBar();
-  this._buildFab();
-  await this._loadAyaCoords();
-  this.surahs = window.quranCalculator?.getAllSurahs() || [];
-  this.audioElement = document.getElementById("quranAudioPlayer");
-  this._cacheElements();               // <- D'abord on remplit this.elements
-  this._populatePageSelect();           // <- Ensuite on utilise this.elements.pageSelect
-  this._populateSurahSelect();
-  this._populateReciterSelect(ACTIVE_RIWAYA);
-  this._selectReciter(this._loadPref(`reciter_${ACTIVE_RIWAYA}`) || null, false);
-  this._setupAudioEvents();
-  this._setupOverlayEvents();
-  this._setupMiniBarEvents();
-  const savedRate = this._loadPref("rate") || 1.0;
-  this._applyRate(savedRate);
-  const index = this.speedOptions.indexOf(parseFloat(savedRate));
-  this.currentSpeedIndex = index !== -1 ? index : 1;
-  this.repeatMode = parseInt(this._loadPref("repeat") || "0");
-  this._updateRepeatBtn();
-  this._setupOnlineOffline();
-}
+  async init() {
+    this._buildMiniBar();
+    this._buildFab();
+    await this._loadAyaCoords();
+    this.surahs = window.quranCalculator?.getAllSurahs() || [];
+    this.audioElement = document.getElementById("quranAudioPlayer");
+    this._cacheElements(); // <- D'abord on remplit this.elements
+    this._populatePageSelect(); // <- Ensuite on utilise this.elements.pageSelect
+    this._populateSurahSelect();
+    this._populateReciterSelect(ACTIVE_RIWAYA);
+    this._selectReciter(
+      this._loadPref(`reciter_${ACTIVE_RIWAYA}`) || null,
+      false,
+    );
+    this._setupAudioEvents();
+    this._setupOverlayEvents();
+    this._setupMiniBarEvents();
+    const savedRate = this._loadPref("rate") || 1.0;
+    this._applyRate(savedRate);
+    const index = this.speedOptions.indexOf(parseFloat(savedRate));
+    this.currentSpeedIndex = index !== -1 ? index : 1;
+    this.repeatMode = parseInt(this._loadPref("repeat") || "0");
+    this._updateRepeatBtn();
+    this._setupOnlineOffline();
+  }
 
   _cacheElements() {
     const g = (id) => document.getElementById(id);
@@ -601,10 +604,6 @@ async init() {
       // répéter la sourate
       this._setSurah(this.currentSurah, 1);
       this.play();
-    } else if (this.repeatMode === 3) {
-      // tout le Coran en boucle
-      this._setSurah(this.currentSurah < 114 ? this.currentSurah + 1 : 1, 1);
-      this.play();
     } else {
       // mode 0 ou 1 : passer à la sourate suivante
       if (this.currentSurah < 114) {
@@ -621,14 +620,14 @@ async init() {
   // ============================================
 
   cycleRepeat() {
-    this.repeatMode = (this.repeatMode + 1) % 4;
+    this.repeatMode = (this.repeatMode + 1) % 3;
     this._updateRepeatBtn();
     this._savePref("repeat", this.repeatMode);
   }
 
   _updateRepeatBtn() {
-    const labels = ["🔁", "🔂¹", "🔁²", "🔁∞"];
-    const titles = ["بدون تكرار", "تكرار الآية", "تكرار السورة", "تكرار الكل"];
+    const labels = ["🔁", "🔂¹", "🔁²"];
+    const titles = ["بدون تكرار", "تكرار الآية", "تكرار السورة"];
     [this.elements.repeatBtn, document.getElementById("miniBarRepeat")].forEach(
       (btn) => {
         if (!btn) return;
@@ -783,8 +782,11 @@ async init() {
     this._boundListeners.audio.ended = () => {
       if (this.audioElement.dataset.basmala === "true") return;
       this.isPlaying = false;
-      if (this.repeatMode === 1) this.play();
-      else this.nextAyah();
+      if (this.repeatMode === 1) {
+        this.audioElement.currentTime = 0;
+        this.audioElement.load();
+        this.play();
+      } else this.nextAyah();
     };
     this._boundListeners.audio.timeupdate = () => {
       const cur = audio.currentTime;
