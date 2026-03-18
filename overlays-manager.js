@@ -311,7 +311,7 @@ class OverlayManager {
       <span class="item-title">${this.escapeHtml(surah.name)}</span>
     </div>
     <div class="item-left">
-      <span class="item-left-icon-col" style="text-align:center;min-width:2rem;">${hasBookmark ? '<span class="item-icon item-bookmark-indicator">🔖</span>' : ""}</span>
+      <span class="item-left-icon-col" style="text-align:center;min-width:2rem;">${hasBookmark ? '<span class="item-icon">🔖</span>' : ""}</span>
       <span style="color:#1976d2;font-weight:bold;font-size:0.8rem;display:inline-flex;align-items:center;min-width:1rem;">${juzStarts.map((j) => `ج ${j}`).join(" ")}</span>
       <span class="item-left-tag-col" style="min-width:4rem;text-align:left;"><span class="item-tag">ص ${surah.page_start}</span></span>
     </div>`;
@@ -460,7 +460,7 @@ class OverlayManager {
         <span class="item-title juzhizb-grid-col2">الحزب ${hizb.hizb}</span>
       </div>
       <div class="item-left">
-        <span class="item-left-icon-col">${hasBookmarkInRange ? '<span class="item-icon item-bookmark-indicator">🔖</span>' : ""}</span>
+        <span class="item-left-icon-col">${hasBookmarkInRange ? '<span class="item-icon">🔖</span>' : ""}</span>
         <span class="item-left-tag-col"><span class="item-tag">ص ${hizb.page_start}</span></span>
       </div>`;
 
