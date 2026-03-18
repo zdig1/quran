@@ -291,10 +291,6 @@ class TafsirSearchManager {
     return cached;
   }
 
-  getSearchStats(query) {
-    return this.searchWithStats(query).stats;
-  }
-
   // ============================================
   // UI RECHERCHE
   // ============================================
@@ -942,22 +938,22 @@ class TafsirSearchManager {
     }, 100);
   }
 
-  async smartPreloadAround(page) {
-    if (!this.isLoaded) await this.ensureLoaded();
-    const pageNum = parseInt(page);
-    const toLoad = new Set([pageNum]);
-    for (let i = 1; i <= this.config.preloadRadius; i++) {
-      if (pageNum - i >= 1) toLoad.add(pageNum - i);
-      if (pageNum + i <= 604) toLoad.add(pageNum + i);
-    }
-    const missing = Array.from(toLoad).filter((p) => !this.pageCache.has(p));
-    for (let i = 0; i < missing.length; i += this.config.maxConcurrentLoads) {
-      const batch = missing.slice(i, i + this.config.maxConcurrentLoads);
-      await Promise.all(batch.map((p) => this.loadPageToCache(p)));
-    }
-    this.cleanupPageCache(pageNum);
+async smartPreloadAround(page) {
+  if (!this.isLoaded) await this.ensureLoaded();
+  const pageNum = parseInt(page);
+  const toLoad = new Set([pageNum]);
+  for (let i = 1; i <= this.config.preloadRadius; i++) {
+    if (pageNum - i >= 1) toLoad.add(pageNum - i);
+    if (pageNum + i <= 604) toLoad.add(pageNum + i);
   }
-
+  const missing = Array.from(toLoad).filter((p) => !this.pageCache.has(p));
+  for (let i = 0; i < missing.length; i += this.config.maxConcurrentLoads) {
+    const batch = missing.slice(i, i + this.config.maxConcurrentLoads);
+    // Attendre que toutes les promesses soient résolues, même en cas d'erreur
+    await Promise.allSettled(batch.map(p => this.loadPageToCache(p).catch(() => {})));
+  }
+  this.cleanupPageCache(pageNum);
+}
   async loadPageToCache(page) {
     if (!this.data) await this.ensureLoaded();
     return this.getAyatByPage(page);

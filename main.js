@@ -259,63 +259,106 @@ class QuranApp {
 
   // Dans la classe QuranApp
 
+  // Dans la classe QuranApp
+
   /**
-   * Exporte les signets au format JSON (chaîne)
+   * Exporte toutes les données utilisateur (signets + épingles)
    * @returns {string} JSON formaté
    */
-  exportBookmarks() {
-    return JSON.stringify(this.bookmarks, null, 2);
+  exportUserData() {
+    const data = {
+      bookmarks: this.bookmarks,
+      pinnedSurahs: this.pinnedSurahs,
+    };
+    return JSON.stringify(data, null, 2);
   }
 
   /**
-   * Importe des signets depuis une chaîne JSON
+   * Importe des données utilisateur depuis une chaîne JSON
    * @param {string} jsonString - Le contenu du fichier JSON
    * @param {boolean} merge - true pour fusionner, false pour remplacer
    * @returns {boolean} Succès ou échec
    */
-  importBookmarks(jsonString, merge = false) {
+  importUserData(jsonString, merge = false) {
     try {
       const imported = JSON.parse(jsonString);
-      if (!Array.isArray(imported)) throw new Error("Format invalide");
 
-      // Validation basique de chaque signet
-      const valid = imported.every(
-        (b) =>
-          b &&
-          typeof b === "object" &&
-          typeof b.page === "number" &&
-          b.page >= 1 &&
-          b.page <= 604 &&
-          typeof b.name === "string" &&
-          (!b.id || typeof b.id === "string"),
-      );
-      if (!valid) throw new Error("Certains signets sont invalides");
-
-      let newBookmarks;
-      if (merge) {
-        // Fusion : on évite les doublons par id (si présent)
-        const existingIds = new Set(this.bookmarks.map((b) => b.id));
-        const toAdd = imported.filter((b) => !existingIds.has(b.id));
-        newBookmarks = [...this.bookmarks, ...toAdd];
-      } else {
-        // Remplacement : on s'assure que chaque élément a un id unique
-        newBookmarks = imported.map((b) => ({
-          ...b,
-          id: b.id || `bookmark_${b.page}_${Date.now()}_${Math.random()}`,
-        }));
+      // Ancien format (simple tableau) → refusé
+      if (Array.isArray(imported)) {
+        console.warn(
+          "Format de fichier obsolète. Veuillez utiliser un fichier exporté par la version 1.0.8 ou ultérieure.",
+        );
+        return false;
       }
-      // Tri par page
-      newBookmarks.sort((a, b) => a.page - b.page);
 
-      this.bookmarks = newBookmarks;
-      this.saveToLocalStorage();
-      window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
-      return true;
+      // Nouveau format
+      if (imported.bookmarks && Array.isArray(imported.bookmarks)) {
+        // Validation des signets
+        const validBookmarks = imported.bookmarks.every(
+          (b) =>
+            b &&
+            typeof b === "object" &&
+            typeof b.page === "number" &&
+            b.page >= 1 &&
+            b.page <= 604,
+        );
+        if (!validBookmarks) throw new Error("Signets invalides");
+
+        // Validation des épingles (optionnel)
+        const validPinned =
+          Array.isArray(imported.pinnedSurahs) &&
+          imported.pinnedSurahs.every(
+            (id) => typeof id === "number" && id >= 1 && id <= 114,
+          );
+
+        let newBookmarks = [...this.bookmarks];
+        let newPinned = [...this.pinnedSurahs];
+
+        if (merge) {
+          // Fusion des signets
+          const existingIds = new Set(this.bookmarks.map((b) => b.id));
+          const toAddBookmarks = imported.bookmarks.filter(
+            (b) => !existingIds.has(b.id),
+          );
+          newBookmarks = [...this.bookmarks, ...toAddBookmarks];
+
+          // Fusion des épingles
+          const existingPinned = new Set(this.pinnedSurahs);
+          const toAddPinned = imported.pinnedSurahs.filter(
+            (id) => !existingPinned.has(id),
+          );
+          newPinned = [...this.pinnedSurahs, ...toAddPinned];
+        } else {
+          // Remplacement
+          newBookmarks = imported.bookmarks.map((b) => ({
+            ...b,
+            id: b.id || `bookmark_${b.page}_${Date.now()}_${Math.random()}`,
+          }));
+          newPinned = validPinned
+            ? [...imported.pinnedSurahs]
+            : this.pinnedSurahs;
+        }
+
+        // Tri des signets par page
+        newBookmarks.sort((a, b) => a.page - b.page);
+
+        this.bookmarks = newBookmarks;
+        this.pinnedSurahs = newPinned;
+
+        this.saveToLocalStorage();
+        window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
+        window.dispatchEvent(new CustomEvent("quran:pinnedSurahsUpdated"));
+
+        return true;
+      }
+
+      throw new Error("Format inconnu");
     } catch (err) {
       console.error("Import error:", err);
       return false;
     }
   }
+
   // ============================================
   // TAFSIR
   // ============================================

@@ -45,6 +45,14 @@ class OverlayManager {
     );
   }
 
+  getDefaultBookmarkName(page) {
+    const pageData = window.quranCalculator?.getPageData(page);
+    if (pageData && pageData.surah) {
+      return `سورة ${pageData.surah.name}`;
+    }
+    return `صفحة ${page}`;
+  }
+
   // ============================================
   // CACHE DES ÉLÉMENTS
   // ============================================
@@ -579,8 +587,7 @@ class OverlayManager {
     input.type = "text";
     input.className = "search-input";
     input.placeholder = "اسم العلامة";
-    input.value = `صفحة ${currentPage}`;
-
+    input.value = this.getDefaultBookmarkName(currentPage);
     const buttonContainer = document.createElement("div");
     buttonContainer.className = "bookmarks-button-container";
 
@@ -665,7 +672,7 @@ class OverlayManager {
           id: `bookmark_${currentPage}_${Date.now()}`,
         });
         window.quranApp.showToast("✅ تمت إضافة العلامة");
-        this.bookmarkFormInput.value = `صفحة ${currentPage}`;
+        this.bookmarkFormInput.value = this.getDefaultBookmarkName(currentPage);
         this.refreshBookmarksDisplay();
       }
     });
@@ -714,7 +721,9 @@ class OverlayManager {
     if (importBtn) importBtn.style.display = "";
     if (exportBtn) exportBtn.style.display = "";
 
-    this.bookmarkFormInput.value = `صفحة ${this.getCurrentPage()}`;
+    this.bookmarkFormInput.value = this.getDefaultBookmarkName(
+      this.getCurrentPage(),
+    );
     this.bookmarkFormCancel.style.display = "none";
     this.bookmarkFormButton.textContent = "إضافة";
     document
@@ -805,91 +814,6 @@ class OverlayManager {
     });
   }
 
-  async exportBookmarks() {
-    const data = window.quranApp.exportBookmarks();
-    const date = new Date().toISOString().slice(2, 10);
-    const fileName = `quran_${date}`;
-    const bytes = new TextEncoder().encode(data);
-    let binary = "";
-    bytes.forEach((b) => (binary += String.fromCharCode(b)));
-    const base64 = btoa(binary);
-
-    if (typeof cordova !== "undefined" && window.plugins?.socialsharing) {
-      window.plugins.socialsharing.shareWithOptions(
-        {
-          message: "نسخة احتياطية من العلامات المرجعية",
-          subject: fileName,
-          files: ["data:application/json;base64," + base64],
-          chooserTitle: "حفظ أو مشاركة الملف",
-        },
-        () => window.quranApp.showToast("✅ تم التصدير"),
-        (err) => window.quranApp.showToast("❌ " + err),
-      );
-    } else {
-      const file = new File([data], fileName, { type: "application/json" });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        navigator
-          .share({ files: [file] })
-          .then(() => window.quranApp.showToast("✅ تم التصدير"))
-          .catch((err) => window.quranApp.showToast("❌ " + err));
-      } else {
-        const a = document.createElement("a");
-        a.href = "data:application/json;base64," + base64;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.quranApp.showToast("✅ تم التصدير");
-      }
-    }
-  }
-
-  importBookmarks() {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json,application/json";
-    input.style.display = "none";
-    document.body.appendChild(input);
-
-    input.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) {
-        input.remove(); // ← remplace document.body.removeChild(input)
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        try {
-          const json = ev.target.result;
-          const choice = await this.showImportChoice();
-          if (!choice) {
-            input.remove(); // ← idem, au cas où l'utilisateur annule
-            return;
-          }
-
-          const success = window.quranApp.importBookmarks(
-            json,
-            choice === "merge",
-          );
-          if (success) {
-            window.quranApp?.showToast("✅ تم استيراد العلامات");
-            this.refreshBookmarksDisplay();
-          } else {
-            window.quranApp?.showToast("❌ فشل الاستيراد: الملف غير صالح");
-          }
-        } catch {
-          window.quranApp?.showToast("❌ خطأ في قراءة الملف");
-        } finally {
-          input.remove(); // ← ici aussi, plus sûr
-        }
-      };
-      reader.readAsText(file);
-    });
-
-    input.click();
-  }
-
   /**
    * Affiche une boîte de dialogue pour choisir entre fusion et remplacement
    * @returns {Promise<string|null>} 'merge', 'replace' ou null si annulé
@@ -901,13 +825,13 @@ class OverlayManager {
       const dialog = document.createElement("div");
       dialog.className = "confirm-dialog";
       dialog.innerHTML = `
-      <p>كيف تريد استيراد العلامات؟</p>
+      <p>كيف تريد استيراد البيانات (العلامات المرجعية والسور المفضلة)؟</p>
       <div class="confirm-buttons">
         <button class="confirm-btn ok" id="mergeBtn">دمج</button>
         <button class="confirm-btn blue" id="replaceBtn">استبدال</button>
         <button class="confirm-btn cancel" id="cancelBtn">إلغاء</button>
       </div>
-    `;
+        `;
       backdrop.appendChild(dialog);
       document.body.appendChild(backdrop);
       window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
@@ -931,6 +855,88 @@ class OverlayManager {
         if (e.target === backdrop) cleanup(null);
       });
     });
+  }
+
+  // Dans OverlayManager, après showImportChoice()
+
+  async exportBookmarks() {
+    const data = window.quranApp.exportUserData(); // nouvelle méthode dans QuranApp
+    const date = new Date().toISOString().slice(2, 10);
+    const fileName = `quran_backup_${date}`;
+    const bytes = new TextEncoder().encode(data);
+    let binary = "";
+    bytes.forEach((b) => (binary += String.fromCharCode(b)));
+    const base64 = btoa(binary);
+
+    if (typeof cordova !== "undefined" && window.plugins?.socialsharing) {
+      window.plugins.socialsharing.shareWithOptions(
+        {
+          message: "نسخة احتياطية من العلامات المرجعية والسور المفضلة",
+          subject: fileName,
+          files: ["data:application/json;base64," + base64],
+          chooserTitle: "حفظ أو مشاركة الملف",
+        },
+        () => window.quranApp.showToast("✅ تم التصدير"),
+        (err) => window.quranApp.showToast("❌ " + err),
+      );
+    } else {
+      const a = document.createElement("a");
+      a.href = "data:application/json;base64," + base64;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.quranApp.showToast("✅ تم التصدير");
+    }
+  }
+
+  importBookmarks() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json,application/json";
+    input.style.display = "none";
+    document.body.appendChild(input);
+
+    input.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) {
+        input.remove();
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const json = ev.target.result;
+          const choice = await this.showImportChoice();
+          if (!choice) {
+            input.remove();
+            return;
+          }
+
+          const success = window.quranApp.importUserData(
+            json,
+            choice === "merge",
+          );
+          if (success) {
+            window.quranApp?.showToast("✅ تم استيراد البيانات");
+            this.refreshBookmarksDisplay();
+            if (this.overlays.surahs?.element?.classList.contains("show")) {
+              this.renderSurahsList();
+            }
+          } else {
+            window.quranApp?.showToast("❌ فشل الاستيراد: الملف غير صالح");
+          }
+        } catch {
+          window.quranApp?.showToast("❌ خطأ في قراءة الملف");
+        } finally {
+          input.remove();
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    input.click();
   }
 
   // ============================================
@@ -974,14 +980,15 @@ class OverlayManager {
       <span id="audioDuration">0:00</span>
     </div>
     <div class="audio-controls">
-      <button class="btn audio-btn" id="overlaySpeedBtn" title="السرعة">1×</button>
+      <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1×</button>
       <button class="btn audio-btn" id="repeatBtn" title="تكرار">🔁</button>
-      <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">⏭</button>
-      <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">▶</button>
-      <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">⏮</button>
-      <button class="btn audio-btn" id="stopBtn" title="إيقاف">⏹</button>
+      <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">⏭️</button>
+      <button class="btn audio-btn" id="nextAyahBtn" title="الآية التالية">⏩</button>
+      <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">▶️</button>
+      <button class="btn audio-btn" id="prevAyahBtn" title="الآية السابقة">⏪</button>
+      <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">⏮️</button>
+      <button class="btn audio-btn" id="stopBtn" title="إيقاف">⏹️</button>
     </div>
-    
     <div class="audio-current-info" style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
       <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} (عبر النت)</div>
       <div id="currentSurahDisplay" class="audio-current-display" style="flex: 1; margin: 0; background: transparent; border: none; color: inherit;"></div>
@@ -1313,6 +1320,11 @@ class OverlayManager {
       <div style="flex: 1;">
         <a href="mailto:zdig1.0@gmail.com?subject=quran" class="confirm-btn blue" style="display:flex; align-items:center; justify-content:center; width:100%; padding:12px; font-size:1rem; text-decoration:none; box-sizing:border-box;">
           📧 للتواصل
+        </a>
+      </div>
+        <div style="flex: 1;">
+        <a href="https://zdig1.gitlab.io/quran/" target="_blank" rel="noopener noreferrer">
+          🌐 زر موقعنا
         </a>
       </div>
     </div>

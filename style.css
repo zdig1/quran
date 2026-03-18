@@ -7,7 +7,7 @@
   --space-sm: 0.5rem;
   --space-md: 0.75rem;
   --space-lg: 1rem;
-  
+
   /* Tailles de texte */
   --text-sm: 0.875rem;
   --text-md: 1rem;
@@ -24,14 +24,22 @@
   --border-radius-lg: 0.75rem;
 
   /* Couleurs principales */
-  --color-green: #1a5e25;      /* vert principal (sourates, badges) */
-  --color-blue: #1976d2;        /* bleu (juz, sélecteurs) */
-  --color-brown: #6d4c41;       /* marron (recherche, badges) */
-  --color-gray: #6c757d;        /* gris (annulation, texte secondaire) */
-  --color-violet: #9c27b0;      /* violet (récitant) */
-  --color-red: #d32f2f;         /* rouge (erreurs, texte de recherche) */
-  --color-gold: #ffaa00;        /* or (épingles, signets) – mais non appliqué aux emojis */
-  --color-white: #ffffff;       /* blanc pur */
+  --color-green: #1a5e25;
+  /* vert principal (sourates, badges) */
+  --color-blue: #1976d2;
+  /* bleu (juz, sélecteurs) */
+  --color-brown: #6d4c41;
+  /* marron (recherche, badges) */
+  --color-gray: #6c757d;
+  /* gris (annulation, texte secondaire) */
+  --color-violet: #9c27b0;
+  /* violet (récitant) */
+  --color-red: #d32f2f;
+  /* rouge (erreurs, texte de recherche) */
+  --color-gold: #ffaa00;
+  /* or (épingles, signets) – mais non appliqué aux emojis */
+  --color-white: #ffffff;
+  /* blanc pur */
 
   /* Dépendances */
   --primary: var(--color-green);
@@ -1051,8 +1059,7 @@ a.confirm-btn.blue:hover {
 .item-container.current-item .item-tertiary,
 .item-container.current-item .item-tag,
 .item-container.current-item .item-revelation-icon,
-.item-container.current-item .item-sajda-icon
- {
+.item-container.current-item .item-sajda-icon {
   color: var(--quran-text-red) !important;
 }
 
@@ -1126,17 +1133,6 @@ a.confirm-btn.blue:hover {
   border-radius: var(--border-radius);
   font-weight: bold;
   cursor: pointer;
-}
-
-.bookmarks-add-form .btn-add {
-  background-color: var(--primary);
-  color: white;
-}
-
-.bookmarks-add-form .btn-cancel {
-  background-color: #6c757d;
-  color: white;
-  display: none;
 }
 
 .item-bookmark.editing-bookmark {
@@ -1711,277 +1707,11 @@ a.confirm-btn.blue:hover {
   background-color: rgba(76, 175, 80, 0.2);
 }
 
+
 /* ============================================
-   AUDIO – OVERLAY ET MINI-BAR
+   SÉLECTEURS DE COULEUR (audio & tafsir)
    ============================================ */
 
-/* Conteneur général de l'overlay audio */
-.audio-body {
-  padding: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-/* Informations sur la récitation (fond gris) */
-.audio-riwaya-info {
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--text-light);
-  padding: 0.2rem;
-  border-radius: var(--border-radius);
-  background: var(--surface-alt);
-  direction: rtl;
-}
-
-/* Affichage de la sourate/verset en cours (sans fond ni bordure) */
-.audio-current-info {
-  background: var(--surface-alt);
-  border-radius: var(--border-radius);
-  padding: 0.2rem 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 4px 0;
-}
-
-.audio-current-info span {
-  white-space: nowrap;
-  font-size: 0.85rem;
-  color: var(--text-light);
-}
-
-.audio-current-info .audio-current-display {
-  flex: 1;
-  margin: 0;
-  background: transparent;
-  border: none;
-  color: inherit;
-  padding: 0.2rem 0;
-  font-size: 0.9rem;
-  text-align: center;
-}
-
-/* Version nuit pour l'affichage courant */
-.night-mode .audio-current-display {
-  background: rgba(76, 175, 80, 0.15);
-  color: var(--success);
-  border-color: var(--success);
-}
-
-/* Sélecteurs audio */
-.audio-select {
-  width: 100%;
-  padding: 0.5rem;
-  font-size: 0.9rem;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  cursor: pointer;
-  direction: rtl;
-}
-
-.audio-select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
-}
-
-.night-mode .audio-select {
-  background: #2d2d2d;
-  border-color: #444;
-  color: #eee;
-}
-
-/* Barre de progression */
-.audio-progress-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--text-light);
-  margin: 0.2rem 0;
-}
-
-.audio-progress {
-  flex: 1;
-  height: 4px;
-  accent-color: var(--primary);
-  cursor: pointer;
-}
-
-/* Conteneur des boutons de contrôle */
-.audio-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.2rem;
-  margin: 0.2rem 0;
-}
-
-/* Boutons de l'overlay */
-.audio-btn {
-  width: 2.4rem;
-  height: 2.4rem;
-  font-size: 1rem;
-  background: var(--surface);
-  border-radius: 50%;
-  color: var(--text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, transform 0.1s;
-  border: 1px solid var(--border);
-}
-
-.audio-btn:active {
-  transform: scale(0.92);
-}
-
-.audio-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.audio-btn.main-btn {
-  font-size: 1.3rem;
-  color: var(--text);
-}
-
-.night-mode .audio-btn {
-  background: #2d2d2d;
-  border-color: #444;
-  color: #eee;
-}
-
-/* Statut (messages) */
-.audio-status {
-  text-align: center;
-  color: var(--text-light);
-  font-size: 0.8rem;
-  padding: 0.3rem;
-  display: none; /* caché par défaut */
-}
-
-.audio-status:not(:empty) {
-  display: block;
-}
-
-/* Avertissement pour coordonnées manquantes */
-.audio-warning {
-  background: rgba(255, 193, 7, 0.2);
-  color: #b45f06;
-  padding: 0.5rem;
-  border-radius: var(--border-radius);
-  font-size: 0.85rem;
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-
-.night-mode .audio-warning {
-  background: rgba(255, 193, 7, 0.1);
-  color: #ffb74d;
-}
-
-/* Mini‑barre */
-.audio-mini-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1200;
-  background: var(--mini-bar-bg);
-  padding: 0.2rem;
-}
-
-.audio-mini-bar.hidden {
-  display: none;
-}
-
-/* Ligne des boutons dans la mini‑barre */
-.audio-mini-bar .mini-bar-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.2rem;
-}
-
-.audio-mini-bar .mini-bar-controls {
-  display: flex;
-  gap: 0.2rem;
-  flex: 1;
-  justify-content: center;
-}
-
-/* Boutons de la mini‑barre */
-.audio-mini-bar .mini-btn {
-  font-size: 1.4rem;
-  padding: 0;
-  width: 2.4rem;
-  height: 2.4rem;
-  border: none;
-  background: none;
-  color: var(--text);
-  cursor: pointer;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s, transform 0.1s;
-}
-
-.audio-mini-bar .mini-btn:active {
-  transform: scale(0.92);
-  background: var(--primary-light);
-}
-
-.audio-mini-bar .mini-btn.main-btn {
-  font-size: 1.6rem;
-}
-
-.night-mode .audio-mini-bar .mini-btn {
-  color: #eee;
-}
-
-/* Bouton de vitesse dans la mini‑barre */
-.audio-mini-bar .mini-btn.speed-btn {
-  font-family: monospace;
-  width: 3.5rem;
-  font-size: 0.85rem;
-  line-height: 1;
-}
-
-/* FAB (bouton flottant) */
-.audio-fab {
-  position: fixed;
-  bottom: 1.2rem;
-  left: 1rem;
-  z-index: 1100;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  background: var(--mini-bar-bg);
-  font-size: 1.3rem;
-  border: none;
-  cursor: pointer;
-  box-shadow: var(--shadow-heavy);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s;
-}
-
-.audio-fab:active {
-  transform: scale(0.92);
-}
-
-.audio-fab.hidden {
-  display: none;
-}
-
-/* Couleurs de sélecteurs spécifiques (pour tafsir et audio) */
 .select-ok,
 .select-blue,
 .select-brown,
@@ -2037,7 +1767,10 @@ a.confirm-btn.blue:hover {
   border-color: var(--color-violet);
 }
 
-/* Highlight des versets */
+/* ============================================
+   HIGHLIGHT DES VERSETS & SPINNER
+   ============================================ */
+
 .aya-highlight {
   position: absolute;
   background: rgba(255, 213, 0, 0.2);
@@ -2051,15 +1784,317 @@ a.confirm-btn.blue:hover {
   background: rgba(255, 213, 0, 0.2);
 }
 
-/* Page wrapper pour positionnement relatif */
 .page-wrapper {
   position: relative;
 }
 
-/* Spinner pour les boutons hors ligne */
 .spinner.small {
   width: 1.2rem;
   height: 1.2rem;
   border-width: 2px;
   margin: 0;
+}
+
+/* ============================================
+   AUDIO – OVERLAY (conteneur et éléments généraux)
+   ============================================ */
+
+.audio-body {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.audio-riwaya-info {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-light);
+  padding: 0.2rem;
+  border-radius: var(--border-radius);
+  background: var(--surface-alt);
+  direction: rtl;
+}
+
+.audio-current-info {
+  background: var(--surface-alt);
+  border-radius: var(--border-radius);
+  padding: 0.2rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.audio-current-info span {
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.audio-current-info .audio-current-display {
+  flex: 1;
+  margin: 0;
+  background: transparent;
+  border: none;
+  color: inherit;
+  padding: 0.2rem 0;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.night-mode .audio-current-display {
+  background: rgba(76, 175, 80, 0.15);
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.audio-select {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  direction: rtl;
+}
+
+.audio-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.night-mode .audio-select {
+  background: #2d2d2d;
+  border-color: #444;
+  color: #eee;
+}
+
+.audio-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin: 0.2rem 0;
+}
+
+.audio-progress {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.audio-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0.2rem 0;
+}
+
+.audio-status {
+  text-align: center;
+  color: var(--text-light);
+  font-size: 0.8rem;
+  padding: 0.3rem;
+  display: none;
+}
+
+.audio-status:not(:empty) {
+  display: block;
+}
+
+.audio-warning {
+  background: rgba(255, 193, 7, 0.2);
+  color: #b45f06;
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.night-mode .audio-warning {
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffb74d;
+}
+
+/* ============================================
+   BOUTONS AUDIO UNIFIÉS (overlay + mini‑barre)
+   ============================================ */
+
+.audio-btn {
+  font-size: 1.5rem;
+  width: 2.8rem;
+  height: 2.8rem;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.audio-btn:active {
+  transform: scale(0.92);
+  background: var(--primary-light);
+}
+
+.audio-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.audio-btn.speed-btn {
+  font-family: monospace;
+  width: 4rem;
+  font-size: 1rem;
+  background: var(--surface-alt);
+  border-radius: 2rem;
+}
+
+/* ============================================
+   MINI-BAR (conteneur et disposition)
+   ============================================ */
+
+.audio-mini-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  background: var(--mini-bar-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transform: translateY(0);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.audio-mini-bar.hidden {
+  transform: translateY(100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.audio-mini-bar .mini-bar-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.audio-mini-bar .mini-bar-controls {
+  display: flex;
+  gap: 0.3rem;
+  flex: 1;
+  justify-content: center;
+}
+
+/* ============================================
+   FAB (bouton flottant)
+   ============================================ */
+
+.audio-fab {
+  position: fixed;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  left: 1rem;
+  z-index: 1100;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  background: var(--mini-bar-bg);
+  color: white;
+  font-size: 1.5rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-heavy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, opacity 0.2s;
+  opacity: 1;
+  transform: scale(1);
+}
+
+.audio-fab.hidden {
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+.audio-fab:active {
+  transform: scale(0.9);
+}
+
+.night-mode .audio-fab {
+  background: var(--success);
+}
+
+.fab-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--text-lighter);
+  transition: background-color 0.2s;
+}
+
+.audio-fab.playing .fab-indicator {
+  background-color: var(--success);
+}
+
+.error-title {
+  color: var(--error);
+}
+
+.noscript-fallback {
+  text-align: center;
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+  background: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+}
+
+.noscript-title {
+  color: #004494;
+}
+
+.hidden {
+    display: none !important;
+}
+.search-wrapper {
+    position: relative;
+    width: 100%;
+}
+.search-input {
+    width: 100%;
+    padding: var(--space-md) var(--space-lg);
+    padding-left: 40px;  /* <-- ajout */
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    font-size: var(--text-md);
+    background: var(--surface);
+    color: var(--text);
+    text-align: right;
 }
