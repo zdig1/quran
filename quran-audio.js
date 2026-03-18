@@ -657,7 +657,7 @@ class QuranAudioPlayer {
   }
 
   _updateRepeatBtn() {
-    const labels = ["🔁", "🔂¹", "🔁²"];
+    const labels = ["🔁", "¹🔁", "²🔁"];
     const titles = ["بدون تكرار", "تكرار الآية", "تكرار السورة"];
     [this.elements.repeatBtn, document.getElementById("miniBarRepeat")].forEach(
       (btn) => {
@@ -717,7 +717,7 @@ class QuranAudioPlayer {
       <button id="miniBarOptions"  class="mini-btn" title="خيارات">⚙️</button>
       <div class="mini-bar-controls">
         <button id="miniBarSpeed" class="mini-btn speed-btn" title="السرعة">1.0×</button>
-        <button id="miniBarRepeat" class="mini-btn" title="تكرار">🔁</button>
+        <button id="miniBarRepeat" class="mini-btn" title="تكرار">🔄️</button>
         <button id="miniBarNextSurah" class="mini-btn" title="السورة التالية">⏭</button>
         <button id="miniBarPlayPause" class="mini-btn main-btn" title="تشغيل">▶</button>
         <button id="miniBarPrevSurah" class="mini-btn" title="السورة السابقة">⏮</button>

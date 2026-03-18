@@ -947,7 +947,7 @@ class QuranReader {
     const btnFaster = document.getElementById("autoScrollFaster");
 
     if (btnScroll) btnScroll.classList.remove("playing");
-    if (btnIcon) btnIcon.textContent = "▶️";
+    if (btnIcon) btnIcon.textContent = "⏫";
     if (btnSlower) {
       btnSlower.classList.remove("visible");
       setTimeout(() => {
