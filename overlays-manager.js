@@ -1311,25 +1311,29 @@ class OverlayManager {
         <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (الصادر عن دار المعرفة)
       </p>
 
- <div style="display: flex; gap: 10px; margin: 15px 0;">
-      <div style="flex: 1;">
-        <button id="shareAppBtn" class="confirm-btn ok" style="width:100%; padding:12px; font-size:1rem;">
-          🔗 شارك التطبيق
-        </button>
-      </div>
-      <div style="flex: 1;">
-        <a href="mailto:zdig1.0@gmail.com?subject=quran" class="confirm-btn blue" style="display:flex; align-items:center; justify-content:center; width:100%; padding:12px; font-size:1rem; text-decoration:none; box-sizing:border-box;">
-          📧 للتواصل
-        </a>
-      </div>
-        <div style="flex: 1;">
-        <a href="https://zdig1.gitlab.io/quran/" target="_blank" rel="noopener noreferrer">
-          🌐 زر موقعنا
-        </a>
-      </div>
-    </div>
-    
-   
+
+<div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
+  <!-- زر مشاركة التطبيق -->
+  <div style="flex: 1;">
+    <button id="shareAppBtn" class="confirm-btn ok" style="width:100%; padding:12px; font-size:1rem; border: none; cursor: pointer;">
+      🔗 شارك</button>
+  </div>
+
+  <!-- رابط البريد الإلكتروني للتواصل -->
+  <div style="flex: 1;">
+    <a href="mailto:zdig1.0@gmail.com?subject=استفسار بخصوص تطبيق القرآن" class="confirm-btn blue" style="display:flex; align-items:center; justify-content:center; width:100%; padding:12px; font-size:1rem; text-decoration:none; box-sizing:border-box;">
+      📧 للتواصل
+    </a>
+  </div>
+
+  <!-- رابط الموقع الإلكتروني - تم التصحيح -->
+  <div style="flex: 1;">
+    <a href="https://zdig1.gitlab.io/quran/" target="_blank" rel="noopener noreferrer" class="confirm-btn brown" style="display:flex; align-items:center; justify-content:center; width:100%; padding:12px; font-size:1rem; text-decoration:none; box-sizing:border-box;">
+      🌐 زر موقعنا
+    </a>
+  </div>
+</div>
+       
       <div class="about-stats">
         <div class="about-stat"><span>السور</span><strong>114</strong></div>
         <div class="about-stat"><span>الآيات</span><strong>6236</strong></div>
@@ -1340,7 +1344,7 @@ class OverlayManager {
       </div>
       <p class="about-footer">
         جميع الحقوق محفوظة © 2026<br>
-        <a href="https://zdig1.gitlab.io/quran/" target="_blank" rel="noopener noreferrer"><u>GDZ</u></a> 🍉
+        GDZ 🍉
         </p>
     </div>`;
 

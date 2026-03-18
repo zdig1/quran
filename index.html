@@ -336,67 +336,67 @@
                     <div id="searchResults" class="overlay-body"></div>
                 </div>
             </div>
-
-            <!-- 6. TAFSIR (Fullscreen) -->
-            <div id="tafsirOverlay" class="overlay" role="dialog" aria-label="التفسير الميسر">
-                <div class="overlay-content fullscreen">
-                    <div class="overlay-header">
-                        <h2>📖 التفسير الميسر</h2>
-                        <button type="button" class="btn close-btn" id="closeTafsirBtn">✕</button>
-                    </div>
-
-                    <div class="tafsir-controls tafsir-container">
-                        <select id="suraSelect" class="tafsir-select select-ok" aria-label="اختر السورة">
-                            <option value="">اختر السورة</option>
-                        </select>
-                        <select id="ayaSelect" class="tafsir-select select-blue" aria-label="اختر الآية">
-                            <option value="">اختر الآية</option>
-                        </select>
-                        <select id="pageSelect" class="tafsir-select select-brown" aria-label="اختر الصفحة">
-                            <option value="">اختر الصفحة</option>
-                        </select>
-                        <button type="button" class="btn tafsir-font-btn" id="tafsirThemeToggle"
-                            aria-label="تبديل الوضع الليلي">🌙</button>
-
-                        <button type="button" class="btn tafsir-font-btn" id="tafsirFontDecrease"
-                            aria-label="تصغير حجم النص">−</button>
-                        <button type="button" class="btn tafsir-font-btn" id="tafsirFontReset"
-                            aria-label="إعادة الحجم الافتراضي">⟲</button>
-                        <button type="button" class="btn tafsir-font-btn" id="tafsirFontIncrease"
-                            aria-label="تكبير حجم النص">+</button>
-                    </div>
-
-                    <div id="tafsirContent" class="overlay-body tafsir-content-container">
-                    </div>
+        </div>
+        <!-- 6. TAFSIR (Fullscreen) -->
+        <div id="tafsirOverlay" class="overlay" role="dialog" aria-label="التفسير الميسر">
+            <div class="overlay-content fullscreen">
+                <div class="overlay-header">
+                    <h2>📖 التفسير الميسر</h2>
+                    <button type="button" class="btn close-btn" id="closeTafsirBtn">✕</button>
                 </div>
-            </div>
 
-            <!-- 7. TAJWEED (Standard) -->
-            <div id="tajweedOverlay" class="overlay" role="dialog" aria-label="قواعد التجويد">
-                <div class="overlay-content fullscreen">
-                    <div class="overlay-header">
-                        <h2>📚 قواعد التجويد</h2>
-                        <button type="button" class="btn close-btn" id="closeTajweedBtn">✕</button>
-                    </div>
-                    <div class="overlay-body">
-                        <div id="tajweedRulesContent" class="tajweed-text"></div>
-                    </div>
+                <div class="tafsir-controls tafsir-container">
+                    <select id="suraSelect" class="tafsir-select select-ok" aria-label="اختر السورة">
+                        <option value="">اختر السورة</option>
+                    </select>
+                    <select id="ayaSelect" class="tafsir-select select-blue" aria-label="اختر الآية">
+                        <option value="">اختر الآية</option>
+                    </select>
+                    <select id="pageSelect" class="tafsir-select select-brown" aria-label="اختر الصفحة">
+                        <option value="">اختر الصفحة</option>
+                    </select>
+                    <button type="button" class="btn tafsir-font-btn" id="tafsirThemeToggle"
+                        aria-label="تبديل الوضع الليلي">🌙</button>
+
+                    <button type="button" class="btn tafsir-font-btn" id="tafsirFontDecrease"
+                        aria-label="تصغير حجم النص">−</button>
+                    <button type="button" class="btn tafsir-font-btn" id="tafsirFontReset"
+                        aria-label="إعادة الحجم الافتراضي">⟲</button>
+                    <button type="button" class="btn tafsir-font-btn" id="tafsirFontIncrease"
+                        aria-label="تكبير حجم النص">+</button>
                 </div>
-            </div>
 
-            <!-- 8. ABOUT (Standard) -->
-            <div id="aboutOverlay" class="overlay" role="dialog" aria-label="عن التطبيق">
-                <div class="overlay-content">
-                    <div class="overlay-header">
-                        <h2>📖 عن التطبيق</h2>
-                        <button type="button" class="btn close-btn" id="closeAboutBtn">✕</button>
-                    </div>
-                    <div class="overlay-body">
-                        <div id="aboutContent" class="about-content"></div>
-                    </div>
+                <div id="tafsirContent" class="overlay-body tafsir-content-container">
                 </div>
             </div>
         </div>
+
+        <!-- 7. TAJWEED (Standard) -->
+        <div id="tajweedOverlay" class="overlay" role="dialog" aria-label="قواعد التجويد">
+            <div class="overlay-content fullscreen">
+                <div class="overlay-header">
+                    <h2>📚 قواعد التجويد</h2>
+                    <button type="button" class="btn close-btn" id="closeTajweedBtn">✕</button>
+                </div>
+                <div class="overlay-body">
+                    <div id="tajweedRulesContent" class="tajweed-text"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. ABOUT (Standard) -->
+        <div id="aboutOverlay" class="overlay" role="dialog" aria-label="عن التطبيق">
+            <div class="overlay-content">
+                <div class="overlay-header">
+                    <h2>📖 عن التطبيق</h2>
+                    <button type="button" class="btn close-btn" id="closeAboutBtn">✕</button>
+                </div>
+                <div class="overlay-body">
+                    <div id="aboutContent" class="about-content"></div>
+                </div>
+            </div>
+        </div>
+
     </div>
     <!-- noscript fallback -->
     <noscript>
