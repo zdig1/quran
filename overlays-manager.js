@@ -952,12 +952,10 @@ class OverlayManager {
         : "";
 
     contentContainer.innerHTML = `
-    <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} — البيانات عبر الإنترنت</div>
     ${coordsStatus}
     <select id="reciterSelect" class="audio-select select-violet" aria-label="اختر القارئ">
       <option value="">اختر القارئ</option>
     </select>
-
     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
       <select id="surahSelectAudio" class="audio-select select-blue" style="flex:1;" aria-label="اختر السورة">
         <option value="">اختر السورة</option>
@@ -969,27 +967,28 @@ class OverlayManager {
         <option value="">اختر الصفحة</option>
       </select>
     </div>
-  <div class="audio-riwaya-info" style="display: flex; align-items: center; justify-content space-between; gap: 8px; margin-bottom: 8px;">
-  <span style="white-space: nowrap;">أنت تستمع إلى :</span>
-  <div id="currentSurahDisplay" class="audio-current-display" style="flex: 1; margin: 0; background: transparent; border: none; color: inherit;"></div>
-</div>
-    <div class="audio-progress-wrap">  
-    <span id="audioCurrentTime">0:00</span>
+    <div id="audioStatus" class="audio-status"></div>
+    <div class="audio-progress-wrap">
+      <span id="audioCurrentTime">0:00</span>
       <input type="range" id="audioProgress" class="audio-progress" value="0" min="0" max="100" step="0.1">
       <span id="audioDuration">0:00</span>
     </div>
     <div class="audio-controls">
       <button class="btn audio-btn" id="overlaySpeedBtn" title="السرعة">1×</button>
-      <button class="btn audio-btn" id="repeatBtn"    title="تكرار">🔁</button>
+      <button class="btn audio-btn" id="repeatBtn" title="تكرار">🔁</button>
       <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">⏭</button>
       <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">▶</button>
       <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">⏮</button>
-      <button class="btn audio-btn" id="stopBtn"      title="إيقاف">⏹</button>
+      <button class="btn audio-btn" id="stopBtn" title="إيقاف">⏹</button>
     </div>
-    <div id="audioStatus" class="audio-status"></div>
+    
+    <div class="audio-current-info" style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
+      <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} (عبر النت)</div>
+      <div id="currentSurahDisplay" class="audio-current-display" style="flex: 1; margin: 0; background: transparent; border: none; color: inherit;"></div>
+    </div>
+    
     <audio id="quranAudioPlayer" preload="none" style="display:none;"></audio>
-  `;
-
+`;
     overlay.contentGenerated = true;
     document.getElementById("playPauseBtn")?.addEventListener("click", () => {
       setTimeout(() => {
@@ -1298,7 +1297,7 @@ class OverlayManager {
     overlay.content.innerHTML = `<div class="about-content">
       <p class="about-title">
         <strong>مصحف التجويد - حفص</strong>
-        <span class="about-version">v1.0.7</span>
+        <span class="about-version">v1.0.8</span>
       </p>
       <p class="about-desc">
         تطبيق لقراءة القرآن الكريم كاملاً بجودة عالية ودون اتصال بالإنترنت، مطابق للمصحف الورقي المعتمد :

@@ -1261,7 +1261,7 @@ class QuranReader {
     const imgH = img.offsetHeight;
     if (!imgW || !imgH) return;
 
-    const sx = imgW / 1259;
+    const sx = imgW / 1260;
     const sy = imgH / 1890;
 
     // Bornes réelles de chaque ligne depuis toute la page
@@ -1279,8 +1279,8 @@ class QuranReader {
       }
     });
 
-    const WEBP_TOP = 23;
-    const WEBP_BOT = 23;
+    const WEBP_TOP = 30;
+    const WEBP_BOT = 25;
 
     rects.forEach((r) => {
       const lineData = r.l ? lineMap[r.l] : null;
@@ -1290,15 +1290,16 @@ class QuranReader {
       const t = realY1 / 1890;
       const yCorrect =
         this.readingMode === "scroll"
-          ? 30 - (realY1 / 1890) * 45
+          ? 30 - (realY1 / 1890) * 55
           : (WEBP_TOP - t * (WEBP_TOP + WEBP_BOT)) * (imgH / 1100);
 
       const div = document.createElement("div");
       div.className = "aya-highlight";
-      div.style.left = offX + (r.x1 - 45) * sx + "px";
+      div.style.left = offX + (r.x1 - 40) * sx + "px";
       div.style.width = (r.x2 - r.x1) * sx + "px";
-      div.style.top = offY + realY1 * sy + yCorrect + "px";
-      div.style.height = (realY2 - realY1) * sy + "px";
+      const SHRINK = 5;
+      div.style.top = offY + realY1 * sy + yCorrect + SHRINK * sy + "px";
+      div.style.height = (realY2 - realY1) * sy - SHRINK * 2 * sy + "px";
       wrapper.appendChild(div);
     });
   }

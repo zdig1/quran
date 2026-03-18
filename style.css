@@ -104,7 +104,8 @@ html {
   font-size: 16px;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -144,7 +145,8 @@ html, body {
    HEADER / FOOTER (communs)
    ============================================ */
 
-.header, .footer {
+.header,
+.footer {
   position: fixed;
   left: 0;
   right: 0;
@@ -155,13 +157,15 @@ html, body {
   transition: var(--transition-default), visibility .3s ease;
 }
 
-.header.hidden, .footer.hidden {
+.header.hidden,
+.footer.hidden {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
 }
 
-.header:not(.hidden), .footer:not(.hidden) {
+.header:not(.hidden),
+.footer:not(.hidden) {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -199,10 +203,16 @@ html, body {
   min-height: 30px;
 }
 
-.footer-item:first-child { justify-content: flex-start; }
-.footer-item:last-child { justify-content: flex-end; }
+.footer-item:first-child {
+  justify-content: flex-start;
+}
 
-.footer-surah, .footer-value {
+.footer-item:last-child {
+  justify-content: flex-end;
+}
+
+.footer-surah,
+.footer-value {
   background: rgba(255, 255, 255, .7);
   border-radius: 1.25rem;
   padding: 8px 12px !important;
@@ -218,7 +228,8 @@ html, body {
   opacity: 1 !important;
 }
 
-.night-mode .footer-surah, .night-mode .footer-value {
+.night-mode .footer-surah,
+.night-mode .footer-value {
   background: rgba(30, 30, 30, .7);
 }
 
@@ -239,7 +250,8 @@ html, body {
   color: var(--success);
 }
 
-.sajda-icon, .item-sajda-icon {
+.sajda-icon,
+.item-sajda-icon {
   font-size: 1.25em;
   display: inline-flex;
   align-items: center;
@@ -296,7 +308,9 @@ html, body {
   margin: 0;
 }
 
-.night-mode .close-btn { color: #ff6b6b; }
+.night-mode .close-btn {
+  color: #ff6b6b;
+}
 
 .icon-btn {
   width: 2rem;
@@ -314,8 +328,13 @@ html, body {
   border-color: var(--border);
 }
 
-.night-mode .icon-btn { color: var(--success); }
-.icon-btn:hover { background: var(--primary-light); }
+.night-mode .icon-btn {
+  color: var(--success);
+}
+
+.icon-btn:hover {
+  background: var(--primary-light);
+}
 
 .pin-btn {
   background: none;
@@ -332,8 +351,13 @@ html, body {
   transition: color .2s ease;
 }
 
-.pin-btn:hover { opacity: .8; }
-.pin-btn.pinned { color: var(--bookmark-color); }
+.pin-btn:hover {
+  opacity: .8;
+}
+
+.pin-btn.pinned {
+  color: var(--bookmark-color);
+}
 
 /* Boutons de confirmation (formulaires, dialogues) */
 .confirm-btn {
@@ -358,7 +382,10 @@ html, body {
   border-color: var(--primary);
 }
 
-.confirm-btn.ok:hover { background: var(--primary-light); color: var(--primary-dark); }
+.confirm-btn.ok:hover {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
 
 .night-mode .confirm-btn.ok {
   background: #2d2d2d;
@@ -372,7 +399,10 @@ html, body {
   border-color: #6c757d;
 }
 
-.confirm-btn.cancel:hover { background: #f8f9fa; color: #5a6268; }
+.confirm-btn.cancel:hover {
+  background: #f8f9fa;
+  color: #5a6268;
+}
 
 .night-mode .confirm-btn.cancel {
   background: #2d2d2d;
@@ -386,7 +416,9 @@ html, body {
   border-color: #1565c0;
 }
 
-.confirm-btn.blue:hover { background: #e3f2fd; }
+.confirm-btn.blue:hover {
+  background: #e3f2fd;
+}
 
 .night-mode .confirm-btn.blue {
   background: #2d2d2d;
@@ -400,7 +432,9 @@ html, body {
   border-color: #6d4c41;
 }
 
-.confirm-btn.brown:hover { background: #efebe9; }
+.confirm-btn.brown:hover {
+  background: #efebe9;
+}
 
 .night-mode .confirm-btn.brown {
   background: #2d2d2d;
@@ -452,7 +486,9 @@ html, body {
   transition: background-color .2s;
 }
 
-.menu-item:hover { background: rgba(255, 255, 255, 0.1); }
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
 
 .tafsir-font-btn {
   flex: 0 0 auto;
@@ -477,7 +513,9 @@ html, body {
   border-color: var(--border-dark);
 }
 
-.tafsir-font-btn:hover { background: var(--primary-light); }
+.tafsir-font-btn:hover {
+  background: var(--primary-light);
+}
 
 #shareAppBtn {
   background: #ffffff !important;
@@ -485,7 +523,9 @@ html, body {
   border: 1px solid var(--primary) !important;
 }
 
-#shareAppBtn:hover { background: var(--primary-light) !important; }
+#shareAppBtn:hover {
+  background: var(--primary-light) !important;
+}
 
 .night-mode #shareAppBtn {
   background: #2d2d2d !important;
@@ -507,7 +547,9 @@ a.confirm-btn.blue {
   transition: background .2s;
 }
 
-a.confirm-btn.blue:hover { background: #e3f2fd; }
+a.confirm-btn.blue:hover {
+  background: #e3f2fd;
+}
 
 .night-mode a.confirm-btn.blue {
   background: #2d2d2d;
@@ -560,7 +602,9 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   transition: opacity .3s ease;
 }
 
-.page-image[data-loaded="true"] { opacity: 1; }
+.page-image[data-loaded="true"] {
+  opacity: 1;
+}
 
 .night-mode .page-image {
   filter: invert(1) hue-rotate(-30deg);
@@ -664,11 +708,18 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   padding: 15vh 5px 5px 5px;
 }
 
-.overlay { background: var(--overlay-bg); }
-.menu-overlay { background: rgba(0, 0, 0, .5); }
+.overlay {
+  background: var(--overlay-bg);
+}
+
+.menu-overlay {
+  background: rgba(0, 0, 0, .5);
+}
 
 .overlay.show,
-.menu-overlay.show { display: flex; }
+.menu-overlay.show {
+  display: flex;
+}
 
 .overlay-content {
   background: var(--surface);
@@ -781,7 +832,9 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   min-height: auto;
 }
 
-.item-container:last-child { border-bottom: none; }
+.item-container:last-child {
+  border-bottom: none;
+}
 
 .item-line-1,
 .item-line-2 {
@@ -820,8 +873,14 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   font-size: var(--text-sm);
 }
 
-.item-subtitle { color: var(--text-light); line-height: 1.3; }
-.item-tertiary { color: var(--text-lighter); }
+.item-subtitle {
+  color: var(--text-light);
+  line-height: 1.3;
+}
+
+.item-tertiary {
+  color: var(--text-lighter);
+}
 
 .item-badge {
   min-width: 2.2rem;
@@ -839,9 +898,17 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   margin-right: 5px;
 }
 
-.item-search .item-badge { --badge-bg: var(--badge-search); }
-.item-surah .item-badge { --badge-bg: var(--primary); }
-.item-juzhizb .item-badge { --badge-bg: var(--badge-juzhizb); }
+.item-search .item-badge {
+  --badge-bg: var(--badge-search);
+}
+
+.item-surah .item-badge {
+  --badge-bg: var(--primary);
+}
+
+.item-juzhizb .item-badge {
+  --badge-bg: var(--badge-juzhizb);
+}
 
 .juzhizb-grid {
   display: grid;
@@ -850,8 +917,19 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   gap: var(--space-md);
 }
 
-.juzhizb-grid-col1 { grid-column: 1; display: flex; align-items: center; justify-content: center; width: 2.5rem; }
-.juzhizb-grid-col2 { grid-column: 2; min-width: 0; overflow: hidden; }
+.juzhizb-grid-col1 {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+}
+
+.juzhizb-grid-col2 {
+  grid-column: 2;
+  min-width: 0;
+  overflow: hidden;
+}
 
 .aya-text {
   display: block;
@@ -885,8 +963,14 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   font-size: var(--text-md);
 }
 
-.item-bookmark-indicator { color: var(--bookmark-color); }
-.item-sajda-icon { color: var(--primary); min-width: 1rem; }
+.item-bookmark-indicator {
+  color: var(--bookmark-color);
+}
+
+.item-sajda-icon {
+  color: var(--primary);
+  min-width: 1rem;
+}
 
 .item-tag {
   background: var(--tag-bg);
@@ -979,7 +1063,10 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   margin: 0;
 }
 
-.bookmarks-list { flex: 1; overflow-y: auto; }
+.bookmarks-list {
+  flex: 1;
+  overflow-y: auto;
+}
 
 .bookmarks-add-form {
   display: flex;
@@ -1009,8 +1096,16 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   cursor: pointer;
 }
 
-.bookmarks-add-form .btn-add { background-color: var(--primary); color: white; }
-.bookmarks-add-form .btn-cancel { background-color: #6c757d; color: white; display: none; }
+.bookmarks-add-form .btn-add {
+  background-color: var(--primary);
+  color: white;
+}
+
+.bookmarks-add-form .btn-cancel {
+  background-color: #6c757d;
+  color: white;
+  display: none;
+}
 
 .item-bookmark.editing-bookmark {
   background-color: var(--primary-light);
@@ -1110,9 +1205,18 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   gap: var(--space-sm);
 }
 
-.stat-results, .stat-suras { font-weight: bold; }
-.stat-results { color: var(--stat-results); }
-.stat-suras { color: var(--stat-suras); }
+.stat-results,
+.stat-suras {
+  font-weight: bold;
+}
+
+.stat-results {
+  color: var(--stat-results);
+}
+
+.stat-suras {
+  color: var(--stat-suras);
+}
 
 .item-search {
   padding: 0 var(--overlay-padding-x);
@@ -1148,7 +1252,10 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   color: var(--text-light);
 }
 
-#searchResults .search-empty p { margin: .5rem 0; text-align: center; }
+#searchResults .search-empty p {
+  margin: .5rem 0;
+  text-align: center;
+}
 
 .clear-search-btn {
   position: absolute;
@@ -1171,8 +1278,14 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   justify-content: center;
 }
 
-.clear-search-btn:hover { color: var(--text); }
-#searchInput { padding-left: 40px !important; box-sizing: border-box; }
+.clear-search-btn:hover {
+  color: var(--text);
+}
+
+#searchInput {
+  padding-left: 40px !important;
+  box-sizing: border-box;
+}
 
 /* ============================================
    TAFSIR
@@ -1220,7 +1333,9 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   scroll-margin-top: 70px;
 }
 
-.tafsir-aya-container:last-child { border-bottom: 1px solid var(--border); }
+.tafsir-aya-container:last-child {
+  border-bottom: 1px solid var(--border);
+}
 
 .tafsir-explanation {
   color: var(--text);
@@ -1287,9 +1402,17 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   margin: 0 !important;
 }
 
-.night-mode .sura-title-container { border-bottom-color: var(--success); }
-.night-mode .sura-badge { background: var(--success); }
-.night-mode .sura-name-kufi { color: var(--success); }
+.night-mode .sura-title-container {
+  border-bottom-color: var(--success);
+}
+
+.night-mode .sura-badge {
+  background: var(--success);
+}
+
+.night-mode .sura-name-kufi {
+  color: var(--success);
+}
 
 /* ============================================
    TAJWEED
@@ -1313,7 +1436,9 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   padding-right: 10px !important;
 }
 
-.tajweed-image img { box-shadow: var(--shadow); }
+.tajweed-image img {
+  box-shadow: var(--shadow);
+}
 
 /* ============================================
    À PROPOS
@@ -1334,8 +1459,13 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   text-align-last: right;
 }
 
-.about-content strong { color: var(--primary); }
-.night-mode .about-content strong { color: var(--success); }
+.about-content strong {
+  color: var(--primary);
+}
+
+.night-mode .about-content strong {
+  color: var(--success);
+}
 
 .about-title {
   text-align: center;
@@ -1344,7 +1474,9 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   line-height: 1.5;
 }
 
-.night-mode .about-title { color: var(--success); }
+.night-mode .about-title {
+  color: var(--success);
+}
 
 .about-version {
   font-size: var(--text-sm);
@@ -1388,7 +1520,9 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   color: var(--primary);
 }
 
-.night-mode .about-stat strong { color: var(--success); }
+.night-mode .about-stat strong {
+  color: var(--success);
+}
 
 .about-footer {
   text-align: center;
@@ -1405,7 +1539,9 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   text-decoration: none;
 }
 
-.night-mode .about-footer a { color: var(--success); }
+.night-mode .about-footer a {
+  color: var(--success);
+}
 
 /* ============================================
    UTILITAIRES
@@ -1436,7 +1572,11 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   margin: var(--space-lg) auto;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* ============================================
    TOAST
@@ -1466,13 +1606,20 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
    AUTO SCROLL
    ============================================ */
 
-.autoscroll-group { display: flex; align-items: center; gap: .25rem; }
+.autoscroll-group {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+}
 
 /* ============================================
    SCROLLBAR (masquée)
    ============================================ */
 
-::-webkit-scrollbar { width: 0; background: transparent; }
+::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
 
 /* ============================================
    DIALOGS
@@ -1515,44 +1662,75 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
    ITEMS LISTES (supplément)
    ============================================ */
 
-.item-surah .item-title { font-family: 'MyNotoKufi', sans-serif; }
+.item-surah .item-title {
+  font-family: 'MyNotoKufi', sans-serif;
+}
 
 .item-search .item-line-2[data-clickable="true"] {
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
-.item-search .item-line-2[data-clickable="true"]:hover { background-color: var(--primary-light); }
+.item-search .item-line-2[data-clickable="true"]:hover {
+  background-color: var(--primary-light);
+}
 
-.night-mode .item-search .item-line-2[data-clickable="true"]:hover { background-color: rgba(76, 175, 80, 0.2); }
+.night-mode .item-search .item-line-2[data-clickable="true"]:hover {
+  background-color: rgba(76, 175, 80, 0.2);
+}
 
 /* ============================================
    AUDIO – OVERLAY ET MINI-BAR
    ============================================ */
 
-.audio-body { padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+/* Conteneur général de l'overlay audio */
+.audio-body {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
+/* Informations sur la récitation (fond gris) */
 .audio-riwaya-info {
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-light);
-  padding: 0.3rem;
+  padding: 0.2rem;
   border-radius: var(--border-radius);
   background: var(--surface-alt);
   direction: rtl;
 }
 
-.audio-current-display {
-  background: var(--primary-light);
-  border: 1px solid var(--primary);
+/* Affichage de la sourate/verset en cours (sans fond ni bordure) */
+.audio-current-info {
+  background: var(--surface-alt);
   border-radius: var(--border-radius);
-  padding: 0.6rem 1rem;
-  text-align: center;
-  font-size: 0.95rem;
-  color: var(--primary);
-  direction: rtl;
+  padding: 0.2rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
 }
 
+.audio-current-info span {
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.audio-current-info .audio-current-display {
+  flex: 1;
+  margin: 0;
+  background: transparent;
+  border: none;
+  color: inherit;
+  padding: 0.2rem 0;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Version nuit pour l'affichage courant */
 .night-mode .audio-current-display {
   background: rgba(76, 175, 80, 0.15);
   color: var(--success);
@@ -1560,9 +1738,10 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
 }
 
 /* Sélecteurs audio */
-.audio-select,
-.audio-rate-select,
-.mini-rate-select {
+.audio-select {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.9rem;
   border-radius: var(--border-radius);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -1571,20 +1750,13 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   direction: rtl;
 }
 
-.audio-select { width: 100%; padding: 0.75rem 1rem; font-size: 1rem; }
-.audio-rate-select, .mini-rate-select { padding: 0.3rem 0.4rem; font-size: 0.85rem; }
-
-.audio-select:focus,
-.audio-rate-select:focus,
-.mini-rate-select:focus {
+.audio-select:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 2px var(--primary-light);
 }
 
-.night-mode .audio-select,
-.night-mode .audio-rate-select,
-.night-mode .mini-rate-select {
+.night-mode .audio-select {
   background: #2d2d2d;
   border-color: #444;
   color: #eee;
@@ -1597,6 +1769,7 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   gap: 0.5rem;
   font-size: 0.85rem;
   color: var(--text-light);
+  margin: 0.2rem 0;
 }
 
 .audio-progress {
@@ -1606,38 +1779,42 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   cursor: pointer;
 }
 
-.audio-controls { display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
+/* Conteneur des boutons de contrôle */
+.audio-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0.2rem 0;
+}
 
-/* Boutons audio et mini-bar (communs) */
-.audio-btn,
-.mini-btn {
-  border: none;
-  background: none;
+/* Boutons de l'overlay */
+.audio-btn {
+  width: 2.4rem;
+  height: 2.4rem;
+  font-size: 1rem;
+  background: var(--surface);
+  border-radius: 50%;
+  color: var(--text);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.15s, transform 0.1s;
-  border-radius: 50%;
+}
+
+.audio-btn:active {
+  transform: scale(0.92);
+}
+
+.audio-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.audio-btn.main-btn {
+  font-size: 1.3rem;
   color: var(--text);
-  line-height: 1;
-}
-
-.audio-btn:active, .mini-btn:active { transform: scale(0.92); }
-.audio-btn:disabled, .mini-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.audio-btn {
-  width: 2.6rem;
-  height: 2.6rem;
-  font-size: 1.1rem;
-  border: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.audio-btn.active {
-  background: var(--primary-light);
-  border-color: var(--primary);
-  color: var(--primary);
 }
 
 .night-mode .audio-btn {
@@ -1646,29 +1823,21 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   color: #eee;
 }
 
-.mini-btn {
-  font-size: 1rem;
-  padding: 0.3rem 0.4rem;
-  border-radius: var(--border-radius);
-}
-
-.mini-btn.active {
-  color: var(--primary);
-  background: var(--primary-light);
-}
-
-.night-mode .mini-btn { color: #eee; }
-
-.audio-btn.main-btn, .mini-btn.main-btn { font-size: 1.3rem; color: var(--text); }
-
+/* Statut (messages) */
 .audio-status {
   text-align: center;
-  min-height: 1.5rem;
   color: var(--text-light);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   padding: 0.3rem;
+  display: none;
+  /* caché par défaut */
 }
 
+.audio-status:not(:empty) {
+  display: block;
+}
+
+/* Avertissement pour coordonnées manquantes */
 .audio-warning {
   background: rgba(255, 193, 7, 0.2);
   color: #b45f06;
@@ -1684,26 +1853,26 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   color: #ffb74d;
 }
 
-/* Mini-bar */
+/* Mini‑barre */
 .audio-mini-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 1200;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.12);
-  padding: 0.5rem;
+  background: #2a6b5ff2;
+  padding: 0.2rem;
 }
 
-.audio-mini-bar.hidden { display: none; }
+.audio-mini-bar.hidden {
+  display: none;
+}
 
 .night-mode .audio-mini-bar {
-  background: #1e1e1e;
-  border-color: #333;
+  background: #1e4a40f2;
 }
 
+/* Ligne des boutons dans la mini‑barre */
 .audio-mini-bar .mini-bar-bottom {
   display: flex;
   align-items: center;
@@ -1718,22 +1887,45 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   justify-content: center;
 }
 
+/* Boutons de la mini‑barre */
 .audio-mini-bar .mini-btn {
   font-size: 1.4rem;
-  padding: 0.4rem;
-  min-width: 2rem;
+  padding: 0;
+  width: 2.4rem;
+  height: 2.4rem;
   border: none;
   background: none;
   color: var(--text);
   cursor: pointer;
-  border-radius: var(--border-radius);
-  transition: background 0.2s;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.1s;
 }
 
-.audio-mini-bar .mini-btn:active { background: var(--primary-light); }
-.audio-mini-bar .mini-btn.main-btn { font-size: 1.6rem; }
+.audio-mini-bar .mini-btn:active {
+  transform: scale(0.92);
+  background: var(--primary-light);
+}
 
-/* FAB */
+.audio-mini-bar .mini-btn.main-btn {
+  font-size: 1.6rem;
+}
+
+.night-mode .audio-mini-bar .mini-btn {
+  color: #eee;
+}
+
+/* Bouton de vitesse dans la mini‑barre */
+.audio-mini-bar .mini-btn.speed-btn {
+  font-family: monospace;
+  width: 3.5rem;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+/* FAB (bouton flottant) */
 .audio-fab {
   position: fixed;
   bottom: 1.2rem;
@@ -1742,7 +1934,7 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   width: 3rem;
   height: 3rem;
   border-radius: 50%;
-  background: #1a5e48f0;
+  background: #2a6b5ff2;
   font-size: 1.3rem;
   border: none;
   cursor: pointer;
@@ -1753,8 +1945,13 @@ a.confirm-btn.blue:hover { background: #e3f2fd; }
   transition: transform 0.15s;
 }
 
-.audio-fab:active { transform: scale(0.92); }
-.audio-fab.hidden { display: none; }
+.audio-fab:active {
+  transform: scale(0.92);
+}
+
+.audio-fab.hidden {
+  display: none;
+}
 
 .night-mode .audio-fab { background: var(--success); }
 
