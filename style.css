@@ -1186,7 +1186,10 @@ a.confirm-btn.blue:hover {
 .search-container {
   padding: var(--space-lg);
   background: var(--surface);
-  flex-shrink: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .search-input {
@@ -1310,8 +1313,8 @@ a.confirm-btn.blue:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-md);
+  gap: 0.5rem;
+  padding: 0.5rem;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   direction: rtl;
@@ -1321,10 +1324,9 @@ a.confirm-btn.blue:hover {
   flex: 1 1 auto;
   min-width: 100px;
   height: auto;
-  padding: var(--space-md) var(--space-lg);
+  padding: 0.5rem;
   border: 1px solid var(--border);
   border-radius: var(--border-radius);
-  background: var(--tafsir-select-bg);
   color: var(--tafsir-select-text);
   font-size: var(--text-sm);
   font-weight: bold;
