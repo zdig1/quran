@@ -368,7 +368,6 @@ class QuranAudioPlayer {
       this.currentSurah !== 1 &&
       this.currentSurah !== 9;
 
-    // Ne pas jouer la basmala si on est en mode répétition de l'aya
     const skipBasmala = this.repeatMode === 1 && this.currentAyah === 1;
 
     if (needsBasmala && !skipBasmala) {
@@ -383,7 +382,12 @@ class QuranAudioPlayer {
       this.audioElement.playbackRate = this.playbackRate;
       this.audioElement.play().catch((e) => console.error("basmala error:", e));
 
-      // Nettoyer l'ancien écouteur pour éviter les doublons
+      if (!this.ayaCoords) {
+        this._loadAyaCoords().then(() => this._applyHighlight());
+      } else {
+        this._applyHighlight();
+      }
+
       if (this._boundListeners.audio.basmalaEnded) {
         this.audioElement.removeEventListener(
           "ended",
