@@ -1106,6 +1106,8 @@ class OverlayManager {
     const clearBtn = document.getElementById("clearSearchBtn");
     if (!clearBtn) return;
 
+    clearBtn.classList.remove("hidden");
+
     if (this._clearSearchHandler) {
       clearBtn.removeEventListener("click", this._clearSearchHandler);
     }
