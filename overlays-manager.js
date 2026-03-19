@@ -344,84 +344,106 @@ class OverlayManager {
     item.appendChild(line2);
 
     item.addEventListener("click", (e) => {
-      if (!e.target.classList.contains("pin-btn")) {
-        window.quranApp?.goToPage(surah.page_start);
-        this.closeOverlay("surahs");
+      // --- ZONE DE SÉCURITÉ ---
+      // Si le clic vient du bouton pin ou d'un de ses enfants, on stoppe tout.
+      if (e.target.closest('.pin-btn')) {
+        return;
       }
+
+      // Sinon, c'est un clic normal sur la sourate
+      window.quranApp?.goToPage(surah.page_start);
+      this.closeOverlay("surahs");
     });
 
     const pinBtn = item.querySelector(".pin-btn");
     pinBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
+      e.preventDefault();
+      e.stopPropagation(); // Bloque la remontée du clic vers 'item'
+
       if (window.quranApp) {
         const added = window.quranApp.togglePinSurah(surah.s_id);
         pinBtn.classList.toggle("pinned", added);
         pinBtn.textContent = added ? "⭐" : "📌";
-        this.renderSurahsList(false);
+
+        // Ton système anti-saut visuel
+        this.renderSurahsList(false, surah.s_id);
       }
     });
 
     return item;
   }
 
-  renderSurahsList(scrollToCurrent = true) {
+  renderSurahsList(scrollToCurrent = true, preserveSurahId = null) {
     const overlay = this.overlays.surahs;
     if (!overlay?.content || !window.quranCalculator) return;
-    overlay.content.innerHTML = "";
 
+    const container = overlay.content;
+
+    // --- 1. CAPTURE DE LA POSITION PRÉCISE ---
+    let initialClickOffset = 0;
+    if (preserveSurahId) {
+      // On cherche l'élément spécifiquement dans la section globale (all-section) 
+      // pour éviter de sauter vers la section favoris
+      const allSectionOld = container.querySelector('.surah-section-all');
+      const clickedEl = allSectionOld
+        ? allSectionOld.querySelector(`.item-surah[data-surah-id="${preserveSurahId}"]`)
+        : container.querySelector(`.item-surah[data-surah-id="${preserveSurahId}"]`);
+
+      if (clickedEl) {
+        initialClickOffset = clickedEl.offsetTop - container.scrollTop;
+      }
+    }
+
+    // --- 2. RECONSTRUCTION DU CONTENU ---
+    container.innerHTML = "";
     const bookmarks = window.quranApp?.getBookmarks() || [];
     const surahs = window.quranCalculator.getAllSurahs();
     const pinnedIds = window.quranApp?.getPinnedSurahs() || [];
-
     const bookmarkedSurahIds = new Set();
-    bookmarks.forEach((bookmark) => {
-      const surah = window.quranCalculator.getFirstSurahForPage(bookmark.page);
-      if (surah) bookmarkedSurahIds.add(surah.s_id);
+    bookmarks.forEach(b => {
+      const s = window.quranCalculator.getFirstSurahForPage(b.page);
+      if (s) bookmarkedSurahIds.add(s.s_id);
     });
 
-    const pinnedSurahs = surahs.filter((s) => pinnedIds.includes(s.s_id));
-
+    // Section Favorites
+    const pinnedSurahs = surahs.filter(s => pinnedIds.includes(s.s_id));
     if (pinnedSurahs.length > 0) {
       const pinnedSection = document.createElement("div");
-      pinnedSection.className = "surah-section";
-      pinnedSection.innerHTML =
-        '<h3 class="section-title">⭐ السور المفضلة</h3>';
-      pinnedSurahs.forEach((surah) =>
-        pinnedSection.appendChild(
-          this._createSurahItem(surah, true, bookmarkedSurahIds, pinnedIds),
-        ),
-      );
-      overlay.content.appendChild(pinnedSection);
+      pinnedSection.className = "surah-section surah-section-pinned"; // Classe spécifique
+      pinnedSection.innerHTML = '<h3 class="section-title">⭐ السور المفضلة</h3>';
+      pinnedSurahs.forEach(s => pinnedSection.appendChild(this._createSurahItem(s, true, bookmarkedSurahIds)));
+      container.appendChild(pinnedSection);
     }
 
+    // Section Globale
     const allSection = document.createElement("div");
-    allSection.className = "surah-section";
+    allSection.className = "surah-section surah-section-all"; // Classe spécifique
     allSection.innerHTML = '<h3 class="section-title">📖 جميع السور</h3>';
-    surahs.forEach((surah) =>
-      allSection.appendChild(
-        this._createSurahItem(
-          surah,
-          pinnedIds.includes(surah.s_id),
-          bookmarkedSurahIds,
-          pinnedIds,
-        ),
-      ),
-    );
-    overlay.content.appendChild(allSection);
-    if (scrollToCurrent) {
-      const currentSurah = window.quranCalculator?.getFirstSurahForPage(
-        this.getCurrentPage(),
-      );
+    surahs.forEach(s => {
+      allSection.appendChild(this._createSurahItem(s, pinnedIds.includes(s.s_id), bookmarkedSurahIds));
+    });
+    container.appendChild(allSection);
+
+    // --- 3. VERROUILLAGE VISUEL (Version Ultra-Précise) ---
+    if (preserveSurahId) {
+      const allSectionNew = container.querySelector('.surah-section-all');
+      const newEl = allSectionNew ? allSectionNew.querySelector(`.item-surah[data-surah-id="${preserveSurahId}"]`) : null;
+
+      if (newEl) {
+        // On utilise requestAnimationFrame pour synchroniser le scroll avec le rendu écran
+        requestAnimationFrame(() => {
+          container.scrollTop = newEl.offsetTop - initialClickOffset;
+        });
+      }
+    } else if (scrollToCurrent) {
+      // ... reste de ton code pour scrollToCurrent ...
+      const currentSurah = window.quranCalculator?.getFirstSurahForPage(this.getCurrentPage());
       if (currentSurah?.s_id) {
-        setTimeout(() => {
-          const el = overlay.content.querySelector(
-            `.item-container[data-surah-id="${currentSurah.s_id}"]`,
-          );
-          if (el) {
-            el.classList.add("current-item");
-            el.scrollIntoView({ block: "center", behavior: "auto" });
-          }
-        }, 50);
+        const el = container.querySelector(`.item-surah[data-surah-id="${currentSurah.s_id}"]`);
+        if (el) {
+          el.classList.add("current-item");
+          el.scrollIntoView({ block: "center", behavior: "auto" });
+        }
       }
     }
   }
@@ -465,7 +487,7 @@ class OverlayManager {
       const line1 = document.createElement("div");
       line1.className = "item-line-1";
       line1.innerHTML = `<div class="item-right juzhizb-grid">
-        ${isNewJuz ? `<span class="item-badge juzhizb-grid-col1">ج ${juzNum}</span>` : '<span class="juzhizb-grid-col1"></span>'}
+        ${isNewJuz ? `<span class="item-badge juzhizb-grid-col1">ج${juzNum}</span>` : '<span class="juzhizb-grid-col1"></span>'}
         <span class="item-title juzhizb-grid-col2">الحزب ${hizb.hizb}</span>
       </div>
       <div class="item-left">
@@ -952,7 +974,6 @@ class OverlayManager {
       window.RIWAYAT_CONFIG?.[window.quranAudioPlayer?.currentRiwaya]?.label ||
       "";
 
-    // Avertissement si les coordonnées ne sont pas chargées
     const coordsStatus =
       window.quranAudioPlayer?.ayaCoordsLoaded === false
         ? '<div class="audio-warning">⚠️ بيانات تحديد الآيات غير متوفرة، لن يظهر التظليل</div>'
@@ -960,17 +981,17 @@ class OverlayManager {
 
     contentContainer.innerHTML = `
     ${coordsStatus}
-    <select id="reciterSelect" class="audio-select select-violet" aria-label="اختر القارئ">
-      <option value="">اختر القارئ</option>
-    </select>
-    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-      <select id="surahSelectAudio" class="audio-select select-blue" style="flex:1;" aria-label="اختر السورة">
+    <div class="audio-select-row">
+      <select id="reciterSelect" class="audio-select select-violet" aria-label="اختر القارئ">
+        <option value="">اختر القارئ</option>
+      </select>
+      <select id="surahSelectAudio" class="audio-select select-blue" aria-label="اختر السورة">
         <option value="">اختر السورة</option>
       </select>
-      <select id="ayaSelectAudio" class="audio-select select-brown" style="flex:1;" aria-label="اختر الآية">
+      <select id="ayaSelectAudio" class="audio-select select-brown" aria-label="اختر الآية">
         <option value="">اختر الآية</option>
       </select>
-      <select id="pageSelectAudio" class="audio-select select-ok" style="flex:1;" aria-label="اختر الصفحة">
+      <select id="pageSelectAudio" class="audio-select select-ok" aria-label="اختر الصفحة">
         <option value="">اختر الصفحة</option>
       </select>
     </div>
@@ -981,7 +1002,7 @@ class OverlayManager {
       <span id="audioDuration">0:00</span>
     </div>
     <div class="audio-controls">
-      <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1×</button>
+      <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>      
       <button class="btn audio-btn" id="repeatBtn" title="تكرار">🔁</button>
       <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">⏭️</button>
       <button class="btn audio-btn" id="nextAyahBtn" title="الآية التالية">⏩</button>
@@ -996,7 +1017,8 @@ class OverlayManager {
     </div>
     
     <audio id="quranAudioPlayer" preload="none" style="display:none;"></audio>
-`;
+  `;
+
     overlay.contentGenerated = true;
     document.getElementById("playPauseBtn")?.addEventListener("click", () => {
       setTimeout(() => {
@@ -1312,23 +1334,19 @@ class OverlayManager {
         <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (الصادر عن دار المعرفة)
       </p>
       
-      <div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
-        <div style="flex: 1;">
-          <button id="shareAppBtn" class="confirm-btn ok" style="width:100%; min-height:48px; padding:12px;">
-            🔗 شارك
-          </button>
-        </div>
-        <div style="flex: 1;">
-          <a href="mailto:zdig1.0@gmail.com?subject=quran" class="confirm-btn blue" style="display:block; width:100%; min-height:48px; padding:12px; text-align:center; text-decoration:none; box-sizing:border-box;">
-            📧 تواصل
-          </a>
-        </div>
-        <div style="flex: 1;">
-          <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="confirm-btn ok" style="display:block; width:100%; min-height:48px; padding:12px; text-align:center; text-decoration:none; box-sizing:border-box;">
-            🌐 موقعنا
-          </a>
-        </div>
-      </div>
+<div class="contact-grid-container">
+  <button id="shareAppBtn" class="contact-box-item contact-green">
+    <span>🔗 شارك</span>
+  </button>
+  
+  <a href="mailto:zdig1.0@gmail.com?subject=quran" class="contact-box-item contact-blue">
+    <span>📧 تواصل</span>
+  </a>
+  
+  <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item contact-brown">
+    <span>🌐 موقعنا</span>
+  </a>
+</div>
        
       <div class="about-stats">
         <div class="about-stat"><span>السور</span><strong>114</strong></div>

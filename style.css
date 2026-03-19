@@ -25,21 +25,13 @@
 
   /* Couleurs principales */
   --color-green: #1a5e25;
-  /* vert principal (sourates, badges) */
   --color-blue: #1976d2;
-  /* bleu (juz, sélecteurs) */
   --color-brown: #6d4c41;
-  /* marron (recherche, badges) */
   --color-gray: #6c757d;
-  /* gris (annulation, texte secondaire) */
   --color-violet: #9c27b0;
-  /* violet (récitant) */
   --color-red: #d32f2f;
-  /* rouge (erreurs, texte de recherche) */
   --color-gold: #ffaa00;
-  /* or (épingles, signets) – mais non appliqué aux emojis */
   --color-white: #ffffff;
-  /* blanc pur */
 
   /* Dépendances */
   --primary: var(--color-green);
@@ -88,7 +80,7 @@
   --overlay-padding-x: 5px;
 
   /* Transitions */
-  --transition-default: opacity 0.3s ease;
+  --transition-default: opacity 0.3s ease, background 0.2s, color 0.2s;
 
   /* Élément courant */
   --current-item-bg: rgb(146, 178, 152);
@@ -98,7 +90,7 @@
   --tafsir-select-text: #ffffff;
 
   /* Mini‑barre */
-  --mini-bar-bg: #f9f9f9d7;
+  --mini-bar-bg: #ffffffd7;
 }
 
 /* ============================================
@@ -143,7 +135,7 @@
   --current-item-bg: #2a4a2a;
   --tafsir-select-bg: #8b3a3a;
 
-  --mini-bar-bg: #1e4a40f2;
+  --mini-bar-bg: #1e1e1ee0;
 }
 
 /* ============================================
@@ -270,14 +262,14 @@ body {
 .footer-value {
   background: rgba(255, 255, 255, 0.7);
   border-radius: 1.25rem;
-  padding: 8px 12px !important;
+  padding: var(--space-sm) var(--space-md) !important;
   color: var(--text);
   font-weight: 500;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
   display: inline-block !important;
   min-width: auto;
   min-height: 30px;
-  font-size: 14px !important;
+  font-size: var(--text-sm) !important;
   line-height: 1.5 !important;
 }
 
@@ -350,7 +342,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-default);
   border: 2px solid transparent;
   line-height: 1;
   padding: 0;
@@ -368,7 +360,7 @@ body {
   cursor: pointer;
   border: 1px solid transparent;
   background: var(--surface-alt);
-  transition: background 0.2s;
+  transition: var(--transition-default);
   color: var(--primary);
   border-color: var(--border);
 }
@@ -382,33 +374,32 @@ body {
 }
 
 .pin-btn {
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
-  color: var(--text-lighter);
-  font-size: var(--text-md);
+  font-size: 1.2rem;
   cursor: pointer;
-  padding: 0;
-  margin: 0px 5px -25px 0px;
-  line-height: 1;
-  display: inline-flex;
+  padding: 12px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease;
-}
-
-.pin-btn:hover {
-  opacity: 0.8;
+  z-index: 5;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 /* Boutons de confirmation */
 .confirm-btn {
   min-width: 80px;
-  padding: 0.75rem 1.2rem;
+  padding: var(--space-md) var(--space-lg);
   border-radius: var(--border-radius);
   font-weight: bold;
   border: 1px solid var(--border);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: var(--transition-default);
   line-height: 1.2;
   margin: 0 0.25rem;
   display: inline-flex;
@@ -521,7 +512,7 @@ body {
   background: transparent;
   border: none;
   border-bottom: 1px solid var(--menu-border);
-  padding: 0.75rem var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
   width: 100%;
   cursor: pointer;
   color: white;
@@ -547,7 +538,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: var(--transition-default);
 }
 
 .night-mode .tafsir-font-btn {
@@ -577,7 +568,6 @@ body {
   border-color: var(--success) !important;
 }
 
-/* Lien email */
 a.confirm-btn.blue {
   background: var(--color-white);
   color: var(--color-blue) !important;
@@ -586,10 +576,10 @@ a.confirm-btn.blue {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.2rem;
+  padding: var(--space-md) var(--space-lg);
   border-radius: var(--border-radius);
   font-weight: bold;
-  transition: background 0.2s;
+  transition: var(--transition-default);
 }
 
 a.confirm-btn.blue:hover {
@@ -652,7 +642,7 @@ a.confirm-btn.blue:hover {
 }
 
 .night-mode .page-image {
-  filter: invert(1) hue-rotate(-30deg);
+  filter: invert(1) hue-rotate(-180deg);
   content-visibility: auto;
 }
 
@@ -750,7 +740,7 @@ a.confirm-btn.blue:hover {
   display: none;
   align-items: flex-start;
   justify-content: center;
-  padding: 15vh 5px 5px 5px;
+  padding: 15vh var(--overlay-padding-x) var(--overlay-padding-x) var(--overlay-padding-x);
 }
 
 .overlay {
@@ -889,6 +879,10 @@ a.confirm-btn.blue:hover {
   direction: rtl;
 }
 
+.item-surah .item-line-2 .item-right {
+  margin-right: calc(var(--pin-offset) - 25px);
+}
+
 .item-right {
   display: flex;
   align-items: center;
@@ -982,21 +976,22 @@ a.confirm-btn.blue:hover {
   text-overflow: ellipsis;
   color: var(--color-red);
   font-family: 'MyNotoKufi', sans-serif;
-  font-size: 14px;
+  font-size: var(--text-sm);
   margin-bottom: 4px;
 }
 
 .aya-prefix {
   color: var(--text-light);
-  font-size: 12px;
+  font-size: var(--text-sm);
   display: block;
+  margin-bottom: 3px;
 }
 
 .juzhizb-grid-col1.item-badge {
   width: 100%;
   height: auto;
   aspect-ratio: 1 / 1;
-  min-width: unset;
+  margin-top: 3px;
 }
 
 .item-icon {
@@ -1063,10 +1058,6 @@ a.confirm-btn.blue:hover {
   color: var(--quran-text-red) !important;
 }
 
-.surah-section {
-  margin-bottom: var(--space-lg);
-}
-
 .surah-section .section-title {
   font-size: var(--text-md);
   font-weight: 600;
@@ -1079,10 +1070,6 @@ a.confirm-btn.blue:hover {
   top: 0;
   z-index: 1;
   backdrop-filter: blur(4px);
-}
-
-.item-surah .item-line-2 .item-right {
-  margin-right: calc(1.875rem + var(--space-md));
 }
 
 .order-value {
@@ -1120,7 +1107,7 @@ a.confirm-btn.blue:hover {
 .bookmarks-add-form .search-input {
   flex: 1;
   min-width: 120px;
-  padding: 10px;
+  padding: var(--space-md);
   border: 1px solid #ccc;
   border-radius: var(--border-radius);
   width: 100%;
@@ -1128,7 +1115,7 @@ a.confirm-btn.blue:hover {
 
 .bookmarks-add-form .btn {
   flex: 0 0 auto;
-  padding: 10px 20px;
+  padding: var(--space-md) var(--space-lg);
   border: none;
   border-radius: var(--border-radius);
   font-weight: bold;
@@ -1323,8 +1310,8 @@ a.confirm-btn.blue:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
+  gap: var(--space-md);
+  padding: var(--space-md);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   direction: rtl;
@@ -1334,12 +1321,12 @@ a.confirm-btn.blue:hover {
   flex: 1 1 auto;
   min-width: 100px;
   height: auto;
-  padding: 0.75rem 1rem;
+  padding: var(--space-md) var(--space-lg);
   border: 1px solid var(--border);
   border-radius: var(--border-radius);
   background: var(--tafsir-select-bg);
   color: var(--tafsir-select-text);
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: bold;
   cursor: pointer;
 }
@@ -1412,7 +1399,7 @@ a.confirm-btn.blue:hover {
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   background: var(--primary);
   color: white;
   flex-shrink: 0;
@@ -1480,8 +1467,8 @@ a.confirm-btn.blue:hover {
   flex-direction: column;
   background: var(--bg);
   direction: rtl;
-  padding: 0.5rem;
-  gap: 0.4rem;
+  padding: var(--space-md);
+  gap: var(--space-sm);
   color: var(--text);
   text-align: justify;
   text-align-last: right;
@@ -1521,8 +1508,8 @@ a.confirm-btn.blue:hover {
 .about-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-  margin: 0.5rem 0;
+  gap: var(--space-md);
+  margin: var(--space-md) 0;
 }
 
 .about-stat {
@@ -1533,7 +1520,7 @@ a.confirm-btn.blue:hover {
   background: var(--surface-alt);
   border: 1px solid var(--border);
   border-radius: var(--border-radius);
-  padding: 0.5rem;
+  padding: var(--space-md);
   gap: 0.25rem;
 }
 
@@ -1559,7 +1546,7 @@ a.confirm-btn.blue:hover {
   color: var(--text-light);
   line-height: 1.8;
   margin-top: auto;
-  padding-top: 0.5rem;
+  padding-top: var(--space-md);
 }
 
 .about-footer a {
@@ -1617,13 +1604,13 @@ a.confirm-btn.blue:hover {
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.9);
   color: white;
-  padding: 12px 20px;
+  padding: var(--space-md) var(--space-lg);
   border-radius: 10px;
   z-index: 10000;
   max-width: 80%;
   text-align: center;
   display: none;
-  font-size: 14px;
+  font-size: var(--text-sm);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   white-space: pre-line;
   line-height: 1.5;
@@ -1682,7 +1669,7 @@ a.confirm-btn.blue:hover {
 
 .confirm-buttons {
   display: flex;
-  gap: 12px;
+  gap: var(--space-md);
   justify-content: center;
 }
 
@@ -1707,6 +1694,433 @@ a.confirm-btn.blue:hover {
   background-color: rgba(76, 175, 80, 0.2);
 }
 
+#surahsOverlay .overlay-content {
+  scroll-behavior: auto !important;
+  overflow-anchor: none;
+}
+
+.item-surah {
+  --pin-offset: 35px;
+  padding-right: var(--pin-offset) !important;
+  contain: layout size;
+  height: 60px;
+  position: relative;
+}
+
+/* ============================================
+   HIGHLIGHT DES VERSETS & SPINNER
+   ============================================ */
+
+.aya-highlight {
+  position: absolute;
+  background: rgba(255, 213, 0, 0.2);
+  border-radius: 4px;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.night-mode .aya-highlight {
+  background: rgba(255, 213, 0, 0.2);
+}
+
+.page-wrapper {
+  position: relative;
+}
+
+.spinner.small {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-width: 2px;
+  margin: 0;
+}
+
+/* ============================================
+   AUDIO – OVERLAY (conteneur et éléments généraux)
+   ============================================ */
+
+.audio-body {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.audio-riwaya-info {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-light);
+  border-radius: var(--border-radius);
+  background: var(--surface-alt);
+  direction: rtl;
+}
+
+.audio-current-info {
+  background: var(--surface-alt);
+  border-radius: var(--border-radius);
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.audio-current-info span {
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  color: var(--text-light);
+}
+
+.audio-current-info .audio-current-display {
+  flex: 1;
+  margin: 0;
+  background: transparent;
+  border: none;
+  color: inherit;
+  padding: 0.2rem 0;
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.night-mode .audio-current-display {
+  background: rgba(76, 175, 80, 0.15);
+  color: var(--success);
+  border-color: var(--success);
+}
+
+/* ============================================
+   AUDIO – SÉLECTEURS (comme ceux du tafsir)
+   ============================================ */
+.audio-select-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  align-items: center;
+}
+
+.audio-select {
+  flex: 1 1 140px;
+  min-width: 120px;
+  width: auto;
+  padding: var(--space-md);
+  font-size: var(--text-md);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  direction: rtl;
+}
+
+#reciterSelect {
+  flex: 2 1 200px;
+}
+
+#surahSelectAudio,
+#ayaSelectAudio,
+#pageSelectAudio {
+  flex: 1 1 120px;
+}
+
+.audio-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.night-mode .audio-select {
+  background: #2d2d2d;
+  border-color: #444;
+  color: #eee;
+}
+
+@media (max-width: 350px) {
+  .audio-select-row .audio-select {
+    flex-basis: 100% !important;
+    min-width: 100%;
+  }
+}
+
+.audio-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font-size: var(--text-sm);
+  color: var(--text-light);
+  margin: 0.2rem 0;
+}
+
+.audio-progress {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.audio-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0.2rem 0;
+}
+
+.audio-status {
+  text-align: center;
+  color: var(--text-light);
+  font-size: var(--text-sm);
+  padding: 0.3rem;
+  display: none;
+}
+
+.audio-status:not(:empty) {
+  display: block;
+}
+
+.audio-warning {
+  background: rgba(255, 193, 7, 0.2);
+  color: #b45f06;
+  padding: var(--space-md);
+  border-radius: var(--border-radius);
+  font-size: var(--text-sm);
+  text-align: center;
+  margin-bottom: var(--space-md);
+}
+
+.night-mode .audio-warning {
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffb74d;
+}
+
+/* ============================================
+   BOUTONS AUDIO UNIFIÉS (overlay + mini‑barre)
+   ============================================ */
+
+.audio-btn {
+  font-size: 1.5rem;
+  width: 2.8rem;
+  height: 2.8rem;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-default), transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.audio-btn:active {
+  transform: scale(0.92);
+  background: var(--primary-light);
+}
+
+.audio-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.audio-btn.speed-btn {
+  font-family: monospace;
+  font-size: 1rem;
+  background: var(--surface-alt);
+  border-radius: 2rem;
+}
+
+/* ============================================
+   MINI-BAR (conteneur et disposition)
+   ============================================ */
+
+.audio-mini-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  background: var(--mini-bar-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transform: translateY(0);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  border-top: 1px solid var(--border);
+}
+
+.audio-mini-bar.hidden {
+  transform: translateY(100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.audio-mini-bar .mini-bar-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 5px 0;
+}
+
+.audio-mini-bar .mini-bar-controls {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+}
+
+/* ============================================
+   FAB (bouton flottant)
+   ============================================ */
+
+.audio-fab {
+  position: fixed;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  left: 1rem;
+  z-index: 1100;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  background: var(--mini-bar-bg);
+  color: white;
+  font-size: 1.5rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-heavy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, opacity 0.2s;
+  opacity: 1;
+  transform: scale(1);
+}
+
+.audio-fab.hidden {
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+.audio-fab:active {
+  transform: scale(0.9);
+}
+
+.night-mode .audio-fab {
+  background: var(--mini-bar-bg);
+}
+
+.fab-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--text-lighter);
+  transition: background-color 0.2s;
+}
+
+.audio-fab.playing .fab-indicator {
+  background-color: var(--success);
+}
+
+.error-title {
+  color: var(--error);
+}
+
+.noscript-fallback {
+  text-align: center;
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+  background: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+}
+
+.noscript-title {
+  color: #004494;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.search-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  padding-left: 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  font-size: var(--text-md);
+  background: var(--surface);
+  color: var(--text);
+  text-align: right;
+}
+
+.contact-grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 15px 0;
+}
+
+.contact-box-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 5px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  text-decoration: none;
+  transition: var(--transition-default);
+  min-height: 60px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.contact-box-item.contact-green {
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+.contact-box-item.contact-blue {
+  color: var(--color-blue) !important;
+  border-color: var(--color-blue) !important;
+}
+
+.contact-box-item.contact-brown {
+  color: var(--color-brown) !important;
+  border-color: var(--color-brown) !important;
+}
+
+.contact-box-item span {
+  font-size: var(--text-sm);
+  font-weight: bold;
+  text-align: center;
+}
+
+.contact-box-item:active {
+  transform: scale(0.96);
+  filter: brightness(0.9);
+}
+
+.night-mode .contact-box-item {
+  background: #2a2a2a;
+}
 
 /* ============================================
    SÉLECTEURS DE COULEUR (audio & tafsir)
@@ -1765,336 +2179,4 @@ a.confirm-btn.blue:hover {
 .night-mode .select-violet {
   color: var(--color-violet);
   border-color: var(--color-violet);
-}
-
-/* ============================================
-   HIGHLIGHT DES VERSETS & SPINNER
-   ============================================ */
-
-.aya-highlight {
-  position: absolute;
-  background: rgba(255, 213, 0, 0.2);
-  border-radius: 4px;
-  pointer-events: none;
-  transition: all 0.2s ease;
-  z-index: 10;
-}
-
-.night-mode .aya-highlight {
-  background: rgba(255, 213, 0, 0.2);
-}
-
-.page-wrapper {
-  position: relative;
-}
-
-.spinner.small {
-  width: 1.2rem;
-  height: 1.2rem;
-  border-width: 2px;
-  margin: 0;
-}
-
-/* ============================================
-   AUDIO – OVERLAY (conteneur et éléments généraux)
-   ============================================ */
-
-.audio-body {
-  padding: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.audio-riwaya-info {
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--text-light);
-  padding: 0.2rem;
-  border-radius: var(--border-radius);
-  background: var(--surface-alt);
-  direction: rtl;
-}
-
-.audio-current-info {
-  background: var(--surface-alt);
-  border-radius: var(--border-radius);
-  padding: 0.2rem 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 4px 0;
-}
-
-.audio-current-info span {
-  white-space: nowrap;
-  font-size: 0.85rem;
-  color: var(--text-light);
-}
-
-.audio-current-info .audio-current-display {
-  flex: 1;
-  margin: 0;
-  background: transparent;
-  border: none;
-  color: inherit;
-  padding: 0.2rem 0;
-  font-size: 0.9rem;
-  text-align: center;
-}
-
-.night-mode .audio-current-display {
-  background: rgba(76, 175, 80, 0.15);
-  color: var(--success);
-  border-color: var(--success);
-}
-
-.audio-select {
-  width: 100%;
-  padding: 0.5rem;
-  font-size: 0.9rem;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  cursor: pointer;
-  direction: rtl;
-}
-
-.audio-select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
-}
-
-.night-mode .audio-select {
-  background: #2d2d2d;
-  border-color: #444;
-  color: #eee;
-}
-
-.audio-progress-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--text-light);
-  margin: 0.2rem 0;
-}
-
-.audio-progress {
-  flex: 1;
-  height: 4px;
-  accent-color: var(--primary);
-  cursor: pointer;
-}
-
-.audio-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.2rem;
-  margin: 0.2rem 0;
-}
-
-.audio-status {
-  text-align: center;
-  color: var(--text-light);
-  font-size: 0.8rem;
-  padding: 0.3rem;
-  display: none;
-}
-
-.audio-status:not(:empty) {
-  display: block;
-}
-
-.audio-warning {
-  background: rgba(255, 193, 7, 0.2);
-  color: #b45f06;
-  padding: 0.5rem;
-  border-radius: var(--border-radius);
-  font-size: 0.85rem;
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-
-.night-mode .audio-warning {
-  background: rgba(255, 193, 7, 0.1);
-  color: #ffb74d;
-}
-
-/* ============================================
-   BOUTONS AUDIO UNIFIÉS (overlay + mini‑barre)
-   ============================================ */
-
-.audio-btn {
-  font-size: 1.5rem;
-  width: 2.8rem;
-  height: 2.8rem;
-  border: none;
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s, transform 0.1s;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.audio-btn:active {
-  transform: scale(0.92);
-  background: var(--primary-light);
-}
-
-.audio-btn:disabled {
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-.audio-btn.speed-btn {
-  font-family: monospace;
-  font-size: 1rem;
-  background: var(--surface-alt);
-  border-radius: 2rem;
-}
-
-/* ============================================
-   MINI-BAR (conteneur et disposition)
-   ============================================ */
-
-.audio-mini-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1200;
-  background: var(--mini-bar-bg);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transform: translateY(0);
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-.audio-mini-bar.hidden {
-  transform: translateY(100%);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.audio-mini-bar .mini-bar-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.audio-mini-bar .mini-bar-controls {
-  display: flex;
-  flex: 1;
-  justify-content: center;
-}
-
-/* ============================================
-   FAB (bouton flottant)
-   ============================================ */
-
-.audio-fab {
-  position: fixed;
-  bottom: calc(1rem + env(safe-area-inset-bottom));
-  left: 1rem;
-  z-index: 1100;
-  width: 3.2rem;
-  height: 3.2rem;
-  border-radius: 50%;
-  background: var(--mini-bar-bg);
-  color: white;
-  font-size: 1.5rem;
-  border: none;
-  cursor: pointer;
-  box-shadow: var(--shadow-heavy);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s, opacity 0.2s;
-  opacity: 1;
-  transform: scale(1);
-}
-
-.audio-fab.hidden {
-  opacity: 0;
-  transform: scale(0);
-  pointer-events: none;
-}
-
-.audio-fab:active {
-  transform: scale(0.9);
-}
-
-.night-mode .audio-fab {
-  background: var(--success);
-}
-
-.fab-indicator {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: var(--text-lighter);
-  transition: background-color 0.2s;
-}
-
-.audio-fab.playing .fab-indicator {
-  background-color: var(--success);
-}
-
-.error-title {
-  color: var(--error);
-}
-
-.noscript-fallback {
-  text-align: center;
-  padding: 2rem;
-  font-family: Arial, sans-serif;
-  background: #fff;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 9999;
-}
-
-.noscript-title {
-  color: #004494;
-}
-
-.hidden {
-  display: none !important;
-}
-
-.search-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.search-input {
-  width: 100%;
-  padding: var(--space-md) var(--space-lg);
-  padding-left: 40px;
-  /* <-- ajout */
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  font-size: var(--text-md);
-  background: var(--surface);
-  color: var(--text);
-  text-align: right;
 }

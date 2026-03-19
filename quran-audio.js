@@ -95,7 +95,7 @@ class QuranAudioPlayer {
     this.playbackRate = 1;
 
     // Vitesse cyclique
-    this.speedOptions = [0.7, 1.0, 1.5, 1.7];
+    this.speedOptions = [0.75, 1.0, 1.25, 1.5];
     this.currentSpeedIndex = 1.0;
 
     // DOM
@@ -700,11 +700,11 @@ class QuranAudioPlayer {
 
     // Mettre à jour le bouton de la mini-barre
     const speedBtn = document.getElementById("miniBarSpeed");
-    if (speedBtn) speedBtn.textContent = numRate + "×";
+    if (speedBtn) speedBtn.textContent = numRate.toFixed(1) + "×";
 
     // Mettre à jour le bouton de l'overlay
     if (this.elements.overlaySpeedBtn) {
-      this.elements.overlaySpeedBtn.textContent = numRate + "×";
+      this.elements.overlaySpeedBtn.textContent = numRate.toFixed(1) + "×";
     }
 
     // Mettre à jour l'index courant
@@ -718,12 +718,12 @@ class QuranAudioPlayer {
   // MINI-BAR
   // ============================================
 
-_buildMiniBar() {
-  if (document.getElementById("audioMiniBar")) return;
-  const bar = document.createElement("div");
-  bar.id = "audioMiniBar";
-  bar.className = "audio-mini-bar hidden";
-  bar.innerHTML = `
+  _buildMiniBar() {
+    if (document.getElementById("audioMiniBar")) return;
+    const bar = document.createElement("div");
+    bar.id = "audioMiniBar";
+    bar.className = "audio-mini-bar hidden";
+    bar.innerHTML = `
   <div class="mini-bar-bottom">
     <button class="audio-btn" id="miniBarOptions" title="خيارات">⚙️</button>
     <div class="mini-bar-controls">
@@ -737,9 +737,9 @@ _buildMiniBar() {
     <button class="audio-btn" id="miniBarHide" title="إخفاء">🔽</button>
   </div>
   `;
-  document.body.appendChild(bar);
-  this.miniBar = bar;
-}
+    document.body.appendChild(bar);
+    this.miniBar = bar;
+  }
 
   _updateFabIndicator() {
     if (!this.fabBtn) return;
@@ -766,7 +766,7 @@ _buildMiniBar() {
     this._updateMiniPlayBtn();
     this._updateRepeatBtn();
     const speedBtn = document.getElementById("miniBarSpeed");
-    if (speedBtn) speedBtn.textContent = this.playbackRate + "×";
+    if (speedBtn) speedBtn.textContent = this.playbackRate.toFixed(1) + "×";
   }
 
   _buildFab() {
@@ -1086,7 +1086,7 @@ _buildMiniBar() {
   _updateCurrentDisplay() {
     const surah = this.surahs.find((s) => s.s_id === this.currentSurah);
     if (this.elements.currentDisplay && surah) {
-      this.elements.currentDisplay.textContent = `${surah.s_id}. ${surah.name} : آية ${this.currentAyah} / ${this.totalAyahs}`;
+      this.elements.currentDisplay.textContent = `${surah.name} : آية ${this.currentAyah} / ${this.totalAyahs}`;
     }
     this._syncMiniBar();
   }
