@@ -296,7 +296,7 @@ class OverlayManager {
     this.closeMenu();
     const overlay = this.lazyLoadOverlay("surahs");
     if (overlay?.element && overlay?.content) {
-      this.renderSurahsList();
+      this.renderSurahsList(true);  // ← défile à l'ouverture
       this.showOverlay("surahs");
     }
   }
@@ -357,14 +357,14 @@ class OverlayManager {
         const added = window.quranApp.togglePinSurah(surah.s_id);
         pinBtn.classList.toggle("pinned", added);
         pinBtn.textContent = added ? "⭐" : "📌";
-        this.renderSurahsList();
+        this.renderSurahsList(false);
       }
     });
 
     return item;
   }
 
-  renderSurahsList() {
+  renderSurahsList(scrollToCurrent = true) {
     const overlay = this.overlays.surahs;
     if (!overlay?.content || !window.quranCalculator) return;
     overlay.content.innerHTML = "";
@@ -408,20 +408,21 @@ class OverlayManager {
       ),
     );
     overlay.content.appendChild(allSection);
-
-    const currentSurah = window.quranCalculator?.getFirstSurahForPage(
-      this.getCurrentPage(),
-    );
-    if (currentSurah?.s_id) {
-      setTimeout(() => {
-        const el = overlay.content.querySelector(
-          `.item-container[data-surah-id="${currentSurah.s_id}"]`,
-        );
-        if (el) {
-          el.classList.add("current-item");
-          el.scrollIntoView({ block: "center", behavior: "auto" });
-        }
-      }, 50);
+    if (scrollToCurrent) {
+      const currentSurah = window.quranCalculator?.getFirstSurahForPage(
+        this.getCurrentPage(),
+      );
+      if (currentSurah?.s_id) {
+        setTimeout(() => {
+          const el = overlay.content.querySelector(
+            `.item-container[data-surah-id="${currentSurah.s_id}"]`,
+          );
+          if (el) {
+            el.classList.add("current-item");
+            el.scrollIntoView({ block: "center", behavior: "auto" });
+          }
+        }, 50);
+      }
     }
   }
 
@@ -1310,29 +1311,24 @@ class OverlayManager {
         تطبيق لقراءة القرآن الكريم كاملاً بجودة عالية ودون اتصال بالإنترنت، مطابق للمصحف الورقي المعتمد :
         <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (الصادر عن دار المعرفة)
       </p>
-
-
-<div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
-  <!-- زر مشاركة التطبيق -->
-  <div style="flex: 1;">
-    <button id="shareAppBtn" class="confirm-btn ok" style="width:100%; padding:12px; font-size:1rem; border: none; cursor: pointer;">
-      🔗 شارك</button>
-  </div>
-
-  <!-- رابط البريد الإلكتروني للتواصل -->
-  <div style="flex: 1;">
-    <a href="mailto:zdig1.0@gmail.com?subject=استفسار بخصوص تطبيق القرآن" class="confirm-btn blue" style="display:flex; align-items:center; justify-content:center; width:100%; padding:12px; font-size:1rem; text-decoration:none; box-sizing:border-box;">
-      📧 للتواصل
-    </a>
-  </div>
-
-  <!-- رابط الموقع الإلكتروني - تم التصحيح -->
-  <div style="flex: 1;">
-    <a href="https://zdig1.gitlab.io/quran/" target="_blank" rel="noopener noreferrer" class="confirm-btn brown" style="display:flex; align-items:center; justify-content:center; width:100%; padding:12px; font-size:1rem; text-decoration:none; box-sizing:border-box;">
-      🌐 زر موقعنا
-    </a>
-  </div>
-</div>
+      
+      <div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
+        <div style="flex: 1;">
+          <button id="shareAppBtn" class="confirm-btn ok" style="width:100%; min-height:48px; padding:12px;">
+            🔗 شارك
+          </button>
+        </div>
+        <div style="flex: 1;">
+          <a href="mailto:zdig1.0@gmail.com?subject=quran" class="confirm-btn blue" style="display:block; width:100%; min-height:48px; padding:12px; text-align:center; text-decoration:none; box-sizing:border-box;">
+            📧 تواصل
+          </a>
+        </div>
+        <div style="flex: 1;">
+          <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="confirm-btn ok" style="display:block; width:100%; min-height:48px; padding:12px; text-align:center; text-decoration:none; box-sizing:border-box;">
+            🌐 موقعنا
+          </a>
+        </div>
+      </div>
        
       <div class="about-stats">
         <div class="about-stat"><span>السور</span><strong>114</strong></div>

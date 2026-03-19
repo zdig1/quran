@@ -1956,7 +1956,6 @@ a.confirm-btn.blue:hover {
 
 .audio-btn.speed-btn {
   font-family: monospace;
-  width: 4rem;
   font-size: 1rem;
   background: var(--surface-alt);
   border-radius: 2rem;
@@ -1994,12 +1993,10 @@ a.confirm-btn.blue:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
 }
 
 .audio-mini-bar .mini-bar-controls {
   display: flex;
-  gap: 0.3rem;
   flex: 1;
   justify-content: center;
 }

@@ -95,8 +95,8 @@ class QuranAudioPlayer {
     this.playbackRate = 1;
 
     // Vitesse cyclique
-    this.speedOptions = [0.7, 1, 1.2, 1.5];
-    this.currentSpeedIndex = 1; // index de 1.0
+    this.speedOptions = [0.7, 1.0, 1.5, 1.7];
+    this.currentSpeedIndex = 1.0;
 
     // DOM
     this.audioElement = null;
