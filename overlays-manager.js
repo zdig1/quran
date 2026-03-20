@@ -986,35 +986,51 @@ class OverlayManager {
 
     contentContainer.innerHTML = `
     ${coordsStatus}
-    <div class="audio-select-row">
-      <select id="reciterSelect" class="audio-select select-violet" aria-label="اختر القارئ">
-        <option value="">اختر القارئ</option>
-      </select>
-      <select id="surahSelectAudio" class="audio-select select-blue" aria-label="اختر السورة">
-        <option value="">اختر السورة</option>
-      </select>
-      <select id="ayaSelectAudio" class="audio-select select-brown" aria-label="اختر الآية">
-        <option value="">اختر الآية</option>
-      </select>
-      <select id="pageSelectAudio" class="audio-select select-ok" aria-label="اختر الصفحة">
-        <option value="">اختر الصفحة</option>
-      </select>
-    </div>
+<div class="audio-select-row">
+  <select id="reciterSelect" class="audio-select select-violet" aria-label="اختر القارئ">
+    <option value="">اختر القارئ</option>
+  </select>
+</div>
+<div class="audio-select-row">
+  <select id="surahSelectAudio" class="audio-select select-blue" aria-label="اختر السورة">
+    <option value="">اختر السورة</option>
+  </select>
+  <select id="ayaSelectAudio" class="audio-select select-brown" aria-label="اختر الآية">
+    <option value="">اختر الآية</option>
+  </select>
+  <select id="pageSelectAudio" class="audio-select select-ok" aria-label="اختر الصفحة">
+    <option value="">اختر الصفحة</option>
+  </select>
+</div>
     <div id="audioStatus" class="audio-status"></div>
     <div class="audio-progress-wrap">
       <span id="audioCurrentTime">0:00</span>
       <input type="range" id="audioProgress" class="audio-progress" value="0" min="0" max="100" step="0.1">
       <span id="audioDuration">0:00</span>
     </div>
-    <div class="audio-controls">
-      <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>      
-      <button class="btn audio-btn" id="repeatBtn" title="تكرار">🔁</button>
-      <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">⏭️</button>
-      <button class="btn audio-btn" id="nextAyahBtn" title="الآية التالية">⏩</button>
-      <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">▶️</button>
-      <button class="btn audio-btn" id="prevAyahBtn" title="الآية السابقة">⏪</button>
-      <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">⏮️</button>
-      <button class="btn audio-btn" id="stopBtn" title="إيقاف">⏹️</button>
+<div class="audio-controls">
+      <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
+      <button class="btn audio-btn" id="repeatBtn" title="تكرار">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      </button>
+      <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="13 5 22 12 13 19"/><line x1="22" y1="5" x2="22" y2="19" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+      <button class="btn audio-btn" id="nextAyahBtn" title="الآية التالية">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="13 5 22 12 13 19"/><polygon points="2 5 11 12 2 19"/></svg>
+      </button>
+      <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
+      </button>
+      <button class="btn audio-btn" id="prevAyahBtn" title="الآية السابقة">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="11 5 2 12 11 19"/><polygon points="22 5 13 12 22 19"/></svg>
+      </button>
+      <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="11 5 2 12 11 19"/><line x1="2" y1="5" x2="2" y2="19" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+      <button class="btn audio-btn" id="stopBtn" title="إيقاف">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+      </button>
     </div>
     <div class="audio-current-info" style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
       <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} (عبر النت)</div>
@@ -1027,7 +1043,7 @@ class OverlayManager {
     overlay.contentGenerated = true;
     document.getElementById("playPauseBtn")?.addEventListener("click", () => {
       setTimeout(() => {
-        if (window.quranAudioPlayer?.isPlaying) this.closeOverlay("audio");
+        if (window.quranAudioPlayer?.isPlaying && !window.quranAudioPlayer?.hasError) this.closeOverlay("audio");
       }, 100);
     });
 

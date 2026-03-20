@@ -21,6 +21,7 @@ const CORE_ASSETS = [
   "./media/605.webp",
   "./media/606.webp",
   "./media/NotoKufiArabic-Bold.woff2",
+  "./media/bismillah.mp3",
 ];
 
 const FIRST_PAGES = [];
