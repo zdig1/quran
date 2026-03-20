@@ -882,13 +882,17 @@ class QuranAudioPlayer {
         this._preloadNextAyah();
       }
     };
-    this._boundListeners.audio.error = () => {
-      if (!navigator.onLine) {
+    
+    this._boundListeners.audio.error = (e) => {
+      const netError = e.target?.error?.code === 2; // MEDIA_ERR_NETWORK
+      if (!navigator.onLine || netError) {
         this._showStatus("❌ لا يوجد اتصال بالإنترنت", true);
+        this.stop();
+        window.quranApp?.showToast("✈️ تحقق من الاتصال بالإنترنت");
         return;
       }
       this._showStatus("❌ فشل تحميل الملف", true);
-      this._handlePlayError(); // Tentative de récupération
+      this._handlePlayError();
     };
 
     audio.addEventListener("play", this._boundListeners.audio.play);

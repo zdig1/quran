@@ -20,7 +20,7 @@
   "applicationCategory": "EducationApplication",
   "operatingSystem": "Android, iOS, Windows, Web",
   "softwareVersion": "1.0.8",
-  "description": "تطبيق مصحف حفص كامل مع التفسير والبحث والبحث والاستماع إلى التلاوات",
+  "description": "تطبيق مصحف حفص كامل مع التفسير والبحث والاستماع إلى التلاوات",
   "image": "https://zdig1.github.io/quran/media/icon-512.png",
   "screenshot": "https://zdig1.github.io/quran/media/screenshot.webp",
   "video": {
@@ -396,6 +396,24 @@
             </div>
         </div>
 
+        <!-- 9. PAGE INPUT -->
+        <div id="pageInputOverlay" class="overlay" role="dialog" aria-label="الانتقال إلى صفحة">
+            <div class="overlay-content">
+                <div class="overlay-header">
+                    <h2>📄 الانتقال إلى صفحة</h2>
+                    <button type="button" class="btn close-btn" id="closePageInputBtn">✕</button>
+                </div>
+                <div class="overlay-body" style="padding: 16px;">
+                    <p style="text-align:right; margin: 0 0 12px 0;">أدخل رقم الصفحة (1-604)</p>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="tel" id="pageInputField" class="search-input" inputmode="numeric" pattern="[0-9]*"
+                            placeholder="1-604" style="flex:1; direction:ltr; text-align:right; margin:0;">
+                        <button type="button" class="confirm-btn ok" id="pageInputGoBtn">اذهب</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
     </div>
     <!-- noscript fallback -->
     <noscript>

@@ -382,8 +382,6 @@ class OverlayManager {
     // --- 1. CAPTURE DE LA POSITION PRÉCISE ---
     let initialClickOffset = 0;
     if (preserveSurahId) {
-      // On cherche l'élément spécifiquement dans la section globale (all-section) 
-      // pour éviter de sauter vers la section favoris
       const allSectionOld = container.querySelector('.surah-section-all');
       const clickedEl = allSectionOld
         ? allSectionOld.querySelector(`.item-surah[data-surah-id="${preserveSurahId}"]`)
@@ -425,25 +423,32 @@ class OverlayManager {
     container.appendChild(allSection);
 
     // --- 3. VERROUILLAGE VISUEL (Version Ultra-Précise) ---
+    const currentSurah = window.quranCalculator?.getFirstSurahForPage(this.getCurrentPage());
+    if (currentSurah?.s_id) {
+      const allSectionNew = container.querySelector('.surah-section-all');
+      const currentEl = allSectionNew
+        ? allSectionNew.querySelector(`.item-surah[data-surah-id="${currentSurah.s_id}"]`)
+        : container.querySelector(`.item-surah[data-surah-id="${currentSurah.s_id}"]`);
+      if (currentEl) currentEl.classList.add("current-item");
+    }
+
     if (preserveSurahId) {
       const allSectionNew = container.querySelector('.surah-section-all');
-      const newEl = allSectionNew ? allSectionNew.querySelector(`.item-surah[data-surah-id="${preserveSurahId}"]`) : null;
-
+      const newEl = allSectionNew
+        ? allSectionNew.querySelector(`.item-surah[data-surah-id="${preserveSurahId}"]`)
+        : null;
       if (newEl) {
-        // On utilise requestAnimationFrame pour synchroniser le scroll avec le rendu écran
         requestAnimationFrame(() => {
           container.scrollTop = newEl.offsetTop - initialClickOffset;
         });
       }
-    } else if (scrollToCurrent) {
-      // ... reste de ton code pour scrollToCurrent ...
-      const currentSurah = window.quranCalculator?.getFirstSurahForPage(this.getCurrentPage());
-      if (currentSurah?.s_id) {
-        const el = container.querySelector(`.item-surah[data-surah-id="${currentSurah.s_id}"]`);
-        if (el) {
-          el.classList.add("current-item");
-          el.scrollIntoView({ block: "center", behavior: "auto" });
-        }
+    } else if (scrollToCurrent && currentSurah?.s_id) {
+      const allSectionNew = container.querySelector('.surah-section-all');
+      const el = allSectionNew
+        ? allSectionNew.querySelector(`.item-surah[data-surah-id="${currentSurah.s_id}"]`)
+        : null;
+      if (el) {
+        requestAnimationFrame(() => el.scrollIntoView({ block: "center", behavior: "auto" }));
       }
     }
   }
@@ -1369,6 +1374,60 @@ class OverlayManager {
     if (shareBtn) {
       shareBtn.addEventListener("click", () => this.shareApp());
     }
+  }
+
+
+  // ============================================
+  // PAGE INPUT OVERLAY
+  // ============================================
+
+  showPageInputDialog() {
+    const overlay = document.getElementById("pageInputOverlay");
+    const input = document.getElementById("pageInputField");
+    const goBtn = document.getElementById("pageInputGoBtn");
+    const closeBtn = document.getElementById("closePageInputBtn");
+    if (!overlay || !input) return;
+
+    input.value = window.quranApp?.getCurrentPage() || 1;
+    overlay.classList.add("show");
+
+    document.body.style.overflow = "hidden";
+    window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
+    if (window.quranReader) window.quranReader._dialogOpen = true;
+    setTimeout(() => {
+      input.focus();
+      setTimeout(() => input.setSelectionRange(0, input.value.length), 100);
+    }, 50);
+
+    const ac = new AbortController();
+    const { signal } = ac;
+
+    const close = () => {
+      if (window.quranReader) window.quranReader._dialogOpen = false;
+      ac.abort();
+      overlay.classList.remove("show");
+      document.body.style.overflow = "";
+      window.dispatchEvent(new CustomEvent("quran:overlayClosed"));
+    };
+
+    const confirm = () => {
+      const pageNum = parseInt(input.value, 10);
+      if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= 604) {
+        window.quranApp?.goToPage(pageNum);
+        close();
+      } else {
+        window.quranApp?.showToast("❌ الرجاء إدخال رقم صفحة صحيح (1-604)");
+        input.focus();
+      }
+    };
+
+    const isTouch = "ontouchstart" in window;
+    goBtn.addEventListener("touchend", (e) => { e.preventDefault(); confirm(); }, { signal });
+    goBtn.addEventListener("click", () => { if (!isTouch) confirm(); }, { signal });
+    closeBtn.addEventListener("touchend", (e) => { e.preventDefault(); close(); }, { signal });
+    closeBtn.addEventListener("click", () => { if (!isTouch) close(); }, { signal });
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); }, { signal });
+    input.addEventListener("keypress", (e) => { if (e.key === "Enter") { e.preventDefault(); confirm(); } }, { signal });
   }
 
   // ============================================

@@ -41,7 +41,7 @@
   --error: var(--color-red);
 
   /* Arrière-plans et surfaces */
-  --bg: #white;
+  --bg: white;
   --surface: #ffffff;
   --surface-alt: #f9f9f9;
   --text: #333333;
@@ -135,7 +135,7 @@
   --current-item-bg: #2a4a2a;
   --tafsir-select-bg: #8b3a3a;
 
-  --mini-bar-bg: #e1e1ee0;
+  --mini-bar-bg: #e1e1ee;
 }
 
 /* ============================================
@@ -618,6 +618,7 @@ a.confirm-btn.blue:hover {
   align-items: center;
   justify-content: flex-start;
   background: var(--bg);
+  position: relative;
 }
 
 .page-image {
@@ -1192,9 +1193,15 @@ a.confirm-btn.blue:hover {
   min-height: 0;
 }
 
+.search-wrapper {
+  position: relative;
+  width: 100%;
+}
+
 .search-input {
   width: 100%;
   padding: var(--space-md) var(--space-lg);
+  padding-left: 40px;
   border: 1px solid var(--border);
   border-radius: var(--border-radius);
   font-size: var(--text-md);
@@ -1301,7 +1308,6 @@ a.confirm-btn.blue:hover {
 }
 
 #searchInput {
-  padding-left: 40px !important;
   box-sizing: border-box;
 }
 
@@ -1726,9 +1732,6 @@ a.confirm-btn.blue:hover {
   background: rgba(255, 213, 0, 0.2);
 }
 
-.page-wrapper {
-  position: relative;
-}
 
 .spinner.small {
   width: 1.2rem;
@@ -2054,22 +2057,7 @@ a.confirm-btn.blue:hover {
   display: none !important;
 }
 
-.search-wrapper {
-  position: relative;
-  width: 100%;
-}
 
-.search-input {
-  width: 100%;
-  padding: var(--space-md) var(--space-lg);
-  padding-left: 40px;
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  font-size: var(--text-md);
-  background: var(--surface);
-  color: var(--text);
-  text-align: right;
-}
 
 .contact-grid-container {
   display: grid;

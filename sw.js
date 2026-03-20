@@ -1,4 +1,5 @@
-const CACHE_NAME = "quran-1.0.8";
+const APP_VERSION = "1.0.8";
+const CACHE_NAME = `quran-${APP_VERSION}`;
 
 const CORE_ASSETS = [
   "./index.html",
@@ -52,7 +53,7 @@ self.addEventListener("install", (event) => {
       .open(CACHE_NAME)
       .then((cache) =>
         Promise.allSettled(
-          PRE_CACHE.map((url) => cache.add(url).catch(() => {})),
+          PRE_CACHE.map((url) => cache.add(url).catch(() => { })),
         ),
       ),
   );
@@ -125,7 +126,15 @@ async function handleFetch(request) {
         headers: { "Content-Type": "image/svg+xml" },
       });
     }
+    // JSON critiques → ne pas fallback, laisser échouer proprement
+    const criticalJson = ["quran.json", "tafsir.json", "ayainfo.json"];
     if (request.url.includes(".json")) {
+      if (criticalJson.some(f => request.url.includes(f))) {
+        return new Response(JSON.stringify(null), {
+          status: 503,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
       return new Response(JSON.stringify([]), {
         status: 503,
         headers: { "Content-Type": "application/json" },

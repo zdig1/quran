@@ -8,7 +8,7 @@ class QuranApp {
     this.lastPage = 1;
     this.theme = "light";
 
-    this.NOTIFICATION_DURATION = 1000;
+    this.NOTIFICATION_DURATION = 2000;
 
     this.tafsirLoaded = false;
     this.tafsirLoading = false;
@@ -33,7 +33,7 @@ class QuranApp {
   async init() {
     if (this.isInitializing) return;
     if (this.isInitialized) {
-      this.destroy(); // Nettoyer avant de réinitialiser
+      this.destroy();
     }
     this.isInitializing = true;
     try {
@@ -83,24 +83,11 @@ class QuranApp {
       const rawBookmarks = localStorage.getItem("quran_bookmarks");
       this.bookmarks = rawBookmarks ? JSON.parse(rawBookmarks) : [];
       if (!Array.isArray(this.bookmarks)) this.bookmarks = [];
-      this.bookmarks = this.bookmarks.map((b, i) => {
-        // Si c'est un ancien format (nombre), on le convertit
-        if (typeof b === "number") {
-          return {
-            page: b,
-            name: `صفحة ${b}`,
-            date: new Date().toISOString(),
-            lastModified: new Date().toISOString(), // Ajout de lastModified
-            id: `bookmark_${b}_${Date.now()}_${i}`,
-          };
-        }
-        // Sinon, on s'assure que lastModified existe
-        return {
-          ...b,
-          id: b.id || `bookmark_${b.page}_${Date.now()}_${i}`,
-          lastModified: b.lastModified || b.date || new Date().toISOString(), // Utilise date existante ou new Date()
-        };
-      });
+      this.bookmarks = this.bookmarks.map((b, i) => ({
+        ...b,
+        id: b.id || `bookmark_${b.page}_${Date.now()}_${i}`,
+        lastModified: b.lastModified || b.date || new Date().toISOString(),
+      }));
 
       const rawPage = localStorage.getItem("quran_lastPage");
       this.lastPage = rawPage ? parseInt(rawPage) : 1;
@@ -220,7 +207,7 @@ class QuranApp {
     if (!bookmark || newPage < 1 || newPage > 604) return false;
     const oldPage = bookmark.page;
     bookmark.page = newPage;
-    bookmark.lastModified = new Date().toISOString(); // Mise à jour de la date
+    bookmark.lastModified = new Date().toISOString();
     this.bookmarks.sort((a, b) => a.page - b.page);
     this.saveToLocalStorage();
     this.updateBookmarkIcon(oldPage);
@@ -243,7 +230,7 @@ class QuranApp {
     const bookmark = this.bookmarks.find((b) => b.id === bookmarkId);
     if (!bookmark) return false;
     bookmark.name = newName.trim() || `صفحة ${bookmark.page}`;
-    bookmark.lastModified = new Date().toISOString(); // Mise à jour de la date
+    bookmark.lastModified = new Date().toISOString();
     this.saveToLocalStorage();
     window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
     return true;
@@ -257,13 +244,8 @@ class QuranApp {
     icon.title = hasBookmark ? "علامة مرجعية موجودة" : "إضافة علامة مرجعية";
   }
 
-  // Dans la classe QuranApp
-
-  // Dans la classe QuranApp
-
   /**
    * Exporte toutes les données utilisateur (signets + épingles)
-   * @returns {string} JSON formaté
    */
   exportUserData() {
     const data = {
@@ -275,25 +257,12 @@ class QuranApp {
 
   /**
    * Importe des données utilisateur depuis une chaîne JSON
-   * @param {string} jsonString - Le contenu du fichier JSON
-   * @param {boolean} merge - true pour fusionner, false pour remplacer
-   * @returns {boolean} Succès ou échec
    */
   importUserData(jsonString, merge = false) {
     try {
       const imported = JSON.parse(jsonString);
 
-      // Ancien format (simple tableau) → refusé
-      if (Array.isArray(imported)) {
-        console.warn(
-          "Format de fichier obsolète. Veuillez utiliser un fichier exporté par la version 1.0.8 ou ultérieure.",
-        );
-        return false;
-      }
-
-      // Nouveau format
       if (imported.bookmarks && Array.isArray(imported.bookmarks)) {
-        // Validation des signets
         const validBookmarks = imported.bookmarks.every(
           (b) =>
             b &&
@@ -319,13 +288,16 @@ class QuranApp {
           const existingIds = new Set(this.bookmarks.map((b) => b.id));
           const toAddBookmarks = imported.bookmarks.filter(
             (b) => !existingIds.has(b.id),
-          );
+          ).map((b) => ({
+            ...b,
+            lastModified: b.lastModified || b.date || new Date().toISOString(),
+          }));
           newBookmarks = [...this.bookmarks, ...toAddBookmarks];
 
           // Fusion des épingles
           const existingPinned = new Set(this.pinnedSurahs);
-          const toAddPinned = imported.pinnedSurahs.filter(
-            (id) => !existingPinned.has(id),
+          imported.pinnedSurahs = imported.pinnedSurahs || [];
+          const toAddPinned = imported.pinnedSurahs.filter((id) => !existingPinned.has(id),
           );
           newPinned = [...this.pinnedSurahs, ...toAddPinned];
         } else {
@@ -333,6 +305,7 @@ class QuranApp {
           newBookmarks = imported.bookmarks.map((b) => ({
             ...b,
             id: b.id || `bookmark_${b.page}_${Date.now()}_${Math.random()}`,
+            lastModified: b.lastModified || b.date || new Date().toISOString(),
           }));
           newPinned = validPinned
             ? [...imported.pinnedSurahs]
@@ -428,138 +401,6 @@ class QuranApp {
     } else {
       document.body.classList.remove("night-mode");
     }
-  }
-
-  // ============================================
-  // DIALOGUE SAISIE DE PAGE
-  // ============================================
-
-  showPageInputDialog() {
-    if (this._dialogOpen) return;
-    this._dialogOpen = true;
-    if (window.quranReader) window.quranReader._dialogOpen = true;
-    window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
-
-    // Backdrop standard
-    const backdrop = document.createElement("div");
-    backdrop.className = "overlay show";
-    backdrop.style.zIndex = "100000";
-
-    // Dialog avec la classe overlay-content (largeur standard)
-    const dialog = document.createElement("div");
-    dialog.className = "overlay-content";
-
-    // Header
-    const header = document.createElement("div");
-    header.className = "overlay-header";
-
-    const title = document.createElement("h2");
-    title.textContent = "📄 الانتقال إلى صفحة";
-
-    const closeBtn = document.createElement("button");
-    closeBtn.className = "btn close-btn";
-    closeBtn.textContent = "✕";
-    closeBtn.setAttribute("aria-label", "إغلاق");
-
-    header.appendChild(title);
-    header.appendChild(closeBtn);
-    dialog.appendChild(header);
-
-    // Corps
-    const body = document.createElement("div");
-    body.style.padding = "16px";
-
-    const label = document.createElement("p");
-    label.textContent = "أدخل رقم الصفحة (1-604)";
-    label.style.textAlign = "right";
-    label.style.margin = "0 0 12px 0";
-    body.appendChild(label);
-
-    // Conteneur pour input + bouton (flex row)
-    const row = document.createElement("div");
-    row.style.display = "flex";
-    row.style.alignItems = "center";
-    row.style.gap = "8px";
-
-    const input = document.createElement("input");
-    input.type = "tel";
-    input.inputMode = "numeric";
-    input.pattern = "[0-9]*";
-    input.placeholder = "1-604";
-    input.value = this.lastPage;
-    input.className = "search-input";
-    input.style.flex = "1"; // prend l'espace disponible
-    input.style.direction = "ltr";
-    input.style.textAlign = "right";
-    input.style.margin = "0";
-
-    const goBtn = document.createElement("button");
-    goBtn.className = "confirm-btn ok";
-    goBtn.textContent = "اذهب";
-    goBtn.style.flexShrink = "0"; // ne se réduit pas
-
-    row.appendChild(input);
-    row.appendChild(goBtn);
-    body.appendChild(row);
-
-    dialog.appendChild(body);
-    backdrop.appendChild(dialog);
-    document.body.appendChild(backdrop);
-
-    // Focus et sélection
-    setTimeout(() => {
-      input.focus();
-      setTimeout(() => input.setSelectionRange(0, input.value.length), 100);
-    }, 50);
-
-    let closed = false;
-
-    const close = () => {
-      if (closed) return;
-      closed = true;
-      this._dialogOpen = false;
-      input.blur();
-      backdrop.remove();
-      if (window.quranReader) window.quranReader._dialogOpen = false;
-      window.dispatchEvent(new CustomEvent("quran:overlayClosed"));
-    };
-
-    const confirm = () => {
-      if (closed) return;
-      const pageNum = parseInt(input.value, 10);
-      if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= 604) {
-        this.goToPage(pageNum);
-        close();
-      } else {
-        this.showToast("❌ الرجاء إدخال رقم صفحة صحيح (1-604)");
-        input.focus();
-      }
-    };
-
-    const isTouch = "ontouchstart" in window;
-    goBtn.addEventListener("touchend", (e) => {
-      e.preventDefault();
-      confirm();
-    });
-    goBtn.addEventListener("click", () => {
-      if (!isTouch) confirm();
-    });
-    closeBtn.addEventListener("touchend", (e) => {
-      e.preventDefault();
-      close();
-    });
-    closeBtn.addEventListener("click", () => {
-      if (!isTouch) close();
-    });
-    backdrop.addEventListener("click", (e) => {
-      if (e.target === backdrop) close();
-    });
-    input.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        confirm();
-      }
-    });
   }
 
   // ============================================
@@ -689,11 +530,6 @@ class QuranApp {
   // ============================================
 
   setupCleanupHandlers() {
-    this._beforeUnloadHandler = () => {
-      if (this.isInitialized) this.saveToLocalStorage();
-    };
-    window.addEventListener("beforeunload", this._beforeUnloadHandler);
-
     this._pageHideHandler = () => {
       if (this.isInitialized) this.saveToLocalStorage();
     };
@@ -751,11 +587,7 @@ class QuranApp {
         handler: this._readingModeChangedHandler,
       },
       { target: document, type: "keydown", handler: this._keyDownHandler },
-      {
-        target: window,
-        type: "beforeunload",
-        handler: this._beforeUnloadHandler,
-      },
+
       { target: window, type: "pagehide", handler: this._pageHideHandler },
       {
         target: document,
@@ -777,7 +609,6 @@ class QuranApp {
     this._bookmarkChangedHandler = null;
     this._readingModeChangedHandler = null;
     this._keyDownHandler = null;
-    this._beforeUnloadHandler = null;
     this._pageHideHandler = null;
     this._visibilityChangeHandler = null;
     this._onlineHandler = null;

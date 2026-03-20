@@ -83,8 +83,7 @@ class QuranReader {
     // Auto scroll
     this.autoScrollActive = false;
     this.autoScrollRAF = null;
-    this.autoScrollSpeed = 0.2;
-    this.minSpeed = 0.1;
+    this.autoScrollSpeed = parseFloat(localStorage.getItem("quran_scrollSpeed")) || 0.2; this.minSpeed = 0.1;
     this.maxSpeed = 0.8;
     this.speedStep = 0.1;
     this._scrollAccum = 0;
@@ -163,7 +162,7 @@ class QuranReader {
       this.elements.sajdaIcon.style.display = data.sajda ? "inline" : "none";
     }
 
-    this.updateBookmarkButton();
+    window.quranApp?.updateBookmarkIcon(this.currentPage);
 
     const notifications = window.quranCalculator.getPageNotifications(pageNum);
     if (notifications?.length) {
@@ -174,14 +173,6 @@ class QuranReader {
     }
 
     this.applyButtonsVisibility();
-  }
-
-  updateBookmarkButton() {
-    if (!this.elements.bookmarkIcon || !window.quranApp) return;
-    const hasBookmark = window.quranApp
-      .getBookmarks()
-      .some((b) => b.page === this.currentPage);
-    this.elements.bookmarkIcon.textContent = hasBookmark ? "⭐" : "🔖";
   }
 
   // ============================================
@@ -703,9 +694,6 @@ class QuranReader {
     const onTouchStart = (e) => {
       startX = e.touches[0].clientX;
     };
-    const onTouchMove = (e) => {
-      e.preventDefault();
-    };
     const onTouchEnd = (e) => {
       endX = e.changedTouches[0].clientX;
       const delta = startX - endX;
@@ -718,34 +706,18 @@ class QuranReader {
     };
 
     this.removeSwipeNavigation();
-    this.elements.pageScroll.addEventListener("touchstart", onTouchStart, {
-      passive: true,
-    });
-    this.elements.pageScroll.addEventListener("touchmove", onTouchMove, {
-      passive: false,
-    });
+    this.elements.pageScroll.addEventListener("touchstart", onTouchStart, { passive: true, });
     this.elements.pageScroll.addEventListener("touchend", onTouchEnd);
     this.swipeHandlers = {
       touchstart: onTouchStart,
-      touchmove: onTouchMove,
       touchend: onTouchEnd,
     };
   }
 
   removeSwipeNavigation() {
     if (!this.elements.pageScroll || !this.swipeHandlers) return;
-    this.elements.pageScroll.removeEventListener(
-      "touchstart",
-      this.swipeHandlers.touchstart,
-    );
-    this.elements.pageScroll.removeEventListener(
-      "touchmove",
-      this.swipeHandlers.touchmove,
-    );
-    this.elements.pageScroll.removeEventListener(
-      "touchend",
-      this.swipeHandlers.touchend,
-    );
+    this.elements.pageScroll.removeEventListener("touchstart", this.swipeHandlers.touchstart,);
+    this.elements.pageScroll.removeEventListener("touchend", this.swipeHandlers.touchend,);
     this.swipeHandlers = null;
     this.swipeEnabled = false;
   }
@@ -972,6 +944,7 @@ class QuranReader {
     speed = Math.min(this.maxSpeed, Math.max(this.minSpeed, speed));
     if (speed === this.autoScrollSpeed) return;
     this.autoScrollSpeed = speed;
+    localStorage.setItem("quran_scrollSpeed", speed.toString()); // ← ajoutez
     this._updateSpeedButtons();
     window.quranApp?.showToast(`⚡ السرعة: ${speed.toFixed(1)}`);
   }
@@ -1119,12 +1092,7 @@ class QuranReader {
 
     if (this.elements.pageNumber) {
       const handler = () => {
-        if (
-          window.quranApp &&
-          typeof window.quranApp.showPageInputDialog === "function"
-        ) {
-          window.quranApp.showPageInputDialog();
-        }
+        window.overlayManager?.showPageInputDialog();
       };
       this.elements.pageNumber.addEventListener("click", handler);
       this.elements.pageNumber.style.cursor = "pointer";
@@ -1248,8 +1216,8 @@ class QuranReader {
       this.readingMode === "scroll"
         ? this.wrapperPool.find((w) => parseInt(w.dataset.page) === page)
         : this.elements.pageScroll.querySelector(
-            `.page-wrapper[data-page="${page}"]`,
-          );
+          `.page-wrapper[data-page="${page}"]`,
+        );
     if (!wrapper) return;
 
     const img = wrapper.querySelector("img");
@@ -1290,7 +1258,7 @@ class QuranReader {
       const t = realY1 / 1890;
       const yCorrect =
         this.readingMode === "scroll"
-          ? 30 - (realY1 / 1890) * 55
+          ? (30 - (realY1 / 1890) * 55) * (imgH / 1100)
           : (WEBP_TOP - t * (WEBP_TOP + WEBP_BOT)) * (imgH / 1100);
 
       const div = document.createElement("div");
