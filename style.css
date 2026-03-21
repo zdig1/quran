@@ -283,6 +283,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .footer-value {
@@ -299,6 +300,34 @@ body {
   justify-content: center;
   line-height: 1;
   color: var(--primary);
+}
+
+.surah-name {
+  color: var(--primary);
+}
+
+.surah-name:active {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.night-mode .surah-name:active {
+  background: rgba(30, 30, 30, 0.9);
+}
+
+.surah-info-content {
+  direction: rtl;
+  text-align: justify;
+}
+
+.surah-section-title {
+  font-size: 1.1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+  padding-right: 0.5rem;
+}
+
+.surah-section-text {
+  margin-right: 1rem;
 }
 
 /* ============================================

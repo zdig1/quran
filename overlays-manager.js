@@ -127,6 +127,11 @@ class OverlayManager {
       closeBtn: "closeAboutBtn",
       content: "aboutContent",
     },
+    surahInfo: {
+      element: "surahInfoOverlay",
+      closeBtn: "closeSurahInfoBtn",
+      content: "surahInfoContent",
+    },
   };
 
   lazyLoadOverlay(name) {
@@ -968,7 +973,7 @@ class OverlayManager {
   }
 
   // ============================================
-  // audio OVERLAY
+  // 3.5 audio OVERLAY
   // ============================================
 
   renderAudioContent(overlay) {
@@ -1396,7 +1401,7 @@ class OverlayManager {
 
 
   // ============================================
-  // PAGE INPUT OVERLAY
+  // 9 PAGE INPUT OVERLAY
   // ============================================
 
   showPageInputDialog() {
@@ -1446,6 +1451,94 @@ class OverlayManager {
     closeBtn.addEventListener("click", () => { if (!isTouch) close(); }, { signal });
     overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); }, { signal });
     input.addEventListener("keypress", (e) => { if (e.key === "Enter") { e.preventDefault(); confirm(); } }, { signal });
+  }
+
+  // ============================================
+  // 10. SURAH INFO OVERLAY
+  // ============================================
+
+  async showSurahInfo(surahId) {
+    this.closeMenu();
+    const overlay = this.lazyLoadOverlay("surahInfo");
+    if (!overlay?.content) return;
+
+    // Afficher un indicateur de chargement
+    overlay.content.innerHTML = `
+    <div class="loading-placeholder" style="padding: 20px;">
+      <div class="spinner" style="margin-bottom: 10px;"></div>
+      <p>جاري تحميل المعلومات...</p>
+    </div>
+  `;
+    this.showOverlay("surahInfo");
+
+    // Charger le fichier JSON si ce n'est pas déjà fait
+    if (!this.surahsInfo) {
+      try {
+        const response = await fetch("data/surainfo.json", { cache: "force-cache" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        this.surahsInfo = await response.json();
+      } catch (err) {
+        overlay.content.innerHTML = `<div class="empty-message">⚠️ تعذر تحميل المعلومات</div>`;
+        return;
+      }
+    }
+
+    // Trouver les infos de la sourate demandée
+    const info = this.surahsInfo.find(item => item.s === surahId);
+    if (!info) {
+      overlay.content.innerHTML = `<div class="empty-message">ℹ️ لا توجد معلومات متوفرة لهذه السورة</div>`;
+      return;
+    }
+
+    // Formater le texte (remplacer \r\n par <br> pour l'affichage)
+    const formattedHtml = this.formatSurahInfo(info.t);
+    overlay.content.innerHTML = `<div class="surah-info-content" style="padding: 1rem;">${formattedHtml}</div>`;
+  }
+
+  getSectionColor(index) {
+    // 8 couleurs : vert, bleu, marron, violet, gris, orange, rouge, turquoise
+    const colors = [
+      'var(--primary)',        // vert
+      'var(--color-blue)',     // bleu
+      'var(--color-brown)',    // marron
+      'var(--color-violet)',   // violet
+      'var(--color-gray)',     // gris
+      '#ff9800',               // orange
+      'var(--color-red)',      // rouge
+      '#009688'                // turquoise
+    ];
+    return colors[index % colors.length];
+  }
+
+  formatSurahInfo(text) {
+    // Séparer les lignes
+    const lines = text.split(/\r?\n/);
+    let html = '';
+    let sectionIndex = 0;
+
+    for (let line of lines) {
+      line = line.trim();
+      if (line === '') {
+        html += '<br>';
+        continue;
+      }
+
+      // Détecte une ligne de titre : commence par un chiffre arabe (١-٩) suivi d'un tiret
+      // Exemple : "١- آياتها:" ou "٢- معنى اسمها:"
+      const match = line.match(/^([1-9][-–:])\s*(.*)/);
+      if (match) {
+        const prefix = match[1];    // "١-"
+        const rest = match[2];
+        const color = this.getSectionColor(sectionIndex);
+        sectionIndex++;
+        // Titre en gras avec la couleur
+        html += `<div class="surah-section-title" style="color: ${color}; font-weight: bold; margin-top: 0.75rem;">${prefix} ${this.escapeHtml(rest)}</div>`;
+      } else {
+        // Texte normal
+        html += `<div class="surah-section-text" style="line-height: 1.6; margin-bottom: 0.5rem;">${this.escapeHtml(line)}</div>`;
+      }
+    }
+    return html;
   }
 
   // ============================================
