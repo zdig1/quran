@@ -691,7 +691,9 @@ class QuranAudioPlayer {
   }
 
   _updateRepeatBtn() {
-    const svgRepeat = `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 3 21 7 17 11"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 21 3 17 7 13"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`;
+    const svgRepeat = `
+<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg>
+    `;
     const labels = [svgRepeat, `¹${svgRepeat}`, `²${svgRepeat}`]; const titles = ["بدون تكرار", "تكرار الآية", "تكرار السورة"];
     [this.elements.repeatBtn, document.getElementById("miniBarRepeat")].forEach(
       (btn) => {
@@ -753,10 +755,12 @@ class QuranAudioPlayer {
   </button>
   <div class="mini-bar-controls">
     <button class="audio-btn speed-btn" id="miniBarSpeed" title="السرعة">1.0×</button>
+
     <button class="audio-btn" id="miniBarRepeat" title="تكرار">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-    </button>
-    <button class="audio-btn" id="miniBarNextAyah" title="الآية التالية">
+<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg> 
+</button>
+
+   <button class="audio-btn" id="miniBarNextAyah" title="الآية التالية">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
     </button>
     <button class="audio-btn" id="miniBarPlayPause" title="تشغيل">

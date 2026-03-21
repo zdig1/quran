@@ -1009,13 +1009,15 @@ class OverlayManager {
       <span id="audioDuration">0:00</span>
     </div>
 <div class="audio-controls">
-      <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
-      <button class="btn audio-btn" id="repeatBtn" title="تكرار">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 3 21 7 17 11"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 21 3 17 7 13"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-      </button>
-      <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">
+<button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
+
+<button class="btn audio-btn" id="repeatBtn" title="تكرار">
+<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg>
+</button>
+  
+  <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 20 12 12 18"/><line x1="21" y1="6" x2="21" y2="18" stroke="currentColor" stroke-width="2"/></svg>
-      </button>
+            </button>
       <button class="btn audio-btn" id="nextAyahBtn" title="الآية التالية">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
       </button>
