@@ -278,12 +278,39 @@ body {
   background: rgba(30, 30, 30, 0.7);
 }
 
+/* Style de base du bloc entier */
 .footer-surah {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 1.25rem;
+  padding: var(--space-sm) var(--space-md);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+  display: inline-block;
   font-size: var(--text-sm);
+  line-height: 1.5;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
   cursor: pointer;
+  transition: background 0.2s;
+}
+
+.night-mode .footer-surah {
+  background: rgba(30, 30, 30, 0.7);
+}
+
+.surah-name {
+  color: var(--primary);
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: bold;
+}
+
+.footer-surah:active {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.night-mode .footer-surah:active {
+  background: rgba(30, 30, 30, 0.9);
 }
 
 .footer-value {
@@ -300,18 +327,6 @@ body {
   justify-content: center;
   line-height: 1;
   color: var(--primary);
-}
-
-.surah-name {
-  color: var(--primary);
-}
-
-.surah-name:active {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.night-mode .surah-name:active {
-  background: rgba(30, 30, 30, 0.9);
 }
 
 .surah-info-content {
