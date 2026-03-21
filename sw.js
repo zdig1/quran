@@ -14,7 +14,7 @@ const CORE_ASSETS = [
   "./version.js",
   "./data/quran.json",
   "./data/tafsir.json",
-  "./data/ayainfo.json",
+  "./data/surainfo.json",
   "./media/icon-192.png",
   "./media/icon-512.png",
   "./media/000.webp",
