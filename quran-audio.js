@@ -691,7 +691,7 @@ class QuranAudioPlayer {
   }
 
   _updateRepeatBtn() {
-    const svgRepeat = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`;
+    const svgRepeat = `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 3 21 7 17 11"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 21 3 17 7 13"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`;
     const labels = [svgRepeat, `¹${svgRepeat}`, `²${svgRepeat}`]; const titles = ["بدون تكرار", "تكرار الآية", "تكرار السورة"];
     [this.elements.repeatBtn, document.getElementById("miniBarRepeat")].forEach(
       (btn) => {
@@ -747,32 +747,34 @@ class QuranAudioPlayer {
     bar.id = "audioMiniBar";
     bar.className = "audio-mini-bar hidden";
     bar.innerHTML = `
-<div class="mini-bar-bottom">
+    <div class="mini-bar-bottom">
   <button class="audio-btn" id="miniBarOptions" title="خيارات">
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
   <div class="mini-bar-controls">
     <button class="audio-btn speed-btn" id="miniBarSpeed" title="السرعة">1.0×</button>
     <button class="audio-btn" id="miniBarRepeat" title="تكرار">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
     </button>
     <button class="audio-btn" id="miniBarNextAyah" title="الآية التالية">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="13 5 22 12 13 19"/><polygon points="2 5 11 12 2 19"/></svg>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
     </button>
     <button class="audio-btn" id="miniBarPlayPause" title="تشغيل">
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="10 8 16 12 10 16"/></svg>
     </button>
     <button class="audio-btn" id="miniBarPrevAyah" title="الآية السابقة">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="11 5 2 12 11 19"/><polygon points="22 5 13 12 22 19"/></svg>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="11 6 3 12 11 18"/><polygon points="21 6 13 12 21 18"/></svg>
     </button>
     <button class="audio-btn" id="miniBarStop" title="إيقاف">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="8" y="8" width="8" height="8"/></svg>
     </button>
   </div>
   <button class="audio-btn" id="miniBarHide" title="إخفاء">
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
   </button>
-</div>`;
+</div>
+
+`;
     document.body.appendChild(bar);
     this.miniBar = bar;
   }
@@ -1088,8 +1090,8 @@ class QuranAudioPlayer {
         miniPlay.innerHTML = '<span class="spinner small"></span>';
       } else {
         miniPlay.innerHTML = this.isPlaying
-          ? `<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`
-          : `<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>`;
+          ? `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7" y="6" width="3" height="12"/><rect x="14" y="6" width="3" height="12"/></svg>`
+          : `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>`;
       }
     }
     if (miniStop) {
@@ -1134,8 +1136,10 @@ class QuranAudioPlayer {
       btn.classList.remove('playing');
     } else {
       btn.innerHTML = this.isPlaying
-        ? `<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`
-        : `<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>`; btn.disabled = !(this.currentReciter && this.currentSurah);
+        ? `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7" y="6" width="3" height="12"/><rect x="14" y="6" width="3" height="12"/></svg>`
+        : `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>`;
+
+      btn.disabled = !(this.currentReciter && this.currentSurah);
       // Modifiez cette condition :
       if (this.isPlaying || this._isTransitioning) {
         btn.classList.add('playing');

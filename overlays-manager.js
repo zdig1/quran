@@ -1011,25 +1011,25 @@ class OverlayManager {
 <div class="audio-controls">
       <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
       <button class="btn audio-btn" id="repeatBtn" title="تكرار">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 3 21 7 17 11"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 21 3 17 7 13"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
       </button>
       <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="13 5 22 12 13 19"/><line x1="22" y1="5" x2="22" y2="19" stroke="currentColor" stroke-width="2"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 20 12 12 18"/><line x1="21" y1="6" x2="21" y2="18" stroke="currentColor" stroke-width="2"/></svg>
       </button>
       <button class="btn audio-btn" id="nextAyahBtn" title="الآية التالية">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="13 5 22 12 13 19"/><polygon points="2 5 11 12 2 19"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
       </button>
       <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">
-        <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>
       </button>
       <button class="btn audio-btn" id="prevAyahBtn" title="الآية السابقة">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="11 5 2 12 11 19"/><polygon points="22 5 13 12 22 19"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="11 6 3 12 11 18"/><polygon points="21 6 13 12 21 18"/></svg>
       </button>
       <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="11 5 2 12 11 19"/><line x1="2" y1="5" x2="2" y2="19" stroke="currentColor" stroke-width="2"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 4 12 12 18"/><line x1="3" y1="6" x2="3" y2="18" stroke="currentColor" stroke-width="2"/></svg>
       </button>
       <button class="btn audio-btn" id="stopBtn" title="إيقاف">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7.5" y="7.5" width="9" height="9"/></svg>
       </button>
     </div>
     <div class="audio-current-info" style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
