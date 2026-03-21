@@ -26,13 +26,13 @@
   ],
   "icons": [
     {
-      "src": "media/icon-192.png",
+      "src": "./media/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "media/icon-512.png",
+      "src": "./media/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -40,7 +40,7 @@
   ],
   "screenshots": [
     {
-      "src": "media/screenshot.webp",
+      "src": "./media/screenshot.webp",
       "type": "image/webp",
       "sizes": "400x800",
       "form_factor": "narrow",

@@ -11,7 +11,7 @@ class TafsirSearchManager {
     };
 
     this.config = {
-      dataUrl: "data/tafsir.json",
+      dataUrl: "./data/tafsir.json",
       searchCacheSize: 100,
       pageCacheSize: 20,
       preloadRadius: 2,

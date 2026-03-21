@@ -1094,8 +1094,8 @@ class OverlayManager {
     const overlay = this.overlays.khatm;
     if (!overlay?.content || overlay.content.children.length > 0) return;
     overlay.content.innerHTML = `<div class="khatm-page">
-      <img src="media/605.webp" alt="دعاء ختم القرآن - الصفحة 605" loading="lazy">
-      <img src="media/606.webp" alt="دعاء ختم القرآن - الصفحة 606" loading="lazy">
+      <img src="./media/605.webp" alt="دعاء ختم القرآن - الصفحة 605" loading="lazy">
+      <img src="./media/606.webp" alt="دعاء ختم القرآن - الصفحة 606" loading="lazy">
     </div>`;
   }
 
@@ -1263,7 +1263,7 @@ class OverlayManager {
     if (!overlay?.content) return;
     overlay.content.innerHTML = `<div class="tajweed-text">
       <div class="tajweed-image">
-        <img src="media/000.webp" alt="قواعد التجويد الملونة" loading="lazy">
+        <img src="./media/000.webp" alt="قواعد التجويد الملونة" loading="lazy">
       </div>
       <p><span style="color:#ff0000;font-weight:bold;margin-right:5px;">أولاً – اللون الأحمر (بتدرّجاته):</span></p>
       <p>يرمز للمدود بأزمنتها المختلفة حسب تدرّج اللون.</p>
@@ -1474,7 +1474,7 @@ class OverlayManager {
     // Charger le fichier JSON si ce n'est pas déjà fait
     if (!this.surahsInfo) {
       try {
-        const response = await fetch("data/surainfo.json", { cache: "force-cache" });
+        const response = await fetch("./data/surainfo.json", { cache: "force-cache" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         this.surahsInfo = await response.json();
       } catch (err) {

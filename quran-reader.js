@@ -462,7 +462,7 @@ class QuranReader {
 
   getPageImageUrl(page) {
     if (page < 1 || page > 604) return "";
-    return `quran_pages/${page.toString().padStart(3, "0")}.webp`;
+    return `./quran_pages/${page.toString().padStart(3, "0")}.webp`;
   }
 
   async loadPageImage(page, priority = "low") {

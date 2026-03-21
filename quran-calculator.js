@@ -11,7 +11,7 @@ class QuranCalculator {
 
   async load() {
     if (this.isLoaded) return this.data;
-    const response = await fetch("data/quran.json", { cache: "force-cache" });
+    const response = await fetch("./data/quran.json", { cache: "force-cache" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     this.data = await response.json();
     this.buildPageIndex();
