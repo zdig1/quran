@@ -156,7 +156,7 @@ class QuranReader {
     if (this.elements.hizbNumber)
       this.elements.hizbNumber.textContent = data.hizb || 1;
     if (this.elements.surahInfo && data.surah) {
-      this.elements.surahInfo.innerHTML = `${data.surah.s_id}.<span class="surah-name">${data.surah.name}</span> (${data.surah.verses_count})`;
+      this.elements.surahInfo.innerHTML = `${data.surah.s_id}.${data.surah.name} (${data.surah.verses_count})`;
     }
     if (this.elements.sajdaIcon) {
       this.elements.sajdaIcon.style.display = data.sajda ? "inline" : "none";
@@ -1064,19 +1064,6 @@ class QuranReader {
         type: "click",
         handler,
       });
-    }
-
-    if (this.elements.surahInfo) {
-      const handler = () => {
-        if (window.overlayManager && window.quranCalculator) {
-          const pageData = window.quranCalculator.getPageData(this.currentPage);
-          if (pageData && pageData.surah) {
-            window.overlayManager.showSurahInfo(pageData.surah.s_id);
-          }
-        }
-      };
-      this.elements.surahInfo.addEventListener('click', handler);
-      this.eventListeners.push({ element: this.elements.surahInfo, type: 'click', handler });
     }
 
     if (this.elements.autoScrollBtn) {

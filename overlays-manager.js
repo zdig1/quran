@@ -307,72 +307,104 @@ class OverlayManager {
   }
 
   _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
-    const hasBookmark = bookmarkedSurahIds.has(surah.s_id);
     const revelationIcon = surah.type === "مدنية" ? "🕌" : "🕋";
-    const juzStarts =
-      window.quranCalculator._juzBySurahId?.get(surah.s_id)?.slice(0, 1) || [];
+    const juzStarts = window.quranCalculator._juzBySurahId?.get(surah.s_id)?.slice(0, 1) || [];
 
     const item = document.createElement("div");
     item.className = "item-container item-surah";
     item.setAttribute("data-surah-id", surah.s_id);
 
-    const line1 = document.createElement("div");
-    line1.className = "item-line-1";
-    line1.innerHTML = `<div class="item-right">
-      <button class="pin-btn ${isPinned ? "pinned" : ""}" data-sura-id="${surah.s_id}">${isPinned ? "⭐" : "📌"}</button>
-      <span class="item-badge">${surah.s_id}</span>
-      <span class="item-title">${this.escapeHtml(surah.name)}</span>
-    </div>
-    <div class="item-left">
-      <span class="item-left-icon-col" style="text-align:center;min-width:2rem;">${hasBookmark ? '<span class="item-icon">🔖</span>' : ""}</span>
-      <span style="color:#1976d2;font-weight:bold;font-size:0.8rem;display:inline-flex;align-items:center;min-width:1rem;">${juzStarts.map((j) => `ج ${j}`).join(" ")}</span>
-      <span class="item-left-tag-col" style="min-width:4rem;text-align:left;"><span class="item-tag">ص ${surah.page_start}</span></span>
-    </div>`;
+    // 1. Pin (deux lignes)
+    const pinBtn = document.createElement("button");
+    pinBtn.className = `pin-btn surah-pin ${isPinned ? "pinned" : ""}`;
+    pinBtn.setAttribute("data-sura-id", surah.s_id);
+    pinBtn.textContent = isPinned ? "⭐" : "📌";
 
-    const line2 = document.createElement("div");
-    line2.className = "item-line-2";
-    line2.innerHTML = `<div class="item-right" style="display:flex;align-items:center;gap:0.5rem;">
-      <span class="item-subtitle" style="display:flex;align-items:center;gap:0.25rem;">
-        <span>النزول:</span>
-        <span class="order-value">${this.escapeHtml(String(surah.order))}</span>
-      </span>
-      <span class="item-revelation-icon" style="display:inline-flex;align-items:center;">${revelationIcon}</span>
-    </div>
-    <div class="item-left" style="display:flex;align-items:center;">
-      <span class="item-left-icon-col" style="display:inline-flex;align-items:center;min-width:1rem;">${window.quranCalculator.hasSajdaInSurah(surah.s_id) ? '<span class="item-icon item-sajda-icon">۩</span>' : ""}</span>
-      <span class="item-left-tag-col" style="min-width:4rem;text-align:left;">
-        <span class="item-tertiary">(${this.escapeHtml(String(surah.verses))}) آية</span>
-      </span>
-    </div>`;
+    // 2. Numéro (deux lignes)
+    const numberSpan = document.createElement("span");
+    numberSpan.className = "item-badge surah-number";
+    numberSpan.textContent = surah.s_id;
 
-    item.appendChild(line1);
-    item.appendChild(line2);
+    // 3. Nom (ligne 1)
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "surah-name";
+    nameSpan.textContent = surah.name;
 
+    // 4. Ordre (ligne 2)
+    const orderSpan = document.createElement("span");
+    orderSpan.className = "surah-tanzil";
+    orderSpan.textContent = `النزول: ${surah.order}`;
+
+    // 5. Info (ligne 1)
+    const infoBtn = document.createElement("button");
+    infoBtn.className = "info-btn surah-info";
+    infoBtn.setAttribute("data-sura-id", surah.s_id);
+    infoBtn.textContent = "ℹ️";
+
+    // 6. Révélation (ligne 2)
+    const revelSpan = document.createElement("span");
+    revelSpan.className = "surah-revel";
+    revelSpan.textContent = revelationIcon;
+
+    // 7. Juz (ligne 1)
+    const juzDiv = document.createElement("div");
+    juzDiv.className = "surah-juz";
+    juzDiv.innerHTML = `<span class="juz-badge">${juzStarts.map(j => `ج ${j}`).join(" ")}</span>`;
+
+    // 8. Sajda (ligne 2)
+    const sajdaDiv = document.createElement("div");
+    sajdaDiv.className = "surah-sajda";
+    if (window.quranCalculator.hasSajdaInSurah(surah.s_id)) {
+      const sajdaSpan = document.createElement("span");
+      sajdaSpan.className = "item-sajda-icon";
+      sajdaSpan.textContent = "۩";
+      sajdaDiv.appendChild(sajdaSpan);
+    }
+
+    // 9. Page (ligne 1)
+    const pageDiv = document.createElement("div");
+    pageDiv.className = "surah-page";
+    pageDiv.innerHTML = `<span class="item-tag">ص ${surah.page_start}</span>`;
+
+    // 10. Versets (ligne 2)
+    const versesDiv = document.createElement("div");
+    versesDiv.className = "surah-verses";
+    versesDiv.textContent = `(${surah.verses}) آية`;
+
+    // Assemblage dans l'ordre (mais l'ordre n'a pas d'importance grâce à la grille)
+    item.appendChild(pinBtn);
+    item.appendChild(numberSpan);
+    item.appendChild(nameSpan);
+    item.appendChild(orderSpan);
+    item.appendChild(infoBtn);
+    item.appendChild(revelSpan);
+    item.appendChild(juzDiv);
+    item.appendChild(sajdaDiv);
+    item.appendChild(pageDiv);
+    item.appendChild(versesDiv);
+
+    // Événements (inchangés)
     item.addEventListener("click", (e) => {
-      // --- ZONE DE SÉCURITÉ ---
-      // Si le clic vient du bouton pin ou d'un de ses enfants, on stoppe tout.
-      if (e.target.closest('.pin-btn')) {
-        return;
-      }
-
-      // Sinon, c'est un clic normal sur la sourate
+      if (e.target.closest('.pin-btn') || e.target.closest('.info-btn')) return;
       window.quranApp?.goToPage(surah.page_start);
       this.closeOverlay("surahs");
     });
 
-    const pinBtn = item.querySelector(".pin-btn");
     pinBtn.addEventListener("click", (e) => {
       e.preventDefault();
-      e.stopPropagation(); // Bloque la remontée du clic vers 'item'
-
+      e.stopPropagation();
       if (window.quranApp) {
         const added = window.quranApp.togglePinSurah(surah.s_id);
         pinBtn.classList.toggle("pinned", added);
         pinBtn.textContent = added ? "⭐" : "📌";
-
-        // Ton système anti-saut visuel
         this.renderSurahsList(false, surah.s_id);
       }
+    });
+
+    infoBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.overlayManager?.showSurahInfo(surah.s_id);
     });
 
     return item;

@@ -139,7 +139,7 @@
 }
 
 /* ============================================
-   RESET & BASE
+   2. RESET & BASE
    ============================================ */
 
 * {
@@ -192,7 +192,7 @@ body {
 }
 
 /* ============================================
-   HEADER / FOOTER
+   3. HEADER & FOOTER
    ============================================ */
 
 .header,
@@ -278,39 +278,10 @@ body {
   background: rgba(30, 30, 30, 0.7);
 }
 
-/* Style de base du bloc entier */
 .footer-surah {
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 1.25rem;
-  padding: var(--space-sm) var(--space-md);
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
-  display: inline-block;
-  font-size: var(--text-sm);
-  line-height: 1.5;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.night-mode .footer-surah {
-  background: rgba(30, 30, 30, 0.7);
-}
-
-.surah-name {
-  color: var(--primary);
-  font-size: inherit;
-  line-height: inherit;
-  font-weight: bold;
-}
-
-.footer-surah:active {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.night-mode .footer-surah:active {
-  background: rgba(30, 30, 30, 0.9);
 }
 
 .footer-value {
@@ -319,34 +290,8 @@ body {
   color: var(--primary);
 }
 
-.sajda-icon,
-.item-sajda-icon {
-  font-size: 1.25em;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  color: var(--primary);
-}
-
-.surah-info-content {
-  direction: rtl;
-  text-align: justify;
-}
-
-.surah-section-title {
-  font-size: 1.1rem;
-  margin-top: 0.75rem;
-  margin-bottom: 0.25rem;
-  padding-right: 0.5rem;
-}
-
-.surah-section-text {
-  margin-right: 1rem;
-}
-
 /* ============================================
-   BOUTONS (styles de base)
+   4. BOUTONS GÉNÉRIQUES
    ============================================ */
 
 .btn {
@@ -415,24 +360,6 @@ body {
 
 .icon-btn:hover {
   background: var(--primary-light);
-}
-
-.pin-btn {
-  position: absolute;
-  right: -5px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
 }
 
 /* Boutons de confirmation */
@@ -518,7 +445,7 @@ body {
   border-color: var(--color-brown);
 }
 
-/* Boutons auto-scroll */
+/* Bouton auto-scroll */
 .autoscroll-speed-btn {
   font-size: 1.3rem;
   font-weight: 900;
@@ -546,25 +473,6 @@ body {
 .autoscroll-speed-btn:disabled {
   opacity: 0.3 !important;
   pointer-events: none;
-}
-
-/* Menu items */
-.menu-item {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--menu-border);
-  padding: var(--space-md) var(--space-lg);
-  width: 100%;
-  cursor: pointer;
-  color: white;
-  transition: background-color 0.2s;
-}
-
-.menu-item:hover {
-  background: rgba(255, 255, 255, 0.1);
 }
 
 /* Boutons tafsir */
@@ -637,7 +545,7 @@ a.confirm-btn.blue:hover {
 }
 
 /* ============================================
-   LECTEUR DE PAGES
+   5. LECTEUR DE PAGES (modes portrait/paysage)
    ============================================ */
 
 .page-scroll {
@@ -774,7 +682,7 @@ a.confirm-btn.blue:hover {
 }
 
 /* ============================================
-   OVERLAYS (générique)
+   6. OVERLAYS (générique & menu)
    ============================================ */
 
 .overlay,
@@ -898,8 +806,26 @@ a.confirm-btn.blue:hover {
   padding-right: var(--space-md);
 }
 
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--menu-border);
+  padding: var(--space-md) var(--space-lg);
+  width: 100%;
+  cursor: pointer;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 /* ============================================
-   ITEMS DE LISTE (sourates, juz, bookmarks, etc.)
+   7. ÉLÉMENTS DE LISTE (sourates, juz, bookmarks, etc.)
    ============================================ */
 
 .item-container {
@@ -924,10 +850,6 @@ a.confirm-btn.blue:hover {
   direction: rtl;
 }
 
-.item-surah .item-line-2 .item-right {
-  margin-right: calc(var(--pin-offset) - 25px);
-}
-
 .item-right {
   display: flex;
   align-items: center;
@@ -949,6 +871,7 @@ a.confirm-btn.blue:hover {
   font-weight: 700;
   color: var(--text);
   line-height: 1.4;
+  flex: 1;
 }
 
 .item-subtitle,
@@ -993,52 +916,6 @@ a.confirm-btn.blue:hover {
   --badge-bg: var(--badge-juzhizb);
 }
 
-.juzhizb-grid {
-  display: grid;
-  grid-template-columns: 2.5rem 1fr;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.juzhizb-grid-col1 {
-  grid-column: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-}
-
-.juzhizb-grid-col2 {
-  grid-column: 2;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.aya-text {
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--color-red);
-  font-family: 'MyNotoKufi', sans-serif;
-  font-size: var(--text-sm);
-  margin-bottom: 4px;
-}
-
-.aya-prefix {
-  color: var(--text-light);
-  font-size: var(--text-sm);
-  display: block;
-  margin-bottom: 3px;
-}
-
-.juzhizb-grid-col1.item-badge {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1 / 1;
-  margin-top: 3px;
-}
-
 .item-icon {
   display: inline-flex;
   align-items: center;
@@ -1050,6 +927,11 @@ a.confirm-btn.blue:hover {
 .item-sajda-icon {
   color: var(--primary);
   min-width: 1rem;
+  font-size: 1.25em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .item-tag {
@@ -1103,6 +985,7 @@ a.confirm-btn.blue:hover {
   color: var(--quran-text-red) !important;
 }
 
+/* Section titres dans les listes */
 .surah-section .section-title {
   font-size: var(--text-md);
   font-weight: 600;
@@ -1117,15 +1000,234 @@ a.confirm-btn.blue:hover {
   backdrop-filter: blur(4px);
 }
 
-.order-value {
-  display: inline-block;
-  min-width: 1.8em;
-  text-align: left;
-  direction: ltr;
+/* ============================================
+   8. SURATES – mise en page en grille (2 lignes, 7 colonnes)
+   ============================================ */
+
+.item-surah {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: auto auto 100px auto 1fr auto auto;
+  align-items: center;
+  row-gap: 2px;
+  column-gap: 2px;
+  padding: 0px;
+  direction: rtl;
+  contain: none;
+  overflow: visible;
+}
+
+.surah-pin {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  justify-self: center;
+  min-width: 2.5rem;
+}
+
+.surah-number {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  justify-self: center;
+}
+
+.surah-name {
+  grid-row: 1;
+  grid-column: 3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'MyNotoKufi', sans-serif;
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--text);
+  margin: 0;
+}
+
+.surah-tanzil {
+  grid-row: 2;
+  grid-column: 3;
+  font-size: var(--text-sm);
+  color: var(--text-light);
+  margin: 0;
+}
+
+.surah-info {
+  grid-row: 1;
+  grid-column: 4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+}
+
+.surah-revel {
+  grid-row: 2;
+  grid-column: 4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: var(--text-md);
+  width: 32px;
+}
+
+.surah-juz {
+  grid-row: 1;
+  grid-column: 6;
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.surah-sajda {
+  grid-row: 2;
+  grid-column: 6;
+  justify-self: end;
+}
+
+.surah-page {
+  grid-row: 1;
+  grid-column: 7;
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.surah-verses {
+  grid-row: 2;
+  grid-column: 7;
+  justify-self: end;
+  font-size: var(--text-sm);
+  color: var(--text-lighter);
+}
+
+.pin-btn {
+  position: static;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.info-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 50%;
+  transition: background 0.2s;
+  color: var(--primary);
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-revelation-icon {
+  font-size: var(--text-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  line-height: 1;
+}
+
+.surah-info,
+.surah-revel {
+  align-items: center;
+  justify-content: center;
+}
+
+.item-tag {
+  background: var(--tag-bg);
+  color: var(--tag-color);
+  padding: 3px 5px;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.item-sajda-icon {
+  color: var(--primary);
+  font-size: 1.25em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.night-mode .info-btn {
+  color: var(--success);
+}
+
+.night-mode .info-btn:active {
+  background: rgba(76, 175, 80, 0.2);
 }
 
 /* ============================================
-   MARQUE-PAGES (bookmarks)
+   9. JUZ/HIZB – grille d'alignement
+   ============================================ */
+
+.juz-badge {
+  color: #1976d2;
+  font-weight: bold;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.juzhizb-grid {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.juzhizb-grid-col1 {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+}
+
+.juzhizb-grid-col1.item-badge {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  margin-top: 3px;
+}
+
+.juzhizb-grid-col2 {
+  grid-column: 2;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.aya-text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-red);
+  font-family: 'MyNotoKufi', sans-serif;
+  font-size: var(--text-sm);
+  margin-bottom: 4px;
+}
+
+.aya-prefix {
+  color: var(--text-light);
+  font-size: var(--text-sm);
+  display: block;
+  margin-bottom: 3px;
+}
+
+/* ============================================
+   10. MARQUE-PAGES (bookmarks)
    ============================================ */
 
 .bookmarks-overlay-content {
@@ -1186,7 +1288,7 @@ a.confirm-btn.blue:hover {
 }
 
 /* ============================================
-   KHATM
+   11. KHATM
    ============================================ */
 
 .khatm-content {
@@ -1225,7 +1327,7 @@ a.confirm-btn.blue:hover {
 }
 
 /* ============================================
-   RECHERCHE
+   12. RECHERCHE
    ============================================ */
 
 .search-container {
@@ -1287,6 +1389,35 @@ a.confirm-btn.blue:hover {
   color: var(--stat-suras);
 }
 
+.clear-search-btn {
+  position: absolute;
+  left: 5px;
+  top: 0;
+  margin: auto 0;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-light);
+  padding: 0;
+  line-height: 1;
+  z-index: 10;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-search-btn:hover {
+  color: var(--text);
+}
+
+#searchInput {
+  box-sizing: border-box;
+}
+
 .item-search {
   padding: 0 var(--overlay-padding-x);
   border-bottom: 1px solid var(--border);
@@ -1326,37 +1457,21 @@ a.confirm-btn.blue:hover {
   text-align: center;
 }
 
-.clear-search-btn {
-  position: absolute;
-  left: 5px;
-  top: 0;
-  margin: auto 0;
-  width: 40px;
-  height: 40px;
-  background: none;
-  border: none;
-  font-size: 1.2rem;
+.item-search .item-line-2[data-clickable="true"] {
   cursor: pointer;
-  color: var(--text-light);
-  padding: 0;
-  line-height: 1;
-  z-index: 10;
-  transition: color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: background-color 0.2s ease;
 }
 
-.clear-search-btn:hover {
-  color: var(--text);
+.item-search .item-line-2[data-clickable="true"]:hover {
+  background-color: var(--primary-light);
 }
 
-#searchInput {
-  box-sizing: border-box;
+.night-mode .item-search .item-line-2[data-clickable="true"]:hover {
+  background-color: rgba(76, 175, 80, 0.2);
 }
 
 /* ============================================
-   TAFSIR
+   13. TAFSIR
    ============================================ */
 
 .tafsir-controls {
@@ -1483,7 +1598,7 @@ a.confirm-btn.blue:hover {
 }
 
 /* ============================================
-   TAJWEED
+   14. TAJWEED
    ============================================ */
 
 .tajweed-text {
@@ -1509,7 +1624,7 @@ a.confirm-btn.blue:hover {
 }
 
 /* ============================================
-   À PROPOS
+   15. À PROPOS
    ============================================ */
 
 .about-content {
@@ -1611,182 +1726,61 @@ a.confirm-btn.blue:hover {
   color: var(--success);
 }
 
-/* ============================================
-   UTILITAIRES
-   ============================================ */
-
-.loading-placeholder,
-.empty-message {
-  text-align: center;
-  color: var(--text-light);
-  padding: var(--overlay-padding-x);
+.contact-grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 15px 0;
 }
 
-.loading-placeholder {
+.contact-box-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-}
-
-.spinner {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 3px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: var(--space-lg) auto;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ============================================
-   TOAST
-   ============================================ */
-
-.toast {
-  position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: var(--space-md) var(--space-lg);
-  border-radius: 10px;
-  z-index: 10000;
-  max-width: 80%;
-  text-align: center;
-  display: none;
-  font-size: var(--text-sm);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  white-space: pre-line;
-  line-height: 1.5;
-  font-weight: 500;
-}
-
-/* ============================================
-   AUTO SCROLL
-   ============================================ */
-
-.autoscroll-group {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-/* ============================================
-   SCROLLBAR (masquée)
-   ============================================ */
-
-::-webkit-scrollbar {
-  width: 0;
-  background: transparent;
-}
-
-/* ============================================
-   DIALOGS
-   ============================================ */
-
-.confirm-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-}
-
-.confirm-dialog {
-  background: var(--surface);
+  padding: 12px 5px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
   border-radius: var(--border-radius-lg);
-  padding: var(--space-lg);
-  max-width: 20rem;
-  width: 90%;
-  text-align: center;
-  box-shadow: var(--shadow-heavy);
-  direction: rtl;
-}
-
-.confirm-dialog p {
-  color: var(--text);
-  margin-bottom: var(--space-lg);
-  font-size: var(--text-md);
-}
-
-.confirm-buttons {
-  display: flex;
-  gap: var(--space-md);
-  justify-content: center;
-}
-
-/* ============================================
-   ITEMS LISTES (supplément)
-   ============================================ */
-
-.item-surah .item-title {
-  font-family: 'MyNotoKufi', sans-serif;
-}
-
-.item-search .item-line-2[data-clickable="true"] {
+  text-decoration: none;
+  transition: var(--transition-default);
+  min-height: 60px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  font-family: inherit;
 }
 
-.item-search .item-line-2[data-clickable="true"]:hover {
-  background-color: var(--primary-light);
+.contact-box-item.contact-green {
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
 }
 
-.night-mode .item-search .item-line-2[data-clickable="true"]:hover {
-  background-color: rgba(76, 175, 80, 0.2);
+.contact-box-item.contact-blue {
+  color: var(--color-blue) !important;
+  border-color: var(--color-blue) !important;
 }
 
-#surahsOverlay .overlay-content {
-  scroll-behavior: auto !important;
-  overflow-anchor: none;
+.contact-box-item.contact-brown {
+  color: var(--color-brown) !important;
+  border-color: var(--color-brown) !important;
 }
 
-.item-surah {
-  --pin-offset: 35px;
-  padding-right: var(--pin-offset) !important;
-  contain: layout size;
-  height: 65px;
-  position: relative;
+.contact-box-item span {
+  font-size: var(--text-sm);
+  font-weight: bold;
+  text-align: center;
 }
 
-/* ============================================
-   HIGHLIGHT DES VERSETS & SPINNER
-   ============================================ */
-
-.aya-highlight {
-  position: absolute;
-  background: rgba(3, 167, 243, 0.212);
-  border-radius: 4px;
-  pointer-events: none;
-  transition: all 0.2s ease;
-  z-index: 10;
+.contact-box-item:active {
+  transform: scale(0.96);
+  filter: brightness(0.9);
 }
 
-.night-mode .aya-highlight {
-  background: rgba(255, 213, 0, 0.2);
-}
-
-
-.spinner.small {
-  width: 1.2rem;
-  height: 1.2rem;
-  border-width: 2px;
-  margin: 0;
+.night-mode .contact-box-item {
+  background: #2a2a2a;
 }
 
 /* ============================================
-   AUDIO – OVERLAY (conteneur et éléments généraux)
+   16. AUDIO – OVERLAY & MINI-BAR
    ============================================ */
 
 .audio-body {
@@ -1838,9 +1832,6 @@ a.confirm-btn.blue:hover {
   border-color: var(--success);
 }
 
-/* ============================================
-   AUDIO – SÉLECTEURS (comme ceux du tafsir)
-   ============================================ */
 .audio-select-row {
   display: flex;
   flex-wrap: wrap;
@@ -1942,10 +1933,6 @@ a.confirm-btn.blue:hover {
   color: #ffb74d;
 }
 
-/* ============================================
-   BOUTONS AUDIO UNIFIÉS (overlay + mini‑barre)
-   ============================================ */
-
 .audio-btn {
   font-size: 1.2rem;
   width: 2.2rem;
@@ -1986,10 +1973,6 @@ a.confirm-btn.blue:hover {
   width: 2.8rem;
   min-width: 2.8rem;
 }
-
-/* ============================================
-   MINI-BAR (conteneur et disposition)
-   ============================================ */
 
 .audio-mini-bar {
   position: fixed;
@@ -2038,10 +2021,6 @@ a.confirm-btn.blue:hover {
   width: 32px;
   height: 32px;
 }
-
-/* ============================================
-   FAB (bouton flottant)
-   ============================================ */
 
 .audio-fab {
   position: fixed;
@@ -2094,88 +2073,8 @@ a.confirm-btn.blue:hover {
   background-color: var(--success);
 }
 
-.error-title {
-  color: var(--error);
-}
-
-.noscript-fallback {
-  text-align: center;
-  padding: 2rem;
-  font-family: Arial, sans-serif;
-  background: #fff;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 9999;
-}
-
-.noscript-title {
-  color: #004494;
-}
-
-.hidden {
-  display: none !important;
-}
-
-
-
-.contact-grid-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin: 15px 0;
-}
-
-.contact-box-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 5px;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius-lg);
-  text-decoration: none;
-  transition: var(--transition-default);
-  min-height: 60px;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.contact-box-item.contact-green {
-  color: var(--primary) !important;
-  border-color: var(--primary) !important;
-}
-
-.contact-box-item.contact-blue {
-  color: var(--color-blue) !important;
-  border-color: var(--color-blue) !important;
-}
-
-.contact-box-item.contact-brown {
-  color: var(--color-brown) !important;
-  border-color: var(--color-brown) !important;
-}
-
-.contact-box-item span {
-  font-size: var(--text-sm);
-  font-weight: bold;
-  text-align: center;
-}
-
-.contact-box-item:active {
-  transform: scale(0.96);
-  filter: brightness(0.9);
-}
-
-.night-mode .contact-box-item {
-  background: #2a2a2a;
-}
-
 /* ============================================
-   SÉLECTEURS DE COULEUR (audio & tafsir)
+   17. SÉLECTEURS DE COULEUR (audio & tafsir)
    ============================================ */
 
 .select-ok,
@@ -2231,4 +2130,180 @@ a.confirm-btn.blue:hover {
 .night-mode .select-violet {
   color: var(--color-violet);
   border-color: var(--color-violet);
+}
+
+/* ============================================
+   18. UTILITAIRES & DIVERS
+   ============================================ */
+
+.sajda-icon {
+  font-size: 1.25em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: var(--primary);
+}
+
+.surah-info-content {
+  direction: rtl;
+  text-align: justify;
+}
+
+.surah-section-title {
+  font-size: 1.1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+  padding-right: 0.5rem;
+}
+
+.surah-section-text {
+  margin-right: 1rem;
+}
+
+.order-value {
+  display: inline-block;
+  min-width: 1.8em;
+  text-align: left;
+  direction: ltr;
+}
+
+.loading-placeholder,
+.empty-message {
+  text-align: center;
+  color: var(--text-light);
+  padding: var(--overlay-padding-x);
+}
+
+.loading-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: var(--space-lg) auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner.small {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-width: 2px;
+  margin: 0;
+}
+
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: 10px;
+  z-index: 10000;
+  max-width: 80%;
+  text-align: center;
+  display: none;
+  font-size: var(--text-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  white-space: pre-line;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.autoscroll-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.confirm-dialog {
+  background: var(--surface);
+  border-radius: var(--border-radius-lg);
+  padding: var(--space-lg);
+  max-width: 20rem;
+  width: 90%;
+  text-align: center;
+  box-shadow: var(--shadow-heavy);
+  direction: rtl;
+}
+
+.confirm-dialog p {
+  color: var(--text);
+  margin-bottom: var(--space-lg);
+  font-size: var(--text-md);
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+}
+
+.aya-highlight {
+  position: absolute;
+  background: rgba(3, 167, 243, 0.212);
+  border-radius: 4px;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.night-mode .aya-highlight {
+  background: rgba(255, 213, 0, 0.2);
+}
+
+.error-title {
+  color: var(--error);
+}
+
+.noscript-fallback {
+  text-align: center;
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+  background: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+}
+
+.noscript-title {
+  color: #004494;
+}
+
+.hidden {
+  display: none !important;
 }
