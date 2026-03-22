@@ -1006,7 +1006,7 @@ a.confirm-btn.blue:hover {
 
 .item-surah {
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: 3fr 2fr;
   grid-template-columns: auto auto 100px auto 1fr auto auto;
   align-items: center;
   row-gap: 2px;
@@ -1028,6 +1028,7 @@ a.confirm-btn.blue:hover {
   grid-row: 1 / span 2;
   grid-column: 2;
   justify-self: center;
+  margin-left: 10px;
 }
 
 .surah-name {
@@ -1041,6 +1042,7 @@ a.confirm-btn.blue:hover {
   font-size: var(--text-lg);
   color: var(--text);
   margin: 0;
+  align-self: center;
 }
 
 .surah-tanzil {
@@ -1049,6 +1051,7 @@ a.confirm-btn.blue:hover {
   font-size: var(--text-sm);
   color: var(--text-light);
   margin: 0;
+  align-self: center;
 }
 
 .surah-info {
@@ -1058,6 +1061,7 @@ a.confirm-btn.blue:hover {
   justify-content: center;
   align-items: center;
   width: 32px;
+  align-self: center;
 }
 
 .surah-revel {
@@ -1068,34 +1072,43 @@ a.confirm-btn.blue:hover {
   align-items: center;
   font-size: var(--text-md);
   width: 32px;
+  align-self: center;
 }
 
 .surah-juz {
   grid-row: 1;
   grid-column: 6;
-  justify-self: end;
+  justify-self: initial;
   white-space: nowrap;
+  align-self: center;
+  margin-left: 5px;
 }
 
 .surah-sajda {
   grid-row: 2;
   grid-column: 6;
-  justify-self: end;
+  justify-self: initial;
+  align-self: center;
+  margin-left: 5px;
 }
 
 .surah-page {
   grid-row: 1;
   grid-column: 7;
-  justify-self: end;
+  justify-self: initial;
   white-space: nowrap;
+  align-self: center;
+  margin-left: 10px;
 }
 
 .surah-verses {
   grid-row: 2;
   grid-column: 7;
-  justify-self: end;
+  justify-self: initial;
   font-size: var(--text-sm);
-  color: var(--text-lighter);
+  color: var(--text-light);
+  align-self: center;
+  margin-left: 10px;
 }
 
 .pin-btn {
