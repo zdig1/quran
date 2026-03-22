@@ -1007,7 +1007,7 @@ a.confirm-btn.blue:hover {
 .item-surah {
   display: grid;
   grid-template-rows: 3fr 2fr;
-  grid-template-columns: auto auto 100px auto 1fr auto auto;
+  grid-template-columns: auto auto 90px auto 1fr auto auto;
   align-items: center;
   row-gap: 2px;
   column-gap: 2px;

@@ -17,6 +17,12 @@ class OverlayManager {
     this.bookmarkFormButton = null;
     this.bookmarkFormCancel = null;
     this._clearSearchHandler = null;
+    this.currentSurahInfoId = null;
+    this._surahInfoSwipeInitialized = false;
+    this._surahInfoTouchStartX = 0;
+    this._surahInfoTouchStartY = 0;
+    this._surahInfoTouchMoved = false;
+    this._surahInfoKeyHandler = null;
   }
 
   init(config = {}) {
@@ -301,7 +307,7 @@ class OverlayManager {
     this.closeMenu();
     const overlay = this.lazyLoadOverlay("surahs");
     if (overlay?.element && overlay?.content) {
-      this.renderSurahsList(true);  // ← défile à l'ouverture
+      this.renderSurahsList(true);
       this.showOverlay("surahs");
     }
   }
@@ -371,7 +377,6 @@ class OverlayManager {
     versesDiv.className = "surah-verses";
     versesDiv.textContent = `(${surah.verses}) آية`;
 
-    // Assemblage dans l'ordre (mais l'ordre n'a pas d'importance grâce à la grille)
     item.appendChild(pinBtn);
     item.appendChild(numberSpan);
     item.appendChild(nameSpan);
@@ -383,7 +388,6 @@ class OverlayManager {
     item.appendChild(pageDiv);
     item.appendChild(versesDiv);
 
-    // Événements (inchangés)
     item.addEventListener("click", (e) => {
       if (e.target.closest('.pin-btn') || e.target.closest('.info-btn')) return;
       window.quranApp?.goToPage(surah.page_start);
@@ -805,7 +809,6 @@ class OverlayManager {
   }
 
   renderBookmarkDisplayMode(item, bookmark) {
-    // Formater la date
     let dateDisplay = "";
     if (bookmark.lastModified) {
       const date = new Date(bookmark.lastModified);
@@ -879,10 +882,6 @@ class OverlayManager {
     });
   }
 
-  /**
-   * Affiche une boîte de dialogue pour choisir entre fusion et remplacement
-   * @returns {Promise<string|null>} 'merge', 'replace' ou null si annulé
-   */
   showImportChoice() {
     return new Promise((resolve) => {
       const backdrop = document.createElement("div");
@@ -921,8 +920,6 @@ class OverlayManager {
       });
     });
   }
-
-  // Dans OverlayManager, après showImportChoice()
 
   async exportBookmarks() {
     const data = window.quranApp.exportUserData(); // nouvelle méthode dans QuranApp
@@ -1100,10 +1097,8 @@ class OverlayManager {
       this.showOverlay("audio");
       const player = window.quranAudioPlayer;
       if (player.isPlaying) {
-        // Lecture en cours → juste resync l'overlay sans changer la position
         player._syncOverlay();
       } else {
-        // Pas de lecture → synchroniser avec la page affichée
         player.setCurrentSurahFromPage();
       }
     }
@@ -1321,9 +1316,6 @@ class OverlayManager {
   // 8. ABOUT OVERLAY
   // ============================================
 
-  /**
-   * Partage l'application via les services disponibles
-   */
   shareApp() {
     const appName = "مصحف التجويد - حفص";
     const appUrl = "https://zdig1.gitlab.io/quran/";
@@ -1424,13 +1416,11 @@ class OverlayManager {
         </p>
     </div>`;
 
-    // Ajouter l'écouteur d'événement pour le partage
     const shareBtn = document.getElementById("shareAppBtn");
     if (shareBtn) {
       shareBtn.addEventListener("click", () => this.shareApp());
     }
   }
-
 
   // ============================================
   // 9 PAGE INPUT OVERLAY
@@ -1492,9 +1482,8 @@ class OverlayManager {
   async showSurahInfo(surahId) {
     this.closeMenu();
     const overlay = this.lazyLoadOverlay("surahInfo");
-    if (!overlay?.content) return;
+    if (!overlay?.element) return;
 
-    // Afficher un indicateur de chargement
     overlay.content.innerHTML = `
     <div class="loading-placeholder" style="padding: 20px;">
       <div class="spinner" style="margin-bottom: 10px;"></div>
@@ -1503,7 +1492,6 @@ class OverlayManager {
   `;
     this.showOverlay("surahInfo");
 
-    // Charger le fichier JSON si ce n'est pas déjà fait
     if (!this.surahsInfo) {
       try {
         const response = await fetch("./data/surainfo.json", { cache: "force-cache" });
@@ -1515,20 +1503,115 @@ class OverlayManager {
       }
     }
 
-    // Trouver les infos de la sourate demandée
+    if (!this._surahInfoSwipeInitialized) {
+      this._initSurahInfoSwipe();
+    }
+
+    this._setupSurahInfoKeyboard();
+    this._updateSurahInfoUI(surahId);
+  }
+
+  _setupSurahInfoKeyboard() {
+    if (this._surahInfoKeyHandler) return; // déjà initialisé
+
+    this._surahInfoKeyHandler = (e) => {
+      const overlayElem = this.overlays.surahInfo?.element;
+      if (!overlayElem || !overlayElem.classList.contains("show")) return;
+      if (!this.currentSurahInfoId) return;
+
+      switch (e.key) {
+        case "ArrowLeft":  
+          e.preventDefault();
+          if (this.currentSurahInfoId < 114) {
+            this._updateSurahInfoUI(this.currentSurahInfoId + 1);
+          }
+          break;
+        case "ArrowRight": 
+          e.preventDefault();
+          if (this.currentSurahInfoId > 1) {
+            this._updateSurahInfoUI(this.currentSurahInfoId - 1);
+          }
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", this._surahInfoKeyHandler);
+  }
+
+  _removeSurahInfoKeyboard() {
+    if (this._surahInfoKeyHandler) {
+      document.removeEventListener("keydown", this._surahInfoKeyHandler);
+      this._surahInfoKeyHandler = null;
+    }
+  }
+
+  _updateSurahInfoUI(surahId) {
+    const overlay = this.overlays.surahInfo;
+    if (!overlay?.content) return;
+
+    if (!this.surahsInfo) {
+      setTimeout(() => this._updateSurahInfoUI(surahId), 100);
+      return;
+    }
+
     const info = this.surahsInfo.find(item => item.s === surahId);
     if (!info) {
       overlay.content.innerHTML = `<div class="empty-message">ℹ️ لا توجد معلومات متوفرة لهذه السورة</div>`;
       return;
     }
 
-    // Formater le texte (remplacer \r\n par <br> pour l'affichage)
     const formattedHtml = this.formatSurahInfo(info.t);
     overlay.content.innerHTML = `<div class="surah-info-content" style="padding: 1rem;">${formattedHtml}</div>`;
+
+    this.currentSurahInfoId = surahId;
+  }
+
+  _initSurahInfoSwipe() {
+    const overlayElem = this.overlays.surahInfo?.element;
+    if (!overlayElem) return;
+
+    const handleTouchStart = (e) => {
+      this._surahInfoTouchStartX = e.touches[0].clientX;
+      this._surahInfoTouchStartY = e.touches[0].clientY;
+      this._surahInfoTouchMoved = false;
+    };
+
+    const handleTouchMove = (e) => {
+      if (!this.currentSurahInfoId) return;
+      const deltaX = e.touches[0].clientX - this._surahInfoTouchStartX;
+      const deltaY = e.touches[0].clientY - this._surahInfoTouchStartY;
+      if (Math.abs(deltaX) > 20 && Math.abs(deltaY) < 30) {
+        this._surahInfoTouchMoved = true;
+        e.preventDefault();
+      }
+    };
+
+    const handleTouchEnd = (e) => {
+      if (!this._surahInfoTouchMoved || !this.currentSurahInfoId) return;
+      const endX = e.changedTouches[0].clientX;
+      const deltaX = endX - this._surahInfoTouchStartX;
+      if (Math.abs(deltaX) < 50) return;
+
+      if (deltaX > 0) {
+        if (this.currentSurahInfoId > 1) {
+          this._updateSurahInfoUI(this.currentSurahInfoId - 1);
+        }
+      } else {
+        if (this.currentSurahInfoId < 114) {
+          this._updateSurahInfoUI(this.currentSurahInfoId + 1);
+        }
+      }
+      this._surahInfoTouchMoved = false;
+    };
+
+    overlayElem.addEventListener("touchstart", handleTouchStart);
+    overlayElem.addEventListener("touchmove", handleTouchMove);
+    overlayElem.addEventListener("touchend", handleTouchEnd);
+
+    this._surahInfoSwipeInitialized = true;
   }
 
   getSectionColor(index) {
-    // 8 couleurs : vert, bleu, marron, violet, gris, orange, rouge, turquoise
     const colors = [
       'var(--primary)',        // vert
       'var(--color-blue)',     // bleu
@@ -1543,7 +1626,6 @@ class OverlayManager {
   }
 
   formatSurahInfo(text) {
-    // Séparer les lignes
     const lines = text.split(/\r?\n/);
     let html = '';
     let sectionIndex = 0;
@@ -1555,18 +1637,14 @@ class OverlayManager {
         continue;
       }
 
-      // Détecte une ligne de titre : commence par un chiffre arabe (١-٩) suivi d'un tiret
-      // Exemple : "١- آياتها:" ou "٢- معنى اسمها:"
       const match = line.match(/^([1-9][-–:])\s*(.*)/);
       if (match) {
-        const prefix = match[1];    // "١-"
+        const prefix = match[1];
         const rest = match[2];
         const color = this.getSectionColor(sectionIndex);
         sectionIndex++;
-        // Titre en gras avec la couleur
         html += `<div class="surah-section-title" style="color: ${color}; font-weight: bold; margin-top: 0.75rem;">${prefix} ${this.escapeHtml(rest)}</div>`;
       } else {
-        // Texte normal
         html += `<div class="surah-section-text" style="line-height: 1.6; margin-bottom: 0.5rem;">${this.escapeHtml(line)}</div>`;
       }
     }
@@ -1574,7 +1652,7 @@ class OverlayManager {
   }
 
   // ============================================
-  // GESTION GÉNÉRALE DES OVERLAYS
+  //  GESTION GÉNÉRALE DES OVERLAYS
   // ============================================
 
   updateThemeButtonText() {
@@ -1609,6 +1687,9 @@ class OverlayManager {
     overlay.element.classList.remove("show");
     if (name === "audio" && !window.quranAudioPlayer?.isStopped) {
       window.quranAudioPlayer?._showMiniBar();
+    }
+    if (name === "surahInfo") {
+      this._removeSurahInfoKeyboard();
     }
     if (this.currentOverlay === name) this.currentOverlay = null;
     if (!this.currentOverlay) document.body.style.overflow = "";
