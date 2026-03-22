@@ -66,16 +66,6 @@ class TafsirSearchManager {
   // UTILITAIRES
   // ============================================
 
-  escapeHtml(text) {
-    if (!text) return "";
-    return String(text)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
   _sortByQuranOrder(items) {
     return [...items].sort((a, b) => a[this.F.id] - b[this.F.id]);
   }
@@ -322,7 +312,7 @@ class TafsirSearchManager {
     if (results.length === 0) {
       resultsEl.innerHTML = `<div class="search-empty">
       <p><b>لا توجد نتائج لــ :</b></p>
-      <p>"${this.escapeHtml(query)}"</p>
+      <p>"${window.quranApp.escapeHtml(query)}"</p>
       <p>جرب 🔍 كلمة بحث أخرى</p>
     </div>`;
       this.lastResults = resultsEl.innerHTML;
@@ -335,13 +325,13 @@ class TafsirSearchManager {
       <div class="item-line-1">
         <div class="item-right">
           <span class="item-badge">${index + 1}</span>
-          <span class="item-title">${item.sura_n}. ${this.escapeHtml(item.sura)}</span>
+          <span class="item-title">${item.sura_n}. ${window.quranApp.escapeHtml(item.sura)}</span>
         </div>
         <div class="item-left">
           <span class="item-tag">ص ${item.page}</span>
         </div>
       </div>
-      <div class="item-line-2 item-search-text" data-clickable="true">${this.escapeHtml(item.text)}</div>
+      <div class="item-line-2 item-search-text" data-clickable="true">${window.quranApp.escapeHtml(item.text)}</div>
     </div>`;
     });
 
@@ -460,7 +450,7 @@ class TafsirSearchManager {
     el.className = "sura-title-container";
     el.dataset.sura = sura_n;
     el.dataset.page = page;
-    el.innerHTML = `<div class="sura-badge">${sura_n}</div><div class="sura-name-kufi">سورة ${this.escapeHtml(suraName)}</div>`;
+    el.innerHTML = `<div class="sura-badge">${sura_n}</div><div class="sura-name-kufi">سورة ${window.quranApp.escapeHtml(suraName)}</div>`;
     return el;
   }
 
@@ -471,7 +461,7 @@ class TafsirSearchManager {
     el.dataset.aya = aya[this.F.aya_n];
     el.dataset.page = aya[this.F.page];
     el.dataset.id = aya[this.F.id];
-    el.innerHTML = `<div class="item-search-text"><div class="item-line-2 item-search-text">${this.escapeHtml(aya[this.F.text])}</div><div class="tafsir-explanation">${this.escapeHtml(tafsirText)}</div></div>`;
+    el.innerHTML = `<div class="item-search-text"><div class="item-line-2 item-search-text">${window.quranApp.escapeHtml(aya[this.F.text])}</div><div class="tafsir-explanation">${window.quranApp.escapeHtml(tafsirText)}</div></div>`;
     return el;
   }
 

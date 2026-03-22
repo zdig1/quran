@@ -134,17 +134,17 @@ class QuranAudioPlayer {
     this._populateSurahSelect();
     this._populateReciterSelect(ACTIVE_RIWAYA);
     this._selectReciter(
-      this._loadPref(`reciter_${ACTIVE_RIWAYA}`) || null,
+      window.quranApp.getPreference(`reciter_${ACTIVE_RIWAYA}`) || null,
       false,
     );
     this._setupAudioEvents();
     this._setupOverlayEvents();
     this._setupMiniBarEvents();
-    const savedRate = this._loadPref("rate") || 1.0;
+    const savedRate = window.quranApp.getPreference("rate") || 1.0;
     this._applyRate(savedRate);
     const index = this.speedOptions.indexOf(parseFloat(savedRate));
     this.currentSpeedIndex = index !== -1 ? index : 1;
-    this.repeatMode = parseInt(this._loadPref("repeat") || "0");
+    this.repeatMode = parseInt(window.quranApp.getPreference("repeat") || "0");
     this._updateRepeatBtn();
     this._setupOnlineOffline();
   }
@@ -223,7 +223,7 @@ class QuranAudioPlayer {
       sel.appendChild(opt);
     });
     // Restaurer ou sélectionner le premier par défaut
-    const saved = this._loadPref(`reciter_${riwaya}`);
+    const saved = window.quranApp.getPreference(`reciter_${riwaya}`);
     if (saved && reciters.some((r) => r.id === saved)) {
       sel.value = saved;
       this._selectReciter(saved, false);
@@ -242,7 +242,7 @@ class QuranAudioPlayer {
     if (!found) return;
     this.currentReciter = found;
     if (this.elements.reciterSelect) this.elements.reciterSelect.value = id;
-    if (save) this._savePref(`reciter_${this.currentRiwaya}`, id);
+    if (save) window.quranApp.setPreference(`reciter_${this.currentRiwaya}`, id);
     this._updateUI();
 
     // Point 5 : si en lecture, arrêter et éventuellement relancer
@@ -677,7 +677,7 @@ class QuranAudioPlayer {
   cycleRepeat() {
     this.repeatMode = (this.repeatMode + 1) % 3;
     this._updateRepeatBtn();
-    this._savePref("repeat", this.repeatMode);
+    window.quranApp.setPreference("repeat", this.repeatMode);
     // Afficher un toast
     const titles = ["بدون تكرار", "تكرار الآية", "تكرار السورة"];
     if (window.quranApp && window.quranApp.showToast) {
@@ -731,7 +731,7 @@ class QuranAudioPlayer {
     const index = this.speedOptions.indexOf(numRate);
     if (index !== -1) this.currentSpeedIndex = index;
 
-    this._savePref("rate", numRate);
+    window.quranApp.setPreference("rate", numRate);
   }
 
   // ============================================
@@ -1184,26 +1184,6 @@ class QuranAudioPlayer {
 
   _fmt(s) {
     return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
-  }
-
-  // ============================================
-  // PERSISTANCE
-  // ============================================
-
-  _savePref(key, val) {
-    try {
-      localStorage.setItem(`quran_audio_${key}`, val);
-    } catch {
-      // Ignorer
-    }
-  }
-
-  _loadPref(key) {
-    try {
-      return localStorage.getItem(`quran_audio_${key}`);
-    } catch {
-      return null;
-    }
   }
 
   // ============================================

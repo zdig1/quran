@@ -142,6 +142,59 @@ class QuranApp {
   }
 
   // ============================================
+  // UTILITAIRES GLOBAUX
+  // ============================================
+
+  escapeHtml(text) {
+    if (!text) return "";
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  setPreference(key, value) {
+    try {
+      localStorage.setItem(`quran_${key}`, value);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  getPreference(key, defaultValue = null) {
+    try {
+      const val = localStorage.getItem(`quran_${key}`);
+      return val !== null ? val : defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  }
+
+  enableSwipe(element, onSwipeLeft, onSwipeRight, threshold = 50) {
+    if (!element) return;
+    let startX = 0;
+    const onTouchStart = (e) => {
+      startX = e.touches[0].clientX;
+    };
+    const onTouchEnd = (e) => {
+      const endX = e.changedTouches[0].clientX;
+      const delta = startX - endX;
+      if (Math.abs(delta) > threshold) {
+        if (delta < 0) onSwipeLeft?.();
+        else onSwipeRight?.();
+      }
+    };
+    element.addEventListener('touchstart', onTouchStart, { passive: true });
+    element.addEventListener('touchend', onTouchEnd);
+    return () => {
+      element.removeEventListener('touchstart', onTouchStart);
+      element.removeEventListener('touchend', onTouchEnd);
+    };
+  }
+
+  // ============================================
   // NAVIGATION
   // ============================================
 
@@ -191,7 +244,6 @@ class QuranApp {
   }
 
   addBookmark(bookmark) {
-    // Ajouter lastModified si non présent
     if (!bookmark.lastModified) {
       bookmark.lastModified = new Date().toISOString();
     }

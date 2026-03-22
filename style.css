@@ -1129,7 +1129,7 @@ a.confirm-btn.blue:hover {
   border: none;
   font-size: 1.1rem;
   cursor: pointer;
-  padding: 0;
+  padding: 4px;
   border-radius: 50%;
   transition: background 0.2s;
   color: var(--primary);
@@ -2161,6 +2161,12 @@ a.confirm-btn.blue:hover {
 .surah-info-content {
   direction: rtl;
   text-align: justify;
+}
+
+.surah-info-title {
+  text-align: center !important;
+  font-size: 1.3rem;
+  font-weight: bold;
 }
 
 .surah-section-title {

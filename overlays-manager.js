@@ -19,10 +19,6 @@ class OverlayManager {
     this._clearSearchHandler = null;
     this.currentSurahInfoId = null;
     this._surahInfoSwipeInitialized = false;
-    this._surahInfoTouchStartX = 0;
-    this._surahInfoTouchStartY = 0;
-    this._surahInfoTouchMoved = false;
-    this._surahInfoKeyHandler = null;
   }
 
   init(config = {}) {
@@ -31,16 +27,6 @@ class OverlayManager {
     this.setupEventListeners();
     this.isInitialized = true;
     return this;
-  }
-
-  escapeHtml(text) {
-    if (!text) return "";
-    return String(text)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
   }
 
   getCurrentPage() {
@@ -524,7 +510,7 @@ class OverlayManager {
       const suraId =
         window.quranCalculator._surahIdByName?.get(hizb.sura) ?? "?";
       const ayaText = (hizb.aya_txt || "").replace(/\s*\(\d+\)\s*$/, "").trim();
-      const prefix = `${this.escapeHtml(String(suraId))}. ${this.escapeHtml(hizb.sura)} - آية (${this.escapeHtml(String(hizb.aya))})`;
+      const prefix = `${window.quranApp.escapeHtml(String(suraId))}. ${window.quranApp.escapeHtml(hizb.sura)} - آية (${window.quranApp.escapeHtml(String(hizb.aya))})`;
 
       const item = document.createElement("div");
       item.className = "item-container item-juzhizb";
@@ -546,7 +532,7 @@ class OverlayManager {
       line2.innerHTML = `<div class="item-right juzhizb-grid">
         <span class="juzhizb-grid-col1"></span>
         <span class="item-subtitle juzhizb-grid-col2">
-          <span class="aya-text">${this.escapeHtml(ayaText)}</span>
+          <span class="aya-text">${window.quranApp.escapeHtml(ayaText)}</span>
           <span class="aya-prefix">${prefix}</span>
         </span>
       </div>`;
@@ -821,7 +807,7 @@ class OverlayManager {
     item.innerHTML = `<div class="item-line-1">
     <div class="item-right">
       <button class="icon-btn icon-btn--edit" data-id="${bookmark.id}" title="تعديل الاسم">✏️</button>
-      <span class="item-title bookmark-name" data-id="${bookmark.id}">${this.escapeHtml(bookmark.name)}</span>
+      <span class="item-title bookmark-name" data-id="${bookmark.id}">${window.quranApp.escapeHtml(bookmark.name)}</span>
     </div>
     <div class="item-left">
       <span class="item-tag">ص ${bookmark.page}</span>
@@ -1393,7 +1379,7 @@ class OverlayManager {
     <span>🔗 شارك</span>
   </button>
   
-  <a href="mailto:zdig1.0@gmail.com?subject=quran" class="contact-box-item contact-blue">
+  <a href="mailto:zdig1.0@gmail.com?sbuject=quran" class="contact-box-item contact-blue">
     <span>📧 تواصل</span>
   </a>
   
@@ -1483,7 +1469,6 @@ class OverlayManager {
     this.closeMenu();
     const overlay = this.lazyLoadOverlay("surahInfo");
     if (!overlay?.element) return;
-
     overlay.content.innerHTML = `
     <div class="loading-placeholder" style="padding: 20px;">
       <div class="spinner" style="margin-bottom: 10px;"></div>
@@ -1512,7 +1497,7 @@ class OverlayManager {
   }
 
   _setupSurahInfoKeyboard() {
-    if (this._surahInfoKeyHandler) return; // déjà initialisé
+    if (this._surahInfoKeyHandler) return;
 
     this._surahInfoKeyHandler = (e) => {
       const overlayElem = this.overlays.surahInfo?.element;
@@ -1520,13 +1505,13 @@ class OverlayManager {
       if (!this.currentSurahInfoId) return;
 
       switch (e.key) {
-        case "ArrowLeft":  
+        case "ArrowLeft":
           e.preventDefault();
           if (this.currentSurahInfoId < 114) {
             this._updateSurahInfoUI(this.currentSurahInfoId + 1);
           }
           break;
-        case "ArrowRight": 
+        case "ArrowRight":
           e.preventDefault();
           if (this.currentSurahInfoId > 1) {
             this._updateSurahInfoUI(this.currentSurahInfoId - 1);
@@ -1567,48 +1552,18 @@ class OverlayManager {
   }
 
   _initSurahInfoSwipe() {
-    const overlayElem = this.overlays.surahInfo?.element;
-    if (!overlayElem) return;
-
-    const handleTouchStart = (e) => {
-      this._surahInfoTouchStartX = e.touches[0].clientX;
-      this._surahInfoTouchStartY = e.touches[0].clientY;
-      this._surahInfoTouchMoved = false;
-    };
-
-    const handleTouchMove = (e) => {
-      if (!this.currentSurahInfoId) return;
-      const deltaX = e.touches[0].clientX - this._surahInfoTouchStartX;
-      const deltaY = e.touches[0].clientY - this._surahInfoTouchStartY;
-      if (Math.abs(deltaX) > 20 && Math.abs(deltaY) < 30) {
-        this._surahInfoTouchMoved = true;
-        e.preventDefault();
-      }
-    };
-
-    const handleTouchEnd = (e) => {
-      if (!this._surahInfoTouchMoved || !this.currentSurahInfoId) return;
-      const endX = e.changedTouches[0].clientX;
-      const deltaX = endX - this._surahInfoTouchStartX;
-      if (Math.abs(deltaX) < 50) return;
-
-      if (deltaX > 0) {
-        if (this.currentSurahInfoId > 1) {
-          this._updateSurahInfoUI(this.currentSurahInfoId - 1);
-        }
-      } else {
-        if (this.currentSurahInfoId < 114) {
-          this._updateSurahInfoUI(this.currentSurahInfoId + 1);
-        }
-      }
-      this._surahInfoTouchMoved = false;
-    };
-
-    overlayElem.addEventListener("touchstart", handleTouchStart);
-    overlayElem.addEventListener("touchmove", handleTouchMove);
-    overlayElem.addEventListener("touchend", handleTouchEnd);
-
-    this._surahInfoSwipeInitialized = true;
+    const element = this.overlays.surahInfo?.element;
+    if (!element) return;
+    window.quranApp.enableSwipe(
+      element,
+      () => {
+        if (this.currentSurahInfoId < 114) this._updateSurahInfoUI(this.currentSurahInfoId + 1);
+      },
+      () => {
+        if (this.currentSurahInfoId > 1) this._updateSurahInfoUI(this.currentSurahInfoId - 1);
+      },
+      50
+    );
   }
 
   getSectionColor(index) {
@@ -1618,34 +1573,40 @@ class OverlayManager {
       'var(--color-brown)',    // marron
       'var(--color-violet)',   // violet
       'var(--color-gray)',     // gris
-      '#ff9800',               // orange
+      '#ff9800',             // orange
       'var(--color-red)',      // rouge
-      '#009688'                // turquoise
+      '#009688'              // turquoise
     ];
     return colors[index % colors.length];
   }
 
   formatSurahInfo(text) {
     const lines = text.split(/\r?\n/);
-    let html = '';
-    let sectionIndex = 0;
+    const title = lines[0]?.trim() || "";
+    const remaining = lines.slice(1);
 
-    for (let line of lines) {
+    let html = '';
+    if (title) {
+      // Conteneur flex pour centrer le titre
+      html += `<div style="display: flex; justify-content: center; width: 100%;">
+               <div class="surah-info-title">${window.quranApp.escapeHtml(title)}</div>
+             </div>`;
+    }
+    let sectionIndex = 0;
+    for (let line of remaining) {
       line = line.trim();
       if (line === '') {
         html += '<br>';
         continue;
       }
-
       const match = line.match(/^([1-9][-–:])\s*(.*)/);
       if (match) {
         const prefix = match[1];
         const rest = match[2];
-        const color = this.getSectionColor(sectionIndex);
-        sectionIndex++;
-        html += `<div class="surah-section-title" style="color: ${color}; font-weight: bold; margin-top: 0.75rem;">${prefix} ${this.escapeHtml(rest)}</div>`;
+        const color = this.getSectionColor(sectionIndex++);
+        html += `<div class="surah-section-title" style="color: ${color}; font-weight: bold; margin-top: 0.75rem;">${prefix} ${window.quranApp.escapeHtml(rest)}</div>`;
       } else {
-        html += `<div class="surah-section-text" style="line-height: 1.6; margin-bottom: 0.5rem;">${this.escapeHtml(line)}</div>`;
+        html += `<div class="surah-section-text" style="line-height: 1.6; margin-bottom: 0.5rem;">${window.quranApp.escapeHtml(line)}</div>`;
       }
     }
     return html;

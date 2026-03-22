@@ -64,6 +64,7 @@ class QuranReader {
     this.isPortraitMode = false;
     this.swipeEnabled = false;
     this.swipeHandlers = null;
+    this.swipeCleanup = null;
 
     this.resizeTimeout = null;
     this.pendingPage = null;
@@ -688,37 +689,25 @@ class QuranReader {
 
   setupSwipeNavigation() {
     if (!this.elements.pageScroll || this.readingMode !== "book") return;
-    let startX = 0;
-    let endX = 0;
-
-    const onTouchStart = (e) => {
-      startX = e.touches[0].clientX;
-    };
-    const onTouchEnd = (e) => {
-      endX = e.changedTouches[0].clientX;
-      const delta = startX - endX;
-      if (delta < -50 && this.currentPage < 604)
-        this.goToPage(this.currentPage + 1);
-      else if (delta > 50 && this.currentPage > 1)
-        this.goToPage(this.currentPage - 1);
-      startX = 0;
-      endX = 0;
-    };
-
-    this.removeSwipeNavigation();
-    this.elements.pageScroll.addEventListener("touchstart", onTouchStart, { passive: true, });
-    this.elements.pageScroll.addEventListener("touchend", onTouchEnd);
-    this.swipeHandlers = {
-      touchstart: onTouchStart,
-      touchend: onTouchEnd,
-    };
+    const element = this.elements.pageScroll;
+    this.swipeCleanup = window.quranApp.enableSwipe(
+      element,
+      () => this.goToNextPage(),
+      () => this.goToPreviousPage(),
+      50
+    );
   }
 
   removeSwipeNavigation() {
-    if (!this.elements.pageScroll || !this.swipeHandlers) return;
-    this.elements.pageScroll.removeEventListener("touchstart", this.swipeHandlers.touchstart,);
-    this.elements.pageScroll.removeEventListener("touchend", this.swipeHandlers.touchend,);
-    this.swipeHandlers = null;
+    if (this.swipeCleanup) {
+      this.swipeCleanup();
+      this.swipeCleanup = null;
+    }
+    if (this.swipeHandlers) {
+      this.elements.pageScroll.removeEventListener("touchstart", this.swipeHandlers.touchstart);
+      this.elements.pageScroll.removeEventListener("touchend", this.swipeHandlers.touchend);
+      this.swipeHandlers = null;
+    }
     this.swipeEnabled = false;
   }
 
@@ -944,7 +933,7 @@ class QuranReader {
     speed = Math.min(this.maxSpeed, Math.max(this.minSpeed, speed));
     if (speed === this.autoScrollSpeed) return;
     this.autoScrollSpeed = speed;
-    localStorage.setItem("quran_scrollSpeed", speed.toString()); // ← ajoutez
+    localStorage.setItem("quran_scrollSpeed", speed.toString()); 
     this._updateSpeedButtons();
     window.quranApp?.showToast(`⚡ السرعة: ${speed.toFixed(1)}`);
   }
