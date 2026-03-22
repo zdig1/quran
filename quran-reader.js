@@ -160,7 +160,11 @@ class QuranReader {
       this.elements.surahInfo.innerHTML = `${data.surah.s_id}.${data.surah.name} (${data.surah.verses_count})`;
     }
     if (this.elements.sajdaIcon) {
-      this.elements.sajdaIcon.style.display = data.sajda ? "inline" : "none";
+      if (data.sajda) {
+        this.elements.sajdaIcon.classList.remove('hidden');
+      } else {
+        this.elements.sajdaIcon.classList.add('hidden');
+      }
     }
 
     window.quranApp?.updateBookmarkIcon(this.currentPage);
@@ -933,7 +937,7 @@ class QuranReader {
     speed = Math.min(this.maxSpeed, Math.max(this.minSpeed, speed));
     if (speed === this.autoScrollSpeed) return;
     this.autoScrollSpeed = speed;
-    localStorage.setItem("quran_scrollSpeed", speed.toString()); 
+    localStorage.setItem("quran_scrollSpeed", speed.toString());
     this._updateSpeedButtons();
     window.quranApp?.showToast(`⚡ السرعة: ${speed.toFixed(1)}`);
   }

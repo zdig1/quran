@@ -245,6 +245,14 @@
                             <span class="menu-text">الوضع الليلي</span>
                         </button>
 
+                        <button type="button" class="btn menu-item" id="backupBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24">
+                                <path
+                                    d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z" />
+                            </svg>
+                            <span class="menu-text">النسخ الاحتياطي</span>
+                        </button>
+
                         <button type="button" class="btn menu-item" id="aboutBtn">
                             <svg class="menu-icon-svg" viewBox="0 0 24 24">
                                 <path
@@ -387,7 +395,7 @@
         <div id="aboutOverlay" class="overlay" role="dialog" aria-label="عن التطبيق">
             <div class="overlay-content">
                 <div class="overlay-header">
-                    <h2>ℹ️ عن التطبيق</h2>
+                    <h2>✅ عن التطبيق</h2>
                     <button type="button" class="btn close-btn" id="closeAboutBtn">✕</button>
                 </div>
                 <div class="overlay-body">
@@ -418,11 +426,33 @@
         <div id="surahInfoOverlay" class="overlay" role="dialog" aria-label="معلومات السورة">
             <div class="overlay-content">
                 <div class="overlay-header">
-                    <h2>✅ معلومات عن السورة</h2>
+                    <h2>ℹ️ معلومات عن السورة</h2>
                     <button type="button" class="btn close-btn" id="closeSurahInfoBtn">✕</button>
                 </div>
                 <div id="surahInfoContent" class="overlay-body"
                     style="white-space: pre-wrap; direction: rtl; text-align: right;"></div>
+            </div>
+        </div>
+        
+        <!-- 11. BACKUP OVERLAY -->
+        <div id="backupOverlay" class="overlay" role="dialog" aria-label="النسخ الاحتياطي">
+            <div class="overlay-content">
+                <div class="overlay-header">
+                    <h2>💾 النسخ الاحتياطي</h2>
+                    <button type="button" class="btn close-btn" id="closeBackupBtn">✕</button>
+                </div>
+                <div class="overlay-body" style="padding: 16px; text-align: right;">
+                    <p style="margin-bottom: 12px; line-height: 1.8;">يشمل النسخ الاحتياطي:</p>
+                    <p style="line-height: 2;">
+                        🔖 العلامات المرجعية<br>
+                        ⭐ السور المفضلة<br>
+                        🎙️ القراء المفضلون
+                    </p>
+                    <div class="confirm-buttons" style="margin-top: 20px;">
+                        <button class="confirm-btn ok" id="backupExportBtn">تصدير</button>
+                        <button class="confirm-btn blue" id="backupImportBtn">استيراد</button>
+                    </div>
+                </div>
             </div>
         </div>
 

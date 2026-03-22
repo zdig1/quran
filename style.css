@@ -942,13 +942,9 @@ a.confirm-btn.blue:hover {
   font-weight: 600;
   font-size: var(--text-sm);
   white-space: nowrap;
-}
-
-.item-revelation-icon {
-  font-size: var(--text-md);
-  display: inline-block;
-  width: 1.8em;
   text-align: center;
+  display: flex;
+  align-items: center;
 }
 
 .item-left-icon-col {
@@ -980,9 +976,12 @@ a.confirm-btn.blue:hover {
 .item-container.current-item .item-subtitle,
 .item-container.current-item .item-tertiary,
 .item-container.current-item .item-tag,
-.item-container.current-item .item-revelation-icon,
 .item-container.current-item .item-sajda-icon {
   color: var(--quran-text-red) !important;
+}
+
+.surah-section {
+  text-align: right;
 }
 
 /* Section titres dans les listes */
@@ -998,6 +997,10 @@ a.confirm-btn.blue:hover {
   top: 0;
   z-index: 1;
   backdrop-filter: blur(4px);
+}
+
+.surah-section-pinned .section-title {
+  position: static;
 }
 
 /* ============================================
@@ -1078,7 +1081,7 @@ a.confirm-btn.blue:hover {
 .surah-juz {
   grid-row: 1;
   grid-column: 6;
-  justify-self: initial;
+  justify-self: self-start;
   white-space: nowrap;
   align-self: center;
   margin-left: 5px;
@@ -1087,7 +1090,7 @@ a.confirm-btn.blue:hover {
 .surah-sajda {
   grid-row: 2;
   grid-column: 6;
-  justify-self: initial;
+  justify-self: end;
   align-self: center;
   margin-left: 5px;
 }
@@ -1095,10 +1098,11 @@ a.confirm-btn.blue:hover {
 .surah-page {
   grid-row: 1;
   grid-column: 7;
-  justify-self: initial;
+  justify-self: flex-start;
   white-space: nowrap;
   align-self: center;
   margin-left: 10px;
+  min-width: 3rem;
 }
 
 .surah-verses {
@@ -1140,46 +1144,48 @@ a.confirm-btn.blue:hover {
   justify-content: center;
 }
 
-.item-revelation-icon {
-  font-size: var(--text-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  line-height: 1;
-}
-
-.surah-info,
-.surah-revel {
-  align-items: center;
-  justify-content: center;
-}
-
-.item-tag {
-  background: var(--tag-bg);
-  color: var(--tag-color);
-  padding: 3px 5px;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  white-space: nowrap;
-}
-
-.item-sajda-icon {
-  color: var(--primary);
-  font-size: 1.25em;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .night-mode .info-btn {
   color: var(--success);
 }
 
 .night-mode .info-btn:active {
   background: rgba(76, 175, 80, 0.2);
+}
+
+/* Correction pour l'alignement du premier élément sous le titre */
+.surah-section-all {
+  padding-top: 0.5rem;
+}
+
+.sajda-icon {
+  font-size: 1.25em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: var(--primary);
+}
+
+.surah-info-content {
+  direction: rtl;
+  text-align: justify;
+}
+
+.surah-info-title {
+  text-align: center !important;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.surah-section-title {
+  font-size: 1.1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+  padding-right: 0.5rem;
+}
+
+.surah-section-text {
+  margin-right: 1rem;
 }
 
 /* ============================================
@@ -1259,7 +1265,7 @@ a.confirm-btn.blue:hover {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  justify-content: flex-start;
+  flex-direction: row-reverse;
   margin-top: 5px;
   padding: 0;
 }
@@ -1290,14 +1296,9 @@ a.confirm-btn.blue:hover {
 
 .bookmarks-button-container {
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
-  justify-content: center;
   align-items: center;
-  margin: 8px 0 0 0;
-  padding: 0;
-  width: 100%;
-  min-height: 48px;
+  flex-shrink: 0;
 }
 
 /* ============================================
@@ -2145,47 +2146,28 @@ a.confirm-btn.blue:hover {
   border-color: var(--color-violet);
 }
 
+/* Style pour le bouton de favori audio */
+#pinReciterBtn {
+  transition: transform 0.2s, color 0.2s;
+}
+
+#pinReciterBtn:active {
+  transform: scale(0.9);
+}
+
+#currentReciterName {
+  font-weight: bold;
+  direction: ltr;
+  text-align: left;
+}
+
+.night-mode #currentReciterName {
+  color: var(--success);
+}
+
 /* ============================================
    18. UTILITAIRES & DIVERS
    ============================================ */
-
-.sajda-icon {
-  font-size: 1.25em;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  color: var(--primary);
-}
-
-.surah-info-content {
-  direction: rtl;
-  text-align: justify;
-}
-
-.surah-info-title {
-  text-align: center !important;
-  font-size: 1.3rem;
-  font-weight: bold;
-}
-
-.surah-section-title {
-  font-size: 1.1rem;
-  margin-top: 0.75rem;
-  margin-bottom: 0.25rem;
-  padding-right: 0.5rem;
-}
-
-.surah-section-text {
-  margin-right: 1rem;
-}
-
-.order-value {
-  display: inline-block;
-  min-width: 1.8em;
-  text-align: left;
-  direction: ltr;
-}
 
 .loading-placeholder,
 .empty-message {

@@ -300,13 +300,18 @@ class QuranApp {
    * Exporte toutes les données utilisateur (signets + épingles)
    */
   exportUserData() {
+    const pinnedReciters = {};
+    Object.keys(window.RIWAYAT_CONFIG || {}).forEach(riwaya => {
+      const stored = this.getPreference(`pinnedReciters_${riwaya}`);
+      if (stored) pinnedReciters[riwaya] = JSON.parse(stored);
+    });
     const data = {
       bookmarks: this.bookmarks,
       pinnedSurahs: this.pinnedSurahs,
+      pinnedReciters,
     };
     return JSON.stringify(data, null, 2);
   }
-
   /**
    * Importe des données utilisateur depuis une chaîne JSON
    */
@@ -369,7 +374,20 @@ class QuranApp {
 
         this.bookmarks = newBookmarks;
         this.pinnedSurahs = newPinned;
-
+        // Restaurer pinnedReciters
+        if (imported.pinnedReciters && typeof imported.pinnedReciters === 'object') {
+          Object.entries(imported.pinnedReciters).forEach(([riwaya, ids]) => {
+            if (Array.isArray(ids)) {
+              if (merge) {
+                const existing = JSON.parse(this.getPreference(`pinnedReciters_${riwaya}`) || '[]');
+                const merged = [...new Set([...existing, ...ids])];
+                this.setPreference(`pinnedReciters_${riwaya}`, JSON.stringify(merged));
+              } else {
+                this.setPreference(`pinnedReciters_${riwaya}`, JSON.stringify(ids));
+              }
+            }
+          });
+        }
         this.saveToLocalStorage();
         window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
         window.dispatchEvent(new CustomEvent("quran:pinnedSurahsUpdated"));

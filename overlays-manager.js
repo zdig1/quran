@@ -57,12 +57,14 @@ class OverlayManager {
       surahsBtn: document.getElementById("surahsBtn"),
       juzHizbBtn: document.getElementById("juzHizbBtn"),
       bookmarksBtn: document.getElementById("bookmarksBtn"),
+      audioBtn: document.getElementById("audioBtn"),
       khatmBtn: document.getElementById("khatmBtn"),
       searchBtn: document.getElementById("searchBtn"),
       tafsirBtn: document.getElementById("tafsirBtn"),
       tajweedBtn: document.getElementById("tajweedBtn"),
-      aboutBtn: document.getElementById("aboutBtn"),
       themeBtn: document.getElementById("themeBtn"),
+      backupBtn: document.getElementById("backupBtn"),
+      aboutBtn: document.getElementById("aboutBtn"),
     };
   }
 
@@ -114,16 +116,20 @@ class OverlayManager {
       closeBtn: "closeTajweedBtn",
       content: "tajweedRulesContent",
     },
-    about: {
-      element: "aboutOverlay",
-      closeBtn: "closeAboutBtn",
-      content: "aboutContent",
-    },
     surahInfo: {
       element: "surahInfoOverlay",
       closeBtn: "closeSurahInfoBtn",
       content: "surahInfoContent",
     },
+    backup: {
+      element: "backupOverlay",
+      closeBtn: "closeBackupBtn",
+    }, about: {
+      element: "aboutOverlay",
+      closeBtn: "closeAboutBtn",
+      content: "aboutContent",
+    },
+
   };
 
   lazyLoadOverlay(name) {
@@ -201,22 +207,15 @@ class OverlayManager {
       { btn: this.elements.surahsBtn, action: () => this.showSurahs() },
       { btn: this.elements.juzHizbBtn, action: () => this.showJuzHizb() },
       { btn: this.elements.bookmarksBtn, action: () => this.showBookmarks() },
-      {
-        btn: document.getElementById("audioBtn"),
-        action: () => this.showAudio(),
-      },
+      { btn: this.elements.audioBtn, action: () => this.showAudio() },
       { btn: this.elements.khatmBtn, action: () => this.showKhatm() },
       { btn: this.elements.searchBtn, action: () => this.showSearch() },
       { btn: this.elements.tafsirBtn, action: () => this.showTafsir() },
       { btn: this.elements.tajweedBtn, action: () => this.showTajweed() },
+      { btn: this.elements.backupBtn, action: () => this.showBackupDialog() },
       { btn: this.elements.aboutBtn, action: () => this.showAbout() },
-      {
-        btn: this.elements.themeBtn,
-        action: () => {
-          this.closeMenu();
-          setTimeout(() => window.quranApp?.toggleTheme(), 50);
-        },
-      },
+      { btn: this.elements.themeBtn, action: () => { this.closeMenu(); setTimeout(() => window.quranApp?.toggleTheme(), 50); } },
+      { btn: this.elements.aboutBtn, action: () => this.showAbout() },
     ];
     buttons.forEach(({ btn, action }) => {
       if (btn) {
@@ -379,16 +378,36 @@ class OverlayManager {
       window.quranApp?.goToPage(surah.page_start);
       this.closeOverlay("surahs");
     });
-
     pinBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (window.quranApp) {
-        const added = window.quranApp.togglePinSurah(surah.s_id);
-        pinBtn.classList.toggle("pinned", added);
-        pinBtn.textContent = added ? "⭐" : "📌";
-        this.renderSurahsList(false, surah.s_id);
+      if (!window.quranApp) return;
+      const added = window.quranApp.togglePinSurah(surah.s_id);
+      pinBtn.classList.toggle("pinned", added);
+      pinBtn.textContent = added ? "⭐" : "📌";
+
+      // Juste mettre à jour la section pinned sans toucher au scroll
+      const container = this.overlays.surahs?.content;
+      if (!container) return;
+      const surahs = window.quranCalculator.getAllSurahs();
+      const pinnedIds = window.quranApp.getPinnedSurahs();
+      const bookmarks = window.quranApp.getBookmarks() || [];
+      const bookmarkedSurahIds = new Set();
+      bookmarks.forEach(b => {
+        const s = window.quranCalculator.getFirstSurahForPage(b.page);
+        if (s) bookmarkedSurahIds.add(s.s_id);
+      });
+      const pinnedSurahs = surahs.filter(s => pinnedIds.includes(s.s_id));
+
+      let pinnedSection = container.querySelector('.surah-section-pinned');
+      if (!pinnedSection) {
+        pinnedSection = document.createElement("div");
+        pinnedSection.className = "surah-section surah-section-pinned";
+        container.insertBefore(pinnedSection, container.firstChild);
       }
+      pinnedSection.innerHTML = '<h3 class="section-title">⭐ السور المفضلة</h3>';
+      pinnedSurahs.forEach(s => pinnedSection.appendChild(this._createSurahItem(s, true, bookmarkedSurahIds)));
+      pinnedSection.style.display = pinnedSurahs.length === 0 ? 'none' : '';
     });
 
     infoBtn.addEventListener("click", (e) => {
@@ -646,39 +665,19 @@ class OverlayManager {
     const buttonContainer = document.createElement("div");
     buttonContainer.className = "bookmarks-button-container";
 
-    // Bouton Ajouter (vert)
     const addBtn = document.createElement("button");
     addBtn.className = "confirm-btn ok";
     addBtn.textContent = "إضافة";
 
-    // Bouton Importer (blue)
-    const importBtn = document.createElement("button");
-    importBtn.className = "confirm-btn blue";
-    importBtn.textContent = "استيراد";
-    importBtn.title = "استيراد علامات من ملف";
-    importBtn.addEventListener("click", () => this.importBookmarks());
-
-    // Bouton Exporter (brown)
-    const exportBtn = document.createElement("button");
-    exportBtn.className = "confirm-btn brown";
-    exportBtn.textContent = "تصدير";
-    exportBtn.title = "تصدير العلامات إلى ملف";
-    exportBtn.addEventListener("click", () => this.exportBookmarks());
-
-    // Bouton Annuler (gris, masqué par défaut)
     const cancelBtn = document.createElement("button");
     cancelBtn.className = "confirm-btn cancel";
     cancelBtn.textContent = "لا";
     cancelBtn.style.display = "none";
 
-    // Assemblage : import puis export (de droite à gauche)
     buttonContainer.appendChild(addBtn);
-    buttonContainer.appendChild(importBtn);
-    buttonContainer.appendChild(exportBtn);
     buttonContainer.appendChild(cancelBtn);
-
-    formContainer.appendChild(input);
     formContainer.appendChild(buttonContainer);
+    formContainer.appendChild(input);
 
     this.bookmarkFormInput = input;
     this.bookmarkFormButton = addBtn;
@@ -741,17 +740,6 @@ class OverlayManager {
   startEditingBookmark(bookmark) {
     if (this.editingBookmarkId) this.resetBookmarkForm();
     this.editingBookmarkId = bookmark.id;
-
-    // Masquer les boutons d'import/export (classes blue et brown)
-    const importBtn = document.querySelector(
-      ".bookmarks-add-form .confirm-btn.blue",
-    );
-    const exportBtn = document.querySelector(
-      ".bookmarks-add-form .confirm-btn.brown",
-    );
-    if (importBtn) importBtn.style.display = "none";
-    if (exportBtn) exportBtn.style.display = "none";
-
     this.bookmarkFormInput.value = bookmark.name;
     this.bookmarkFormButton.textContent = "حفظ";
     this.bookmarkFormCancel.style.display = "inline-flex";
@@ -765,16 +753,6 @@ class OverlayManager {
 
   resetBookmarkForm() {
     this.editingBookmarkId = null;
-
-    // Réafficher les boutons d'import/export
-    const importBtn = document.querySelector(
-      ".bookmarks-add-form .confirm-btn.blue",
-    );
-    const exportBtn = document.querySelector(
-      ".bookmarks-add-form .confirm-btn.brown",
-    );
-    if (importBtn) importBtn.style.display = "";
-    if (exportBtn) exportBtn.style.display = "";
 
     this.bookmarkFormInput.value = this.getDefaultBookmarkName(
       this.getCurrentPage(),
@@ -1006,38 +984,42 @@ class OverlayManager {
 
     contentContainer.innerHTML = `
     ${coordsStatus}
-<div class="audio-select-row">
+    
+    <!-- Section récitant avec bouton favori -->
+  <div class="audio-select-row">
   <select id="reciterSelect" class="audio-select select-violet" aria-label="اختر القارئ">
     <option value="">اختر القارئ</option>
   </select>
+  <button id="pinReciterBtn" class="audio-btn pin-btn reciter-pin" title="إضافة إلى المفضلين" style="font-size:1.3rem; flex-shrink:0;">📌</button>
 </div>
-<div class="audio-select-row">
-  <select id="surahSelectAudio" class="audio-select select-blue" aria-label="اختر السورة">
-    <option value="">اختر السورة</option>
-  </select>
-  <select id="ayaSelectAudio" class="audio-select select-brown" aria-label="اختر الآية">
-    <option value="">اختر الآية</option>
-  </select>
-  <select id="pageSelectAudio" class="audio-select select-ok" aria-label="اختر الصفحة">
-    <option value="">اختر الصفحة</option>
-  </select>
-</div>
+    
+    <div class="audio-select-row">
+      <select id="surahSelectAudio" class="audio-select select-blue" aria-label="اختر السورة">
+        <option value="">اختر السورة</option>
+      </select>
+      <select id="ayaSelectAudio" class="audio-select select-brown" aria-label="اختر الآية">
+        <option value="">اختر الآية</option>
+      </select>
+      <select id="pageSelectAudio" class="audio-select select-ok" aria-label="اختر الصفحة">
+        <option value="">اختر الصفحة</option>
+      </select>
+    </div>
+    
     <div id="audioStatus" class="audio-status"></div>
     <div class="audio-progress-wrap">
       <span id="audioCurrentTime">0:00</span>
       <input type="range" id="audioProgress" class="audio-progress" value="0" min="0" max="100" step="0.1">
       <span id="audioDuration">0:00</span>
     </div>
-<div class="audio-controls">
-<button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
-
-<button class="btn audio-btn" id="repeatBtn" title="تكرار">
-<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg>
-</button>
-  
-  <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">
+    
+    <div class="audio-controls">
+      <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
+      <button class="btn audio-btn" id="repeatBtn" title="تكرار">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg>
+      </button>
+      <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 20 12 12 18"/><line x1="21" y1="6" x2="21" y2="18" stroke="currentColor" stroke-width="2"/></svg>
-            </button>
+      </button>
       <button class="btn audio-btn" id="nextAyahBtn" title="الآية التالية">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
       </button>
@@ -1054,6 +1036,7 @@ class OverlayManager {
         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7.5" y="7.5" width="9" height="9"/></svg>
       </button>
     </div>
+    
     <div class="audio-current-info" style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
       <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} (عبر النت)</div>
       <div id="currentSurahDisplay" class="audio-current-display" style="flex: 1; margin: 0; background: transparent; border: none; color: inherit;"></div>
@@ -1063,6 +1046,13 @@ class OverlayManager {
   `;
 
     overlay.contentGenerated = true;
+
+    setTimeout(() => {
+      if (window.quranAudioPlayer) {
+        window.quranAudioPlayer._updateReciterPinButton();
+      }
+    }, 50);
+
     document.getElementById("playPauseBtn")?.addEventListener("click", () => {
       setTimeout(() => {
         if (window.quranAudioPlayer?.isPlaying && !window.quranAudioPlayer?.hasError) this.closeOverlay("audio");
@@ -1623,6 +1613,32 @@ class OverlayManager {
         ? "الوضع النهاري"
         : "الوضع الليلي";
     }
+  }
+
+  showBackupDialog() {
+    this.closeMenu();
+    const overlay = this.lazyLoadOverlay("backup");
+    if (!overlay?.element) return;
+
+    this.showOverlay("backup");
+
+    const exportBtn = document.getElementById("backupExportBtn");
+    const importBtn = document.getElementById("backupImportBtn");
+
+    // Nettoyer anciens listeners
+    const newExport = exportBtn.cloneNode(true);
+    const newImport = importBtn.cloneNode(true);
+    exportBtn.replaceWith(newExport);
+    importBtn.replaceWith(newImport);
+
+    newExport.addEventListener("click", () => {
+      this.closeOverlay("backup");
+      this.exportBookmarks();
+    });
+    newImport.addEventListener("click", () => {
+      this.closeOverlay("backup");
+      this.importBookmarks();
+    });
   }
 
   showOverlay(name) {
