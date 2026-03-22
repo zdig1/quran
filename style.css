@@ -1890,13 +1890,6 @@ a.confirm-btn.blue:hover {
   color: #eee;
 }
 
-@media (max-width: 350px) {
-  .audio-select-row .audio-select {
-    flex-basis: 100% !important;
-    min-width: 100%;
-  }
-}
-
 .audio-progress-wrap {
   display: flex;
   align-items: center;
