@@ -1742,7 +1742,7 @@ a.confirm-btn.blue:hover {
 
 .contact-grid-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   margin: 15px 0;
 }
@@ -1776,6 +1776,11 @@ a.confirm-btn.blue:hover {
 .contact-box-item.contact-brown {
   color: var(--color-brown) !important;
   border-color: var(--color-brown) !important;
+}
+
+.contact-box-item.contact-violet {
+  color: var(--color-violet) !important;
+  border-color: var(--color-violet) !important;
 }
 
 .contact-box-item span {

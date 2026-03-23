@@ -63,7 +63,6 @@ class OverlayManager {
       tafsirBtn: document.getElementById("tafsirBtn"),
       tajweedBtn: document.getElementById("tajweedBtn"),
       themeBtn: document.getElementById("themeBtn"),
-      backupBtn: document.getElementById("backupBtn"),
       aboutBtn: document.getElementById("aboutBtn"),
     };
   }
@@ -212,8 +211,6 @@ class OverlayManager {
       { btn: this.elements.searchBtn, action: () => this.showSearch() },
       { btn: this.elements.tafsirBtn, action: () => this.showTafsir() },
       { btn: this.elements.tajweedBtn, action: () => this.showTajweed() },
-      { btn: this.elements.backupBtn, action: () => this.showBackupDialog() },
-      { btn: this.elements.aboutBtn, action: () => this.showAbout() },
       { btn: this.elements.themeBtn, action: () => { this.closeMenu(); setTimeout(() => window.quranApp?.toggleTheme(), 50); } },
       { btn: this.elements.aboutBtn, action: () => this.showAbout() },
     ];
@@ -408,6 +405,15 @@ class OverlayManager {
       pinnedSection.innerHTML = '<h3 class="section-title">⭐ السور المفضلة</h3>';
       pinnedSurahs.forEach(s => pinnedSection.appendChild(this._createSurahItem(s, true, bookmarkedSurahIds)));
       pinnedSection.style.display = pinnedSurahs.length === 0 ? 'none' : '';
+      // Synchroniser le bouton dans la section globale
+      const allSection = container.querySelector('.surah-section-all');
+      if (allSection) {
+        const otherPin = allSection.querySelector(`.pin-btn[data-sura-id="${surah.s_id}"]`);
+        if (otherPin) {
+          otherPin.classList.toggle("pinned", added);
+          otherPin.textContent = added ? "⭐" : "📌";
+        }
+      }
     });
 
     infoBtn.addEventListener("click", (e) => {
@@ -1364,19 +1370,20 @@ class OverlayManager {
         <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (الصادر عن دار المعرفة)
       </p>
       
-<div class="contact-grid-container">
-  <button id="shareAppBtn" class="contact-box-item contact-green">
-    <span>🔗 شارك</span>
-  </button>
-  
-  <a href="mailto:zdig1.0@gmail.com?sbuject=quran" class="contact-box-item contact-blue">
-    <span>📧 تواصل</span>
-  </a>
-  
-  <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item contact-brown">
-    <span>🌐 موقعنا</span>
-  </a>
-</div>
+    <div class="contact-grid-container">
+      <button id="aboutBackupBtn" class="contact-box-item contact-green">
+        <span>💾 نسخ احتياطي</span>
+      </button>
+      <button id="shareAppBtn" class="contact-box-item contact-blue">
+        <span>🔗 شارك التطبيق</span>
+      </button>
+      <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item contact-brown">
+        <span>🌐 زيارة الموقع</span>
+      </a>
+      <a href="mailto:zdig1.0@gmail.com?subject=quran" class="contact-box-item contact-violet">
+        <span>📧 تواصل معنا</span>
+      </a>
+    </div>
        
       <div class="about-stats">
         <div class="about-stat"><span>السور</span><strong>114</strong></div>
@@ -1396,6 +1403,14 @@ class OverlayManager {
     if (shareBtn) {
       shareBtn.addEventListener("click", () => this.shareApp());
     }
+    const backupBtn = document.getElementById("aboutBackupBtn");
+    if (backupBtn) {
+      backupBtn.addEventListener("click", () => {
+        this.closeOverlay("about");
+        this.showBackupDialog();
+      });
+    }
+
   }
 
   // ============================================
