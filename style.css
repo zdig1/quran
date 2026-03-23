@@ -14,9 +14,9 @@
   --text-lg: 1.125rem;
 
   /* Hauteurs */
-  --header-height: 3.75rem;
-  --footer-height: 3.125rem;
-  --button-size: 2.75rem;
+  --footer-height: 3rem;
+  --btn-sm: 2rem;
+  --btn-lg: 3.3rem;
 
   /* Coins arrondis */
   --border-radius: 0.5rem;
@@ -186,23 +186,19 @@ body {
 
 .header {
   position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
+  inset: 10px 5px auto 5px;
   z-index: 1001;
   background: transparent;
   display: flex;
   align-items: center;
   transition: var(--transition-default), visibility 0.3s ease;
-  height: var(--header-height);
+  height: var(--footer-height);
   justify-content: space-between;
 }
 
 .footer {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: auto 0 0 0;
   z-index: 1001;
   background: transparent;
   display: grid !important;
@@ -210,7 +206,6 @@ body {
   align-items: center;
   transition: var(--transition-default), visibility 0.3s ease;
   height: var(--footer-height);
-  min-height: var(--footer-height);
   padding-bottom: 0;
   transform: translateZ(0);
 }
@@ -227,13 +222,6 @@ body {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-}
-
-@media (display-mode: standalone) {
-  .footer {
-    bottom: 0 !important;
-    padding-bottom: 0 !important;
-  }
 }
 
 .footer-item {
@@ -253,10 +241,10 @@ body {
 .footer-surah,
 .footer-value {
   background: rgba(255, 255, 255, 0.7);
-  border-radius: 1.25rem;
-  padding: var(--space-sm) var(--space-md) !important;
+  border-radius: 1rem;
+  padding: var(--space-sm) !important;
   color: var(--text);
-  font-weight: 500;
+  font-weight: bold;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
   display: inline-block !important;
   min-width: auto;
@@ -267,7 +255,6 @@ body {
 
 .footer-value {
   font-size: var(--text-lg);
-  font-weight: bold;
   color: var(--primary);
 }
 
@@ -297,8 +284,8 @@ body {
 }
 
 .header-btn {
-  width: var(--button-size);
-  height: var(--button-size);
+  width: var(--btn-lg);
+  height: var(--btn-lg);
   background: rgba(255, 255, 255, 0.7);
   border-radius: 50%;
   color: var(--primary);
@@ -315,8 +302,8 @@ body {
   background: none;
   color: var(--error);
   font-size: 1.5rem;
-  width: 3rem;
-  height: 3rem;
+  width: var(--btn-lg);
+  height: var(--btn-lg);
   border-radius: 50%;
   font-weight: 900;
   display: flex;
@@ -331,8 +318,8 @@ body {
 }
 
 .icon-btn {
-  width: 2rem;
-  height: 2rem;
+  width: var(--btn-sm);
+  height: var(--btn-sm);
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -495,51 +482,6 @@ body {
   background: var(--primary-light);
 }
 
-/* Bouton de partage */
-#shareAppBtn {
-  background: var(--color-white) !important;
-  color: var(--primary) !important;
-  border: 1px solid var(--primary) !important;
-}
-
-#shareAppBtn:hover {
-  background: var(--primary-light) !important;
-}
-
-.night-mode #shareAppBtn {
-  background: #2d2d2d !important;
-  color: var(--success) !important;
-  border-color: var(--success) !important;
-}
-
-a.confirm-btn.blue {
-  background: var(--color-white);
-  color: var(--color-blue) !important;
-  border: 1px solid var(--color-blue) !important;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-md) var(--space-lg);
-  border-radius: var(--border-radius);
-  font-weight: bold;
-  transition: var(--transition-default);
-}
-
-a.confirm-btn.blue:hover {
-  background: #e3f2fd;
-}
-
-.night-mode a.confirm-btn.blue {
-  background: #2d2d2d;
-  color: var(--color-blue) !important;
-  border-color: var(--color-blue) !important;
-}
-
-/* ============================================
-   5. LECTEUR DE PAGES (modes portrait/paysage)
-   ============================================ */
-
 .page-scroll {
   position: relative;
   z-index: 999;
@@ -638,15 +580,6 @@ a.confirm-btn.blue:hover {
   width: 100%;
   display: block;
   object-fit: fill;
-  height: calc(100vh - var(--header-height) - var(--footer-height));
-  max-height: calc(100vh - var(--header-height) - var(--footer-height));
-}
-
-@media (display-mode: standalone) {
-  .mode-portrait .portrait-image {
-    height: calc(100vh - var(--header-height) - var(--footer-height)) !important;
-    max-height: calc(100vh - var(--header-height) - var(--footer-height)) !important;
-  }
 }
 
 /* Mode paysage (scroll) */
@@ -1122,12 +1055,7 @@ a.confirm-btn.blue:hover {
   border: none;
   font-size: 1.1rem;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 50%;
-  transition: background 0.2s;
-  color: var(--primary);
-  width: 2rem;
-  height: 2rem;
+  padding: 4px 15px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1937,8 +1865,8 @@ a.confirm-btn.blue:hover {
 
 .audio-btn {
   font-size: 1.2rem;
-  width: 2.2rem;
-  height: 2.2rem;
+  width: var(--btn-sm);
+  height: var(--btn-sm);
   border: none;
   background: transparent;
   color: var(--text);
@@ -2005,7 +1933,8 @@ a.confirm-btn.blue:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 0 5px 0;
+  padding: 5px 0 0 0;
+  height: var(--footer-height);
 }
 
 .audio-mini-bar .mini-bar-controls {
@@ -2015,8 +1944,8 @@ a.confirm-btn.blue:hover {
 }
 
 .audio-mini-bar .audio-btn svg {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
 }
 
 .audio-controls .audio-btn svg {
