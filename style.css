@@ -2153,16 +2153,6 @@ a.confirm-btn.blue:hover {
   transform: scale(0.9);
 }
 
-#currentReciterName {
-  font-weight: bold;
-  direction: ltr;
-  text-align: left;
-}
-
-.night-mode #currentReciterName {
-  color: var(--success);
-}
-
 /* ============================================
    18. UTILITAIRES & DIVERS
    ============================================ */
