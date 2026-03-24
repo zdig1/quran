@@ -106,6 +106,8 @@ class QuranAudioPlayer {
 
     // Préchargement
     this._preloadTriggered = false;
+    this._nextAudioBuffer = null;
+    this._crossfading = false;
     // Wake lock
     this._wakeLock = null;
     this._isTransitioning = false;
@@ -532,15 +534,48 @@ class QuranAudioPlayer {
         this._showStatus("❌ لا يوجد اتصال بالإنترنت", true);
         return;
       }
-      if (this.audioElement.src !== url) {
-        this.audioElement.src = url;
-        this.audioElement.load();
+      // Si le buffer préchargé correspond à cet url et est prêt → swap
+      if (
+        this._nextAudioBuffer &&
+        this._nextAudioBuffer.src === url &&
+        this._nextAudioBuffer.readyState >= 2
+      ) {
+        const buf = this._nextAudioBuffer;
+        this._nextAudioBuffer = null;
+        // Retirer les anciens listeners de l'élément courant
+        const oldAudio = this.audioElement;
+        oldAudio.removeEventListener("play", this._boundListeners.audio.play);
+        oldAudio.removeEventListener("pause", this._boundListeners.audio.pause);
+        oldAudio.removeEventListener("ended", this._boundListeners.audio.ended);
+        oldAudio.removeEventListener("timeupdate", this._boundListeners.audio.timeupdate);
+        oldAudio.removeEventListener("error", this._boundListeners.audio.error);
+        oldAudio.pause();
+        oldAudio.src = "";
+        // Brancher le buffer comme élément actif
+        this.audioElement = buf;
+        buf.playbackRate = this.playbackRate;
+        // Rebind les listeners sur le nouvel élément
+        buf.addEventListener("play", this._boundListeners.audio.play);
+        buf.addEventListener("pause", this._boundListeners.audio.pause);
+        buf.addEventListener("ended", this._boundListeners.audio.ended);
+        buf.addEventListener("timeupdate", this._boundListeners.audio.timeupdate);
+        buf.addEventListener("error", this._boundListeners.audio.error);
+        buf.play().catch((e) => {
+          console.error("buffer swap play error:", e);
+          this._handlePlayError();
+        });
+      } else {
+        // Chargement normal
+        if (this.audioElement.src !== url) {
+          this.audioElement.src = url;
+          this.audioElement.load();
+        }
+        this.audioElement.playbackRate = this.playbackRate;
+        this.audioElement.play().catch((e) => {
+          console.error("play error:", e);
+          this._handlePlayError();
+        });
       }
-      this.audioElement.playbackRate = this.playbackRate;
-      this.audioElement.play().catch((e) => {
-        console.error("play error:", e);
-        this._handlePlayError();
-      });
       if (!this.ayaCoords) {
         this._loadAyaCoords().then(() => this._applyHighlight());
       } else {
@@ -655,9 +690,16 @@ class QuranAudioPlayer {
 
   stop() {
     this.audioElement.pause();
+    this.audioElement.volume = 1;
     this.audioElement.currentTime = 0;
     this.isPlaying = false;
     this.isStopped = true;
+    this._crossfading = false;
+    if (this._nextAudioBuffer) {
+      this._nextAudioBuffer.pause();
+      this._nextAudioBuffer.src = "";
+      this._nextAudioBuffer = null;
+    }
     window.quranReader?.clearHighlight();
     this._updateUI();
     this._retrying = false;
@@ -699,10 +741,10 @@ class QuranAudioPlayer {
 
     const url = this._buildAyahUrl(nextSurah, nextAyah);
     if (url) {
-      // Précharger sans jouer
-      const preloadAudio = new Audio();
-      preloadAudio.src = url;
-      preloadAudio.load();
+      this._nextAudioBuffer = new Audio();
+      this._nextAudioBuffer.src = url;
+      this._nextAudioBuffer.preload = "auto";
+      this._nextAudioBuffer.load();
     }
   }
 
@@ -1010,11 +1052,53 @@ class QuranAudioPlayer {
     this._boundListeners.audio.ended = () => {
       if (this.audioElement.dataset.basmala === "true") return;
       this.isPlaying = false;
+      this.audioElement.volume = 1;
+
       if (this.repeatMode === 1) {
+        this._crossfading = false;
+        this._nextAudioBuffer = null;
         this.audioElement.currentTime = 0;
         this.audioElement.load();
         this.play();
-      } else this.nextAyah();
+        return;
+      }
+
+      // Si le buffer suivant joue déjà (overlap déclenché) → swap propre
+      if (this._crossfading && this._nextAudioBuffer) {
+        const buf = this._nextAudioBuffer;
+        this._nextAudioBuffer = null;
+        this._crossfading = false;
+
+        const oldAudio = this.audioElement;
+        oldAudio.removeEventListener("play", this._boundListeners.audio.play);
+        oldAudio.removeEventListener("pause", this._boundListeners.audio.pause);
+        oldAudio.removeEventListener("ended", this._boundListeners.audio.ended);
+        oldAudio.removeEventListener("timeupdate", this._boundListeners.audio.timeupdate);
+        oldAudio.removeEventListener("error", this._boundListeners.audio.error);
+        oldAudio.pause();
+        oldAudio.src = "";
+
+        this.audioElement = buf;
+        buf.addEventListener("play", this._boundListeners.audio.play);
+        buf.addEventListener("pause", this._boundListeners.audio.pause);
+        buf.addEventListener("ended", this._boundListeners.audio.ended);
+        buf.addEventListener("timeupdate", this._boundListeners.audio.timeupdate);
+        buf.addEventListener("error", this._boundListeners.audio.error);
+
+        if (this.currentAyah < this.totalAyahs) {
+          this.currentAyah++;
+        } else {
+          this._onEndOfSurah();
+          return;
+        }
+        this._preloadTriggered = false;
+        this._updateCurrentDisplay();
+        this._applyHighlight();
+      } else {
+        // Pas d'overlap prêt → comportement normal
+        this._crossfading = false;
+        this.nextAyah();
+      }
     };
     this._boundListeners.audio.timeupdate = () => {
       const cur = audio.currentTime;
@@ -1034,10 +1118,26 @@ class QuranAudioPlayer {
       if (tLeft) tLeft.textContent = this._fmt(cur);
       if (tRight) tRight.textContent = this._fmt(dur);
 
-      // Déclencher le préchargement à 80%
-      if (dur > 0 && cur / dur > 0.8 && !this._preloadTriggered) {
+      // Déclencher le préchargement à 50%
+      if (dur > 0 && cur / dur > 0.5 && !this._preloadTriggered) {
         this._preloadTriggered = true;
         this._preloadNextAyah();
+      }
+
+      // Démarrer le verset suivant 500ms avant la fin (sans fade, juste overlap)
+      const timeLeft = dur - cur;
+      if (
+        dur > 0 &&
+        timeLeft > 0 &&
+        timeLeft <= 0.5 &&
+        !this._crossfading &&
+        this._nextAudioBuffer &&
+        this._nextAudioBuffer.readyState >= 2
+      ) {
+        this._crossfading = true;
+        this._nextAudioBuffer.volume = 1;
+        this._nextAudioBuffer.playbackRate = this.playbackRate;
+        this._nextAudioBuffer.play().catch(() => {});
       }
     };
 

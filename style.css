@@ -12,11 +12,12 @@
   --text-sm: 0.875rem;
   --text-md: 1rem;
   --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
 
   /* Hauteurs */
-  --footer-height: 3rem;
+  --footer-height: 3.5rem;
   --btn-sm: 2rem;
-  --btn-lg: 3.3rem;
+  --btn-lg: 3.2rem;
 
   /* Coins arrondis */
   --border-radius: 0.5rem;
@@ -198,7 +199,7 @@ body {
 
 .footer {
   position: fixed;
-  inset: auto 0 0 0;
+  inset: auto 3px 0 3px;
   z-index: 1001;
   background: transparent;
   display: grid !important;
@@ -249,12 +250,11 @@ body {
   display: inline-block !important;
   min-width: auto;
   min-height: 30px;
-  font-size: var(--text-sm) !important;
+  font-size: var(--text-sm);
   line-height: 1.5 !important;
 }
 
 .footer-value {
-  font-size: var(--text-lg);
   color: var(--primary);
 }
 
@@ -289,7 +289,7 @@ body {
   background: rgba(255, 255, 255, 0.7);
   border-radius: 50%;
   color: var(--primary);
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   box-shadow: var(--shadow);
 }
 
@@ -1421,19 +1421,6 @@ body {
   direction: rtl;
 }
 
-.tafsir-select {
-  flex: 1 1 auto;
-  min-width: 100px;
-  height: auto;
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  color: var(--tafsir-select-text);
-  font-size: var(--text-sm);
-  font-weight: bold;
-  cursor: pointer;
-}
-
 .tafsir-container {
   margin: 0;
   border-radius: 0;
@@ -1777,12 +1764,14 @@ body {
   align-items: center;
 }
 
+.tafsir-select,
 .audio-select {
   flex: 1 1 140px;
   min-width: 120px;
   width: auto;
   padding: var(--space-md);
   font-size: var(--text-md);
+  font-weight: bold;
   border-radius: var(--border-radius);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -1791,8 +1780,14 @@ body {
   direction: rtl;
 }
 
+.audio-select {
+  min-width: 120px;
+}
+
 #reciterSelect {
-  flex: 2 1 200px;
+  direction: rtl;
+  text-align: right;
+  text-align-last: right;
 }
 
 #surahSelectAudio,
@@ -1801,10 +1796,16 @@ body {
   flex: 1 1 120px;
 }
 
-.audio-select:focus {
+.tafsir-select:focus,
+.audio-select:focus,
+.select-ok:focus,
+.select-blue:focus,
+.select-brown:focus,
+.select-violet:focus,
+.select-orange:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
+  border-color: #ff9800 !important;
+  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.3) !important;
 }
 
 .night-mode .audio-select {
@@ -1906,9 +1907,7 @@ body {
 
 .audio-mini-bar {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  inset: auto 3px 0 3px;
   z-index: 1200;
   background: var(--mini-bar-bg);
   backdrop-filter: blur(8px);

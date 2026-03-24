@@ -1000,13 +1000,13 @@ class OverlayManager {
 </div>
     
     <div class="audio-select-row">
-      <select id="surahSelectAudio" class="audio-select select-blue" aria-label="اختر السورة">
+      <select id="surahSelectAudio" class="audio-select select-ok" aria-label="اختر السورة">
         <option value="">اختر السورة</option>
       </select>
-      <select id="ayaSelectAudio" class="audio-select select-brown" aria-label="اختر الآية">
+      <select id="ayaSelectAudio" class="audio-select select-blue" aria-label="اختر الآية">
         <option value="">اختر الآية</option>
       </select>
-      <select id="pageSelectAudio" class="audio-select select-ok" aria-label="اختر الصفحة">
+      <select id="pageSelectAudio" class="audio-select select-brown" aria-label="اختر الصفحة">
         <option value="">اختر الصفحة</option>
       </select>
     </div>
