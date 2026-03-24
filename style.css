@@ -205,7 +205,7 @@ body {
   display: grid !important;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  transition: var(--transition-default), visibility 0.3s ease;
+  transition: opacity 0.3s ease, visibility 0.3s ease, height 0.2s ease, min-height 0.2s ease;
   height: var(--footer-height);
   padding-bottom: 0;
   transform: translateZ(0);
@@ -811,9 +811,9 @@ body {
 }
 
 .item-badge {
-  min-width: 2.2rem;
-  width: 2.2rem;
-  height: 2.2rem;
+  min-width: 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -823,7 +823,7 @@ body {
   flex-shrink: 0;
   color: white;
   background: var(--badge-bg, var(--primary));
-  margin-right: 5px;
+  margin-left: 10px;
 }
 
 .item-search .item-badge {
@@ -836,6 +836,7 @@ body {
 
 .item-juzhizb .item-badge {
   --badge-bg: var(--badge-juzhizb);
+  margin-right: 10px;
 }
 
 .item-icon {
@@ -864,9 +865,10 @@ body {
   font-weight: 600;
   font-size: var(--text-sm);
   white-space: nowrap;
-  text-align: center;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
+  width: 100%;
 }
 
 .item-left-icon-col {
@@ -880,7 +882,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  width: 4rem;
+  width: auto;
   flex-shrink: 0;
 }
 
@@ -915,14 +917,8 @@ body {
   background: var(--surface-alt);
   border-bottom: 1px solid var(--border);
   margin: 0;
-  position: sticky;
-  top: 0;
   z-index: 1;
   backdrop-filter: blur(4px);
-}
-
-.surah-section-pinned .section-title {
-  position: static;
 }
 
 /* ============================================
@@ -932,7 +928,7 @@ body {
 .item-surah {
   display: grid;
   grid-template-rows: 3fr 2fr;
-  grid-template-columns: auto auto 90px auto 1fr auto auto;
+  grid-template-columns: auto auto 1fr auto 3.6rem;
   align-items: center;
   row-gap: 2px;
   column-gap: 2px;
@@ -953,7 +949,6 @@ body {
   grid-row: 1 / span 2;
   grid-column: 2;
   justify-self: center;
-  margin-left: 10px;
 }
 
 .surah-name {
@@ -970,39 +965,38 @@ body {
   align-self: center;
 }
 
-.surah-tanzil {
+.surah-line2-group {
   grid-row: 2;
   grid-column: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.surah-tanzil {
   font-size: var(--text-sm);
   color: var(--text-light);
   margin: 0;
   align-self: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 70px;
+  text-align: right;
 }
 
+.surah-revel,
 .surah-info {
-  grid-row: 1;
-  grid-column: 4;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   width: 32px;
-  align-self: center;
-}
-
-.surah-revel {
-  grid-row: 2;
-  grid-column: 4;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: var(--text-md);
-  width: 32px;
-  align-self: center;
+  font-size: var(--text-lg);
 }
 
 .surah-juz {
   grid-row: 1;
-  grid-column: 6;
+  grid-column: 4;
   justify-self: self-start;
   white-space: nowrap;
   align-self: center;
@@ -1011,7 +1005,7 @@ body {
 
 .surah-sajda {
   grid-row: 2;
-  grid-column: 6;
+  grid-column: 4;
   justify-self: end;
   align-self: center;
   margin-left: 5px;
@@ -1019,24 +1013,29 @@ body {
 
 .surah-page {
   grid-row: 1;
-  grid-column: 7;
+  grid-column: 5;
   justify-self: flex-start;
   white-space: nowrap;
   align-self: center;
-  margin-left: 10px;
-  min-width: 3rem;
+  justify-content: flex-end;
+  text-align: right;
+  min-width: 3.2rem;
 }
 
 .surah-verses {
   grid-row: 2;
-  grid-column: 7;
-  justify-self: initial;
+  grid-column: 5;
   font-size: var(--text-sm);
   color: var(--text-light);
-  align-self: center;
-  margin-left: 10px;
 }
 
+.surah-page .item-tag,
+.item-left-tag-col .item-tag {
+  min-width: 3.2rem;
+  justify-content: flex-start;
+}
+
+/* autre */
 .pin-btn {
   position: static;
   background: none;
@@ -1053,11 +1052,9 @@ body {
 .info-btn {
   background: none;
   border: none;
-  font-size: 1.1rem;
   cursor: pointer;
-  padding: 4px 15px;
+  padding: 0px 15px;
   display: flex;
-  align-items: center;
   justify-content: center;
 }
 
@@ -1067,11 +1064,6 @@ body {
 
 .night-mode .info-btn:active {
   background: rgba(76, 175, 80, 0.2);
-}
-
-/* Correction pour l'alignement du premier élément sous le titre */
-.surah-section-all {
-  padding-top: 0.5rem;
 }
 
 .sajda-icon {
@@ -1094,54 +1086,14 @@ body {
   font-weight: bold;
 }
 
-.surah-section-title {
-  font-size: 1.1rem;
-  margin-top: 0.75rem;
-  margin-bottom: 0.25rem;
-  padding-right: 0.5rem;
-}
-
-.surah-section-text {
-  margin-right: 1rem;
-}
-
 /* ============================================
    9. JUZ/HIZB – grille d'alignement
    ============================================ */
-
 .juz-badge {
   color: #1976d2;
   font-weight: bold;
   font-size: 0.8rem;
   white-space: nowrap;
-}
-
-.juzhizb-grid {
-  display: grid;
-  grid-template-columns: 2.5rem 1fr;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.juzhizb-grid-col1 {
-  grid-column: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-}
-
-.juzhizb-grid-col1.item-badge {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1 / 1;
-  margin-top: 3px;
-}
-
-.juzhizb-grid-col2 {
-  grid-column: 2;
-  min-width: 0;
-  overflow: hidden;
 }
 
 .aya-text {
@@ -1160,6 +1112,50 @@ body {
   font-size: var(--text-sm);
   display: block;
   margin-bottom: 3px;
+}
+
+.juz-line1 {
+  display: grid;
+  grid-template-columns: 3rem 1fr 1.5rem 3.6rem;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  direction: rtl;
+}
+
+.juz-col-juz {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.juz-col-hizb {
+  min-width: 0;
+}
+
+.juz-col-bookmark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.juz-col-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.juz-col-page .item-tag {
+  width: 100%;
+  text-align: center;
+  justify-content: center;
+}
+
+.juz-line2,
+.juz-line3 {
+  padding-right: 3rem;
+  direction: rtl;
+  width: 100%;
 }
 
 /* ============================================
@@ -1267,7 +1263,7 @@ body {
    ============================================ */
 
 .search-container {
-  padding: var(--space-lg);
+  padding: 3px;
   background: var(--surface);
   flex: 1;
   display: flex;
@@ -1355,7 +1351,6 @@ body {
 }
 
 .item-search {
-  padding: 0 var(--overlay-padding-x);
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background-color 0.2s;
@@ -1907,18 +1902,29 @@ body {
 
 .audio-mini-bar {
   position: fixed;
-  inset: auto 3px 0 3px;
+  inset: auto 0 0 0;
   z-index: 1200;
   background: var(--mini-bar-bg);
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   transform: translateY(0);
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease, height 0.2s ease, min-height 0.2s ease;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
   border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.audio-mini-bar .mini-bar-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px 0 10px;
+  /* height: var(--footer-height);  retirée */
+  flex-shrink: 0;
 }
 
 .audio-mini-bar.hidden {
@@ -1926,14 +1932,6 @@ body {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-}
-
-.audio-mini-bar .mini-bar-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 5px 0 0 0;
-  height: var(--footer-height);
 }
 
 .audio-mini-bar .mini-bar-controls {

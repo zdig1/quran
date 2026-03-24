@@ -235,7 +235,7 @@ class QuranReader {
       wrapper.style.display = page === this.currentPage ? "flex" : "none";
       if (page === this.currentPage) {
         const naturalH = (1100 * window.innerWidth) / 700;
-        const maxStretch = naturalH * 1.25;
+        const maxStretch = naturalH * 1.3;
         if (naturalH >= window.innerHeight) {
           img.style.cssText = "width:100%;height:auto;";
         } else if (window.innerHeight <= maxStretch) {
@@ -245,10 +245,12 @@ class QuranReader {
           img.style.cssText =
             "width:100%;height:" + maxStretch + "px;object-fit:fill;";
         }
+        this._adjustFooterHeight();
       }
       wrapper.classList.toggle("active", page === this.currentPage);
       this.loadPageImage(page, page === this.currentPage ? "high" : "low");
     });
+    setTimeout(() => this._adjustFooterHeight(), 100);
   }
 
   createPagesForScrollMode() {
@@ -812,6 +814,7 @@ class QuranReader {
 
   applyButtonsVisibility() {
     this._applyHeaderFooterVisibility();
+    setTimeout(() => this._adjustFooterHeight(), 50);
     window.dispatchEvent(
       new CustomEvent("quran:buttonsVisibilityChanged", {
         detail: { visible: this.buttonsVisible },
@@ -827,6 +830,55 @@ class QuranReader {
     } else {
       this.elements.header.classList.add("hidden");
       this.elements.footer.classList.add("hidden");
+    }
+  }
+  _adjustFooterHeight() {
+    if (this.readingMode !== "book") return;
+    const activeWrapper = this.elements.pageScroll.querySelector('.page-wrapper.active');
+    if (!activeWrapper) return;
+    const img = activeWrapper.querySelector('img');
+    if (!img) return;
+
+    const apply = () => {
+      requestAnimationFrame(() => {
+        this._applyFooterAdjustment(img);
+      });
+    };
+
+    if (img.complete && img.naturalWidth !== 0) {
+      apply();
+    } else {
+      img.addEventListener('load', apply, { once: true });
+    }
+  }
+
+  _applyFooterAdjustment(img) {
+    const footer = this.elements.footer;
+    if (!footer) return;
+
+    const imgRect = img.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - imgRect.bottom;
+    const minFooterHeight = 56;
+
+    // Ajustement du footer
+    if (spaceBelow > minFooterHeight) {
+      footer.style.height = `${spaceBelow}px`;
+      footer.style.minHeight = `${spaceBelow}px`;
+    } else {
+      footer.style.height = '';
+      footer.style.minHeight = '';
+    }
+
+    // Ajustement de la mini-barre
+    const miniBar = document.getElementById('audioMiniBar');
+    if (miniBar && !miniBar.classList.contains('hidden')) {
+      if (spaceBelow > minFooterHeight) {
+        miniBar.style.height = `${spaceBelow}px`;
+        miniBar.style.minHeight = `${spaceBelow}px`;
+      } else {
+        miniBar.style.height = '';
+        miniBar.style.minHeight = '';
+      }
     }
   }
 
@@ -1008,7 +1060,7 @@ class QuranReader {
                   });
                 }
               }
-
+              if (this.readingMode === "book") this._adjustFooterHeight();
               this.isTransitioning = false;
             },
             isIOS ? 300 : 200,
@@ -1155,6 +1207,11 @@ class QuranReader {
       type: "quran:overlayClosed",
       handler: onOverlayClosed,
     });
+    window.addEventListener('quran:buttonsVisibilityChanged', () => {
+      if (this.readingMode === 'book') {
+        this._adjustFooterHeight();
+      }
+    });
   }
 
   // ============================================
@@ -1168,8 +1225,11 @@ class QuranReader {
     this.tapEnabled = !overlayOpen;
     this.applyReadingMode();
     setTimeout(() => {
-      if (this.readingMode === "book")
+      if (this.readingMode === "book") {
         this.loadPageImage(this.currentPage, "high");
+        // --- AJOUTER CETTE LIGNE ---
+        this._adjustFooterHeight();
+      }
     }, 100);
   }
 

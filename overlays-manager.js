@@ -323,16 +323,23 @@ class OverlayManager {
     orderSpan.className = "surah-tanzil";
     orderSpan.textContent = `النزول: ${surah.order}`;
 
-    // 5. Info (ligne 1)
+    // 5. Info
     const infoBtn = document.createElement("button");
     infoBtn.className = "info-btn surah-info";
     infoBtn.setAttribute("data-sura-id", surah.s_id);
     infoBtn.textContent = "ℹ️";
 
-    // 6. Révélation (ligne 2)
+    // 6. Révélation
     const revelSpan = document.createElement("span");
     revelSpan.className = "surah-revel";
     revelSpan.textContent = revelationIcon;
+
+    // Groupe pour la ligne 2 de la colonne 3
+    const line2Group = document.createElement("div");
+    line2Group.className = "surah-line2-group";
+    line2Group.appendChild(orderSpan);
+    line2Group.appendChild(revelSpan);
+    line2Group.appendChild(infoBtn);
 
     // 7. Juz (ligne 1)
     const juzDiv = document.createElement("div");
@@ -359,16 +366,15 @@ class OverlayManager {
     versesDiv.className = "surah-verses";
     versesDiv.textContent = `(${surah.verses}) آية`;
 
-    item.appendChild(pinBtn);
-    item.appendChild(numberSpan);
-    item.appendChild(nameSpan);
-    item.appendChild(orderSpan);
-    item.appendChild(infoBtn);
-    item.appendChild(revelSpan);
-    item.appendChild(juzDiv);
-    item.appendChild(sajdaDiv);
-    item.appendChild(pageDiv);
-    item.appendChild(versesDiv);
+    // Ajout dans l'ordre correspondant aux colonnes de la grille
+    item.appendChild(pinBtn);        // colonne 1 (2 lignes)
+    item.appendChild(numberSpan);    // colonne 2 (2 lignes)
+    item.appendChild(nameSpan);      // colonne 3, ligne 1
+    item.appendChild(line2Group);    // colonne 3, ligne 2 (groupe)
+    item.appendChild(juzDiv);        // colonne 4, ligne 1
+    item.appendChild(sajdaDiv);      // colonne 4, ligne 2
+    item.appendChild(pageDiv);       // colonne 5, ligne 1
+    item.appendChild(versesDiv);     // colonne 5, ligne 2
 
     item.addEventListener("click", (e) => {
       if (e.target.closest('.pin-btn') || e.target.closest('.info-btn')) return;
@@ -541,29 +547,27 @@ class OverlayManager {
       item.className = "item-container item-juzhizb";
       item.setAttribute("data-hizb", hizb.hizb);
 
-      const line1 = document.createElement("div");
-      line1.className = "item-line-1";
-      line1.innerHTML = `<div class="item-right juzhizb-grid">
-        ${isNewJuz ? `<span class="item-badge juzhizb-grid-col1">ج${juzNum}</span>` : '<span class="juzhizb-grid-col1"></span>'}
-        <span class="item-title juzhizb-grid-col2">الحزب ${hizb.hizb}</span>
-      </div>
-      <div class="item-left">
-        <span class="item-left-icon-col">${hasBookmarkInRange ? '<span class="item-icon">🔖</span>' : ""}</span>
-        <span class="item-left-tag-col"><span class="item-tag">ص ${hizb.page_start}</span></span>
-      </div>`;
+const line1 = document.createElement("div");
+      line1.className = "item-line-1 juz-line1";
+      line1.innerHTML = `
+        <div class="juz-col-juz">${isNewJuz ? `<span class="item-badge">ج${juzNum}</span>` : ''}</div>
+        <div class="juz-col-hizb"><span class="item-title">الحزب ${hizb.hizb}</span></div>
+        <div class="juz-col-bookmark">${hasBookmarkInRange ? '<span class="item-icon">🔖</span>' : ''}</div>
+        <div class="juz-col-page"><span class="item-tag">ص ${hizb.page_start}</span></div>
+      `;
 
       const line2 = document.createElement("div");
-      line2.className = "item-line-2";
-      line2.innerHTML = `<div class="item-right juzhizb-grid">
-        <span class="juzhizb-grid-col1"></span>
-        <span class="item-subtitle juzhizb-grid-col2">
-          <span class="aya-text">${window.quranApp.escapeHtml(ayaText)}</span>
-          <span class="aya-prefix">${prefix}</span>
-        </span>
-      </div>`;
+      line2.className = "item-line-2 juz-line2";
+      line2.innerHTML = `<span class="aya-text">${window.quranApp.escapeHtml(ayaText)}</span>`;
+
+      const line3 = document.createElement("div");
+      line3.className = "item-line-3 juz-line3";
+      line3.innerHTML = `<span class="aya-prefix">${prefix}</span>`;
 
       item.appendChild(line1);
       item.appendChild(line2);
+      item.appendChild(line3);
+ 
       item.addEventListener("click", () => {
         window.quranApp?.goToPage(hizb.page_start);
         this.closeOverlay("juzHizb");

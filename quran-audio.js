@@ -131,6 +131,7 @@ class QuranAudioPlayer {
     await this._loadAyaCoords();
     this.surahs = window.quranCalculator?.getAllSurahs() || [];
     this.audioElement = document.getElementById("quranAudioPlayer");
+    this._nextAudioBuffer = null;
     this._cacheElements();
     this._setupPinReciterButton();
     this._populatePageSelect();
@@ -534,48 +535,15 @@ class QuranAudioPlayer {
         this._showStatus("❌ لا يوجد اتصال بالإنترنت", true);
         return;
       }
-      // Si le buffer préchargé correspond à cet url et est prêt → swap
-      if (
-        this._nextAudioBuffer &&
-        this._nextAudioBuffer.src === url &&
-        this._nextAudioBuffer.readyState >= 2
-      ) {
-        const buf = this._nextAudioBuffer;
-        this._nextAudioBuffer = null;
-        // Retirer les anciens listeners de l'élément courant
-        const oldAudio = this.audioElement;
-        oldAudio.removeEventListener("play", this._boundListeners.audio.play);
-        oldAudio.removeEventListener("pause", this._boundListeners.audio.pause);
-        oldAudio.removeEventListener("ended", this._boundListeners.audio.ended);
-        oldAudio.removeEventListener("timeupdate", this._boundListeners.audio.timeupdate);
-        oldAudio.removeEventListener("error", this._boundListeners.audio.error);
-        oldAudio.pause();
-        oldAudio.src = "";
-        // Brancher le buffer comme élément actif
-        this.audioElement = buf;
-        buf.playbackRate = this.playbackRate;
-        // Rebind les listeners sur le nouvel élément
-        buf.addEventListener("play", this._boundListeners.audio.play);
-        buf.addEventListener("pause", this._boundListeners.audio.pause);
-        buf.addEventListener("ended", this._boundListeners.audio.ended);
-        buf.addEventListener("timeupdate", this._boundListeners.audio.timeupdate);
-        buf.addEventListener("error", this._boundListeners.audio.error);
-        buf.play().catch((e) => {
-          console.error("buffer swap play error:", e);
-          this._handlePlayError();
-        });
-      } else {
-        // Chargement normal
-        if (this.audioElement.src !== url) {
-          this.audioElement.src = url;
-          this.audioElement.load();
-        }
-        this.audioElement.playbackRate = this.playbackRate;
-        this.audioElement.play().catch((e) => {
-          console.error("play error:", e);
-          this._handlePlayError();
-        });
+      if (this.audioElement.src !== url) {
+        this.audioElement.src = url;
+        this.audioElement.load();
       }
+      this.audioElement.playbackRate = this.playbackRate;
+      this.audioElement.play().catch((e) => {
+        console.error("play error:", e);
+        this._handlePlayError();
+      });
       if (!this.ayaCoords) {
         this._loadAyaCoords().then(() => this._applyHighlight());
       } else {
@@ -589,7 +557,10 @@ class QuranAudioPlayer {
     this._updateCurrentDisplay();
 
     this._requestWakeLock();
+    this._crossfading = false;
     this._preloadTriggered = false;
+    // Précharger X+1 dès le début de X
+    this._preloadNextAyah();
   }
 
   // Gestion des erreurs de lecture avec fallback
@@ -695,10 +666,10 @@ class QuranAudioPlayer {
     this.isPlaying = false;
     this.isStopped = true;
     this._crossfading = false;
+    // Arrêter le buffer sans vider son src (élément fixe du DOM)
     if (this._nextAudioBuffer) {
       this._nextAudioBuffer.pause();
-      this._nextAudioBuffer.src = "";
-      this._nextAudioBuffer = null;
+      this._nextAudioBuffer.currentTime = 0;
     }
     window.quranReader?.clearHighlight();
     this._updateUI();
@@ -742,8 +713,8 @@ class QuranAudioPlayer {
     const url = this._buildAyahUrl(nextSurah, nextAyah);
     if (url) {
       this._nextAudioBuffer = new Audio();
-      this._nextAudioBuffer.src = url;
       this._nextAudioBuffer.preload = "auto";
+      this._nextAudioBuffer.src = url;
       this._nextAudioBuffer.load();
     }
   }
@@ -985,6 +956,13 @@ class QuranAudioPlayer {
     this.miniBar?.classList.remove("hidden");
     this.fabBtn?.classList.add("hidden");
     this._syncMiniBar();
+
+    // Attendre le prochain frame pour que le DOM soit prêt
+    requestAnimationFrame(() => {
+      if (window.quranReader && typeof window.quranReader._adjustFooterHeight === 'function') {
+        window.quranReader._adjustFooterHeight();
+      }
+    });
   }
 
   _hideMiniBar(showFab = true) {
@@ -994,6 +972,13 @@ class QuranAudioPlayer {
     } else {
       this.fabBtn?.classList.add("hidden");
     }
+
+    // Recalculer après masquage
+    requestAnimationFrame(() => {
+      if (window.quranReader && typeof window.quranReader._adjustFooterHeight === 'function') {
+        window.quranReader._adjustFooterHeight();
+      }
+    });
   }
 
   _updateMiniPlayBtn() {
@@ -1053,50 +1038,40 @@ class QuranAudioPlayer {
       if (this.audioElement.dataset.basmala === "true") return;
       this.isPlaying = false;
       this.audioElement.volume = 1;
+      this._crossfading = false;
 
       if (this.repeatMode === 1) {
-        this._crossfading = false;
-        this._nextAudioBuffer = null;
         this.audioElement.currentTime = 0;
         this.audioElement.load();
         this.play();
         return;
       }
 
-      // Si le buffer suivant joue déjà (overlap déclenché) → swap propre
-      if (this._crossfading && this._nextAudioBuffer) {
-        const buf = this._nextAudioBuffer;
-        this._nextAudioBuffer = null;
+      // Fin de sourate
+      if (this.currentAyah >= this.totalAyahs) {
+        this._onEndOfSurah();
+        return;
+      }
+
+      // Buffer prêt → transférer src vers l'élément principal et jouer
+      if (this._nextAudioBuffer && this._nextAudioBuffer.readyState >= 2) {
+        const nextUrl = this._nextAudioBuffer.src;
+        this._nextAudioBuffer.pause();
+        this._nextAudioBuffer.currentTime = 0;
+
+        this.currentAyah++;
+        this._preloadTriggered = false;
         this._crossfading = false;
 
-        const oldAudio = this.audioElement;
-        oldAudio.removeEventListener("play", this._boundListeners.audio.play);
-        oldAudio.removeEventListener("pause", this._boundListeners.audio.pause);
-        oldAudio.removeEventListener("ended", this._boundListeners.audio.ended);
-        oldAudio.removeEventListener("timeupdate", this._boundListeners.audio.timeupdate);
-        oldAudio.removeEventListener("error", this._boundListeners.audio.error);
-        oldAudio.pause();
-        oldAudio.src = "";
+        this.audioElement.src = nextUrl;
+        this.audioElement.playbackRate = this.playbackRate;
+        this.audioElement.play().catch(() => this.nextAyah());
 
-        this.audioElement = buf;
-        buf.addEventListener("play", this._boundListeners.audio.play);
-        buf.addEventListener("pause", this._boundListeners.audio.pause);
-        buf.addEventListener("ended", this._boundListeners.audio.ended);
-        buf.addEventListener("timeupdate", this._boundListeners.audio.timeupdate);
-        buf.addEventListener("error", this._boundListeners.audio.error);
-
-        if (this.currentAyah < this.totalAyahs) {
-          this.currentAyah++;
-        } else {
-          this._onEndOfSurah();
-          return;
-        }
-        this._preloadTriggered = false;
         this._updateCurrentDisplay();
         this._applyHighlight();
+        this._preloadNextAyah();
       } else {
-        // Pas d'overlap prêt → comportement normal
-        this._crossfading = false;
+        // Fallback normal
         this.nextAyah();
       }
     };
@@ -1118,27 +1093,6 @@ class QuranAudioPlayer {
       if (tLeft) tLeft.textContent = this._fmt(cur);
       if (tRight) tRight.textContent = this._fmt(dur);
 
-      // Déclencher le préchargement à 50%
-      if (dur > 0 && cur / dur > 0.5 && !this._preloadTriggered) {
-        this._preloadTriggered = true;
-        this._preloadNextAyah();
-      }
-
-      // Démarrer le verset suivant 500ms avant la fin (sans fade, juste overlap)
-      const timeLeft = dur - cur;
-      if (
-        dur > 0 &&
-        timeLeft > 0 &&
-        timeLeft <= 0.5 &&
-        !this._crossfading &&
-        this._nextAudioBuffer &&
-        this._nextAudioBuffer.readyState >= 2
-      ) {
-        this._crossfading = true;
-        this._nextAudioBuffer.volume = 1;
-        this._nextAudioBuffer.playbackRate = this.playbackRate;
-        this._nextAudioBuffer.play().catch(() => {});
-      }
     };
 
     this._boundListeners.audio.error = (e) => {
