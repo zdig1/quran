@@ -345,15 +345,25 @@
                 </div>
 
                 <div class="tafsir-controls tafsir-container">
-                    <select id="suraSelect" class="tafsir-select select-ok" aria-label="اختر السورة">
-                        <option value="">اختر السورة</option>
-                    </select>
-                    <select id="ayaSelect" class="tafsir-select select-blue" aria-label="اختر الآية">
-                        <option value="">اختر الآية</option>
-                    </select>
-                    <select id="pageSelect" class="tafsir-select select-brown" aria-label="اختر الصفحة">
-                        <option value="">اختر الصفحة</option>
-                    </select>
+                    <div class="custom-select" id="suraSelectWrap">
+                        <button type="button" class="custom-select-btn select-ok" id="suraSelect">
+                            <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>
+                        </button>
+                        <div class="custom-select-dropdown" id="suraSelectList"></div>
+                    </div>
+                    <div class="custom-select" id="ayaSelectWrap">
+                        <button type="button" class="custom-select-btn select-blue" id="ayaSelect">
+                            <span class="custom-select-val">اختر الآية</span><span class="custom-select-arrow">▾</span>
+                        </button>
+                        <div class="custom-select-dropdown" id="ayaSelectList"></div>
+                    </div>
+                    <div class="custom-select" id="pageSelectWrap">
+                        <button type="button" class="custom-select-btn select-brown" id="pageSelect">
+                            <span class="custom-select-val">اختر الصفحة</span><span class="custom-select-arrow">▾</span>
+                        </button>
+                        <div class="custom-select-dropdown" id="pageSelectList"></div>
+                    </div>
+                    
                     <button type="button" class="btn tafsir-font-btn" id="tafsirThemeToggle"
                         aria-label="تبديل الوضع الليلي">🌙</button>
 

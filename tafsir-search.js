@@ -577,59 +577,110 @@ class TafsirSearchManager {
     return this.tafsirUI;
   }
 
+  // ---- helpers custom select ----
+  _csRender(listId, opts) {
+    // opts = [{ value, label, group? }]
+    const list = document.getElementById(listId);
+    if (!list) return;
+    list.innerHTML = '';
+    let curGroup = null;
+    opts.forEach(opt => {
+      if (opt.group && opt.group !== curGroup) {
+        curGroup = opt.group;
+        const g = document.createElement('div');
+        g.className = 'custom-select-group';
+        g.textContent = opt.group;
+        list.appendChild(g);
+      }
+      const el = document.createElement('div');
+      el.className = 'custom-select-option';
+      el.dataset.value = opt.value;
+      el.textContent = opt.label;
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        list.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+        el.classList.add('selected');
+        const btn = list.previousElementSibling;
+        if (btn) btn.querySelector('.custom-select-val').textContent = opt.label;
+        list.closest('.custom-select')?.classList.remove('open');
+        if (opt.value !== '') opt._cb(opt.value);
+      });
+      list.appendChild(el);
+    });
+  }
+
+  _csSetValue(btnId, listId, value) {
+    const list = document.getElementById(listId);
+    const btn = document.getElementById(btnId);
+    if (!list || !btn) return;
+    const opt = list.querySelector(`[data-value="${value}"]`);
+    if (!opt) return;
+    list.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+    btn.querySelector('.custom-select-val').textContent = opt.textContent;
+    opt.scrollIntoView({ block: 'nearest' });
+  }
+
+  _csGetValue(listId) {
+    return document.getElementById(listId)?.querySelector('.selected')?.dataset.value || '';
+  }
+
+  _csInitToggle() {
+    if (this._csToggleReady) return;
+    this._csToggleReady = true;
+    document.querySelectorAll('.custom-select-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wrap = btn.closest('.custom-select');
+        const isOpen = wrap?.classList.contains('open');
+        document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
+        if (!isOpen && wrap) wrap.classList.add('open');
+      });
+    });
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
+    });
+  }
+  // ---- fin helpers ----
+
   initializeTafsirSelectors() {
     if (!this.tafsirUI) return;
-    const { suraSelect, ayaSelect, pageSelect } = this.tafsirUI;
-    if (!suraSelect || !ayaSelect || !pageSelect) return;
+    this._csInitToggle();
 
-    if (this._suraChangeHandler)
-      suraSelect.removeEventListener("change", this._suraChangeHandler);
-    if (this._pageChangeHandler)
-      pageSelect.removeEventListener("change", this._pageChangeHandler);
-    if (this._ayaChangeHandler)
-      ayaSelect.removeEventListener("change", this._ayaChangeHandler);
+    // Sura
+    const suraOpts = [{ value: '', label: 'اختر السورة', _cb: () => {} },
+      ...this.getSurahsIndex().map(s => ({
+        value: String(s.id), label: `${s.id}. ${s.name}`,
+        _cb: (val) => { this.tafsirUI.suraSelect = { value: val }; this.handleSuraChange(); }
+      }))
+    ];
+    this._csRender('suraSelectList', suraOpts);
 
-    this._suraChangeHandler = () => this.handleSuraChange();
-    this._pageChangeHandler = () => this.handlePageChange();
-    this._ayaChangeHandler = () => this.handleAyaChange();
+    // Page
+    const pageOpts = [{ value: '', label: 'اختر الصفحة', _cb: () => {} },
+      ...Array.from({ length: 604 }, (_, i) => ({
+        value: String(i + 1), label: `الصفحة ${i + 1}`,
+        _cb: (val) => { this.tafsirUI.pageSelect = { value: val }; this.handlePageChange(); }
+      }))
+    ];
+    this._csRender('pageSelectList', pageOpts);
 
-    suraSelect.addEventListener("change", this._suraChangeHandler);
-    pageSelect.addEventListener("change", this._pageChangeHandler);
-    ayaSelect.addEventListener("change", this._ayaChangeHandler);
-
-    suraSelect.innerHTML = '<option value="">اختر السورة</option>';
-    this.getSurahsIndex().forEach((sura) => {
-      const opt = document.createElement("option");
-      opt.value = sura.id;
-      opt.textContent = `${sura.id}. ${sura.name}`;
-      suraSelect.appendChild(opt);
-    });
-
-    pageSelect.innerHTML = '<option value="">اختر الصفحة</option>';
-    for (let p = 1; p <= 604; p++) {
-      const opt = document.createElement("option");
-      opt.value = p;
-      opt.textContent = `الصفحة ${p}`;
-      pageSelect.appendChild(opt);
-    }
+    // Aya (vide, rempli après sélection sura)
+    this._csRender('ayaSelectList', [{ value: '', label: 'اختر الآية', _cb: () => {} }]);
   }
 
   async handleSuraChange() {
     if (!this.tafsirUIReady || this.updatingDropdowns) return;
     this.updatingDropdowns = true;
-    const sura_n = this.tafsirUI.suraSelect.value;
+    const sura_n = this.tafsirUI.suraSelect?.value || this._csGetValue('suraSelectList');
     if (sura_n) {
       const ayat = this.getAyatBySura(parseInt(sura_n));
       if (ayat.length) {
         const first = ayat[0];
         this.updateAyaDropdown(ayat);
-        this.tafsirUI.ayaSelect.value = first[this.F.aya_n];
-        this.tafsirUI.pageSelect.value = first[this.F.page];
-        this.updateTafsirNavigation(
-          first[this.F.sura_n],
-          first[this.F.aya_n],
-          first[this.F.page],
-        );
+        this._csSetValue('ayaSelect', 'ayaSelectList', first[this.F.aya_n]);
+        this._csSetValue('pageSelect', 'pageSelectList', first[this.F.page]);
+        this.updateTafsirNavigation(first[this.F.sura_n], first[this.F.aya_n], first[this.F.page]);
         await this.loadTafsirForPage(first[this.F.page]);
         setTimeout(() => this.scrollToFirstAyaOfSura(parseInt(sura_n)), 300);
       }
@@ -640,20 +691,16 @@ class TafsirSearchManager {
   async handlePageChange() {
     if (!this.tafsirUIReady || this.updatingDropdowns) return;
     this.updatingDropdowns = true;
-    const page = this.tafsirUI.pageSelect.value;
+    const page = this.tafsirUI.pageSelect?.value || this._csGetValue('pageSelectList');
     if (page) {
       await this.loadTafsirForPage(page);
       const ayat = this.getAyatByPage(parseInt(page));
       if (ayat.length) {
         const first = this._getFirstAyaOfPage(ayat);
-        this.tafsirUI.suraSelect.value = first[this.F.sura_n];
+        this._csSetValue('suraSelect', 'suraSelectList', first[this.F.sura_n]);
         this.updateAyaDropdown(this.getAyatBySura(first[this.F.sura_n]));
-        this.tafsirUI.ayaSelect.value = first[this.F.aya_n];
-        this.updateTafsirNavigation(
-          first[this.F.sura_n],
-          first[this.F.aya_n],
-          page,
-        );
+        this._csSetValue('ayaSelect', 'ayaSelectList', first[this.F.aya_n]);
+        this.updateTafsirNavigation(first[this.F.sura_n], first[this.F.aya_n], page);
         setTimeout(() => this.scrollToFirstAyaOfPage(parseInt(page)), 300);
       }
     }
@@ -663,64 +710,46 @@ class TafsirSearchManager {
   async handleAyaChange() {
     if (!this.tafsirUIReady || this.updatingDropdowns) return;
     this.updatingDropdowns = true;
-    const sura_n = this.tafsirUI.suraSelect.value;
-    const aya_n = this.tafsirUI.ayaSelect.value;
+    const sura_n = this.tafsirUI.suraSelect?.value || this._csGetValue('suraSelectList');
+    const aya_n = this.tafsirUI.ayaSelect?.value || this._csGetValue('ayaSelectList');
     if (sura_n && aya_n) {
       const found = this.getAyatBySura(parseInt(sura_n)).find(
         (aya) => aya[this.F.aya_n] === parseInt(aya_n),
       );
       if (found) {
-        this.tafsirUI.pageSelect.value = found[this.F.page];
-        this.updateTafsirNavigation(
-          found[this.F.sura_n],
-          found[this.F.aya_n],
-          found[this.F.page],
-        );
+        this._csSetValue('pageSelect', 'pageSelectList', found[this.F.page]);
+        this.updateTafsirNavigation(found[this.F.sura_n], found[this.F.aya_n], found[this.F.page]);
         await this.loadTafsirForPage(found[this.F.page]);
-        setTimeout(
-          () => this.scrollToAya(found[this.F.sura_n], found[this.F.aya_n]),
-          300,
-        );
+        setTimeout(() => this.scrollToAya(found[this.F.sura_n], found[this.F.aya_n]), 300);
       }
     }
     this.updatingDropdowns = false;
   }
 
   updateAyaDropdown(ayat) {
-    const select = this.tafsirUI.ayaSelect;
-    if (!select) return;
-    select.innerHTML = '<option value="">اختر الآية</option>';
-    ayat.forEach((aya) => {
-      const opt = document.createElement("option");
-      opt.value = aya[this.F.aya_n];
-      opt.textContent = `الآية ${aya[this.F.aya_n]}`;
-      select.appendChild(opt);
-    });
+    const opts = [{ value: '', label: 'اختر الآية', _cb: () => {} },
+      ...ayat.map(a => ({
+        value: String(a[this.F.aya_n]), label: `الآية ${a[this.F.aya_n]}`,
+        _cb: (val) => { this.tafsirUI.ayaSelect = { value: val }; this.handleAyaChange(); }
+      }))
+    ];
+    this._csRender('ayaSelectList', opts);
   }
 
   syncDropdowns(sura_n, aya_n, page, source = "scroll") {
     if ((this.updatingDropdowns && source !== "init") || !this.tafsirUI) return;
     if (source === "scroll" && this.isScrolling) return;
     this.updatingDropdowns = true;
-    const { suraSelect, ayaSelect, pageSelect } = this.tafsirUI;
     try {
-      if (sura_n && suraSelect.value != sura_n) {
-        suraSelect.value = sura_n;
+      if (sura_n && this._csGetValue('suraSelectList') != sura_n) {
+        this._csSetValue('suraSelect', 'suraSelectList', sura_n);
         const ayat = this.getAyatBySura(sura_n);
-        ayaSelect.innerHTML = '<option value="">اختر الآية</option>';
-        ayat.forEach((aya) => {
-          const opt = document.createElement("option");
-          opt.value = aya[this.F.aya_n];
-          opt.textContent = `الآية ${aya[this.F.aya_n]}`;
-          ayaSelect.appendChild(opt);
-        });
+        this.updateAyaDropdown(ayat);
       }
-      if (aya_n && ayaSelect.value != aya_n) ayaSelect.value = aya_n;
-      if (page && pageSelect.value != page) pageSelect.value = page;
+      if (aya_n) this._csSetValue('ayaSelect', 'ayaSelectList', aya_n);
+      if (page) this._csSetValue('pageSelect', 'pageSelectList', page);
     } finally {
-      setTimeout(() => {
-        this.updatingDropdowns = false;
-      }, 50);
+      setTimeout(() => { this.updatingDropdowns = false; }, 50);
     }
   }
 
