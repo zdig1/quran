@@ -367,7 +367,7 @@ class OverlayManager {
     rowLeft.appendChild(bookmarkDiv);
     const pageDiv = document.createElement("div");
     pageDiv.className = "surah-page";
-    pageDiv.innerHTML = `<span class="item-tag">ص ${surah.page_start}</span>`;
+    pageDiv.innerHTML = `<span class="page-tag">ص ${surah.page_start}</span>`;
 
     const sajdaDiv = document.createElement("div");
     sajdaDiv.className = "surah-sajda";
@@ -577,7 +577,7 @@ class OverlayManager {
         <div class="juz-col-juz">${isNewJuz ? `<span class="item-badge">ج${juzNum}</span>` : ''}</div>
         <div class="juz-col-hizb"><span class="item-title">الحزب ${hizb.hizb}</span></div>
         <div class="juz-col-bookmark">${hasBookmarkInRange ? '<span class="item-icon">🔖</span>' : ''}</div>
-        <div class="juz-col-page"><span class="item-tag">ص ${hizb.page_start}</span></div>
+        <div class="juz-col-page"><span class="page-tag">ص ${hizb.page_start}</span></div>
       `;
 
       const line2 = document.createElement("div");
@@ -822,7 +822,7 @@ class OverlayManager {
       <span class="item-title bookmark-name" data-id="${bookmark.id}">${window.quranApp.escapeHtml(bookmark.name)}</span>
     </div>
     <div class="item-left">
-      <span class="item-tag">ص ${bookmark.page}</span>
+      <span class="page-tag">ص ${bookmark.page}</span>
       <button class="icon-btn icon-btn--replace" data-id="${bookmark.id}" title="استبدال الصفحة بالصفحة الحالية">♻️</button>
       <button class="icon-btn icon-btn--remove" data-id="${bookmark.id}" title="حذف">🗑️</button>
     </div>

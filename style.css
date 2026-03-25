@@ -845,7 +845,7 @@ body {
   line-height: 1;
 }
 
-.item-tag {
+.page-tag {
   background: var(--tag-bg);
   color: var(--tag-color);
   padding: 3px 5px;
@@ -865,7 +865,7 @@ body {
 
 .item-container.current-item .item-title,
 .item-container.current-item .item-tertiary,
-.item-container.current-item .item-tag,
+.item-container.current-item .page-tag,
 .item-container.current-item .item-sajda-icon {
   color: var(--quran-text-red) !important;
 }
@@ -1006,7 +1006,7 @@ body {
 
 .item-surah .surah-tanzil,
 .item-surah .surah-verses,
-.item-surah .surah-page .item-tag {
+.item-surah .surah-page .page-tag {
   font-size: var(--text-sm);
   line-height: 1.4;
 }
@@ -1032,7 +1032,7 @@ body {
   font-weight: bold;
 }
 
-.item-surah .surah-page .item-tag {
+.item-surah .surah-page .page-tag {
   padding: 2px 6px;
   border-radius: var(--border-radius);
 }

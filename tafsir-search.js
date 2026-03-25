@@ -328,7 +328,7 @@ class TafsirSearchManager {
           <span class="item-title">${item.sura_n}. ${window.quranApp.escapeHtml(item.sura)}</span>
         </div>
         <div class="item-left">
-          <span class="item-tag">ص ${item.page}</span>
+          <span class="page-tag">ص ${item.page}</span>
         </div>
       </div>
       <div class="item-line-2 item-search-text" data-clickable="true">${window.quranApp.escapeHtml(item.text)}</div>
