@@ -302,24 +302,22 @@ class OverlayManager {
     item.className = "item-container item-surah";
     item.setAttribute("data-surah-id", surah.s_id);
 
-    // Pin (sur deux lignes)
+    // Bouton épingle
     const pinBtn = document.createElement("button");
-    pinBtn.className = `pin-btn surah-pin ${isPinned ? "pinned" : ""}`;
-    pinBtn.setAttribute("data-sura-id", surah.s_id);
+    pinBtn.className = `action-icon pin-btn surah-pin ${isPinned ? "pinned" : ""}`; pinBtn.setAttribute("data-sura-id", surah.s_id);
     pinBtn.textContent = isPinned ? "⭐" : "📌";
 
     const rowsWrapper = document.createElement("div");
     rowsWrapper.className = "surah-rows";
 
-    // ---- Rangée 1 ----
+    // Ligne 1 : numéro + nom
     const row1 = document.createElement("div");
     row1.className = "surah-row";
-
     const row1Right = document.createElement("div");
     row1Right.className = "surah-row-right";
 
     const numberSpan = document.createElement("span");
-    numberSpan.className = "surah-number";
+    numberSpan.className = "surah-number badge";
     numberSpan.textContent = surah.s_id;
     row1Right.appendChild(numberSpan);
 
@@ -328,15 +326,16 @@ class OverlayManager {
     nameSpan.textContent = surah.name;
     row1Right.appendChild(nameSpan);
 
-    // ---- Rangée 2 ----
+    row1.appendChild(row1Right);
+
+    // Ligne 2 : ordre de révélation + icône + bouton info
     const row2 = document.createElement("div");
     row2.className = "surah-row";
-
     const row2Right = document.createElement("div");
     row2Right.className = "surah-row-right";
 
     const orderSpan = document.createElement("span");
-    orderSpan.className = "aya-prefix";
+    orderSpan.className = "note-small";
     orderSpan.textContent = `النزول: ${surah.order}`;
     row2Right.appendChild(orderSpan);
 
@@ -346,29 +345,42 @@ class OverlayManager {
     row2Right.appendChild(revelSpan);
 
     const infoBtn = document.createElement("button");
-    infoBtn.className = "info-btn surah-info";
+    infoBtn.className = "action-icon info-btn surah-info";
     infoBtn.setAttribute("data-sura-id", surah.s_id);
     infoBtn.textContent = "ℹ️";
     row2Right.appendChild(infoBtn);
 
-    // ---- Côté gauche PARTAGÉ (grid 2×2) ----
+    row2.appendChild(row2Right);
+
+    // Partie gauche (informations supplémentaires)
     const rowLeft = document.createElement("div");
     rowLeft.className = "surah-row-left";
 
-    const juzDiv = document.createElement("div");
-    juzDiv.className = "surah-juz";
-    juzDiv.innerHTML = `<span class="juz-badge">${juzStarts.map(j => `ج ${j}`).join(" ")}</span>`;
-
+    // Élément 1 : bookmark (colonne 1, ligne 1)
     const bookmarkDiv = document.createElement("div");
     bookmarkDiv.className = "surah-bookmark";
     if (bookmarkedSurahIds?.has(surah.s_id)) {
       bookmarkDiv.innerHTML = '<span class="item-icon">🔖</span>';
     }
     rowLeft.appendChild(bookmarkDiv);
+
+    // Élément 2 : juz (colonne 2, ligne 1)
+    const juzDiv = document.createElement("div");
+    juzDiv.className = "surah-juz";
+    if (juzStarts.length) {
+      juzDiv.innerHTML = `<span class="juz-badge">${juzStarts.map(j => `ج${j}`).join(" ")}</span>`;
+    } else {
+      juzDiv.innerHTML = '<span class="juz-badge"></span>';
+    }
+    rowLeft.appendChild(juzDiv);
+
+    // Élément 3 : page (colonne 3, ligne 1)
     const pageDiv = document.createElement("div");
     pageDiv.className = "surah-page";
     pageDiv.innerHTML = `<span class="page-tag">ص ${surah.page_start}</span>`;
+    rowLeft.appendChild(pageDiv);
 
+    // Élément 4 : sajda (colonne 1, ligne 2)
     const sajdaDiv = document.createElement("div");
     sajdaDiv.className = "surah-sajda";
     if (window.quranCalculator.hasSajdaInSurah(surah.s_id)) {
@@ -377,29 +389,23 @@ class OverlayManager {
       sajdaSpan.textContent = "۩";
       sajdaDiv.appendChild(sajdaSpan);
     }
+    rowLeft.appendChild(sajdaDiv);
 
+    // Élément 5 : nombre de versets (colonne 3, ligne 2)
     const versesDiv = document.createElement("div");
     versesDiv.className = "surah-verses";
     versesDiv.textContent = `(${surah.verses}) آية`;
+    rowLeft.appendChild(versesDiv);
 
-    rowLeft.appendChild(bookmarkDiv);  // col 1
-    rowLeft.appendChild(juzDiv);       // col 2
-    rowLeft.appendChild(pageDiv);      // col 3
-    rowLeft.appendChild(sajdaDiv);     // col 1 row 2
-    rowLeft.appendChild(versesDiv);    // col 3 row 2
-
-    row1.appendChild(row1Right);
-    row2.appendChild(row2Right);
-
+    // Assemblage final
     rowsWrapper.appendChild(row1);
     rowsWrapper.appendChild(row2);
     rowsWrapper.appendChild(rowLeft);
 
-    // Assemblage
     item.appendChild(pinBtn);
     item.appendChild(rowsWrapper);
 
-    // Événements
+    // Événements (inchangés)
     item.addEventListener("click", (e) => {
       if (e.target.closest('.pin-btn') || e.target.closest('.info-btn')) return;
       window.quranApp?.goToPage(surah.page_start);
@@ -410,40 +416,14 @@ class OverlayManager {
       e.preventDefault();
       e.stopPropagation();
       if (!window.quranApp) return;
+
       const added = window.quranApp.togglePinSurah(surah.s_id);
+      // Mise à jour visuelle instantanée du bouton courant
       pinBtn.classList.toggle("pinned", added);
       pinBtn.textContent = added ? "⭐" : "📌";
 
-      const container = this.overlays.surahs?.content;
-      if (!container) return;
-      const surahs = window.quranCalculator.getAllSurahs();
-      const pinnedIds = window.quranApp.getPinnedSurahs();
-      const bookmarks = window.quranApp.getBookmarks() || [];
-      const bookmarkedSurahIds = new Set();
-      bookmarks.forEach(b => {
-        const s = window.quranCalculator.getFirstSurahForPage(b.page);
-        if (s) bookmarkedSurahIds.add(s.s_id);
-      });
-      const pinnedSurahs = surahs.filter(s => pinnedIds.includes(s.s_id));
-
-      let pinnedSection = container.querySelector('.surah-section-pinned');
-      if (!pinnedSection) {
-        pinnedSection = document.createElement("div");
-        pinnedSection.className = "surah-section surah-section-pinned";
-        container.insertBefore(pinnedSection, container.firstChild);
-      }
-      pinnedSection.innerHTML = '<h3 class="section-title">⭐ السور المفضلة</h3>';
-      pinnedSurahs.forEach(s => pinnedSection.appendChild(this._createSurahItem(s, true, bookmarkedSurahIds)));
-      pinnedSection.style.display = pinnedSurahs.length === 0 ? 'none' : '';
-
-      const allSection = container.querySelector('.surah-section-all');
-      if (allSection) {
-        const otherPin = allSection.querySelector(`.pin-btn[data-sura-id="${surah.s_id}"]`);
-        if (otherPin) {
-          otherPin.classList.toggle("pinned", added);
-          otherPin.textContent = added ? "⭐" : "📌";
-        }
-      }
+      // Reconstruction complète de la liste, en préservant la position de cette sourate
+      this.renderSurahsList(true, surah.s_id);
     });
 
     infoBtn.addEventListener("click", (e) => {
@@ -536,6 +516,157 @@ class OverlayManager {
   }
 
   // ============================================
+  // 1.5 SURAH INFO OVERLAY
+  // ============================================
+
+  async showSurahInfo(surahId) {
+    this.closeMenu();
+    const overlay = this.lazyLoadOverlay("surahInfo");
+    if (!overlay?.element) return;
+    overlay.content.innerHTML = `
+    <div class="loading-placeholder" style="padding: 20px;">
+      <div class="spinner" style="margin-bottom: 10px;"></div>
+      <p>جاري تحميل المعلومات...</p>
+    </div>
+  `;
+    this.showOverlay("surahInfo");
+
+    if (!this.surahsInfo) {
+      try {
+        const response = await fetch("./data/surainfo.json", { cache: "force-cache" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        this.surahsInfo = await response.json();
+      } catch (err) {
+        overlay.content.innerHTML = `<div class="empty-message">⚠️ تعذر تحميل المعلومات</div>`;
+        return;
+      }
+    }
+
+    if (!this._surahInfoSwipeInitialized) {
+      this._initSurahInfoSwipe();
+    }
+
+    this._setupSurahInfoKeyboard();
+    this._updateSurahInfoUI(surahId);
+  }
+
+  _setupSurahInfoKeyboard() {
+    if (this._surahInfoKeyHandler) return;
+
+    this._surahInfoKeyHandler = (e) => {
+      const overlayElem = this.overlays.surahInfo?.element;
+      if (!overlayElem || !overlayElem.classList.contains("show")) return;
+      if (!this.currentSurahInfoId) return;
+
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          if (this.currentSurahInfoId < 114) {
+            this._updateSurahInfoUI(this.currentSurahInfoId + 1);
+          }
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          if (this.currentSurahInfoId > 1) {
+            this._updateSurahInfoUI(this.currentSurahInfoId - 1);
+          }
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", this._surahInfoKeyHandler);
+  }
+
+  _removeSurahInfoKeyboard() {
+    if (this._surahInfoKeyHandler) {
+      document.removeEventListener("keydown", this._surahInfoKeyHandler);
+      this._surahInfoKeyHandler = null;
+    }
+  }
+
+  _updateSurahInfoUI(surahId) {
+    const overlay = this.overlays.surahInfo;
+    if (!overlay?.content) return;
+
+    if (!this.surahsInfo) {
+      setTimeout(() => this._updateSurahInfoUI(surahId), 100);
+      return;
+    }
+
+    const info = this.surahsInfo.find(item => item.s === surahId);
+    if (!info) {
+      overlay.content.innerHTML = `<div class="empty-message">ℹ️ لا توجد معلومات متوفرة لهذه السورة</div>`;
+      return;
+    }
+
+    const formattedHtml = this.formatSurahInfo(info.t);
+    overlay.content.innerHTML = `<div class="surah-info-content" style="padding: 1rem;">${formattedHtml}</div>`;
+
+    this.currentSurahInfoId = surahId;
+  }
+
+  _initSurahInfoSwipe() {
+    const element = this.overlays.surahInfo?.element;
+    if (!element) return;
+    window.quranApp.enableSwipe(
+      element,
+      () => {
+        if (this.currentSurahInfoId < 114) this._updateSurahInfoUI(this.currentSurahInfoId + 1);
+      },
+      () => {
+        if (this.currentSurahInfoId > 1) this._updateSurahInfoUI(this.currentSurahInfoId - 1);
+      },
+      50
+    );
+  }
+
+  getSectionColor(index) {
+    const colors = [
+      'var(--primary)',        // vert
+      'var(--color-blue)',     // bleu
+      'var(--color-brown)',    // marron
+      'var(--color-violet)',   // violet
+      'var(--color-gray)',     // gris
+      '#ff9800',             // orange
+      'var(--color-red)',      // rouge
+      '#009688'              // turquoise
+    ];
+    return colors[index % colors.length];
+  }
+
+  formatSurahInfo(text) {
+    const lines = text.split(/\r?\n/);
+    const title = lines[0]?.trim() || "";
+    const remaining = lines.slice(1);
+
+    let html = '';
+    if (title) {
+      // Conteneur flex pour centrer le titre
+      html += `<div style="display: flex; justify-content: center; width: 100%;">
+               <div class="surah-info-title">${window.quranApp.escapeHtml(title)}</div>
+             </div>`;
+    }
+    let sectionIndex = 0;
+    for (let line of remaining) {
+      line = line.trim();
+      if (line === '') {
+        html += '<br>';
+        continue;
+      }
+      const match = line.match(/^([1-9][-–:])\s*(.*)/);
+      if (match) {
+        const prefix = match[1];
+        const rest = match[2];
+        const color = this.getSectionColor(sectionIndex++);
+        html += `<div class="surah-section-title" style="color: ${color}; font-weight: bold; margin-top: 0.75rem;">${prefix} ${window.quranApp.escapeHtml(rest)}</div>`;
+      } else {
+        html += `<div class="surah-section-text" style="line-height: 1.6; margin-bottom: 0.5rem;">${window.quranApp.escapeHtml(line)}</div>`;
+      }
+    }
+    return html;
+  }
+
+  // ============================================
   // 2. JUZ/HIZB OVERLAY
   // ============================================
 
@@ -547,7 +678,6 @@ class OverlayManager {
       this.showOverlay("juzHizb");
     }
   }
-
   renderJuzHizbList() {
     const overlay = this.overlays.juzHizb;
     if (!overlay?.content || !window.quranCalculator) return;
@@ -571,22 +701,56 @@ class OverlayManager {
       item.className = "item-container item-juzhizb";
       item.setAttribute("data-hizb", hizb.hizb);
 
+      // --- Première ligne (badge + titre) ---
       const line1 = document.createElement("div");
-      line1.className = "item-line-1 juz-line1";
-      line1.innerHTML = `
-        <div class="juz-col-juz">${isNewJuz ? `<span class="item-badge">ج${juzNum}</span>` : ''}</div>
-        <div class="juz-col-hizb"><span class="item-title">الحزب ${hizb.hizb}</span></div>
-        <div class="juz-col-bookmark">${hasBookmarkInRange ? '<span class="item-icon">🔖</span>' : ''}</div>
-        <div class="juz-col-page"><span class="page-tag">ص ${hizb.page_start}</span></div>
-      `;
+      line1.className = "item-line-1";
 
+      const rightPart = document.createElement("div");
+      rightPart.className = "item-right";
+
+      // Badge du juz (toujours présent, invisible si pas de nouveau juz)
+      const badgeSpan = document.createElement("span");
+      badgeSpan.className = "item-badge badge";
+      if (isNewJuz) {
+        badgeSpan.textContent = `ج${juzNum}`;
+      } else {
+        badgeSpan.style.visibility = "hidden";
+        badgeSpan.textContent = "ج0";
+      }
+      rightPart.appendChild(badgeSpan);
+
+      const titleSpan = document.createElement("span");
+      titleSpan.className = "item-title";
+      titleSpan.textContent = `الحزب ${hizb.hizb}`;
+      rightPart.appendChild(titleSpan);
+
+      const leftPart = document.createElement("div");
+      leftPart.className = "item-left";
+
+      if (hasBookmarkInRange) {
+        const bookmarkSpan = document.createElement("span");
+        bookmarkSpan.className = "item-icon";
+        bookmarkSpan.textContent = "🔖";
+        leftPart.appendChild(bookmarkSpan);
+      }
+
+      const pageSpan = document.createElement("span");
+      pageSpan.className = "page-tag";
+      pageSpan.textContent = `ص ${hizb.page_start}`;
+      leftPart.appendChild(pageSpan);
+
+      line1.appendChild(rightPart);
+      line1.appendChild(leftPart);
+
+      // --- Deuxième ligne (texte de l'ayah) ---
       const line2 = document.createElement("div");
       line2.className = "item-line-2 juz-line2";
       line2.innerHTML = `<span class="aya-text">${window.quranApp.escapeHtml(ayaText)}</span>`;
 
+      // --- Troisième ligne (référence sourate + numéro d'ayah) ---
       const line3 = document.createElement("div");
       line3.className = "item-line-3 juz-line3";
-      line3.innerHTML = `<span class="aya-prefix">${prefix}</span>`;
+      line3.innerHTML = `<span class="note-small">${prefix}</span>`;
 
       item.appendChild(line1);
       item.appendChild(line2);
@@ -810,26 +974,25 @@ class OverlayManager {
     let dateDisplay = "";
     if (bookmark.lastModified) {
       const date = new Date(bookmark.lastModified);
-      const year = date.getFullYear().toString().slice(-2); // 2 derniers chiffres
+      const year = date.getFullYear().toString().slice(-2);
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
       dateDisplay = `${year}-${month}-${day}`;
     }
-
     item.innerHTML = `<div class="item-line-1">
     <div class="item-right">
-      <button class="icon-btn icon-btn--edit" data-id="${bookmark.id}" title="تعديل الاسم">✏️</button>
+        <button class="action-icon bordered icon-btn--edit" data-id="${bookmark.id}" title="تعديل الاسم">✏️</button>
       <span class="item-title bookmark-name" data-id="${bookmark.id}">${window.quranApp.escapeHtml(bookmark.name)}</span>
     </div>
     <div class="item-left">
       <span class="page-tag">ص ${bookmark.page}</span>
-      <button class="icon-btn icon-btn--replace" data-id="${bookmark.id}" title="استبدال الصفحة بالصفحة الحالية">♻️</button>
-      <button class="icon-btn icon-btn--remove" data-id="${bookmark.id}" title="حذف">🗑️</button>
+        <button class="action-icon bordered icon-btn--replace" data-id="${bookmark.id}" title="استبدال الصفحة بالصفحة الحالية">♻️</button>
+        <button class="action-icon bordered icon-btn--remove" data-id="${bookmark.id}" title="حذف">🗑️</button>
     </div>
   </div>
   <div class="item-line-2" style="margin-top: 4px; padding-right: 45px;">
     <div class="item-right">
-<span class="aya-prefix" style="font-size: 0.75rem; color: var(--text-lighter);">
+<span class="note-small">
   ${dateDisplay || "غير معروف"}
 </span>
     </div>
@@ -1000,7 +1163,29 @@ class OverlayManager {
   }
 
   // ============================================
-  // 3.5 audio OVERLAY
+  // 4. KHATM OVERLAY
+  // ============================================
+
+  showKhatm() {
+    this.closeMenu();
+    const overlay = this.lazyLoadOverlay("khatm");
+    if (overlay) {
+      this.prepareKhatmContent();
+      this.showOverlay("khatm");
+    }
+  }
+
+  prepareKhatmContent() {
+    const overlay = this.overlays.khatm;
+    if (!overlay?.content || overlay.content.children.length > 0) return;
+    overlay.content.innerHTML = `<div class="khatm-page">
+      <img src="./media/605.webp" alt="دعاء ختم القرآن - الصفحة 605" loading="lazy">
+      <img src="./media/606.webp" alt="دعاء ختم القرآن - الصفحة 606" loading="lazy">
+    </div>`;
+  }
+
+  // ============================================
+  // 5 audio OVERLAY
   // ============================================
 
   renderAudioContent(overlay) {
@@ -1019,15 +1204,13 @@ class OverlayManager {
     contentContainer.innerHTML = `
     ${coordsStatus}
     
-    <!-- Section récitant avec bouton favori -->
-  <div class="audio-select-row">
+<div class="audio-select-row">
     <div class="custom-select" id="reciterSelectWrap">
       <button type="button" class="custom-select-btn select-violet" id="reciterSelect">
         <span class="custom-select-val">اختر القارئ</span><span class="custom-select-arrow">▾</span>
       </button>
       <div class="custom-select-dropdown" id="reciterSelectList"></div>
     </div>
-    <button id="pinReciterBtn" class="audio-btn pin-btn reciter-pin" title="إضافة إلى المفضلين" style="font-size:1.3rem; flex-shrink:0;">📌</button>
   </div>
     
     <div class="audio-select-row">
@@ -1113,7 +1296,6 @@ class OverlayManager {
         });
       }
       if (window.quranAudioPlayer) {
-        window.quranAudioPlayer._updateReciterPinButton();
       }
     }, 50);
 
@@ -1145,29 +1327,7 @@ class OverlayManager {
   }
 
   // ============================================
-  // 4. KHATM OVERLAY
-  // ============================================
-
-  showKhatm() {
-    this.closeMenu();
-    const overlay = this.lazyLoadOverlay("khatm");
-    if (overlay) {
-      this.prepareKhatmContent();
-      this.showOverlay("khatm");
-    }
-  }
-
-  prepareKhatmContent() {
-    const overlay = this.overlays.khatm;
-    if (!overlay?.content || overlay.content.children.length > 0) return;
-    overlay.content.innerHTML = `<div class="khatm-page">
-      <img src="./media/605.webp" alt="دعاء ختم القرآن - الصفحة 605" loading="lazy">
-      <img src="./media/606.webp" alt="دعاء ختم القرآن - الصفحة 606" loading="lazy">
-    </div>`;
-  }
-
-  // ============================================
-  // 5. SEARCH OVERLAY
+  // 6. SEARCH OVERLAY
   // ============================================
 
   async showSearch() {
@@ -1246,7 +1406,7 @@ class OverlayManager {
   }
 
   // ============================================
-  // 6. TAFSIR OVERLAY
+  // 7. TAFSIR OVERLAY
   // ============================================
 
   async showTafsir() {
@@ -1260,60 +1420,33 @@ class OverlayManager {
 
     this.showOverlay("tafsir");
 
-    if (
-      window.tafsirManager?.initTafsirUI &&
-      !this.lazyLoaded.has("tafsirUI")
-    ) {
-      overlay.content.innerHTML = `<div class="tafsir-loading-overlay" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;background:inherit;">
-        <div style="text-align:center;">
-          <div class="spinner" style="margin-bottom:20px;"></div>
-          <p>جاري تحميل التفسير...</p>
-        </div>
-      </div>`;
+    // ✅ Attendre le prochain frame pour que l'overlay soit visible
+    await new Promise(r => requestAnimationFrame(r));
 
-      this._tafsirInitTimeout = setTimeout(async () => {
-        const suraSelect =
-          overlay.suraSelect || document.getElementById("suraSelect");
-        const ayaSelect =
-          overlay.ayaSelect || document.getElementById("ayaSelect");
-        const pageSelect =
-          overlay.pageSelect || document.getElementById("pageSelect");
+    // ✅ Initialisation immédiate (plus de setTimeout)
+    const suraSelect = overlay.suraSelect || document.getElementById("suraSelect");
+    const ayaSelect = overlay.ayaSelect || document.getElementById("ayaSelect");
+    const pageSelect = overlay.pageSelect || document.getElementById("pageSelect");
 
-        if (suraSelect && ayaSelect && pageSelect) {
-          await window.tafsirManager.initTafsirUI(
-            suraSelect,
-            ayaSelect,
-            pageSelect,
-            overlay.content,
-            (page) => {
-              this.closeOverlay("tafsir");
-              setTimeout(() => window.quranApp?.goToPage(page), 200);
-            },
-            (sura, aya) => this.goToAya(sura, aya),
-          );
-          this.lazyLoaded.add("tafsirUI");
-          const loadingEl = overlay.content.querySelector(
-            ".tafsir-loading-overlay",
-          );
-          if (loadingEl) {
-            loadingEl.style.opacity = "0";
-            setTimeout(() => loadingEl.remove(), 300);
-          }
-        }
-        this._tafsirInitTimeout = null;
-      }, 200);
-    } else if (this.lazyLoaded.has("tafsirUI") && window.tafsirManager) {
-      const currentPage = window.quranApp?.getCurrentPage() || 1;
-      window.tafsirManager.loadTafsirForPage(currentPage);
-      setTimeout(
-        () => window.tafsirManager.scrollToFirstAyaOfPage(currentPage),
-        150,
+    if (suraSelect && ayaSelect && pageSelect) {
+      await window.tafsirManager.initTafsirUI(
+        suraSelect,
+        ayaSelect,
+        pageSelect,
+        overlay.content,
+        (page) => {
+          this.closeOverlay("tafsir");
+          setTimeout(() => window.quranApp?.goToPage(page), 200);
+        },
+        (sura, aya) => this.goToAya(sura, aya),
       );
+      this.lazyLoaded.add("tafsirUI");
+      // La fonction initTafsirUI charge déjà la page courante
     }
   }
 
   // ============================================
-  // 7. TAJWEED OVERLAY
+  // 8. TAJWEED OVERLAY
   // ============================================
 
   showTajweed() {
@@ -1353,7 +1486,7 @@ class OverlayManager {
   }
 
   // ============================================
-  // 8. ABOUT OVERLAY
+  // 9. ABOUT OVERLAY
   // ============================================
 
   shareApp() {
@@ -1468,11 +1601,36 @@ class OverlayManager {
         this.showBackupDialog();
       });
     }
+  }
 
+  showBackupDialog() {
+    this.closeMenu();
+    const overlay = this.lazyLoadOverlay("backup");
+    if (!overlay?.element) return;
+
+    this.showOverlay("backup");
+
+    const exportBtn = document.getElementById("backupExportBtn");
+    const importBtn = document.getElementById("backupImportBtn");
+
+    // Nettoyer anciens listeners
+    const newExport = exportBtn.cloneNode(true);
+    const newImport = importBtn.cloneNode(true);
+    exportBtn.replaceWith(newExport);
+    importBtn.replaceWith(newImport);
+
+    newExport.addEventListener("click", () => {
+      this.closeOverlay("backup");
+      this.exportBookmarks();
+    });
+    newImport.addEventListener("click", () => {
+      this.closeOverlay("backup");
+      this.importBookmarks();
+    });
   }
 
   // ============================================
-  // 9 PAGE INPUT OVERLAY
+  // 10 PAGE INPUT OVERLAY
   // ============================================
 
   showPageInputDialog() {
@@ -1525,157 +1683,6 @@ class OverlayManager {
   }
 
   // ============================================
-  // 10. SURAH INFO OVERLAY
-  // ============================================
-
-  async showSurahInfo(surahId) {
-    this.closeMenu();
-    const overlay = this.lazyLoadOverlay("surahInfo");
-    if (!overlay?.element) return;
-    overlay.content.innerHTML = `
-    <div class="loading-placeholder" style="padding: 20px;">
-      <div class="spinner" style="margin-bottom: 10px;"></div>
-      <p>جاري تحميل المعلومات...</p>
-    </div>
-  `;
-    this.showOverlay("surahInfo");
-
-    if (!this.surahsInfo) {
-      try {
-        const response = await fetch("./data/surainfo.json", { cache: "force-cache" });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        this.surahsInfo = await response.json();
-      } catch (err) {
-        overlay.content.innerHTML = `<div class="empty-message">⚠️ تعذر تحميل المعلومات</div>`;
-        return;
-      }
-    }
-
-    if (!this._surahInfoSwipeInitialized) {
-      this._initSurahInfoSwipe();
-    }
-
-    this._setupSurahInfoKeyboard();
-    this._updateSurahInfoUI(surahId);
-  }
-
-  _setupSurahInfoKeyboard() {
-    if (this._surahInfoKeyHandler) return;
-
-    this._surahInfoKeyHandler = (e) => {
-      const overlayElem = this.overlays.surahInfo?.element;
-      if (!overlayElem || !overlayElem.classList.contains("show")) return;
-      if (!this.currentSurahInfoId) return;
-
-      switch (e.key) {
-        case "ArrowLeft":
-          e.preventDefault();
-          if (this.currentSurahInfoId < 114) {
-            this._updateSurahInfoUI(this.currentSurahInfoId + 1);
-          }
-          break;
-        case "ArrowRight":
-          e.preventDefault();
-          if (this.currentSurahInfoId > 1) {
-            this._updateSurahInfoUI(this.currentSurahInfoId - 1);
-          }
-          break;
-      }
-    };
-
-    document.addEventListener("keydown", this._surahInfoKeyHandler);
-  }
-
-  _removeSurahInfoKeyboard() {
-    if (this._surahInfoKeyHandler) {
-      document.removeEventListener("keydown", this._surahInfoKeyHandler);
-      this._surahInfoKeyHandler = null;
-    }
-  }
-
-  _updateSurahInfoUI(surahId) {
-    const overlay = this.overlays.surahInfo;
-    if (!overlay?.content) return;
-
-    if (!this.surahsInfo) {
-      setTimeout(() => this._updateSurahInfoUI(surahId), 100);
-      return;
-    }
-
-    const info = this.surahsInfo.find(item => item.s === surahId);
-    if (!info) {
-      overlay.content.innerHTML = `<div class="empty-message">ℹ️ لا توجد معلومات متوفرة لهذه السورة</div>`;
-      return;
-    }
-
-    const formattedHtml = this.formatSurahInfo(info.t);
-    overlay.content.innerHTML = `<div class="surah-info-content" style="padding: 1rem;">${formattedHtml}</div>`;
-
-    this.currentSurahInfoId = surahId;
-  }
-
-  _initSurahInfoSwipe() {
-    const element = this.overlays.surahInfo?.element;
-    if (!element) return;
-    window.quranApp.enableSwipe(
-      element,
-      () => {
-        if (this.currentSurahInfoId < 114) this._updateSurahInfoUI(this.currentSurahInfoId + 1);
-      },
-      () => {
-        if (this.currentSurahInfoId > 1) this._updateSurahInfoUI(this.currentSurahInfoId - 1);
-      },
-      50
-    );
-  }
-
-  getSectionColor(index) {
-    const colors = [
-      'var(--primary)',        // vert
-      'var(--color-blue)',     // bleu
-      'var(--color-brown)',    // marron
-      'var(--color-violet)',   // violet
-      'var(--color-gray)',     // gris
-      '#ff9800',             // orange
-      'var(--color-red)',      // rouge
-      '#009688'              // turquoise
-    ];
-    return colors[index % colors.length];
-  }
-
-  formatSurahInfo(text) {
-    const lines = text.split(/\r?\n/);
-    const title = lines[0]?.trim() || "";
-    const remaining = lines.slice(1);
-
-    let html = '';
-    if (title) {
-      // Conteneur flex pour centrer le titre
-      html += `<div style="display: flex; justify-content: center; width: 100%;">
-               <div class="surah-info-title">${window.quranApp.escapeHtml(title)}</div>
-             </div>`;
-    }
-    let sectionIndex = 0;
-    for (let line of remaining) {
-      line = line.trim();
-      if (line === '') {
-        html += '<br>';
-        continue;
-      }
-      const match = line.match(/^([1-9][-–:])\s*(.*)/);
-      if (match) {
-        const prefix = match[1];
-        const rest = match[2];
-        const color = this.getSectionColor(sectionIndex++);
-        html += `<div class="surah-section-title" style="color: ${color}; font-weight: bold; margin-top: 0.75rem;">${prefix} ${window.quranApp.escapeHtml(rest)}</div>`;
-      } else {
-        html += `<div class="surah-section-text" style="line-height: 1.6; margin-bottom: 0.5rem;">${window.quranApp.escapeHtml(line)}</div>`;
-      }
-    }
-    return html;
-  }
-
-  // ============================================
   //  GESTION GÉNÉRALE DES OVERLAYS
   // ============================================
 
@@ -1686,32 +1693,6 @@ class OverlayManager {
         ? "الوضع النهاري"
         : "الوضع الليلي";
     }
-  }
-
-  showBackupDialog() {
-    this.closeMenu();
-    const overlay = this.lazyLoadOverlay("backup");
-    if (!overlay?.element) return;
-
-    this.showOverlay("backup");
-
-    const exportBtn = document.getElementById("backupExportBtn");
-    const importBtn = document.getElementById("backupImportBtn");
-
-    // Nettoyer anciens listeners
-    const newExport = exportBtn.cloneNode(true);
-    const newImport = importBtn.cloneNode(true);
-    exportBtn.replaceWith(newExport);
-    importBtn.replaceWith(newImport);
-
-    newExport.addEventListener("click", () => {
-      this.closeOverlay("backup");
-      this.exportBookmarks();
-    });
-    newImport.addEventListener("click", () => {
-      this.closeOverlay("backup");
-      this.importBookmarks();
-    });
   }
 
   showOverlay(name) {

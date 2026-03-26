@@ -30,35 +30,18 @@
     "thumbnailUrl": "https://img.youtube.com/vi/quVCFsKA85o/maxresdefault.jpg",
     "contentUrl": "https://www.youtube.com/watch?v=quVCFsKA85o",
     "embedUrl": "https://www.youtube.com/embed/quVCFsKA85o",
-    "uploadDate": "2026-02-26"
+    "uploadDate": "2026-03-26"
   },
-  "audience": {
-    "@type": "Audience",
-    "audienceType": "General"
-  },
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  },
-  "featureList": [
-    "قرآن",
-    "تلاوة",
-    "تفسير",
-    "بحث",
-    "وضع ليلي"
-  ],
-  "author": {
-    "@type": "Person",
-    "name": "zdig1",
-    "sameAs": [
+  "audience": {    "@type": "Audience",    "audienceType": "General"  },
+  "offers": {    "@type": "Offer",    "price": "0",    "priceCurrency": "USD"  },
+    "featureList": [    "قرآن",    "تلاوة",    "تفسير",    "بحث",    "وضع ليلي"  ],
+  "author": {    "@type": "Person",    "name": "zdig1",
+      "sameAs": [
       "https://twitter.com/zdig1",
       "https://www.youtube.com/@zdig01"
     ]
   },
-  "publisher": {
-    "@type": "Organization",
-    "name": "GDZ",
+  "publisher": {    "@type": "Organization",    "name": "GDZ",
     "url": "https://quran-58c7cd.gitlab.io/",
     "sameAs": [
       "https://www.facebook.com/streaming.rakuen",
@@ -271,6 +254,18 @@
             </div>
         </div>
 
+        <!-- 1.5. SUURAH INFO OVERLAY -->
+        <div id="surahInfoOverlay" class="overlay" role="dialog" aria-label="معلومات السورة">
+            <div class="overlay-content">
+                <div class="overlay-header">
+                    <h2>ℹ️ معلومات عن السورة</h2>
+                    <button type="button" class="btn close-btn" id="closeSurahInfoBtn">✕</button>
+                </div>
+                <div id="surahInfoContent" class="overlay-body"
+                    style="white-space: pre-wrap; direction: rtl; text-align: right;"></div>
+            </div>
+        </div>
+
         <!-- 2. JUZ/HIZB (Standard) -->
         <div id="juzHizbOverlay" class="overlay" role="dialog" aria-label="الأجزاء والأحزاب">
             <div class="overlay-content fullscreen">
@@ -293,17 +288,6 @@
             </div>
         </div>
 
-        <!-- 3.5 audio Overlay -->
-        <div id="audioOverlay" class="overlay" role="dialog" aria-label="الاستماع إلى القرآن">
-            <div class="overlay-content">
-                <div class="overlay-header">
-                    <h2>🎧 الاستماع إلى القرآن</h2>
-                    <button type="button" class="btn close-btn" id="closeAudioBtn">✕</button>
-                </div>
-                <div id="audioContent" class="overlay-body audio-body"></div>
-            </div>
-        </div>
-
         <!-- 4. KHATM (Fullscreen) -->
         <div id="khatmOverlay" class="overlay" role="dialog" aria-label="دعاء ختم القرآن">
             <div class="overlay-content fullscreen">
@@ -312,6 +296,17 @@
                     <button type="button" class="btn close-btn" id="closeKhatmBtn">✕</button>
                 </div>
                 <div id="khatmContent" class="overlay-body khatm-content"></div>
+            </div>
+        </div>
+
+        <!-- 4.5 audio Overlay -->
+        <div id="audioOverlay" class="overlay" role="dialog" aria-label="الاستماع إلى القرآن">
+            <div class="overlay-content">
+                <div class="overlay-header">
+                    <h2>🎧 الاستماع إلى القرآن</h2>
+                    <button type="button" class="btn close-btn" id="closeAudioBtn">✕</button>
+                </div>
+                <div id="audioContent" class="overlay-body audio-body"></div>
             </div>
         </div>
 
@@ -363,7 +358,7 @@
                         </button>
                         <div class="custom-select-dropdown" id="pageSelectList"></div>
                     </div>
-                    
+
                     <button type="button" class="btn tafsir-font-btn" id="tafsirThemeToggle"
                         aria-label="تبديل الوضع الليلي">🌙</button>
 
@@ -406,37 +401,7 @@
             </div>
         </div>
 
-        <!-- 9. PAGE INPUT -->
-        <div id="pageInputOverlay" class="overlay" role="dialog" aria-label="الانتقال إلى صفحة">
-            <div class="overlay-content">
-                <div class="overlay-header">
-                    <h2>⬅️ الانتقال إلى صفحة</h2>
-                    <button type="button" class="btn close-btn" id="closePageInputBtn">✕</button>
-                </div>
-                <div class="overlay-body" style="padding: 16px;">
-                    <p style="text-align:right; margin: 0 0 12px 0;">أدخل رقم الصفحة (1-604)</p>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <input type="tel" id="pageInputField" class="search-input" inputmode="numeric" pattern="[0-9]*"
-                            placeholder="1-604" style="flex:1; direction:ltr; text-align:right; margin:0;">
-                        <button type="button" class="confirm-btn ok" id="pageInputGoBtn">اذهب</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 10. SUURAH INFO OVERLAY -->
-        <div id="surahInfoOverlay" class="overlay" role="dialog" aria-label="معلومات السورة">
-            <div class="overlay-content">
-                <div class="overlay-header">
-                    <h2>ℹ️ معلومات عن السورة</h2>
-                    <button type="button" class="btn close-btn" id="closeSurahInfoBtn">✕</button>
-                </div>
-                <div id="surahInfoContent" class="overlay-body"
-                    style="white-space: pre-wrap; direction: rtl; text-align: right;"></div>
-            </div>
-        </div>
-
-        <!-- 11. BACKUP OVERLAY -->
+        <!-- 8.5 BACKUP OVERLAY -->
         <div id="backupOverlay" class="overlay" role="dialog" aria-label="النسخ الاحتياطي">
             <div class="overlay-content">
                 <div class="overlay-header">
@@ -457,7 +422,26 @@
             </div>
         </div>
 
+        <!-- 9. PAGE INPUT -->
+        <div id="pageInputOverlay" class="overlay" role="dialog" aria-label="الانتقال إلى صفحة">
+            <div class="overlay-content">
+                <div class="overlay-header">
+                    <h2>⬅️ الانتقال إلى صفحة</h2>
+                    <button type="button" class="btn close-btn" id="closePageInputBtn">✕</button>
+                </div>
+                <div class="overlay-body" style="padding: 16px;">
+                    <p style="text-align:right; margin: 0 0 12px 0;">أدخل رقم الصفحة (1-604)</p>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="tel" id="pageInputField" class="search-input" inputmode="numeric" pattern="[0-9]*"
+                            placeholder="1-604" style="flex:1; direction:ltr; text-align:right; margin:0;">
+                        <button type="button" class="confirm-btn ok" id="pageInputGoBtn">اذهب</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
+    
     <!-- noscript fallback -->
     <noscript>
         <div class="noscript-fallback">

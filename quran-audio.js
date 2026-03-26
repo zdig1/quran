@@ -280,30 +280,77 @@ class QuranAudioPlayer {
   }
   // ---- fin helpers ----
 
+  _closeReciterDropdown() {
+    const wrap = document.getElementById('reciterSelectWrap');
+    if (wrap) wrap.classList.remove('open');
+  }
+
   _populateReciterSelect(riwaya) {
     this._csInitToggle();
+    const listContainer = document.getElementById('reciterSelectList');
+    if (!listContainer) return;
+
     const reciters = RIWAYAT_CONFIG[riwaya]?.reciters || [];
     const pinnedIds = this.getPinnedReciters();
+    // Trier : favoris en premier
     const pinned = reciters.filter(r => pinnedIds.includes(r.id));
     const normal = reciters.filter(r => !pinnedIds.includes(r.id));
 
-    const opts = [{ value: '', label: 'اختر القارئ' }];
-    pinned.forEach(r => opts.push({
-      value: r.id, label: `⭐ ${r.name}`, group: '⭐ المفضلون',
-      _cb: (val) => this._selectReciter(val)
-    }));
-    normal.forEach(r => opts.push({
-      value: r.id, label: r.name, group: '📖 جميع القراء',
-      _cb: (val) => this._selectReciter(val)
-    }));
-    this._csRender('reciterSelectList', opts);
+    listContainer.innerHTML = '';
 
-    const saved = window.quranApp.getPreference(`reciter_${riwaya}`);
-    const toSelect = (saved && reciters.some(r => r.id === saved)) ? saved : reciters[0]?.id;
-    if (toSelect) {
-      this._csSetValue('reciterSelect', 'reciterSelectList', toSelect);
-      this._selectReciter(toSelect, false);
+    const addOptions = (reciterArray, groupName) => {
+      if (groupName) {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'custom-select-group';
+        groupDiv.textContent = groupName;
+        listContainer.appendChild(groupDiv);
+      }
+      reciterArray.forEach(reciter => {
+        const isPinned = pinnedIds.includes(reciter.id);
+        const option = document.createElement('div');
+        option.className = 'custom-select-option reciter-option';
+        option.dataset.value = reciter.id;
+
+        // Nom du récitant (cliquable pour sélectionner)
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'reciter-name';
+        nameSpan.textContent = reciter.name;
+        nameSpan.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this._selectReciter(reciter.id);
+          this._closeReciterDropdown();
+        });
+
+        // Bouton pin
+        const pinBtn = document.createElement('button');
+        pinBtn.className = `pin-reciter-btn action-icon ${isPinned ? 'pinned' : ''}`;
+        pinBtn.textContent = isPinned ? '⭐' : '📌';
+        pinBtn.setAttribute('data-id', reciter.id);
+        pinBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.togglePinReciter(reciter.id);
+          // Rafraîchir la liste sans fermer le dropdown
+          this._populateReciterSelect(this.currentRiwaya);
+          // Mettre à jour le bouton principal si le récitant actuel est celui modifié
+          if (this.currentReciter && this.currentReciter.id === reciter.id) {
+            this._updateReciterSelectButton();
+          }
+        });
+
+        option.appendChild(nameSpan);
+        option.appendChild(pinBtn);
+        listContainer.appendChild(option);
+      });
+    };
+
+    addOptions(pinned, '⭐ المفضلون');
+    addOptions(normal, '📖 جميع القراء');
+
+    // Sélectionner l'option correspondant au récitant courant
+    if (this.currentReciter) {
+      this._csSetValue('reciterSelect', 'reciterSelectList', this.currentReciter.id);
     }
+    this._updateReciterSelectButton();
   }
 
   _selectReciter(id, save = true) {
@@ -315,7 +362,7 @@ class QuranAudioPlayer {
     this._csSetValue('reciterSelect', 'reciterSelectList', id);
     if (save) window.quranApp.setPreference(`reciter_${this.currentRiwaya}`, id);
     this._updateCurrentReciterName();
-    this._updateReciterPinButton();
+    this._updateReciterSelectButton();
     this._updateUI();
     if (this.isPlaying && !this.hasError) {
       this.audioElement.pause();
@@ -324,6 +371,13 @@ class QuranAudioPlayer {
   }
   // Dans la classe QuranAudioPlayer
 
+  _updateReciterSelectButton() {
+    const btn = document.getElementById('reciterSelect');
+    if (!btn || !this.currentReciter) return;
+    const valSpan = btn.querySelector('.custom-select-val');
+    const isPinned = this.isReciterPinned(this.currentReciter.id);
+    valSpan.textContent = isPinned ? `⭐ ${this.currentReciter.name}` : this.currentReciter.name;
+  }
   // Gestion des récitants favoris
   getPinnedReciters() {
     const key = `pinnedReciters_${this.currentRiwaya}`;
@@ -404,7 +458,7 @@ class QuranAudioPlayer {
       }
 
       const added = this.togglePinReciter(this.currentReciter.id);
-      this._updateReciterPinButton();
+      this._updateReciterSelectButton();
       window.quranApp?.showToast(
         added ? '⭐ تمت الإضافة إلى المفضلين' : '📌 تمت الإزالة من المفضلين'
       );
@@ -418,10 +472,10 @@ class QuranAudioPlayer {
 
   _populateSurahSelect() {
     const opts = [{ value: '', label: 'اختر السورة' },
-      ...this.surahs.map(s => ({
-        value: String(s.s_id), label: `${s.s_id}. ${s.name}`,
-        _cb: (val) => this._setSurah(val, 1)
-      }))
+    ...this.surahs.map(s => ({
+      value: String(s.s_id), label: `${s.s_id}. ${s.name}`,
+      _cb: (val) => this._setSurah(val, 1)
+    }))
     ];
     this._csRender('surahSelectAudioList', opts);
   }
@@ -453,20 +507,20 @@ class QuranAudioPlayer {
       return;
     }
     const opts = [{ value: '', label: 'اختر الآية' },
-      ...Array.from({ length: surah.verses_count }, (_, i) => ({
-        value: String(i + 1), label: `الآية ${i + 1}`,
-        _cb: (val) => { this.currentAyah = parseInt(val); this._updateCurrentDisplay(); }
-      }))
+    ...Array.from({ length: surah.verses_count }, (_, i) => ({
+      value: String(i + 1), label: `الآية ${i + 1}`,
+      _cb: (val) => { this.currentAyah = parseInt(val); this._updateCurrentDisplay(); }
+    }))
     ];
     this._csRender('ayaSelectAudioList', opts);
   }
 
   _populatePageSelect() {
     const opts = [{ value: '', label: 'اختر الصفحة' },
-      ...Array.from({ length: 604 }, (_, i) => ({
-        value: String(i + 1), label: `الصفحة ${i + 1}`,
-        _cb: (val) => this._handlePageChange({ target: { value: val } })
-      }))
+    ...Array.from({ length: 604 }, (_, i) => ({
+      value: String(i + 1), label: `الصفحة ${i + 1}`,
+      _cb: (val) => this._handlePageChange({ target: { value: val } })
+    }))
     ];
     this._csRender('pageSelectAudioList', opts);
   }
@@ -976,14 +1030,13 @@ class QuranAudioPlayer {
     this.fabBtn?.classList.add("hidden");
     this._syncMiniBar();
 
-    // Attendre le prochain frame pour que le DOM soit prêt
-    requestAnimationFrame(() => {
+    // Forcer un recalcul après que la barre soit visible
+    setTimeout(() => {
       if (window.quranReader && typeof window.quranReader._adjustFooterHeight === 'function') {
         window.quranReader._adjustFooterHeight();
       }
-    });
+    }, 50);
   }
-
   _hideMiniBar(showFab = true) {
     this.miniBar?.classList.add("hidden");
     if (showFab) {
