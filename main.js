@@ -690,7 +690,194 @@ class QuranApp {
 }
 
 // ============================================
-// INITIALISATION
+// UTILITAIRES DE RENDU DE LISTES
+// ============================================
+
+class ListItemRenderer {
+  /**
+   * Crée un conteneur d'item avec les classes de base
+   * @param {string} type - "surah", "juz", "search", "bookmark"
+   * @param {string} id - identifiant optionnel
+   */
+  static createContainer(type, id = null) {
+    const div = document.createElement('div');
+    div.className = `item-container item-${type}`;
+    if (id) div.setAttribute(`data-${type}-id`, id);
+    return div;
+  }
+
+  /**
+   * Construit la première ligne (badge + titre à droite, éléments à gauche)
+   */
+  static buildLine1({ rightElements = [], leftElements = [] }) {
+    const line1 = document.createElement('div');
+    line1.className = 'item-line-1';
+
+    const rightPart = document.createElement('div');
+    rightPart.className = 'item-right';
+    rightElements.forEach(el => rightPart.appendChild(el));
+
+    const leftPart = document.createElement('div');
+    leftPart.className = 'item-left';
+    leftElements.forEach(el => leftPart.appendChild(el));
+
+    line1.appendChild(rightPart);
+    line1.appendChild(leftPart);
+    return line1;
+  }
+
+  /**
+   * Construit une ligne supplémentaire (2, 3...)
+   */
+  static buildLine(className, content) {
+    const line = document.createElement('div');
+    line.className = className;
+    if (typeof content === 'string') {
+      line.innerHTML = content;
+    } else if (content instanceof HTMLElement) {
+      line.appendChild(content);
+    }
+    return line;
+  }
+
+  /**
+   * Crée un badge standard
+   */
+  static createBadge(text, extraClass = '') {
+    const span = document.createElement('span');
+    span.className = `item-badge badge ${extraClass}`;
+    span.textContent = text;
+    return span;
+  }
+
+  /**
+   * Crée un titre d'item
+   */
+  static createTitle(text) {
+    const span = document.createElement('span');
+    span.className = 'item-title';
+    span.textContent = text;
+    return span;
+  }
+
+  /**
+   * Crée une étiquette de page
+   */
+  static createPageTag(page) {
+    const span = document.createElement('span');
+    span.className = 'page-tag';
+    span.textContent = `ص ${page}`;
+    return span;
+  }
+
+  /**
+   * Crée une icône (bookmark, etc.)
+   */
+  static createIcon(icon, extraClass = '') {
+    const span = document.createElement('span');
+    span.className = `item-icon ${extraClass}`;
+    span.textContent = icon;
+    return span;
+  }
+}
+
+// ============================================
+// GESTION DES SELECTEURS PERSONNALISÉS
+// ============================================
+
+class CustomSelect {
+  static _toggleReady = false;
+
+  static initToggle() {
+    if (CustomSelect._toggleReady) return;
+    CustomSelect._toggleReady = true;
+
+    document.querySelectorAll('.custom-select-btn').forEach(btn => {
+      // Éviter les doublons en remplaçant le bouton par un clone
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+
+      newBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wrap = newBtn.closest('.custom-select');
+        const isOpen = wrap?.classList.contains('open');
+        // Fermer tous les autres
+        document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
+        if (!isOpen && wrap) {
+          wrap.classList.add('open');
+        }
+      });
+    });
+
+    // Fermer au clic en dehors, mais pas si on clique sur un bouton
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.custom-select-btn')) return;
+      document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
+    });
+  }
+
+  static render(listId, options) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    list.innerHTML = '';
+    let curGroup = null;
+
+    options.forEach(opt => {
+      if (opt.group && opt.group !== curGroup) {
+        curGroup = opt.group;
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'custom-select-group';
+        groupDiv.textContent = opt.group;
+        list.appendChild(groupDiv);
+      }
+
+      const el = document.createElement('div');
+      el.className = 'custom-select-option';
+      el.dataset.value = opt.value;
+      el.textContent = opt.label;
+
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        list.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+        el.classList.add('selected');
+        const btn = list.previousElementSibling;
+        if (btn) btn.querySelector('.custom-select-val').textContent = opt.label;
+        list.closest('.custom-select')?.classList.remove('open');
+        if (opt.value !== '' && opt.onSelect) opt.onSelect(opt.value);
+      });
+
+      list.appendChild(el);
+    });
+  }
+
+  static setValue(btnId, listId, value) {
+    const list = document.getElementById(listId);
+    const btn = document.getElementById(btnId);
+    if (!list || !btn) return;
+
+    const opt = list.querySelector(`[data-value="${value}"]`);
+    if (!opt) return;
+
+    list.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+    btn.querySelector('.custom-select-val').textContent = opt.textContent;
+    opt.scrollIntoView({ block: 'nearest' });
+  }
+
+  static getValue(listId) {
+    const list = document.getElementById(listId);
+    return list?.querySelector('.selected')?.dataset.value || '';
+  }
+}
+
+// ============================================
+// EXPOSITION GLOBALE (pour les autres modules)
+// ============================================
+window.ListItemRenderer = ListItemRenderer;
+window.CustomSelect = CustomSelect;
+
+// ============================================
+// INITIALISATION DE L'APPLICATION
 // ============================================
 
 if (!window.quranApp) window.quranApp = new QuranApp();

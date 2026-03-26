@@ -809,7 +809,7 @@ body {
    ÉLÉMENTS DE LISTE (harmonisés)
    ============================================ */
 .item-container {
-  padding: 0 var(--space-md);
+  padding: 0 3px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   display: flex;
@@ -953,7 +953,7 @@ body {
   grid-row: 1 / span 2;
   align-self: center;
   justify-self: center;
-  margin-left: 10px;
+  margin: 0 3px 0 10px;
 }
 
 .item-surah .surah-rows {
@@ -1788,7 +1788,7 @@ body {
   font-size: 1rem;
   background: var(--surface-alt);
   border-radius: 2rem;
-  letter-spacing: -1px;
+  letter-spacing: -3px;
   padding: 2px 4px;
   min-width: 2.2rem;
 }

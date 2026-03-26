@@ -123,12 +123,12 @@ class OverlayManager {
     backup: {
       element: "backupOverlay",
       closeBtn: "closeBackupBtn",
-    }, about: {
+    },
+    about: {
       element: "aboutOverlay",
       closeBtn: "closeAboutBtn",
       content: "aboutContent",
     },
-
   };
 
   lazyLoadOverlay(name) {
@@ -202,6 +202,7 @@ class OverlayManager {
   }
 
   setupMenuButtons() {
+    // Ordre modifié : audio après bookmarks
     const buttons = [
       { btn: this.elements.surahsBtn, action: () => this.showSurahs() },
       { btn: this.elements.juzHizbBtn, action: () => this.showJuzHizb() },
@@ -295,20 +296,19 @@ class OverlayManager {
   }
 
   _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
-    const revelationIcon = surah.type === "مدنية" ? "🕌" : "🕋";
-    const juzStarts = window.quranCalculator._juzBySurahId?.get(surah.s_id)?.slice(0, 1) || [];
-
-    const item = document.createElement("div");
-    item.className = "item-container item-surah";
-    item.setAttribute("data-surah-id", surah.s_id);
+    // Utiliser ListItemRenderer pour la structure de base
+    const container = ListItemRenderer.createContainer('surah', surah.s_id);
+    container.classList.add('item-surah');
 
     // Bouton épingle
     const pinBtn = document.createElement("button");
-    pinBtn.className = `action-icon pin-btn surah-pin ${isPinned ? "pinned" : ""}`; pinBtn.setAttribute("data-sura-id", surah.s_id);
+    pinBtn.className = `action-icon pin-btn surah-pin ${isPinned ? "pinned" : ""}`;
+    pinBtn.setAttribute("data-sura-id", surah.s_id);
     pinBtn.textContent = isPinned ? "⭐" : "📌";
 
-    const rowsWrapper = document.createElement("div");
-    rowsWrapper.className = "surah-rows";
+    // Colonne principale
+    const mainColumn = document.createElement("div");
+    mainColumn.className = "surah-rows";
 
     // Ligne 1 : numéro + nom
     const row1 = document.createElement("div");
@@ -316,19 +316,16 @@ class OverlayManager {
     const row1Right = document.createElement("div");
     row1Right.className = "surah-row-right";
 
-    const numberSpan = document.createElement("span");
-    numberSpan.className = "surah-number badge";
-    numberSpan.textContent = surah.s_id;
-    row1Right.appendChild(numberSpan);
-
+    const badge = ListItemRenderer.createBadge(String(surah.s_id));
     const nameSpan = document.createElement("span");
     nameSpan.className = "surah-name";
     nameSpan.textContent = surah.name;
-    row1Right.appendChild(nameSpan);
 
+    row1Right.appendChild(badge);
+    row1Right.appendChild(nameSpan);
     row1.appendChild(row1Right);
 
-    // Ligne 2 : ordre de révélation + icône + bouton info
+    // Ligne 2 : ordre de révélation + icône + info
     const row2 = document.createElement("div");
     row2.className = "surah-row";
     const row2Right = document.createElement("div");
@@ -337,34 +334,33 @@ class OverlayManager {
     const orderSpan = document.createElement("span");
     orderSpan.className = "note-small";
     orderSpan.textContent = `النزول: ${surah.order}`;
-    row2Right.appendChild(orderSpan);
-
     const revelSpan = document.createElement("span");
     revelSpan.className = "surah-revel";
-    revelSpan.textContent = revelationIcon;
-    row2Right.appendChild(revelSpan);
-
+    revelSpan.textContent = surah.type === "مدنية" ? "🕌" : "🕋";
     const infoBtn = document.createElement("button");
     infoBtn.className = "action-icon info-btn surah-info";
     infoBtn.setAttribute("data-sura-id", surah.s_id);
     infoBtn.textContent = "ℹ️";
-    row2Right.appendChild(infoBtn);
 
+    row2Right.appendChild(orderSpan);
+    row2Right.appendChild(revelSpan);
+    row2Right.appendChild(infoBtn);
     row2.appendChild(row2Right);
 
-    // Partie gauche (informations supplémentaires)
+    // Partie droite (bookmark, juz, page, sajda, versets)
     const rowLeft = document.createElement("div");
     rowLeft.className = "surah-row-left";
 
-    // Élément 1 : bookmark (colonne 1, ligne 1)
+    const juzStarts = window.quranCalculator._juzBySurahId?.get(surah.s_id)?.slice(0, 1) || [];
+
+    // bookmark
     const bookmarkDiv = document.createElement("div");
     bookmarkDiv.className = "surah-bookmark";
     if (bookmarkedSurahIds?.has(surah.s_id)) {
       bookmarkDiv.innerHTML = '<span class="item-icon">🔖</span>';
     }
-    rowLeft.appendChild(bookmarkDiv);
 
-    // Élément 2 : juz (colonne 2, ligne 1)
+    // juz
     const juzDiv = document.createElement("div");
     juzDiv.className = "surah-juz";
     if (juzStarts.length) {
@@ -372,15 +368,13 @@ class OverlayManager {
     } else {
       juzDiv.innerHTML = '<span class="juz-badge"></span>';
     }
-    rowLeft.appendChild(juzDiv);
 
-    // Élément 3 : page (colonne 3, ligne 1)
+    // page
     const pageDiv = document.createElement("div");
     pageDiv.className = "surah-page";
     pageDiv.innerHTML = `<span class="page-tag">ص ${surah.page_start}</span>`;
-    rowLeft.appendChild(pageDiv);
 
-    // Élément 4 : sajda (colonne 1, ligne 2)
+    // sajda
     const sajdaDiv = document.createElement("div");
     sajdaDiv.className = "surah-sajda";
     if (window.quranCalculator.hasSajdaInSurah(surah.s_id)) {
@@ -389,24 +383,28 @@ class OverlayManager {
       sajdaSpan.textContent = "۩";
       sajdaDiv.appendChild(sajdaSpan);
     }
-    rowLeft.appendChild(sajdaDiv);
 
-    // Élément 5 : nombre de versets (colonne 3, ligne 2)
+    // versets
     const versesDiv = document.createElement("div");
     versesDiv.className = "surah-verses";
     versesDiv.textContent = `(${surah.verses}) آية`;
+
+    // Ajout dans l'ordre de la grille
+    rowLeft.appendChild(bookmarkDiv);
+    rowLeft.appendChild(juzDiv);
+    rowLeft.appendChild(pageDiv);
+    rowLeft.appendChild(sajdaDiv);
     rowLeft.appendChild(versesDiv);
 
-    // Assemblage final
-    rowsWrapper.appendChild(row1);
-    rowsWrapper.appendChild(row2);
-    rowsWrapper.appendChild(rowLeft);
+    mainColumn.appendChild(row1);
+    mainColumn.appendChild(row2);
+    mainColumn.appendChild(rowLeft);
 
-    item.appendChild(pinBtn);
-    item.appendChild(rowsWrapper);
+    container.appendChild(pinBtn);
+    container.appendChild(mainColumn);
 
-    // Événements (inchangés)
-    item.addEventListener("click", (e) => {
+    // Événements
+    container.addEventListener("click", (e) => {
       if (e.target.closest('.pin-btn') || e.target.closest('.info-btn')) return;
       window.quranApp?.goToPage(surah.page_start);
       this.closeOverlay("surahs");
@@ -416,23 +414,19 @@ class OverlayManager {
       e.preventDefault();
       e.stopPropagation();
       if (!window.quranApp) return;
-
       const added = window.quranApp.togglePinSurah(surah.s_id);
-      // Mise à jour visuelle instantanée du bouton courant
       pinBtn.classList.toggle("pinned", added);
       pinBtn.textContent = added ? "⭐" : "📌";
-
-      // Reconstruction complète de la liste, en préservant la position de cette sourate
       this.renderSurahsList(true, surah.s_id);
     });
 
     infoBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      window.overlayManager?.showSurahInfo(surah.s_id);
+      this.showSurahInfo(surah.s_id);
     });
 
-    return item;
+    return container;
   }
 
   renderSurahsList(scrollToCurrent = true, preserveSurahId = null) {
@@ -441,20 +435,18 @@ class OverlayManager {
 
     const container = overlay.content;
 
-    // --- 1. CAPTURE DE LA POSITION PRÉCISE ---
+    // Capture position
     let initialClickOffset = 0;
     if (preserveSurahId) {
       const allSectionOld = container.querySelector('.surah-section-all');
       const clickedEl = allSectionOld
         ? allSectionOld.querySelector(`.item-surah[data-surah-id="${preserveSurahId}"]`)
         : container.querySelector(`.item-surah[data-surah-id="${preserveSurahId}"]`);
-
       if (clickedEl) {
         initialClickOffset = clickedEl.offsetTop - container.scrollTop;
       }
     }
 
-    // --- 2. RECONSTRUCTION DU CONTENU ---
     container.innerHTML = "";
     const bookmarks = window.quranApp?.getBookmarks() || [];
     const surahs = window.quranCalculator.getAllSurahs();
@@ -469,7 +461,7 @@ class OverlayManager {
     const pinnedSurahs = surahs.filter(s => pinnedIds.includes(s.s_id));
     if (pinnedSurahs.length > 0) {
       const pinnedSection = document.createElement("div");
-      pinnedSection.className = "surah-section surah-section-pinned"; // Classe spécifique
+      pinnedSection.className = "surah-section surah-section-pinned";
       pinnedSection.innerHTML = '<h3 class="section-title">⭐ السور المفضلة</h3>';
       pinnedSurahs.forEach(s => pinnedSection.appendChild(this._createSurahItem(s, true, bookmarkedSurahIds)));
       container.appendChild(pinnedSection);
@@ -477,14 +469,14 @@ class OverlayManager {
 
     // Section Globale
     const allSection = document.createElement("div");
-    allSection.className = "surah-section surah-section-all"; // Classe spécifique
+    allSection.className = "surah-section surah-section-all";
     allSection.innerHTML = '<h3 class="section-title">📖 جميع السور</h3>';
     surahs.forEach(s => {
       allSection.appendChild(this._createSurahItem(s, pinnedIds.includes(s.s_id), bookmarkedSurahIds));
     });
     container.appendChild(allSection);
 
-    // --- 3. VERROUILLAGE VISUEL (Version Ultra-Précise) ---
+    // Mettre en évidence la sourate courante
     const currentSurah = window.quranCalculator?.getFirstSurahForPage(this.getCurrentPage());
     if (currentSurah?.s_id) {
       const allSectionNew = container.querySelector('.surah-section-all');
@@ -494,6 +486,7 @@ class OverlayManager {
       if (currentEl) currentEl.classList.add("current-item");
     }
 
+    // Revenir à l'élément préservé
     if (preserveSurahId) {
       const allSectionNew = container.querySelector('.surah-section-all');
       const newEl = allSectionNew
@@ -524,11 +517,11 @@ class OverlayManager {
     const overlay = this.lazyLoadOverlay("surahInfo");
     if (!overlay?.element) return;
     overlay.content.innerHTML = `
-    <div class="loading-placeholder" style="padding: 20px;">
-      <div class="spinner" style="margin-bottom: 10px;"></div>
-      <p>جاري تحميل المعلومات...</p>
-    </div>
-  `;
+      <div class="loading-placeholder" style="padding: 20px;">
+        <div class="spinner" style="margin-bottom: 10px;"></div>
+        <p>جاري تحميل المعلومات...</p>
+      </div>
+    `;
     this.showOverlay("surahInfo");
 
     if (!this.surahsInfo) {
@@ -552,7 +545,6 @@ class OverlayManager {
 
   _setupSurahInfoKeyboard() {
     if (this._surahInfoKeyHandler) return;
-
     this._surahInfoKeyHandler = (e) => {
       const overlayElem = this.overlays.surahInfo?.element;
       if (!overlayElem || !overlayElem.classList.contains("show")) return;
@@ -561,19 +553,14 @@ class OverlayManager {
       switch (e.key) {
         case "ArrowLeft":
           e.preventDefault();
-          if (this.currentSurahInfoId < 114) {
-            this._updateSurahInfoUI(this.currentSurahInfoId + 1);
-          }
+          if (this.currentSurahInfoId < 114) this._updateSurahInfoUI(this.currentSurahInfoId + 1);
           break;
         case "ArrowRight":
           e.preventDefault();
-          if (this.currentSurahInfoId > 1) {
-            this._updateSurahInfoUI(this.currentSurahInfoId - 1);
-          }
+          if (this.currentSurahInfoId > 1) this._updateSurahInfoUI(this.currentSurahInfoId - 1);
           break;
       }
     };
-
     document.addEventListener("keydown", this._surahInfoKeyHandler);
   }
 
@@ -601,7 +588,6 @@ class OverlayManager {
 
     const formattedHtml = this.formatSurahInfo(info.t);
     overlay.content.innerHTML = `<div class="surah-info-content" style="padding: 1rem;">${formattedHtml}</div>`;
-
     this.currentSurahInfoId = surahId;
   }
 
@@ -622,14 +608,14 @@ class OverlayManager {
 
   getSectionColor(index) {
     const colors = [
-      'var(--primary)',        // vert
-      'var(--color-blue)',     // bleu
-      'var(--color-brown)',    // marron
-      'var(--color-violet)',   // violet
-      'var(--color-gray)',     // gris
-      '#ff9800',             // orange
-      'var(--color-red)',      // rouge
-      '#009688'              // turquoise
+      'var(--primary)',
+      'var(--color-blue)',
+      'var(--color-brown)',
+      'var(--color-violet)',
+      'var(--color-gray)',
+      '#ff9800',
+      'var(--color-red)',
+      '#009688'
     ];
     return colors[index % colors.length];
   }
@@ -641,7 +627,6 @@ class OverlayManager {
 
     let html = '';
     if (title) {
-      // Conteneur flex pour centrer le titre
       html += `<div style="display: flex; justify-content: center; width: 100%;">
                <div class="surah-info-title">${window.quranApp.escapeHtml(title)}</div>
              </div>`;
@@ -678,6 +663,7 @@ class OverlayManager {
       this.showOverlay("juzHizb");
     }
   }
+
   renderJuzHizbList() {
     const overlay = this.overlays.juzHizb;
     if (!overlay?.content || !window.quranCalculator) return;
@@ -692,85 +678,50 @@ class OverlayManager {
       );
       const isNewJuz = parseInt(hizb.hizb) % 2 !== 0;
       const juzNum = Math.ceil(parseInt(hizb.hizb) / 2);
-      const suraId =
-        window.quranCalculator._surahIdByName?.get(hizb.sura) ?? "?";
+      const suraId = window.quranCalculator._surahIdByName?.get(hizb.sura) ?? "?";
       const ayaText = (hizb.aya_txt || "").replace(/\s*\(\d+\)\s*$/, "").trim();
       const prefix = `${window.quranApp.escapeHtml(String(suraId))}. ${window.quranApp.escapeHtml(hizb.sura)} - آية (${window.quranApp.escapeHtml(String(hizb.aya))})`;
 
-      const item = document.createElement("div");
-      item.className = "item-container item-juzhizb";
-      item.setAttribute("data-hizb", hizb.hizb);
+      const container = ListItemRenderer.createContainer('juzhizb', hizb.hizb);
 
-      // --- Première ligne (badge + titre) ---
-      const line1 = document.createElement("div");
-      line1.className = "item-line-1";
+      // Première ligne
+      const rightElements = [];
+      const badgeSpan = ListItemRenderer.createBadge(isNewJuz ? `ج${juzNum}` : "ج0");
+      if (!isNewJuz) badgeSpan.style.visibility = "hidden";
+      rightElements.push(badgeSpan);
+      const titleSpan = ListItemRenderer.createTitle(`الحزب ${hizb.hizb}`);
+      rightElements.push(titleSpan);
 
-      const rightPart = document.createElement("div");
-      rightPart.className = "item-right";
+      const leftElements = [];
+      if (hasBookmarkInRange) leftElements.push(ListItemRenderer.createIcon("🔖"));
+      leftElements.push(ListItemRenderer.createPageTag(hizb.page_start));
 
-      // Badge du juz (toujours présent, invisible si pas de nouveau juz)
-      const badgeSpan = document.createElement("span");
-      badgeSpan.className = "item-badge badge";
-      if (isNewJuz) {
-        badgeSpan.textContent = `ج${juzNum}`;
-      } else {
-        badgeSpan.style.visibility = "hidden";
-        badgeSpan.textContent = "ج0";
-      }
-      rightPart.appendChild(badgeSpan);
+      const line1 = ListItemRenderer.buildLine1({ rightElements, leftElements });
+      container.appendChild(line1);
 
-      const titleSpan = document.createElement("span");
-      titleSpan.className = "item-title";
-      titleSpan.textContent = `الحزب ${hizb.hizb}`;
-      rightPart.appendChild(titleSpan);
-
-      const leftPart = document.createElement("div");
-      leftPart.className = "item-left";
-
-      if (hasBookmarkInRange) {
-        const bookmarkSpan = document.createElement("span");
-        bookmarkSpan.className = "item-icon";
-        bookmarkSpan.textContent = "🔖";
-        leftPart.appendChild(bookmarkSpan);
-      }
-
-      const pageSpan = document.createElement("span");
-      pageSpan.className = "page-tag";
-      pageSpan.textContent = `ص ${hizb.page_start}`;
-      leftPart.appendChild(pageSpan);
-
-      line1.appendChild(rightPart);
-      line1.appendChild(leftPart);
-
-      // --- Deuxième ligne (texte de l'ayah) ---
+      // Ligne 2 : texte de l'ayah
       const line2 = document.createElement("div");
       line2.className = "item-line-2 juz-line2";
       line2.innerHTML = `<span class="aya-text">${window.quranApp.escapeHtml(ayaText)}</span>`;
+      container.appendChild(line2);
 
-      // --- Troisième ligne (référence sourate + numéro d'ayah) ---
+      // Ligne 3 : référence sourate + ayah
       const line3 = document.createElement("div");
       line3.className = "item-line-3 juz-line3";
       line3.innerHTML = `<span class="note-small">${prefix}</span>`;
+      container.appendChild(line3);
 
-      item.appendChild(line1);
-      item.appendChild(line2);
-      item.appendChild(line3);
-
-      item.addEventListener("click", () => {
+      container.addEventListener("click", () => {
         window.quranApp?.goToPage(hizb.page_start);
         this.closeOverlay("juzHizb");
       });
-      overlay.content.appendChild(item);
+      overlay.content.appendChild(container);
     });
 
-    const currentHizb = window.quranCalculator?.getHizbForPage(
-      this.getCurrentPage(),
-    );
+    const currentHizb = window.quranCalculator?.getHizbForPage(this.getCurrentPage());
     if (currentHizb?.hizb) {
       setTimeout(() => {
-        const el = overlay.content.querySelector(
-          `.item-container[data-hizb="${currentHizb.hizb}"]`,
-        );
+        const el = overlay.content.querySelector(`.item-container[data-juzhizb-id="${currentHizb.hizb}"]`);
         if (el) {
           el.classList.add("current-item");
           el.scrollIntoView({ block: "center", behavior: "auto" });
@@ -881,7 +832,6 @@ class OverlayManager {
     this.bookmarkFormButton = addBtn;
     this.bookmarkFormCancel = cancelBtn;
 
-    // Remplissage de la liste
     if (bookmarks.length === 0) {
       const emptyMsg = document.createElement("div");
       emptyMsg.className = "empty-message";
@@ -889,7 +839,7 @@ class OverlayManager {
       listContainer.appendChild(emptyMsg);
     } else {
       bookmarks.forEach((bookmark) =>
-        listContainer.appendChild(this.createBookmarkElement(bookmark)),
+        listContainer.appendChild(this.createBookmarkElement(bookmark))
       );
     }
 
@@ -906,17 +856,13 @@ class OverlayManager {
     this.bookmarkFormButton.addEventListener("click", () => {
       if (this.editingBookmarkId) {
         const newName = this.bookmarkFormInput.value.trim();
-        if (
-          newName &&
-          window.quranApp?.updateBookmark(this.editingBookmarkId, newName)
-        ) {
+        if (newName && window.quranApp?.updateBookmark(this.editingBookmarkId, newName)) {
           window.quranApp.showToast("✏️ تم تعديل الاسم");
           this.resetBookmarkForm();
           this.refreshBookmarksDisplay();
         }
       } else {
-        const name =
-          this.bookmarkFormInput.value.trim() || `صفحة ${currentPage}`;
+        const name = this.bookmarkFormInput.value.trim() || `صفحة ${currentPage}`;
         window.quranApp.addBookmark({
           page: currentPage,
           name,
@@ -944,28 +890,23 @@ class OverlayManager {
     document.querySelectorAll(".item-bookmark").forEach((item) => {
       item.classList.toggle(
         "editing-bookmark",
-        item.dataset.bookmarkId === bookmark.id,
+        item.dataset.bookmarkId === bookmark.id
       );
     });
   }
 
   resetBookmarkForm() {
     this.editingBookmarkId = null;
-
-    this.bookmarkFormInput.value = this.getDefaultBookmarkName(
-      this.getCurrentPage(),
-    );
+    this.bookmarkFormInput.value = this.getDefaultBookmarkName(this.getCurrentPage());
     this.bookmarkFormCancel.style.display = "none";
     this.bookmarkFormButton.textContent = "إضافة";
-    document
-      .querySelectorAll(".item-bookmark")
-      .forEach((item) => item.classList.remove("editing-bookmark"));
+    document.querySelectorAll(".item-bookmark").forEach((item) =>
+      item.classList.remove("editing-bookmark")
+    );
   }
 
   createBookmarkElement(bookmark) {
-    const item = document.createElement("div");
-    item.className = "item-container item-bookmark";
-    item.setAttribute("data-bookmark-id", bookmark.id);
+    const item = ListItemRenderer.createContainer('bookmark', bookmark.id);
     this.renderBookmarkDisplayMode(item, bookmark);
     return item;
   }
@@ -979,24 +920,62 @@ class OverlayManager {
       const day = String(date.getDate()).padStart(2, "0");
       dateDisplay = `${year}-${month}-${day}`;
     }
-    item.innerHTML = `<div class="item-line-1">
-    <div class="item-right">
-        <button class="action-icon bordered icon-btn--edit" data-id="${bookmark.id}" title="تعديل الاسم">✏️</button>
-      <span class="item-title bookmark-name" data-id="${bookmark.id}">${window.quranApp.escapeHtml(bookmark.name)}</span>
-    </div>
-    <div class="item-left">
-      <span class="page-tag">ص ${bookmark.page}</span>
-        <button class="action-icon bordered icon-btn--replace" data-id="${bookmark.id}" title="استبدال الصفحة بالصفحة الحالية">♻️</button>
-        <button class="action-icon bordered icon-btn--remove" data-id="${bookmark.id}" title="حذف">🗑️</button>
-    </div>
-  </div>
-  <div class="item-line-2" style="margin-top: 4px; padding-right: 45px;">
-    <div class="item-right">
-<span class="note-small">
-  ${dateDisplay || "غير معروف"}
-</span>
-    </div>
-  </div>`;
+
+    // Utiliser les classes standard pour la ligne 1
+    const rightElements = [
+      (() => {
+        const btn = document.createElement("button");
+        btn.className = "action-icon bordered icon-btn--edit";
+        btn.setAttribute("data-id", bookmark.id);
+        btn.title = "تعديل الاسم";
+        btn.textContent = "✏️";
+        return btn;
+      })(),
+      (() => {
+        const span = document.createElement("span");
+        span.className = "item-title bookmark-name";
+        span.setAttribute("data-id", bookmark.id);
+        span.textContent = window.quranApp.escapeHtml(bookmark.name);
+        return span;
+      })(),
+    ];
+
+    const leftElements = [
+      ListItemRenderer.createPageTag(bookmark.page),
+      (() => {
+        const btn = document.createElement("button");
+        btn.className = "action-icon bordered icon-btn--replace";
+        btn.setAttribute("data-id", bookmark.id);
+        btn.title = "استبدال الصفحة بالصفحة الحالية";
+        btn.textContent = "♻️";
+        return btn;
+      })(),
+      (() => {
+        const btn = document.createElement("button");
+        btn.className = "action-icon bordered icon-btn--remove";
+        btn.setAttribute("data-id", bookmark.id);
+        btn.title = "حذف";
+        btn.textContent = "🗑️";
+        return btn;
+      })(),
+    ];
+
+    const line1 = ListItemRenderer.buildLine1({ rightElements, leftElements });
+    item.appendChild(line1);
+
+    // Ligne 2 : date
+    const line2 = document.createElement("div");
+    line2.className = "item-line-2";
+    line2.style.marginTop = "4px";
+    line2.style.paddingRight = "45px";
+    const rightPart2 = document.createElement("div");
+    rightPart2.className = "item-right";
+    const dateSpan = document.createElement("span");
+    dateSpan.className = "note-small";
+    dateSpan.textContent = dateDisplay || "غير معروف";
+    rightPart2.appendChild(dateSpan);
+    line2.appendChild(rightPart2);
+    item.appendChild(line2);
 
     this.attachBookmarkEvents(item, bookmark);
   }
@@ -1007,35 +986,26 @@ class OverlayManager {
       this.startEditingBookmark(bookmark);
     });
 
-    item
-      .querySelector(".icon-btn--replace")
-      ?.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const currentPage = this.getCurrentPage();
-        const confirmed = await this.showConfirm(
-          `هل تريد وضع العلامة (${bookmark.name}) بهاته الصفحة ؟`,
-        );
-        if (
-          confirmed &&
-          window.quranApp?.replaceBookmarkPage(bookmark.id, currentPage)
-        ) {
-          window.quranApp.showToast(`♻️ تم استبدال الصفحة ب ${currentPage}`);
-          this.refreshBookmarksDisplay();
-        }
-      });
+    item.querySelector(".icon-btn--replace")?.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const currentPage = this.getCurrentPage();
+      const confirmed = await this.showConfirm(
+        `هل تريد وضع العلامة (${bookmark.name}) بهاته الصفحة ؟`
+      );
+      if (confirmed && window.quranApp?.replaceBookmarkPage(bookmark.id, currentPage)) {
+        window.quranApp.showToast(`♻️ تم استبدال الصفحة ب ${currentPage}`);
+        this.refreshBookmarksDisplay();
+      }
+    });
 
-    item
-      .querySelector(".icon-btn--remove")
-      ?.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const confirmed = await this.showConfirm(
-          `هل تريد حذف العلامة (${bookmark.name}) ؟`,
-        );
-        if (confirmed && window.quranApp?.removeBookmarkById(bookmark.id)) {
-          window.quranApp.showToast("✖️ تمت إزالة العلامة");
-          this.refreshBookmarksDisplay();
-        }
-      });
+    item.querySelector(".icon-btn--remove")?.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const confirmed = await this.showConfirm(`هل تريد حذف العلامة (${bookmark.name}) ؟`);
+      if (confirmed && window.quranApp?.removeBookmarkById(bookmark.id)) {
+        window.quranApp.showToast("✖️ تمت إزالة العلامة");
+        this.refreshBookmarksDisplay();
+      }
+    });
 
     item.addEventListener("click", () => {
       window.quranApp?.goToPage(bookmark.page);
@@ -1050,13 +1020,13 @@ class OverlayManager {
       const dialog = document.createElement("div");
       dialog.className = "confirm-dialog";
       dialog.innerHTML = `
-      <p>كيف تريد استيراد البيانات (العلامات المرجعية والسور المفضلة)؟</p>
-      <div class="confirm-buttons">
-        <button class="confirm-btn ok" id="mergeBtn">دمج</button>
-        <button class="confirm-btn blue" id="replaceBtn">استبدال</button>
-        <button class="confirm-btn cancel" id="cancelBtn">إلغاء</button>
-      </div>
-        `;
+        <p>كيف تريد استيراد البيانات (العلامات المرجعية والسور المفضلة)؟</p>
+        <div class="confirm-buttons">
+          <button class="confirm-btn ok" id="mergeBtn">دمج</button>
+          <button class="confirm-btn blue" id="replaceBtn">استبدال</button>
+          <button class="confirm-btn cancel" id="cancelBtn">إلغاء</button>
+        </div>
+      `;
       backdrop.appendChild(dialog);
       document.body.appendChild(backdrop);
       window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
@@ -1067,15 +1037,9 @@ class OverlayManager {
         resolve(result);
       };
 
-      dialog
-        .querySelector("#mergeBtn")
-        .addEventListener("click", () => cleanup("merge"));
-      dialog
-        .querySelector("#replaceBtn")
-        .addEventListener("click", () => cleanup("replace"));
-      dialog
-        .querySelector("#cancelBtn")
-        .addEventListener("click", () => cleanup(null));
+      dialog.querySelector("#mergeBtn").addEventListener("click", () => cleanup("merge"));
+      dialog.querySelector("#replaceBtn").addEventListener("click", () => cleanup("replace"));
+      dialog.querySelector("#cancelBtn").addEventListener("click", () => cleanup(null));
       backdrop.addEventListener("click", (e) => {
         if (e.target === backdrop) cleanup(null);
       });
@@ -1083,7 +1047,7 @@ class OverlayManager {
   }
 
   async exportBookmarks() {
-    const data = window.quranApp.exportUserData(); // nouvelle méthode dans QuranApp
+    const data = window.quranApp.exportUserData();
     const date = new Date().toISOString().slice(2, 10);
     const fileName = `quran_backup_${date}`;
     const bytes = new TextEncoder().encode(data);
@@ -1100,7 +1064,7 @@ class OverlayManager {
           chooserTitle: "حفظ أو مشاركة الملف",
         },
         () => window.quranApp.showToast("✅ تم التصدير"),
-        (err) => window.quranApp.showToast("❌ " + err),
+        (err) => window.quranApp.showToast("❌ " + err)
       );
     } else {
       const a = document.createElement("a");
@@ -1137,10 +1101,7 @@ class OverlayManager {
             return;
           }
 
-          const success = window.quranApp.importUserData(
-            json,
-            choice === "merge",
-          );
+          const success = window.quranApp.importUserData(json, choice === "merge");
           if (success) {
             window.quranApp?.showToast("✅ تم استيراد البيانات");
             this.refreshBookmarksDisplay();
@@ -1185,7 +1146,7 @@ class OverlayManager {
   }
 
   // ============================================
-  // 5 audio OVERLAY
+  // 5. AUDIO OVERLAY
   // ============================================
 
   renderAudioContent(overlay) {
@@ -1193,8 +1154,7 @@ class OverlayManager {
     if (!contentContainer) return;
 
     const riwayaLabel =
-      window.RIWAYAT_CONFIG?.[window.quranAudioPlayer?.currentRiwaya]?.label ||
-      "";
+      window.RIWAYAT_CONFIG?.[window.quranAudioPlayer?.currentRiwaya]?.label || "";
 
     const coordsStatus =
       window.quranAudioPlayer?.ayaCoordsLoaded === false
@@ -1202,103 +1162,78 @@ class OverlayManager {
         : "";
 
     contentContainer.innerHTML = `
-    ${coordsStatus}
-    
-<div class="audio-select-row">
-    <div class="custom-select" id="reciterSelectWrap">
-      <button type="button" class="custom-select-btn select-violet" id="reciterSelect">
-        <span class="custom-select-val">اختر القارئ</span><span class="custom-select-arrow">▾</span>
-      </button>
-      <div class="custom-select-dropdown" id="reciterSelectList"></div>
-    </div>
-  </div>
-    
-    <div class="audio-select-row">
-    <div class="custom-select" id="surahSelectAudioWrap">
-      <button type="button" class="custom-select-btn select-ok" id="surahSelectAudio">
-        <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>
-      </button>
-      <div class="custom-select-dropdown" id="surahSelectAudioList"></div>
-    </div>
-    <div class="custom-select" id="ayaSelectAudioWrap">
-      <button type="button" class="custom-select-btn select-blue" id="ayaSelectAudio">
-        <span class="custom-select-val">اختر الآية</span><span class="custom-select-arrow">▾</span>
-      </button>
-      <div class="custom-select-dropdown" id="ayaSelectAudioList"></div>
-    </div>
-    <div class="custom-select" id="pageSelectAudioWrap">
-      <button type="button" class="custom-select-btn select-brown" id="pageSelectAudio">
-        <span class="custom-select-val">اختر الصفحة</span><span class="custom-select-arrow">▾</span>
-      </button>
-      <div class="custom-select-dropdown" id="pageSelectAudioList"></div>
-    </div>
-  </div>
-    
-    <div id="audioStatus" class="audio-status"></div>
-    <div class="audio-progress-wrap">
-      <span id="audioCurrentTime">0:00</span>
-      <input type="range" id="audioProgress" class="audio-progress" value="0" min="0" max="100" step="0.1">
-      <span id="audioDuration">0:00</span>
-    </div>
-    
-    <div class="audio-controls">
-      <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
-      <button class="btn audio-btn" id="repeatBtn" title="تكرار">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg>
-      </button>
-      <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 20 12 12 18"/><line x1="21" y1="6" x2="21" y2="18" stroke="currentColor" stroke-width="2"/></svg>
-      </button>
-      <button class="btn audio-btn" id="nextAyahBtn" title="الآية التالية">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
-      </button>
-      <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>
-      </button>
-      <button class="btn audio-btn" id="prevAyahBtn" title="الآية السابقة">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="11 6 3 12 11 18"/><polygon points="21 6 13 12 21 18"/></svg>
-      </button>
-      <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 4 12 12 18"/><line x1="3" y1="6" x2="3" y2="18" stroke="currentColor" stroke-width="2"/></svg>
-      </button>
-      <button class="btn audio-btn" id="stopBtn" title="إيقاف">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7.5" y="7.5" width="9" height="9"/></svg>
-      </button>
-    </div>
-    
-    <div class="audio-current-info" style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
-      <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} (عبر النت)</div>
-      <div id="currentSurahDisplay" class="audio-current-display" style="flex: 1; margin: 0; background: transparent; border: none; color: inherit;"></div>
-    </div>
-    
-    <audio id="quranAudioPlayer" preload="none" style="display:none;"></audio>
-  `;
+      ${coordsStatus}
+      <div class="audio-select-row">
+        <div class="custom-select" id="reciterSelectWrap">
+          <button type="button" class="custom-select-btn select-violet" id="reciterSelect">
+            <span class="custom-select-val">اختر القارئ</span><span class="custom-select-arrow">▾</span>
+          </button>
+          <div class="custom-select-dropdown" id="reciterSelectList"></div>
+        </div>
+      </div>
+      <div class="audio-select-row">
+        <div class="custom-select" id="surahSelectAudioWrap">
+          <button type="button" class="custom-select-btn select-ok" id="surahSelectAudio">
+            <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>
+          </button>
+          <div class="custom-select-dropdown" id="surahSelectAudioList"></div>
+        </div>
+        <div class="custom-select" id="ayaSelectAudioWrap">
+          <button type="button" class="custom-select-btn select-blue" id="ayaSelectAudio">
+            <span class="custom-select-val">اختر الآية</span><span class="custom-select-arrow">▾</span>
+          </button>
+          <div class="custom-select-dropdown" id="ayaSelectAudioList"></div>
+        </div>
+        <div class="custom-select" id="pageSelectAudioWrap">
+          <button type="button" class="custom-select-btn select-brown" id="pageSelectAudio">
+            <span class="custom-select-val">اختر الصفحة</span><span class="custom-select-arrow">▾</span>
+          </button>
+          <div class="custom-select-dropdown" id="pageSelectAudioList"></div>
+        </div>
+      </div>
+      <div id="audioStatus" class="audio-status"></div>
+      <div class="audio-progress-wrap">
+        <span id="audioCurrentTime">0:00</span>
+        <input type="range" id="audioProgress" class="audio-progress" value="0" min="0" max="100" step="0.1">
+        <span id="audioDuration">0:00</span>
+      </div>
+      <div class="audio-controls">
+        <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
+        <button class="btn audio-btn" id="repeatBtn" title="تكرار">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg>
+        </button>
+        <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 20 12 12 18"/><line x1="21" y1="6" x2="21" y2="18" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+        <button class="btn audio-btn" id="nextAyahBtn" title="الآية التالية">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
+        </button>
+        <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>
+        </button>
+        <button class="btn audio-btn" id="prevAyahBtn" title="الآية السابقة">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="11 6 3 12 11 18"/><polygon points="21 6 13 12 21 18"/></svg>
+        </button>
+        <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 4 12 12 18"/><line x1="3" y1="6" x2="3" y2="18" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+        <button class="btn audio-btn" id="stopBtn" title="إيقاف">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7.5" y="7.5" width="9" height="9"/></svg>
+        </button>
+      </div>
+      <div class="audio-current-info" style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
+        <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} (عبر النت)</div>
+        <div id="currentSurahDisplay" class="audio-current-display" style="flex: 1; margin: 0; background: transparent; border: none; color: inherit;"></div>
+      </div>
+      <audio id="quranAudioPlayer" preload="none" style="display:none;"></audio>
+    `;
 
     overlay.contentGenerated = true;
 
-    // Init toggle custom selects
-    setTimeout(() => {
-      document.querySelectorAll('.custom-select-btn').forEach(btn => {
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        newBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const wrap = newBtn.closest('.custom-select');
-          const isOpen = wrap?.classList.contains('open');
-          document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
-          if (!isOpen && wrap) wrap.classList.add('open');
-        });
-      });
-      if (!window._csGlobalClick) {
-        window._csGlobalClick = true;
-        document.addEventListener('click', () => {
-          document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
-        });
-      }
-      if (window.quranAudioPlayer) {
-      }
-    }, 50);
+    // Initialiser les dropdowns
+    window.CustomSelect.initToggle();
 
+    // Événements de fermeture automatique
     document.getElementById("playPauseBtn")?.addEventListener("click", () => {
       setTimeout(() => {
         if (window.quranAudioPlayer?.isPlaying && !window.quranAudioPlayer?.hasError) this.closeOverlay("audio");
@@ -1342,7 +1277,7 @@ class OverlayManager {
       window.tafsirManager.setupSearchUI(
         overlay.input,
         overlay.results,
-        (sura, aya) => this.goToAya(sura, aya),
+        (sura, aya) => this.goToAya(sura, aya)
       );
       overlay.input = document.getElementById("searchInput");
 
@@ -1360,7 +1295,6 @@ class OverlayManager {
   _setupClearButton(overlay) {
     const clearBtn = document.getElementById("clearSearchBtn");
     if (!clearBtn) return;
-
     clearBtn.classList.remove("hidden");
 
     if (this._clearSearchHandler) {
@@ -1420,10 +1354,8 @@ class OverlayManager {
 
     this.showOverlay("tafsir");
 
-    // ✅ Attendre le prochain frame pour que l'overlay soit visible
     await new Promise(r => requestAnimationFrame(r));
 
-    // ✅ Initialisation immédiate (plus de setTimeout)
     const suraSelect = overlay.suraSelect || document.getElementById("suraSelect");
     const ayaSelect = overlay.ayaSelect || document.getElementById("ayaSelect");
     const pageSelect = overlay.pageSelect || document.getElementById("pageSelect");
@@ -1438,10 +1370,9 @@ class OverlayManager {
           this.closeOverlay("tafsir");
           setTimeout(() => window.quranApp?.goToPage(page), 200);
         },
-        (sura, aya) => this.goToAya(sura, aya),
+        (sura, aya) => this.goToAya(sura, aya)
       );
       this.lazyLoaded.add("tafsirUI");
-      // La fonction initTafsirUI charge déjà la page courante
     }
   }
 
@@ -1494,7 +1425,6 @@ class OverlayManager {
     const appUrl = "https://zdig1.gitlab.io/quran/";
     const shortMessage = `📖 ${appName} - تطبيق قرآن كامل بدون إنترنت: ${appUrl}`;
 
-    // Utiliser socialsharing si disponible (Cordova)
     if (typeof cordova !== "undefined" && window.plugins?.socialsharing) {
       window.plugins.socialsharing.shareWithOptions(
         {
@@ -1507,11 +1437,9 @@ class OverlayManager {
         (err) => {
           console.error("Share error:", err);
           window.quranApp?.showToast("❌ تعذر فتح المشاركة");
-        },
+        }
       );
-    }
-    // Utiliser Web Share API si disponible
-    else if (navigator.share) {
+    } else if (navigator.share) {
       navigator
         .share({
           title: appName,
@@ -1524,16 +1452,13 @@ class OverlayManager {
             window.quranApp?.showToast("❌ تعذرت المشاركة");
           }
         });
-    }
-    // Fallback : copier le lien dans le presse-papier
-    else {
+    } else {
       navigator.clipboard
         .writeText(appUrl)
         .then(() => {
           window.quranApp?.showToast("📋 تم نسخ رابط التطبيق");
         })
         .catch(() => {
-          // Dernier recours : ouvrir une boîte de dialogue avec le lien
           prompt("انسخ رابط التطبيق:", appUrl);
         });
     }
@@ -1560,22 +1485,20 @@ class OverlayManager {
         تطبيق لقراءة القرآن الكريم كاملاً بجودة عالية ودون اتصال بالإنترنت، مطابق للمصحف الورقي المعتمد :
         <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (الصادر عن دار المعرفة)
       </p>
-      
-    <div class="contact-grid-container">
-      <button id="aboutBackupBtn" class="contact-box-item contact-green">
-        <span>💾 نسخ احتياطي</span>
-      </button>
-      <button id="shareAppBtn" class="contact-box-item contact-blue">
-        <span>🔗 شارك التطبيق</span>
-      </button>
-      <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item contact-brown">
-        <span>🌐 زيارة الموقع</span>
-      </a>
-      <a href="mailto:zdig1.0@gmail.com?subject=quran" class="contact-box-item contact-violet">
-        <span>📧 تواصل معنا</span>
-      </a>
-    </div>
-       
+      <div class="contact-grid-container">
+        <button id="aboutBackupBtn" class="contact-box-item contact-green">
+          <span>💾 نسخ احتياطي</span>
+        </button>
+        <button id="shareAppBtn" class="contact-box-item contact-blue">
+          <span>🔗 شارك التطبيق</span>
+        </button>
+        <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item contact-brown">
+          <span>🌐 زيارة الموقع</span>
+        </a>
+        <a href="mailto:zdig1.0@gmail.com?subject=quran" class="contact-box-item contact-violet">
+          <span>📧 تواصل معنا</span>
+        </a>
+      </div>
       <div class="about-stats">
         <div class="about-stat"><span>السور</span><strong>114</strong></div>
         <div class="about-stat"><span>الآيات</span><strong>6236</strong></div>
@@ -1587,7 +1510,7 @@ class OverlayManager {
       <p class="about-footer">
         جميع الحقوق محفوظة © 2026<br>
         GDZ 🍉
-        </p>
+      </p>
     </div>`;
 
     const shareBtn = document.getElementById("shareAppBtn");
@@ -1607,13 +1530,11 @@ class OverlayManager {
     this.closeMenu();
     const overlay = this.lazyLoadOverlay("backup");
     if (!overlay?.element) return;
-
     this.showOverlay("backup");
 
     const exportBtn = document.getElementById("backupExportBtn");
     const importBtn = document.getElementById("backupImportBtn");
 
-    // Nettoyer anciens listeners
     const newExport = exportBtn.cloneNode(true);
     const newImport = importBtn.cloneNode(true);
     exportBtn.replaceWith(newExport);
@@ -1630,7 +1551,7 @@ class OverlayManager {
   }
 
   // ============================================
-  // 10 PAGE INPUT OVERLAY
+  // 10. PAGE INPUT OVERLAY
   // ============================================
 
   showPageInputDialog() {
@@ -1683,7 +1604,7 @@ class OverlayManager {
   }
 
   // ============================================
-  //  GESTION GÉNÉRALE DES OVERLAYS
+  // GESTION GÉNÉRALE DES OVERLAYS
   // ============================================
 
   updateThemeButtonText() {
@@ -1708,7 +1629,7 @@ class OverlayManager {
       window.quranReader.applyButtonsVisibility();
     }
     window.dispatchEvent(
-      new CustomEvent("quran:overlayOpened", { detail: { overlay: name } }),
+      new CustomEvent("quran:overlayOpened", { detail: { overlay: name } })
     );
   }
 
@@ -1737,7 +1658,7 @@ class OverlayManager {
       }
     }
     window.dispatchEvent(
-      new CustomEvent("quran:overlayClosed", { detail: { overlay: name } }),
+      new CustomEvent("quran:overlayClosed", { detail: { overlay: name } })
     );
   }
 
@@ -1745,10 +1666,6 @@ class OverlayManager {
     if (this.currentOverlay) this.closeOverlay(this.currentOverlay);
   }
 }
-
-// ============================================
-// INITIALISATION
-// ============================================
 
 window.overlayManager = new OverlayManager();
 if (typeof window !== "undefined") window.OverlayManager = OverlayManager;
