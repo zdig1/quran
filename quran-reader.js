@@ -860,24 +860,34 @@ class QuranReader {
     const spaceBelow = window.innerHeight - imgRect.bottom;
     const minFooterHeight = 56;
 
-    // Ajustement du footer
+    let footerHeight = minFooterHeight;
     if (spaceBelow > minFooterHeight) {
-      footer.style.height = `${spaceBelow}px`;
-      footer.style.minHeight = `${spaceBelow}px`;
-    } else {
-      footer.style.height = '';
-      footer.style.minHeight = '';
+      footerHeight = spaceBelow;
     }
 
-    // Ajustement de la mini-barre
+    // Ajuster le footer
+    footer.style.height = `${footerHeight}px`;
+    footer.style.minHeight = `${footerHeight}px`;
+
+    // Gérer la mini bar audio
     const miniBar = document.getElementById('audioMiniBar');
-    if (miniBar && !miniBar.classList.contains('hidden')) {
-      if (spaceBelow > minFooterHeight) {
-        miniBar.style.height = `${spaceBelow}px`;
-        miniBar.style.minHeight = `${spaceBelow}px`;
-      } else {
+    const isMiniBarVisible = miniBar && !miniBar.classList.contains('hidden');
+
+    if (isMiniBarVisible) {
+      // La mini bar prend la même hauteur que le footer
+      miniBar.style.height = `${footerHeight}px`;
+      miniBar.style.minHeight = `${footerHeight}px`;
+      // Cacher le footer pendant que la mini bar est visible
+      footer.classList.add('hidden');
+    } else {
+      // Réinitialiser la hauteur de la mini bar
+      if (miniBar) {
         miniBar.style.height = '';
         miniBar.style.minHeight = '';
+      }
+      // Réafficher le footer seulement si les boutons sont visibles
+      if (this.buttonsVisible) {
+        footer.classList.remove('hidden');
       }
     }
   }

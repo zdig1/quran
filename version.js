@@ -69,7 +69,7 @@
           if (!app) return;
           if (isNewerVersion(app.version, APP_VERSION)) showUpdateBanner(app);
         })
-        .catch(() => {});
+        .catch(() => { });
     },
   };
 
@@ -84,15 +84,9 @@
     window.updateChecker.check();
   };
 
-  window.addEventListener("quran:appReady", () => setTimeout(run, 5000), {
-    once: true,
-  });
-  window.addEventListener(
-    "quran:appError",
-    () => {
-      fired = true;
-    },
-    { once: true },
-  );
+  window.addEventListener("quran:appReady", () => setTimeout(run, 5000),
+    { once: true, });
+  window.addEventListener("quran:appError", () => { fired = true; }, { once: true },);
   setTimeout(run, 10000);
-})();
+})
+  ();

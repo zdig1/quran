@@ -127,20 +127,24 @@ async function handleFetch(request) {
         headers: { "Content-Type": "image/svg+xml" },
       });
     }
-    // JSON critiques → ne pas fallback, laisser échouer proprement
+
+    // JSON critiques → retourner une structure minimale
     const criticalJson = ["quran.json", "tafsir.json", "ayainfo.json"];
     if (request.url.includes(".json")) {
       if (criticalJson.some(f => request.url.includes(f))) {
-        return new Response(JSON.stringify(null), {
+        // Retourne un objet avec une propriété error pour éviter de casser l'app
+        return new Response(JSON.stringify({ error: "offline" }), {
           status: 503,
           headers: { "Content-Type": "application/json" },
         });
       }
+      // Pour les autres JSON, retourner un tableau vide
       return new Response(JSON.stringify([]), {
         status: 503,
         headers: { "Content-Type": "application/json" },
       });
     }
+
     return new Response("غير متصل", { status: 503 });
   }
 }

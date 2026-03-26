@@ -1637,7 +1637,7 @@ class OverlayManager {
     const overlay = this.overlays[name];
     if (!overlay?.element) return;
     overlay.element.classList.remove("show");
-    if (name === "audio" && !window.quranAudioPlayer?.isStopped) {
+    if (name === "audio" && window.quranAudioPlayer?.isPlaying) {
       window.quranAudioPlayer?._showMiniBar();
     }
     if (name === "surahInfo") {

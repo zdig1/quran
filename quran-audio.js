@@ -366,7 +366,7 @@ class QuranAudioPlayer {
     }
   }
 
-  _updateCurrentReciterName() {}
+  _updateCurrentReciterName() { }
 
   _setupPinReciterButton() {
     const pinBtn = document.getElementById('pinReciterBtn');
@@ -394,7 +394,7 @@ class QuranAudioPlayer {
 
   _populateSurahSelect() {
     if (!window.CustomSelect) return;
-    const options = [{ value: '', label: 'اختر السورة', onSelect: () => {} }];
+    const options = [{ value: '', label: 'اختر السورة', onSelect: () => { } }];
     this.surahs.forEach(s => {
       options.push({
         value: String(s.s_id),
@@ -428,15 +428,15 @@ class QuranAudioPlayer {
   _populateAyaSelect(surahId) {
     if (!window.CustomSelect) return;
     if (!surahId) {
-      window.CustomSelect.render('ayaSelectAudioList', [{ value: '', label: 'اختر الآية', onSelect: () => {} }]);
+      window.CustomSelect.render('ayaSelectAudioList', [{ value: '', label: 'اختر الآية', onSelect: () => { } }]);
       return;
     }
     const surah = this.surahs.find((s) => s.s_id == surahId);
     if (!surah) {
-      window.CustomSelect.render('ayaSelectAudioList', [{ value: '', label: 'اختر الآية', onSelect: () => {} }]);
+      window.CustomSelect.render('ayaSelectAudioList', [{ value: '', label: 'اختر الآية', onSelect: () => { } }]);
       return;
     }
-    const options = [{ value: '', label: 'اختر الآية', onSelect: () => {} }];
+    const options = [{ value: '', label: 'اختر الآية', onSelect: () => { } }];
     for (let i = 1; i <= surah.verses_count; i++) {
       options.push({
         value: String(i),
@@ -449,7 +449,7 @@ class QuranAudioPlayer {
 
   _populatePageSelect() {
     if (!window.CustomSelect) return;
-    const options = [{ value: '', label: 'اختر الصفحة', onSelect: () => {} }];
+    const options = [{ value: '', label: 'اختر الصفحة', onSelect: () => { } }];
     for (let i = 1; i <= 604; i++) {
       options.push({
         value: String(i),
@@ -903,7 +903,8 @@ class QuranAudioPlayer {
   _showMiniBar() {
     this.miniBar?.classList.remove("hidden");
     this.fabBtn?.classList.add("hidden");
-    this._syncMiniBar();
+    // Force le recalcul de la hauteur et masque le footer
+    window.quranReader?._adjustFooterHeight();
     setTimeout(() => {
       if (window.quranReader && typeof window.quranReader._adjustFooterHeight === 'function') {
         window.quranReader._adjustFooterHeight();
