@@ -77,7 +77,10 @@ class TafsirSearchManager {
   _getFirstAyaOfPage(ayat) {
     return ayat?.length ? this._sortByQuranOrder(ayat)[0] : null;
   }
-
+  normalizeArabic(text) {
+    if (!text) return '';
+    return String(text).replace(/[أإآٱ]/g, 'ا');
+  }
   // ============================================
   // CHARGEMENT DES DONNÉES
   // ============================================
@@ -182,14 +185,14 @@ class TafsirSearchManager {
     const first = this._getFirstAyaOfPage(ayat);
     return first
       ? {
-          sura_n: first[this.F.sura_n],
-          sura: first[this.F.sura],
-          aya_n: first[this.F.aya_n],
-          page: first[this.F.page],
-          isSuraStart: first[this.F.aya_n] === 1,
-          id: first[this.F.id],
-          ayatCountOnPage: ayat.length,
-        }
+        sura_n: first[this.F.sura_n],
+        sura: first[this.F.sura],
+        aya_n: first[this.F.aya_n],
+        page: first[this.F.page],
+        isSuraStart: first[this.F.aya_n] === 1,
+        id: first[this.F.id],
+        ayatCountOnPage: ayat.length,
+      }
       : null;
   }
 
@@ -215,13 +218,13 @@ class TafsirSearchManager {
     );
     return found
       ? {
-          sura_n: found[this.F.sura_n],
-          sura: found[this.F.sura],
-          aya_n: found[this.F.aya_n],
-          text: found[this.F.text],
-          page: found[this.F.page],
-          tfsir: found[this.F.tfsir],
-        }
+        sura_n: found[this.F.sura_n],
+        sura: found[this.F.sura],
+        aya_n: found[this.F.aya_n],
+        text: found[this.F.text],
+        page: found[this.F.page],
+        tfsir: found[this.F.tfsir],
+      }
       : null;
   }
 
@@ -245,8 +248,8 @@ class TafsirSearchManager {
     if (!this.data || !query?.trim())
       return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
 
-    const normalized = query.toLowerCase();
-    const cacheKey = `combined_${normalized}`;
+    const normalizedQuery = this.normalizeArabic(query.trim().toLowerCase());
+    const cacheKey = `alif_norm_${normalizedQuery}`;
     if (this.searchCache.has(cacheKey)) return this.searchCache.get(cacheKey);
 
     const results = [];
@@ -254,7 +257,11 @@ class TafsirSearchManager {
     let totalCount = 0;
 
     for (const aya of this.data) {
-      if (!aya[this.F.text]?.toLowerCase().includes(normalized)) continue;
+      const text = aya[this.F.text];
+      if (!text) continue;
+      const normalizedText = this.normalizeArabic(text.toLowerCase());
+      if (!normalizedText.includes(normalizedQuery)) continue;
+
       totalCount++;
       surasFound.add(aya[this.F.sura_n]);
       if (results.length < 1000) {
@@ -571,7 +578,7 @@ class TafsirSearchManager {
     }
 
     // Sura
-    const suraOpts = [{ value: '', label: 'اختر السورة', onSelect: () => {} }];
+    const suraOpts = [{ value: '', label: 'اختر السورة', onSelect: () => { } }];
     this.getSurahsIndex().forEach(s => {
       suraOpts.push({
         value: String(s.id),
@@ -582,7 +589,7 @@ class TafsirSearchManager {
     window.CustomSelect.render('suraSelectList', suraOpts);
 
     // Page
-    const pageOpts = [{ value: '', label: 'اختر الصفحة', onSelect: () => {} }];
+    const pageOpts = [{ value: '', label: 'اختر الصفحة', onSelect: () => { } }];
     for (let i = 1; i <= 604; i++) {
       pageOpts.push({
         value: String(i),
@@ -593,7 +600,7 @@ class TafsirSearchManager {
     window.CustomSelect.render('pageSelectList', pageOpts);
 
     // Aya (vide, rempli après sélection sura)
-    window.CustomSelect.render('ayaSelectList', [{ value: '', label: 'اختر الآية', onSelect: () => {} }]);
+    window.CustomSelect.render('ayaSelectList', [{ value: '', label: 'اختر الآية', onSelect: () => { } }]);
   }
 
   async handleSuraChange() {
@@ -654,7 +661,7 @@ class TafsirSearchManager {
   }
 
   updateAyaDropdown(ayat) {
-    const opts = [{ value: '', label: 'اختر الآية', onSelect: () => {} }];
+    const opts = [{ value: '', label: 'اختر الآية', onSelect: () => { } }];
     ayat.forEach(a => {
       opts.push({
         value: String(a[this.F.aya_n]),
@@ -898,7 +905,7 @@ class TafsirSearchManager {
     const missing = Array.from(toLoad).filter((p) => !this.pageCache.has(p));
     for (let i = 0; i < missing.length; i += this.config.maxConcurrentLoads) {
       const batch = missing.slice(i, i + this.config.maxConcurrentLoads);
-      await Promise.allSettled(batch.map(p => this.loadPageToCache(p).catch(() => {})));
+      await Promise.allSettled(batch.map(p => this.loadPageToCache(p).catch(() => { })));
     }
     this.cleanupPageCache(pageNum);
   }
@@ -1166,6 +1173,6 @@ setTimeout(() => {
     !window.tafsirManager.isLoading &&
     document.visibilityState === "visible"
   ) {
-    window.tafsirManager.preload().catch(() => {});
+    window.tafsirManager.preload().catch(() => { });
   }
 }, 10000);

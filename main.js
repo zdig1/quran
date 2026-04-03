@@ -172,20 +172,28 @@ class QuranApp {
     }
   }
 
-  enableSwipe(element, onSwipeLeft, onSwipeRight, threshold = 50) {
+  enableSwipe(element, onSwipeLeft, onSwipeRight, threshold = 50, cooldown = 300) {
     if (!element) return;
     let startX = 0;
+    let lastSwipeTime = 0;
+
     const onTouchStart = (e) => {
       startX = e.touches[0].clientX;
     };
+
     const onTouchEnd = (e) => {
+      const now = Date.now();
+      if (now - lastSwipeTime < cooldown) return; // anti-rebond
+
       const endX = e.changedTouches[0].clientX;
       const delta = startX - endX;
       if (Math.abs(delta) > threshold) {
+        lastSwipeTime = now;
         if (delta < 0) onSwipeLeft?.();
         else onSwipeRight?.();
       }
     };
+
     element.addEventListener('touchstart', onTouchStart, { passive: true });
     element.addEventListener('touchend', onTouchEnd);
     return () => {

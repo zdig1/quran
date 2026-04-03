@@ -517,8 +517,10 @@ class QuranReader {
   // ============================================
 
   goToPage(page) {
+    if (this.isTransitioning) return;
     const pageNum = parseInt(page);
     if (isNaN(pageNum) || pageNum < 1 || pageNum > 604) return;
+    this.isTransitioning = true;
     this.currentPage = pageNum;
     this.updatePageInfo(pageNum);
     if (this.readingMode === "book") {
@@ -529,6 +531,8 @@ class QuranReader {
       this.scrollToPage(pageNum);
     }
     this.notifyPageChange();
+    // Relâcher le verrou après un court délai (la transition visuelle est rapide)
+    setTimeout(() => { this.isTransitioning = false; }, 200);
   }
 
   scrollToPage(page) {
@@ -696,11 +700,17 @@ class QuranReader {
   setupSwipeNavigation() {
     if (!this.elements.pageScroll || this.readingMode !== "book") return;
     const element = this.elements.pageScroll;
+
     this.swipeCleanup = window.quranApp.enableSwipe(
       element,
-      () => this.goToNextPage(),
-      () => this.goToPreviousPage(),
-      50
+      () => {
+        if (!this.isTransitioning) this.goToNextPage();
+      },
+      () => {
+        if (!this.isTransitioning) this.goToPreviousPage();
+      },
+      50,    // seuil
+      300    // cooldown (déjà dans enableSwipe, mais on le précise)
     );
   }
 
