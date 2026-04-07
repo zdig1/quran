@@ -844,6 +844,7 @@ class QuranReader {
   }
   _adjustFooterHeight() {
     if (this.readingMode !== "book") return;
+    if (this.isTransitioning) return;
     const activeWrapper = this.elements.pageScroll.querySelector('.page-wrapper.active');
     if (!activeWrapper) return;
     const img = activeWrapper.querySelector('img');
@@ -887,18 +888,13 @@ class QuranReader {
       // La mini bar prend la même hauteur que le footer
       miniBar.style.height = `${footerHeight}px`;
       miniBar.style.minHeight = `${footerHeight}px`;
-      // Cacher le footer pendant que la mini bar est visible
-      footer.classList.add('hidden');
     } else {
       // Réinitialiser la hauteur de la mini bar
       if (miniBar) {
         miniBar.style.height = '';
         miniBar.style.minHeight = '';
       }
-      // Réafficher le footer seulement si les boutons sont visibles
-      if (this.buttonsVisible) {
-        footer.classList.remove('hidden');
-      }
+
     }
   }
 
