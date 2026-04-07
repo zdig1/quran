@@ -51,7 +51,6 @@ const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
       { id: "Ghamadi_40kbps", name: "سعد الغامدي" },
       { id: "Salah_Al_Budair_128kbps", name: "صالح البدير" },
       { id: "Salaah_AbdulRahman_Bukhatir_128kbps", name: "صلاح بوخاطر" },
-      { id: "Alafasy_64kbps", name: "مشاري العفاسي" },
     ],
   },
   warsh: {
