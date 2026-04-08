@@ -989,11 +989,12 @@ class OverlayManager {
     item.querySelector(".icon-btn--replace")?.addEventListener("click", async (e) => {
       e.stopPropagation();
       const currentPage = this.getCurrentPage();
+      const oldPage = bookmark.page; // ancienne page avant remplacement
       const confirmed = await this.showConfirm(
         `هل تريد وضع العلامة (${bookmark.name}) بهاته الصفحة ؟`
       );
       if (confirmed && window.quranApp?.replaceBookmarkPage(bookmark.id, currentPage)) {
-        window.quranApp.showToast(`♻️ تم استبدال الصفحة ب ${currentPage}`);
+        window.quranApp.showToast(`♻️ تم نقل العلامة من صفحة ${oldPage} إلى ${currentPage}`);
         this.refreshBookmarksDisplay();
       }
     });
