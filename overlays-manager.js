@@ -988,11 +988,20 @@ class OverlayManager {
 
     item.querySelector(".icon-btn--replace")?.addEventListener("click", async (e) => {
       e.stopPropagation();
-      const currentPage = this.getCurrentPage();
-      const oldPage = bookmark.page; // ancienne page avant remplacement
+      // 🔁 Récupérer la page courante DIRECTEMENT depuis le lecteur (pas via `getCurrentPage()` qui peut être obsolète)
+      const currentPage = window.quranReader?.getCurrentPage() || this.getCurrentPage();
+      const oldPage = bookmark.page;
+
+      // Éviter le remplacement si la page n'a pas changé
+      if (oldPage === currentPage) {
+        window.quranApp?.showToast("⚠️ العلامة موجودة بالفعل على هذه الصفحة");
+        return;
+      }
+
       const confirmed = await this.showConfirm(
-        `هل تريد وضع العلامة (${bookmark.name}) بهاته الصفحة ؟`
+        `هل تريد نقل العلامة (${bookmark.name}) من صفحة ${oldPage} إلى صفحة ${currentPage} ؟`
       );
+
       if (confirmed && window.quranApp?.replaceBookmarkPage(bookmark.id, currentPage)) {
         window.quranApp.showToast(`♻️ تم نقل العلامة من صفحة ${oldPage} إلى ${currentPage}`);
         this.refreshBookmarksDisplay();
