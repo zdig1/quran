@@ -648,7 +648,7 @@ body {
 }
 
 .menu-header {
-  padding: var(--space-lg) var(--space-md);
+  padding: var(--space-sm);
   border-bottom: 1px solid var(--menu-border);
   display: flex;
   align-items: center;

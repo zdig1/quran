@@ -704,10 +704,10 @@ class QuranReader {
     this.swipeCleanup = window.quranApp.enableSwipe(
       element,
       () => {
-        if (!this.isTransitioning) this.goToNextPage();
+        if (!this.isTransitioning && !this._dialogOpen) this.goToNextPage();
       },
       () => {
-        if (!this.isTransitioning) this.goToPreviousPage();
+        if (!this.isTransitioning && !this._dialogOpen) this.goToPreviousPage();
       },
       50,    // seuil
       300    // cooldown (déjà dans enableSwipe, mais on le précise)
