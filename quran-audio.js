@@ -7,7 +7,7 @@
 // const ACTIVE_RIWAYA = "qaloun";
 
 const EVERYAYAH_BASE = "https://everyayah.com/data/";
-const AYA_COORDS_PATH = "./data/ayainfo.json";
+const AYA_COORDS_PATH = "./data/ayapage.json";
 
 const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
   hafs: {
@@ -182,7 +182,7 @@ class QuranAudioPlayer {
   }
 
   // ============================================
-  // COORDONNÉES AYA (ayainfo.json)
+  // COORDONNÉES AYA (ayapage.json)
   // ============================================
 
   async _loadAyaCoords() {
@@ -196,7 +196,7 @@ class QuranAudioPlayer {
         this.ayaCoordsLoaded = false;
       }
     } catch (e) {
-      console.warn("ayainfo.json non chargé:", e);
+      console.warn("ayapage.json non chargé:", e);
       this.ayaCoordsLoaded = false;
     }
   }

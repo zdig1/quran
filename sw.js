@@ -129,7 +129,7 @@ async function handleFetch(request) {
     }
 
     // JSON critiques → retourner une structure minimale
-    const criticalJson = ["quran.json", "tafsir.json", "ayainfo.json"];
+    const criticalJson = ["quran.json", "tafsir.json", "ayapage.json"];
     if (request.url.includes(".json")) {
       if (criticalJson.some(f => request.url.includes(f))) {
         // Retourne un objet avec une propriété error pour éviter de casser l'app
