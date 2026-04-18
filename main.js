@@ -16,6 +16,7 @@ class QuranApp {
     this.tafsirLoadQueue = [];
 
     this._toastTimeout = null;
+    this._savePageTimeout = null;
     this._beforeUnloadHandler = null;
     this._pageHideHandler = null;
     this._visibilityChangeHandler = null;
@@ -62,6 +63,19 @@ class QuranApp {
     if (!window.quranCalculator)
       throw new Error("Module Calculator non trouvé");
     await window.quranCalculator.load();
+    // Migration surahId : maintenant que le calculator est chargé
+    let needsSave = false;
+    this.bookmarks = this.bookmarks.map((b) => {
+      if (!b.surahId && b.page) {
+        const surah = window.quranCalculator.getFirstSurahForPage(b.page);
+        if (surah) { needsSave = true; return { ...b, surahId: surah.s_id }; }
+      }
+      return b;
+    });
+    if (needsSave) {
+      this._updateBookmarkedPagesSet();
+      this.saveToLocalStorage();
+    }
   }
 
   async initReader() {
@@ -85,26 +99,14 @@ class QuranApp {
       this.bookmarks = rawBookmarks ? JSON.parse(rawBookmarks) : [];
       if (!Array.isArray(this.bookmarks)) this.bookmarks = [];
 
-      // Migration : ajouter surahId si absent
-      let needsSave = false;
-      this.bookmarks = this.bookmarks.map((b, i) => {
-        const bookmark = {
-          ...b,
-          id: b.id || `bookmark_${b.page}_${Date.now()}_${i}`,
-          lastModified: b.lastModified || b.date || new Date().toISOString(),
-        };
-        if (!bookmark.surahId && bookmark.page) {
-          const surah = window.quranCalculator?.getFirstSurahForPage(bookmark.page);
-          if (surah) {
-            bookmark.surahId = surah.s_id;
-            needsSave = true;
-          }
-        }
-        return bookmark;
-      });
+      // Normalisation des ids et dates (sans migration surahId — fait après chargement du calculator)
+      this.bookmarks = this.bookmarks.map((b, i) => ({
+        ...b,
+        id: b.id || `bookmark_${b.page}_${Date.now()}_${i}`,
+        lastModified: b.lastModified || b.date || new Date().toISOString(),
+      }));
 
       this._updateBookmarkedPagesSet();
-      if (needsSave) this.saveToLocalStorage();
 
       const rawPage = localStorage.getItem("quran_lastPage");
       this.lastPage = rawPage ? parseInt(rawPage) : 1;
@@ -138,6 +140,8 @@ class QuranApp {
 
   saveToLocalStorage() {
     try {
+      // Annuler le debounce en cours et écrire immédiatement
+      clearTimeout(this._savePageTimeout);
       localStorage.setItem("quran_bookmarks", JSON.stringify(this.bookmarks));
       localStorage.setItem("quran_lastPage", this.lastPage.toString());
       localStorage.setItem("quran_theme", this.theme);
@@ -225,15 +229,19 @@ class QuranApp {
   // ============================================
 
   getCurrentPage() {
-    return this.lastPage;
+    return window.quranReader?.getCurrentPage?.() || this.lastPage;
   }
 
   updateCurrentPage(page) {
     const pageNum = parseInt(page, 10);
     if (isNaN(pageNum) || pageNum < 1 || pageNum > 604) return;
     this.lastPage = pageNum;
-    localStorage.setItem("quran_lastPage", pageNum.toString());
     if (typeof window !== "undefined") window.currentQuranPage = pageNum;
+    // Debounce : évite d'écrire localStorage à chaque page scrollée
+    clearTimeout(this._savePageTimeout);
+    this._savePageTimeout = setTimeout(() => {
+      localStorage.setItem("quran_lastPage", pageNum.toString());
+    }, 500);
   }
 
   goToPage(page) {
@@ -644,6 +652,15 @@ class QuranApp {
     };
     window.addEventListener("pagehide", this._pageHideHandler);
 
+    // Cordova
+    document.addEventListener("pause", () => {
+      if (this.isInitialized) {
+        const readerPage = window.quranReader?.getCurrentPage?.();
+        if (readerPage) this.lastPage = readerPage;
+        this.saveToLocalStorage();
+      }
+    }, false);
+
     this._visibilityChangeHandler = () => {
       if (document.visibilityState === "hidden") {
         const readerPage = window.quranReader?.getCurrentPage?.();
@@ -677,6 +694,10 @@ class QuranApp {
     if (this._toastTimeout) {
       clearTimeout(this._toastTimeout);
       this._toastTimeout = null;
+    }
+    if (this._savePageTimeout) {
+      clearTimeout(this._savePageTimeout);
+      this._savePageTimeout = null;
     }
 
     const events = [

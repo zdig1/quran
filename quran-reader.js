@@ -289,7 +289,7 @@ class QuranReader {
     }
 
     let rafPending = false;
-    container.addEventListener("scroll", () => {
+    const onScroll = () => {
       if (!rafPending) {
         rafPending = true;
         window.requestAnimationFrame(() => {
@@ -298,7 +298,9 @@ class QuranReader {
           rafPending = false;
         });
       }
-    });
+    };
+    container.addEventListener("scroll", onScroll);
+    this.eventListeners.push({ element: container, type: "scroll", handler: onScroll });
 
     this.updateVisiblePages();
     this.setupImageObserver();
