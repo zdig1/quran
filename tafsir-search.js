@@ -244,12 +244,20 @@ class TafsirSearchManager {
   // RECHERCHE
   // ============================================
 
-  searchWithStats(query) {
-    if (!this.data || !query?.trim())
-      return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
+searchWithStats(query) {
+    // Si la base de données n'est pas chargée, retour vide
+    if (!this.data) return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
+    
+    // Vérifier si la requête est vide (après suppression des espaces inutiles)
+    // Mais on conserve les espaces saisis pour la recherche elle-même.
+    if (!query || query.trim() === '') 
+        return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
 
-    const normalizedQuery = this.normalizeArabic(query.trim().toLowerCase());
-    const cacheKey = `alif_norm_${normalizedQuery}`;
+    // Normalisation et minuscule SANS supprimer les espaces en début/fin
+    const normalizedQuery = this.normalizeArabic(query.toLowerCase());
+
+    // Clé de cache qui reflète la chaîne exacte (avec espaces)
+    const cacheKey = `alif_exact_${normalizedQuery}`;
     if (this.searchCache.has(cacheKey)) return this.searchCache.get(cacheKey);
 
     const results = [];
@@ -286,7 +294,7 @@ class TafsirSearchManager {
     }
     this.searchCache.set(cacheKey, cached);
     return cached;
-  }
+}
 
   // ============================================
   // UI RECHERCHE
