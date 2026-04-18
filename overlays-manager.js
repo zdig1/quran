@@ -453,8 +453,9 @@ class OverlayManager {
     const pinnedIds = window.quranApp?.getPinnedSurahs() || [];
     const bookmarkedSurahIds = new Set();
     bookmarks.forEach(b => {
-      const s = window.quranCalculator.getFirstSurahForPage(b.page);
-      if (s) bookmarkedSurahIds.add(s.s_id);
+      if (b.surahId) {
+        bookmarkedSurahIds.add(b.surahId);
+      }
     });
 
     // Section Favorites
@@ -678,10 +679,8 @@ class OverlayManager {
       );
       const isNewJuz = parseInt(hizb.hizb) % 2 !== 0;
       const juzNum = Math.ceil(parseInt(hizb.hizb) / 2);
-      const suraId = window.quranCalculator._surahIdByName?.get(hizb.sura) ?? "?";
-      const ayaText = (hizb.aya_txt || "").replace(/\s*\(\d+\)\s*$/, "").trim();
+      const suraId = hizb.s_id; const ayaText = (hizb.aya_txt || "").replace(/\s*\(\d+\)\s*$/, "").trim();
       const prefix = `${window.quranApp.escapeHtml(String(suraId))}. ${window.quranApp.escapeHtml(hizb.sura)} - آية (${window.quranApp.escapeHtml(String(hizb.aya))})`;
-
       const container = ListItemRenderer.createContainer('juzhizb', hizb.hizb);
 
       // Première ligne

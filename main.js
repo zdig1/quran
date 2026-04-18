@@ -4,6 +4,7 @@ class QuranApp {
     this.isInitializing = false;
 
     this.bookmarks = [];
+    this.bookmarkedPagesSet = new Set(); // ⭐ Ajout
     this.pinnedSurahs = [];
     this.lastPage = 1;
     this.theme = "light";
@@ -83,11 +84,27 @@ class QuranApp {
       const rawBookmarks = localStorage.getItem("quran_bookmarks");
       this.bookmarks = rawBookmarks ? JSON.parse(rawBookmarks) : [];
       if (!Array.isArray(this.bookmarks)) this.bookmarks = [];
-      this.bookmarks = this.bookmarks.map((b, i) => ({
-        ...b,
-        id: b.id || `bookmark_${b.page}_${Date.now()}_${i}`,
-        lastModified: b.lastModified || b.date || new Date().toISOString(),
-      }));
+
+      // Migration : ajouter surahId si absent
+      let needsSave = false;
+      this.bookmarks = this.bookmarks.map((b, i) => {
+        const bookmark = {
+          ...b,
+          id: b.id || `bookmark_${b.page}_${Date.now()}_${i}`,
+          lastModified: b.lastModified || b.date || new Date().toISOString(),
+        };
+        if (!bookmark.surahId && bookmark.page) {
+          const surah = window.quranCalculator?.getFirstSurahForPage(bookmark.page);
+          if (surah) {
+            bookmark.surahId = surah.s_id;
+            needsSave = true;
+          }
+        }
+        return bookmark;
+      });
+
+      this._updateBookmarkedPagesSet();
+      if (needsSave) this.saveToLocalStorage();
 
       const rawPage = localStorage.getItem("quran_lastPage");
       this.lastPage = rawPage ? parseInt(rawPage) : 1;
@@ -103,6 +120,7 @@ class QuranApp {
       this.lastPage = 1;
       this.theme = "light";
       this.pinnedSurahs = [];
+      this.bookmarkedPagesSet.clear();
       [
         "quran_bookmarks",
         "quran_lastPage",
@@ -183,7 +201,7 @@ class QuranApp {
 
     const onTouchEnd = (e) => {
       const now = Date.now();
-      if (now - lastSwipeTime < cooldown) return; // anti-rebond
+      if (now - lastSwipeTime < cooldown) return;
 
       const endX = e.changedTouches[0].clientX;
       const delta = startX - endX;
@@ -251,12 +269,21 @@ class QuranApp {
     return [...this.bookmarks];
   }
 
+  _updateBookmarkedPagesSet() {
+    this.bookmarkedPagesSet = new Set(this.bookmarks.map(b => b.page));
+  }
+
   addBookmark(bookmark) {
     if (!bookmark.lastModified) {
       bookmark.lastModified = new Date().toISOString();
     }
+    if (!bookmark.surahId && bookmark.page) {
+      const surah = window.quranCalculator?.getFirstSurahForPage(bookmark.page);
+      if (surah) bookmark.surahId = surah.s_id;
+    }
     this.bookmarks.push(bookmark);
     this.bookmarks.sort((a, b) => a.page - b.page);
+    this._updateBookmarkedPagesSet();
     this.saveToLocalStorage();
     this.updateBookmarkIcon(bookmark.page);
     window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
@@ -268,7 +295,10 @@ class QuranApp {
     const oldPage = bookmark.page;
     bookmark.page = newPage;
     bookmark.lastModified = new Date().toISOString();
+    const surah = window.quranCalculator?.getFirstSurahForPage(newPage);
+    bookmark.surahId = surah ? surah.s_id : null;
     this.bookmarks.sort((a, b) => a.page - b.page);
+    this._updateBookmarkedPagesSet();
     this.saveToLocalStorage();
     this.updateBookmarkIcon(oldPage);
     this.updateBookmarkIcon(newPage);
@@ -280,6 +310,7 @@ class QuranApp {
     const idx = this.bookmarks.findIndex((b) => b.id === bookmarkId);
     if (idx === -1) return false;
     const removed = this.bookmarks.splice(idx, 1)[0];
+    this._updateBookmarkedPagesSet();
     this.saveToLocalStorage();
     this.updateBookmarkIcon(removed.page);
     window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
@@ -299,7 +330,7 @@ class QuranApp {
   updateBookmarkIcon(page) {
     const icon = document.getElementById("bookmarkIcon");
     if (!icon) return;
-    const hasBookmark = this.bookmarks.some((b) => b.page === page);
+    const hasBookmark = this.bookmarkedPagesSet.has(page);
     icon.textContent = hasBookmark ? "⭐" : "🔖";
     icon.title = hasBookmark ? "علامة مرجعية موجودة" : "إضافة علامة مرجعية";
   }
@@ -320,6 +351,7 @@ class QuranApp {
     };
     return JSON.stringify(data, null, 2);
   }
+
   /**
    * Importe des données utilisateur depuis une chaîne JSON
    */
@@ -338,7 +370,6 @@ class QuranApp {
         );
         if (!validBookmarks) throw new Error("Signets invalides");
 
-        // Validation des épingles (optionnel)
         const validPinned =
           Array.isArray(imported.pinnedSurahs) &&
           imported.pinnedSurahs.every(
@@ -349,7 +380,6 @@ class QuranApp {
         let newPinned = [...this.pinnedSurahs];
 
         if (merge) {
-          // Fusion des signets
           const existingIds = new Set(this.bookmarks.map((b) => b.id));
           const toAddBookmarks = imported.bookmarks.filter(
             (b) => !existingIds.has(b.id),
@@ -359,14 +389,11 @@ class QuranApp {
           }));
           newBookmarks = [...this.bookmarks, ...toAddBookmarks];
 
-          // Fusion des épingles
           const existingPinned = new Set(this.pinnedSurahs);
           imported.pinnedSurahs = imported.pinnedSurahs || [];
-          const toAddPinned = imported.pinnedSurahs.filter((id) => !existingPinned.has(id),
-          );
+          const toAddPinned = imported.pinnedSurahs.filter((id) => !existingPinned.has(id));
           newPinned = [...this.pinnedSurahs, ...toAddPinned];
         } else {
-          // Remplacement
           newBookmarks = imported.bookmarks.map((b) => ({
             ...b,
             id: b.id || `bookmark_${b.page}_${Date.now()}_${Math.random()}`,
@@ -377,12 +404,12 @@ class QuranApp {
             : this.pinnedSurahs;
         }
 
-        // Tri des signets par page
         newBookmarks.sort((a, b) => a.page - b.page);
 
         this.bookmarks = newBookmarks;
         this.pinnedSurahs = newPinned;
-        // Restaurer pinnedReciters
+        this._updateBookmarkedPagesSet();
+
         if (imported.pinnedReciters && typeof imported.pinnedReciters === 'object') {
           Object.entries(imported.pinnedReciters).forEach(([riwaya, ids]) => {
             if (Array.isArray(ids)) {
@@ -609,12 +636,18 @@ class QuranApp {
 
   setupCleanupHandlers() {
     this._pageHideHandler = () => {
-      if (this.isInitialized) this.saveToLocalStorage();
+      if (this.isInitialized) {
+        const readerPage = window.quranReader?.getCurrentPage?.();
+        if (readerPage) this.lastPage = readerPage;
+        this.saveToLocalStorage();
+      }
     };
     window.addEventListener("pagehide", this._pageHideHandler);
 
     this._visibilityChangeHandler = () => {
       if (document.visibilityState === "hidden") {
+        const readerPage = window.quranReader?.getCurrentPage?.();
+        if (readerPage) this.lastPage = readerPage;
         this.saveToLocalStorage();
         window.quranReader?.imageCache.clear();
       } else if (document.visibilityState === "visible") {
@@ -641,13 +674,11 @@ class QuranApp {
   // ============================================
 
   destroy() {
-    // Annuler le timeout du toast
     if (this._toastTimeout) {
       clearTimeout(this._toastTimeout);
       this._toastTimeout = null;
     }
 
-    // Retirer tous les écouteurs d'événements
     const events = [
       {
         target: window,
@@ -682,7 +713,6 @@ class QuranApp {
       }
     });
 
-    // Remettre les propriétés à null
     this._pageChangedHandler = null;
     this._bookmarkChangedHandler = null;
     this._readingModeChangedHandler = null;
@@ -692,7 +722,6 @@ class QuranApp {
     this._onlineHandler = null;
     this._offlineHandler = null;
 
-    // L'application n'est plus initialisée
     this.isInitialized = false;
   }
 }
@@ -702,11 +731,6 @@ class QuranApp {
 // ============================================
 
 class ListItemRenderer {
-  /**
-   * Crée un conteneur d'item avec les classes de base
-   * @param {string} type - "surah", "juz", "search", "bookmark"
-   * @param {string} id - identifiant optionnel
-   */
   static createContainer(type, id = null) {
     const div = document.createElement('div');
     div.className = `item-container item-${type}`;
@@ -714,9 +738,6 @@ class ListItemRenderer {
     return div;
   }
 
-  /**
-   * Construit la première ligne (badge + titre à droite, éléments à gauche)
-   */
   static buildLine1({ rightElements = [], leftElements = [] }) {
     const line1 = document.createElement('div');
     line1.className = 'item-line-1';
@@ -734,9 +755,6 @@ class ListItemRenderer {
     return line1;
   }
 
-  /**
-   * Construit une ligne supplémentaire (2, 3...)
-   */
   static buildLine(className, content) {
     const line = document.createElement('div');
     line.className = className;
@@ -748,9 +766,6 @@ class ListItemRenderer {
     return line;
   }
 
-  /**
-   * Crée un badge standard
-   */
   static createBadge(text, extraClass = '') {
     const span = document.createElement('span');
     span.className = `item-badge badge ${extraClass}`;
@@ -758,9 +773,6 @@ class ListItemRenderer {
     return span;
   }
 
-  /**
-   * Crée un titre d'item
-   */
   static createTitle(text) {
     const span = document.createElement('span');
     span.className = 'item-title';
@@ -768,9 +780,6 @@ class ListItemRenderer {
     return span;
   }
 
-  /**
-   * Crée une étiquette de page
-   */
   static createPageTag(page) {
     const span = document.createElement('span');
     span.className = 'page-tag';
@@ -778,9 +787,6 @@ class ListItemRenderer {
     return span;
   }
 
-  /**
-   * Crée une icône (bookmark, etc.)
-   */
   static createIcon(icon, extraClass = '') {
     const span = document.createElement('span');
     span.className = `item-icon ${extraClass}`;
@@ -801,7 +807,6 @@ class CustomSelect {
     CustomSelect._toggleReady = true;
 
     document.querySelectorAll('.custom-select-btn').forEach(btn => {
-      // Éviter les doublons en remplaçant le bouton par un clone
       const newBtn = btn.cloneNode(true);
       btn.parentNode.replaceChild(newBtn, btn);
 
@@ -809,7 +814,6 @@ class CustomSelect {
         e.stopPropagation();
         const wrap = newBtn.closest('.custom-select');
         const isOpen = wrap?.classList.contains('open');
-        // Fermer tous les autres
         document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
         if (!isOpen && wrap) {
           wrap.classList.add('open');
@@ -817,7 +821,6 @@ class CustomSelect {
       });
     });
 
-    // Fermer au clic en dehors, mais pas si on clique sur un bouton
     document.addEventListener('click', (e) => {
       if (e.target.closest('.custom-select-btn')) return;
       document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
@@ -879,7 +882,7 @@ class CustomSelect {
 }
 
 // ============================================
-// EXPOSITION GLOBALE (pour les autres modules)
+// EXPOSITION GLOBALE
 // ============================================
 window.ListItemRenderer = ListItemRenderer;
 window.CustomSelect = CustomSelect;
