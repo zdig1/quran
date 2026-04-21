@@ -1504,7 +1504,7 @@ class OverlayManager {
         <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item contact-brown">
           <span>🌐 زيارة الموقع</span>
         </a>
-        <a href="mailto:zdig1.0@gmail.com?subject=quranreader" class="contact-box-item contact-violet">
+        <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%201.0.9%0A---%0A%0A" class="contact-box-item contact-violet">
           <span>📧 تواصل معنا</span>
         </a>
       </div>
