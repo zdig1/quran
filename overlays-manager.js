@@ -202,7 +202,6 @@ class OverlayManager {
   }
 
   setupMenuButtons() {
-    // Ordre modifié : audio après bookmarks
     const buttons = [
       { btn: this.elements.surahsBtn, action: () => this.showSurahs() },
       { btn: this.elements.juzHizbBtn, action: () => this.showJuzHizb() },

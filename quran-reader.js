@@ -84,7 +84,8 @@ class QuranReader {
     // Auto scroll
     this.autoScrollActive = false;
     this.autoScrollRAF = null;
-    this.autoScrollSpeed = parseFloat(localStorage.getItem("quran_scrollSpeed")) || 0.2; this.minSpeed = 0.1;
+    this.autoScrollSpeed = parseFloat(localStorage.getItem("quran_scrollSpeed")) || 0.2;
+    this.minSpeed = 0.1;
     this.maxSpeed = 0.8;
     this.speedStep = 0.1;
     this._scrollAccum = 0;
