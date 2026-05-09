@@ -2,7 +2,7 @@
   "use strict";
 
   const APP_ID = "quranreader";
-  const APP_VERSION = "1.0.9";
+  const APP_VERSION = "1.1.0";
 
   function escapeHtml(text) {
     if (!text) return "";

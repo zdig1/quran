@@ -635,7 +635,7 @@ body {
 }
 
 .menu-content {
-  width: 15.625rem;
+  width: 17rem;
   position: absolute;
   top: 0;
   right: 0;
@@ -677,6 +677,8 @@ body {
   font-size: var(--text-md);
   font-family: 'MyNotoKufi', sans-serif;
   padding-right: var(--space-md);
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .menu-item {
@@ -691,6 +693,7 @@ body {
   cursor: pointer;
   color: white;
   transition: background-color 0.2s;
+  white-space: nowrap;
 }
 
 .menu-item:hover {

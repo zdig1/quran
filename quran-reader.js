@@ -679,8 +679,11 @@ class QuranReader {
       ),
     );
     if (detected !== this.currentPage) {
-      this.currentPage = detected;
-      this.updatePageInfo(detected);
+      const step = detected > this.currentPage ? 1 : -1;
+      for (let p = this.currentPage + step; p !== detected + step; p += step) {
+        this.currentPage = p;
+        this.updatePageInfo(p);
+      }
       this.notifyPageChange();
     }
   }

@@ -1487,7 +1487,7 @@ class OverlayManager {
     overlay.content.innerHTML = `<div class="about-content">
       <p class="about-title">
         <strong>مصحف التجويد - حفص</strong>
-        <span class="about-version">v1.0.9</span>
+        <span class="about-version">v1.1.0</span>
       </p>
       <p class="about-desc">
         تطبيق لقراءة القرآن الكريم كاملاً بجودة عالية ودون اتصال بالإنترنت، مطابق للمصحف الورقي المعتمد :
@@ -1503,7 +1503,7 @@ class OverlayManager {
         <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item contact-brown">
           <span>🌐 زيارة الموقع</span>
         </a>
-        <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%201.0.9%0A---%0A%0A" class="contact-box-item contact-violet">
+        <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%201.1.0%0A---%0A%0A" class="contact-box-item contact-violet">
           <span>📧 تواصل معنا</span>
         </a>
       </div>
