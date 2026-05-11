@@ -1287,64 +1287,97 @@ class QuranReader {
     if (!rects?.length) return;
 
     const page = this.currentPage;
-    const wrapper =
-      this.readingMode === "scroll"
-        ? this.wrapperPool.find((w) => parseInt(w.dataset.page) === page)
-        : this.elements.pageScroll.querySelector(
-          `.page-wrapper[data-page="${page}"]`,
-        );
-    if (!wrapper) return;
 
-    const img = wrapper.querySelector("img");
-    if (!img) return;
+    if (this.readingMode === "scroll") {
+      // En mode scroll : position absolue dans le spacer, indépendant du pool
+      if (!this.spacer || !this.pageHeight) return;
+      const container = this.elements.pageScroll;
+      const imgW = container?.clientWidth ?? window.innerWidth;
+      const imgH = this.pageHeight;
+      if (!imgW || !imgH) return;
 
-    const offX = img.offsetLeft;
-    const offY = img.offsetTop;
-    const imgW = img.offsetWidth;
-    const imgH = img.offsetHeight;
-    if (!imgW || !imgH) return;
+      const sx = imgW / 1260;
+      const sy = imgH / 1890;
 
-    const sx = imgW / 1260;
-    const sy = imgH / 1890;
+      const pageCoords = (window.quranAudioPlayer?.ayaCoords || []).filter(
+        (r) => r.p === page,
+      );
+      const lineMap = {};
+      pageCoords.forEach((r) => {
+        if (!r.l) return;
+        if (!lineMap[r.l]) {
+          lineMap[r.l] = { y1: r.y1, y2: r.y2 };
+        } else {
+          lineMap[r.l].y1 = Math.min(lineMap[r.l].y1, r.y1);
+          lineMap[r.l].y2 = Math.max(lineMap[r.l].y2, r.y2);
+        }
+      });
 
-    // Bornes réelles de chaque ligne depuis toute la page
-    const pageCoords = (window.quranAudioPlayer?.ayaCoords || []).filter(
-      (r) => r.p === page,
-    );
-    const lineMap = {};
-    pageCoords.forEach((r) => {
-      if (!r.l) return;
-      if (!lineMap[r.l]) {
-        lineMap[r.l] = { y1: r.y1, y2: r.y2 };
-      } else {
-        lineMap[r.l].y1 = Math.min(lineMap[r.l].y1, r.y1);
-        lineMap[r.l].y2 = Math.max(lineMap[r.l].y2, r.y2);
-      }
-    });
+      const pageOffsetTop = (page - 1) * this.pageHeight;
 
-    const WEBP_TOP = 30;
-    const WEBP_BOT = 25;
+      rects.forEach((r) => {
+        const lineData = r.l ? lineMap[r.l] : null;
+        const realY1 = lineData ? lineData.y1 : r.y1;
+        const realY2 = lineData ? lineData.y2 : r.y2;
 
-    rects.forEach((r) => {
-      const lineData = r.l ? lineMap[r.l] : null;
-      const realY1 = lineData ? lineData.y1 : r.y1;
-      const realY2 = lineData ? lineData.y2 : r.y2;
+        const yCorrect = (30 - (realY1 / 1890) * 55) * (imgH / 1100);
+        const SHRINK = 5;
 
-      const t = realY1 / 1890;
-      const yCorrect =
-        this.readingMode === "scroll"
-          ? (30 - (realY1 / 1890) * 55) * (imgH / 1100)
-          : (WEBP_TOP - t * (WEBP_TOP + WEBP_BOT)) * (imgH / 1100);
+        const div = document.createElement("div");
+        div.className = "aya-highlight";
+        div.style.position = "absolute";
+        div.style.left = (r.x1 - 40) * sx + "px";
+        div.style.width = (r.x2 - r.x1) * sx + "px";
+        div.style.top = pageOffsetTop + realY1 * sy + yCorrect + SHRINK * sy + "px";
+        div.style.height = (realY2 - realY1) * sy - SHRINK * 2 * sy + "px";
+        this.spacer.appendChild(div);
+      });
 
-      const div = document.createElement("div");
-      div.className = "aya-highlight";
-      div.style.left = offX + (r.x1 - 40) * sx + "px";
-      div.style.width = (r.x2 - r.x1) * sx + "px";
-      const SHRINK = 5;
-      div.style.top = offY + realY1 * sy + yCorrect + SHRINK * sy + "px";
-      div.style.height = (realY2 - realY1) * sy - SHRINK * 2 * sy + "px";
-      wrapper.appendChild(div);
-    });
+    } else {
+      // Mode book : comportement inchangé
+      const wrapper = this.elements.pageScroll.querySelector(
+        `.page-wrapper[data-page="${page}"]`,
+      );
+      if (!wrapper) return;
+      const img = wrapper.querySelector("img");
+      if (!img) return;
+      const offX = img.offsetLeft;
+      const offY = img.offsetTop;
+      const imgW = img.offsetWidth;
+      const imgH = img.offsetHeight;
+      if (!imgW || !imgH) return;
+      const sx = imgW / 1260;
+      const sy = imgH / 1890;
+      const pageCoords = (window.quranAudioPlayer?.ayaCoords || []).filter(
+        (r) => r.p === page,
+      );
+      const lineMap = {};
+      pageCoords.forEach((r) => {
+        if (!r.l) return;
+        if (!lineMap[r.l]) lineMap[r.l] = { y1: r.y1, y2: r.y2 };
+        else {
+          lineMap[r.l].y1 = Math.min(lineMap[r.l].y1, r.y1);
+          lineMap[r.l].y2 = Math.max(lineMap[r.l].y2, r.y2);
+        }
+      });
+      const WEBP_TOP = 30;
+      const WEBP_BOT = 25;
+      rects.forEach((r) => {
+        const lineData = r.l ? lineMap[r.l] : null;
+        const realY1 = lineData ? lineData.y1 : r.y1;
+        const realY2 = lineData ? lineData.y2 : r.y2;
+        const t = realY1 / 1890;
+        const yCorrect = (WEBP_TOP - t * (WEBP_TOP + WEBP_BOT)) * (imgH / 1100);
+        const div = document.createElement("div");
+        div.className = "aya-highlight";
+        div.style.left = offX + (r.x1 - 40) * sx + "px";
+        div.style.width = (r.x2 - r.x1) * sx + "px";
+        const SHRINK = 5;
+        div.style.top = offY + realY1 * sy + yCorrect + SHRINK * sy + "px";
+        div.style.height = (realY2 - realY1) * sy - SHRINK * 2 * sy + "px";
+        wrapper.appendChild(div);
+      });
+    }
   }
 
   clearHighlight() {

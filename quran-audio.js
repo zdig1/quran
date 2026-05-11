@@ -2,7 +2,7 @@
 // CONFIGURATION
 // ============================================
 
- const ACTIVE_RIWAYA = "hafs";
+const ACTIVE_RIWAYA = "hafs";
 // const ACTIVE_RIWAYA = "warsh";
 // const ACTIVE_RIWAYA = "qaloun";
 
@@ -59,7 +59,8 @@ const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
       { id: "warsh/warsh_Abdul_Basit_128kbps", name: "عبد الباسط — ورش" },
       { id: "warsh/warsh_ibrahim_aldosary_128kbps", name: "إبراهيم الدوسري" },
       { id: "warsh/warsh_yassin_al_jazaery_64kbps", name: "ياسين الجزائري" },
-    ],},
+    ],
+  },
   qaloun: {
     label: "قالون",
     reciters: [],
@@ -289,31 +290,31 @@ class QuranAudioPlayer {
     this._updateReciterSelectButton();
   }
 
-_selectReciter(id, save = true) {
-  const reciters = RIWAYAT_CONFIG[this.currentRiwaya]?.reciters || [];
-  if (reciters.length === 0) return;
-  
-  let found = null;
-  if (id) {
-    found = reciters.find((r) => r.id === id);
+  _selectReciter(id, save = true) {
+    const reciters = RIWAYAT_CONFIG[this.currentRiwaya]?.reciters || [];
+    if (reciters.length === 0) return;
+
+    let found = null;
+    if (id) {
+      found = reciters.find((r) => r.id === id);
+    }
+    if (!found) {
+      found = reciters[0]; // premier récitant par défaut
+    }
+
+    this.currentReciter = found;
+    if (window.CustomSelect) {
+      window.CustomSelect.setValue('reciterSelect', 'reciterSelectList', found.id);
+    }
+    if (save) window.quranApp.setPreference(`reciter_${this.currentRiwaya}`, found.id);
+    this._updateCurrentReciterName();
+    this._updateReciterSelectButton();
+    this._updateUI();
+    if (this.isPlaying && !this.hasError) {
+      this.audioElement.pause();
+      this.play();
+    }
   }
-  if (!found) {
-    found = reciters[0]; // premier récitant par défaut
-  }
-  
-  this.currentReciter = found;
-  if (window.CustomSelect) {
-    window.CustomSelect.setValue('reciterSelect', 'reciterSelectList', found.id);
-  }
-  if (save) window.quranApp.setPreference(`reciter_${this.currentRiwaya}`, found.id);
-  this._updateCurrentReciterName();
-  this._updateReciterSelectButton();
-  this._updateUI();
-  if (this.isPlaying && !this.hasError) {
-    this.audioElement.pause();
-    this.play();
-  }
-}
 
   _updateReciterSelectButton() {
     const btn = document.getElementById('reciterSelect');
@@ -499,111 +500,111 @@ _selectReciter(id, save = true) {
   // LECTURE
   // ============================================
 
-async _fetchMp3QuranReciters(riwaya) {
-  const config = RIWAYAT_CONFIG[riwaya];
-  if (!config || !config.source || config.reciters.length > 0) return;
-  try {
-    const r = await fetch("https://www.mp3quran.net/api/_arabic.json");
-    const data = await r.json();
-    config.reciters = (data.reciters || [])
-      .filter(rec =>
-        rec.rewaya && rec.rewaya.includes(config.rewayaKeyword) &&
-        rec.count === "114"
-      )
-      .map(rec => ({
-        id: `mp3q_${rec.id}`,
-        name: rec.name,
-        source: "mp3quran",
-        readId: rec.id,
-        serverUrl: rec.Server.endsWith("/") ? rec.Server : rec.Server + "/",
-      }));
-  } catch (e) {
-    console.warn("mp3quran fetch error:", e);
-    // Fallback pour Qaloun en cas d'échec réseau
-    if (riwaya === "qaloun" && config.reciters.length === 0) {
-      config.reciters = [{
-        id: "mp3q_fallback_qaloun",
-        name: "قالون (أحمد عيسى)",
-        source: "mp3quran",
-        readId: "qaloon",
-        serverUrl: "https://server7.mp3quran.net/a_m3/",
-      }];
+  async _fetchMp3QuranReciters(riwaya) {
+    const config = RIWAYAT_CONFIG[riwaya];
+    if (!config || !config.source || config.reciters.length > 0) return;
+    try {
+      const r = await fetch("https://www.mp3quran.net/api/_arabic.json");
+      const data = await r.json();
+      config.reciters = (data.reciters || [])
+        .filter(rec =>
+          rec.rewaya && rec.rewaya.includes(config.rewayaKeyword) &&
+          rec.count === "114"
+        )
+        .map(rec => ({
+          id: `mp3q_${rec.id}`,
+          name: rec.name,
+          source: "mp3quran",
+          readId: rec.id,
+          serverUrl: rec.Server.endsWith("/") ? rec.Server : rec.Server + "/",
+        }));
+    } catch (e) {
+      console.warn("mp3quran fetch error:", e);
+      // Fallback pour Qaloun en cas d'échec réseau
+      if (riwaya === "qaloun" && config.reciters.length === 0) {
+        config.reciters = [{
+          id: "mp3q_fallback_qaloun",
+          name: "قالون (أحمد عيسى)",
+          source: "mp3quran",
+          readId: "qaloon",
+          serverUrl: "https://server7.mp3quran.net/a_m3/",
+        }];
+      }
     }
   }
-}
 
   // ---- MP3QURAN : lecture par aya via timing ----
 
-async _playMp3Quran() {
-  const surah = this.currentSurah;
-  const ayah = this.currentAyah;
-  const surahUrl = this._buildAyahUrl(surah, ayah);
+  async _playMp3Quran() {
+    const surah = this.currentSurah;
+    const ayah = this.currentAyah;
+    const surahUrl = this._buildAyahUrl(surah, ayah);
 
-  this._showStatus("⏳ تحميل...", false);
+    this._showStatus("⏳ تحميل...", false);
 
-  const currentSrc = this.audioElement.dataset.mp3qSurah;
-  if (currentSrc !== `${this.currentReciter.id}_${surah}`) {
-    this.audioElement.src = surahUrl;
-    this.audioElement.dataset.mp3qSurah = `${this.currentReciter.id}_${surah}`;
-    this.audioElement.dataset.mp3qMode = "true";
-    this.audioElement.load();
-  } else {
-    this.audioElement.dataset.mp3qMode = "true";
+    const currentSrc = this.audioElement.dataset.mp3qSurah;
+    if (currentSrc !== `${this.currentReciter.id}_${surah}`) {
+      this.audioElement.src = surahUrl;
+      this.audioElement.dataset.mp3qSurah = `${this.currentReciter.id}_${surah}`;
+      this.audioElement.dataset.mp3qMode = "true";
+      this.audioElement.load();
+    } else {
+      this.audioElement.dataset.mp3qMode = "true";
+    }
+
+    // Tentative de chargement des timings
+    let timings = null;
+    try {
+      timings = await this._loadMp3QuranTimings(surah);
+    } catch (e) { console.warn(e); }
+
+    // ⚠️ CAS 1 : Pas de timings disponibles
+    if (!timings || timings.length === 0) {
+      this._showStatus("⚠️ توقيتات غير متوفرة، تشغيل السورة كاملة", true);
+      // On joue la sourate entière, on ne pourra pas passer automatiquement à l'ayah suivante
+      this.audioElement.playbackRate = this.playbackRate;
+      this.audioElement.play().catch(e => this._handlePlayError());
+      this._applyHighlight();
+      // IMPORTANT : On désactive le mode mp3quran pour éviter le timeupdate
+      this.audioElement.dataset.mp3qMode = "false";
+      return;
+    }
+
+    const t = timings.find(x => x.ayah === ayah);
+
+    // ⚠️ CAS 2 : L'ayah spécifique n'a pas de timing
+    if (!t) {
+      this._showStatus(`⚠️ لا توجد توقيتات للآية ${ayah}`, true);
+      // Fallback : jouer depuis le début de la sourate
+      this.audioElement.currentTime = 0;
+      this.audioElement.playbackRate = this.playbackRate;
+      this.audioElement.play().catch(e => this._handlePlayError());
+      // Désactiver le suivi automatique pour cette ayah
+      this.audioElement.dataset.mp3qMode = "false";
+      return;
+    }
+
+    // ✅ CAS 3 : Timing trouvé - lecture normale
+    this._mp3qEndTime = t.end_time / 1000;
+    const startSec = t.start_time / 1000;
+
+    const doSeekAndPlay = () => {
+      this.audioElement.currentTime = startSec;
+      this.audioElement.playbackRate = this.playbackRate;
+      this.audioElement.play().catch(e => {
+        console.error("mp3quran play error:", e);
+        this._showStatus("❌ تعذر التشغيل", true);
+      });
+      this._showStatus("", false);
+      this._applyHighlight();
+    };
+
+    if (this.audioElement.readyState >= 2) {
+      doSeekAndPlay();
+    } else {
+      this.audioElement.addEventListener("canplay", doSeekAndPlay, { once: true });
+    }
   }
-
-  // Tentative de chargement des timings
-  let timings = null;
-  try {
-    timings = await this._loadMp3QuranTimings(surah);
-  } catch(e) { console.warn(e); }
-
-  // ⚠️ CAS 1 : Pas de timings disponibles
-  if (!timings || timings.length === 0) {
-    this._showStatus("⚠️ توقيتات غير متوفرة، تشغيل السورة كاملة", true);
-    // On joue la sourate entière, on ne pourra pas passer automatiquement à l'ayah suivante
-    this.audioElement.playbackRate = this.playbackRate;
-    this.audioElement.play().catch(e => this._handlePlayError());
-    this._applyHighlight();
-    // IMPORTANT : On désactive le mode mp3quran pour éviter le timeupdate
-    this.audioElement.dataset.mp3qMode = "false";
-    return;
-  }
-
-  const t = timings.find(x => x.ayah === ayah);
-  
-  // ⚠️ CAS 2 : L'ayah spécifique n'a pas de timing
-  if (!t) {
-    this._showStatus(`⚠️ لا توجد توقيتات للآية ${ayah}`, true);
-    // Fallback : jouer depuis le début de la sourate
-    this.audioElement.currentTime = 0;
-    this.audioElement.playbackRate = this.playbackRate;
-    this.audioElement.play().catch(e => this._handlePlayError());
-    // Désactiver le suivi automatique pour cette ayah
-    this.audioElement.dataset.mp3qMode = "false";
-    return;
-  }
-
-  // ✅ CAS 3 : Timing trouvé - lecture normale
-  this._mp3qEndTime = t.end_time / 1000;
-  const startSec = t.start_time / 1000;
-
-  const doSeekAndPlay = () => {
-    this.audioElement.currentTime = startSec;
-    this.audioElement.playbackRate = this.playbackRate;
-    this.audioElement.play().catch(e => {
-      console.error("mp3quran play error:", e);
-      this._showStatus("❌ تعذر التشغيل", true);
-    });
-    this._showStatus("", false);
-    this._applyHighlight();
-  };
-
-  if (this.audioElement.readyState >= 2) {
-    doSeekAndPlay();
-  } else {
-    this.audioElement.addEventListener("canplay", doSeekAndPlay, { once: true });
-  }
-}
 
   async _loadMp3QuranTimings(surah) {
     if (!this._timingsCache) this._timingsCache = {};
@@ -970,9 +971,9 @@ async _playMp3Quran() {
     this.playbackRate = numRate;
     if (this.audioElement) this.audioElement.playbackRate = this.playbackRate;
     const speedBtn = document.getElementById("miniBarSpeed");
-    if (speedBtn) speedBtn.textContent = numRate.toFixed(1) + "×";
+    if (speedBtn) speedBtn.textContent = numRate.toFixed(2) + "×";
     if (this.elements.overlaySpeedBtn) {
-      this.elements.overlaySpeedBtn.textContent = numRate.toFixed(1) + "×";
+      this.elements.overlaySpeedBtn.textContent = numRate.toFixed(2) + "×";
     }
     const index = this.speedOptions.indexOf(numRate);
     if (index !== -1) this.currentSpeedIndex = index;
@@ -1041,7 +1042,7 @@ async _playMp3Quran() {
     this._updateMiniPlayBtn();
     this._updateRepeatBtn();
     const speedBtn = document.getElementById("miniBarSpeed");
-    if (speedBtn) speedBtn.textContent = this.playbackRate.toFixed(1) + "×";
+    if (speedBtn) speedBtn.textContent = this.playbackRate.toFixed(2) + "×";
   }
 
   _buildFab() {
@@ -1123,31 +1124,31 @@ async _playMp3Quran() {
       this.isPlaying = false;
       this._updateUI();
     };
-this._boundListeners.audio.ended = () => {
-  if (this.audioElement.dataset.basmala === "true") return;
-  this.isPlaying = false;
-  this.audioElement.volume = 1;
-  this._crossfading = false;
-  this.audioElement.dataset.mp3qMode = "false";
+    this._boundListeners.audio.ended = () => {
+      if (this.audioElement.dataset.basmala === "true") return;
+      this.isPlaying = false;
+      this.audioElement.volume = 1;
+      this._crossfading = false;
+      this.audioElement.dataset.mp3qMode = "false";
 
-  // Mode mp3quran : la sourate entière vient de finir → passer à la suivante
-  if (this.currentReciter?.source === "mp3quran") {
-    if (this.repeatMode === 2) {
-      this._setSurah(this.currentSurah, 1);
-      this.play();
-    } else {
-      this._onEndOfSurah();
-    }
-    return;
-  }
+      // Mode mp3quran : la sourate entière vient de finir → passer à la suivante
+      if (this.currentReciter?.source === "mp3quran") {
+        if (this.repeatMode === 2) {
+          this._setSurah(this.currentSurah, 1);
+          this.play();
+        } else {
+          this._onEndOfSurah();
+        }
+        return;
+      }
 
-  if (this.repeatMode === 1) {
-    this.audioElement.currentTime = 0;
-    this.audioElement.load();
-    this.play();
-    return;
-  }
-  // ... reste inchangé
+      if (this.repeatMode === 1) {
+        this.audioElement.currentTime = 0;
+        this.audioElement.load();
+        this.play();
+        return;
+      }
+      // ... reste inchangé
 
       if (this.currentAyah >= this.totalAyahs) {
         this._onEndOfSurah();
