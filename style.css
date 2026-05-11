@@ -2073,7 +2073,7 @@ body {
 
 .aya-highlight {
   position: absolute;
-  background: rgba(3, 167, 243, 0.212);
+  background: rgba(0, 200, 100, 0.25);
   border-radius: 4px;
   pointer-events: none;
   transition: all 0.2s ease;
