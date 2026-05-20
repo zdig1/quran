@@ -1287,7 +1287,7 @@ class QuranReader {
     if (!rects?.length) return;
     const page = this.currentPage;
 
-    const WEBP_TOP = 30, WEBP_BOT = 25, SHRINK = 5;
+    const WEBP_TOP = 50, WEBP_BOT = 50, SHRINK = 5;
 
     const pageCoords = (window.quranAudioPlayer?.ayaCoords || []).filter(r => r.p === page);
     const lineMap = {};
