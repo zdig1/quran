@@ -7,7 +7,7 @@ const CORE_ASSETS = [
   "./manifest.webmanifest",
   "./main.js",
   "./quran-reader.js",
-  "./quran-calculator.js",
+  "./calculator.js",
   "./tafsir-search.js",
   "./overlays-manager.js",
   "./quran-audio.js",

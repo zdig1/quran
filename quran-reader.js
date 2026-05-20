@@ -1285,99 +1285,63 @@ class QuranReader {
   highlightAya(surah, ayah, rects) {
     document.querySelectorAll(".aya-highlight").forEach((el) => el.remove());
     if (!rects?.length) return;
-
     const page = this.currentPage;
 
+    const WEBP_TOP = 30, WEBP_BOT = 25, SHRINK = 5;
+
+    const pageCoords = (window.quranAudioPlayer?.ayaCoords || []).filter(r => r.p === page);
+    const lineMap = {};
+    pageCoords.forEach((r) => {
+      if (!r.l) return;
+      if (!lineMap[r.l]) lineMap[r.l] = { y1: r.y1, y2: r.y2 };
+      else {
+        lineMap[r.l].y1 = Math.min(lineMap[r.l].y1, r.y1);
+        lineMap[r.l].y2 = Math.max(lineMap[r.l].y2, r.y2);
+      }
+    });
+
+    let imgW, imgH, getLeft, getTop, appendTo;
+
     if (this.readingMode === "scroll") {
-      // En mode scroll : position absolue dans le spacer, indépendant du pool
       if (!this.spacer || !this.pageHeight) return;
-      const container = this.elements.pageScroll;
-      const imgW = container?.clientWidth ?? window.innerWidth;
-      const imgH = this.pageHeight;
+      imgW = this.elements.pageScroll?.clientWidth ?? window.innerWidth;
+      imgH = this.pageHeight;
       if (!imgW || !imgH) return;
-
-      const sx = imgW / 1260;
-      const sy = imgH / 1890;
-
-      const pageCoords = (window.quranAudioPlayer?.ayaCoords || []).filter(
-        (r) => r.p === page,
-      );
-      const lineMap = {};
-      pageCoords.forEach((r) => {
-        if (!r.l) return;
-        if (!lineMap[r.l]) {
-          lineMap[r.l] = { y1: r.y1, y2: r.y2 };
-        } else {
-          lineMap[r.l].y1 = Math.min(lineMap[r.l].y1, r.y1);
-          lineMap[r.l].y2 = Math.max(lineMap[r.l].y2, r.y2);
-        }
-      });
-
-      const pageOffsetTop = (page - 1) * this.pageHeight;
-
-      rects.forEach((r) => {
-        const lineData = r.l ? lineMap[r.l] : null;
-        const realY1 = lineData ? lineData.y1 : r.y1;
-        const realY2 = lineData ? lineData.y2 : r.y2;
-
-        const yCorrect = (30 - (realY1 / 1890) * 55) * (imgH / 1100);
-        const SHRINK = 5;
-
-        const div = document.createElement("div");
-        div.className = "aya-highlight";
-        div.style.position = "absolute";
-        div.style.left = (r.x1 - 40) * sx + "px";
-        div.style.width = (r.x2 - r.x1) * sx + "px";
-        div.style.top = pageOffsetTop + realY1 * sy + yCorrect + SHRINK * sy + "px";
-        div.style.height = (realY2 - realY1) * sy - SHRINK * 2 * sy + "px";
-        this.spacer.appendChild(div);
-      });
-
+      const pageOffsetTop = (page - 1) * imgH;
+      getLeft = (sx, r) => (r.x1 - 40) * sx;
+      getTop = (sy, realY1, yCorrect) => pageOffsetTop + realY1 * sy + yCorrect + SHRINK * sy;
+      appendTo = this.spacer;
     } else {
-      // Mode book : comportement inchangé
-      const wrapper = this.elements.pageScroll.querySelector(
-        `.page-wrapper[data-page="${page}"]`,
-      );
+      const wrapper = this.elements.pageScroll.querySelector(`.page-wrapper[data-page="${page}"]`);
       if (!wrapper) return;
       const img = wrapper.querySelector("img");
       if (!img) return;
-      const offX = img.offsetLeft;
-      const offY = img.offsetTop;
-      const imgW = img.offsetWidth;
-      const imgH = img.offsetHeight;
+      imgW = img.offsetWidth;
+      imgH = img.offsetHeight;
       if (!imgW || !imgH) return;
-      const sx = imgW / 1260;
-      const sy = imgH / 1890;
-      const pageCoords = (window.quranAudioPlayer?.ayaCoords || []).filter(
-        (r) => r.p === page,
-      );
-      const lineMap = {};
-      pageCoords.forEach((r) => {
-        if (!r.l) return;
-        if (!lineMap[r.l]) lineMap[r.l] = { y1: r.y1, y2: r.y2 };
-        else {
-          lineMap[r.l].y1 = Math.min(lineMap[r.l].y1, r.y1);
-          lineMap[r.l].y2 = Math.max(lineMap[r.l].y2, r.y2);
-        }
-      });
-      const WEBP_TOP = 30;
-      const WEBP_BOT = 25;
-      rects.forEach((r) => {
-        const lineData = r.l ? lineMap[r.l] : null;
-        const realY1 = lineData ? lineData.y1 : r.y1;
-        const realY2 = lineData ? lineData.y2 : r.y2;
-        const t = realY1 / 1890;
-        const yCorrect = (WEBP_TOP - t * (WEBP_TOP + WEBP_BOT)) * (imgH / 1100);
-        const div = document.createElement("div");
-        div.className = "aya-highlight";
-        div.style.left = offX + (r.x1 - 40) * sx + "px";
-        div.style.width = (r.x2 - r.x1) * sx + "px";
-        const SHRINK = 5;
-        div.style.top = offY + realY1 * sy + yCorrect + SHRINK * sy + "px";
-        div.style.height = (realY2 - realY1) * sy - SHRINK * 2 * sy + "px";
-        wrapper.appendChild(div);
-      });
+      const offX = img.offsetLeft, offY = img.offsetTop;
+      getLeft = (sx, r) => offX + (r.x1 - 40) * sx;
+      getTop = (sy, realY1, yCorrect) => offY + realY1 * sy + yCorrect + SHRINK * sy;
+      appendTo = wrapper;
     }
+
+    const sx = imgW / 1260, sy = imgH / 1890;
+
+    rects.forEach((r) => {
+      const lineData = r.l ? lineMap[r.l] : null;
+      const realY1 = lineData ? lineData.y1 : r.y1;
+      const realY2 = lineData ? lineData.y2 : r.y2;
+      const yCorrect = (WEBP_TOP - (realY1 / 1890) * (WEBP_TOP + WEBP_BOT)) * sy;
+
+      const div = document.createElement("div");
+      div.className = "aya-highlight";
+      if (this.readingMode === "scroll") div.style.position = "absolute";
+      div.style.left = getLeft(sx, r) + "px";
+      div.style.width = (r.x2 - r.x1) * sx + "px";
+      div.style.top = getTop(sy, realY1, yCorrect) + "px";
+      div.style.height = (realY2 - realY1) * sy - SHRINK * 2 * sy + "px";
+      appendTo.appendChild(div);
+    });
   }
 
   clearHighlight() {
