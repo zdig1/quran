@@ -732,32 +732,13 @@ class OverlayManager {
   // 3. BOOKMARKS OVERLAY
   // ============================================
 
-  showConfirm(message) {
+  _showBackdropDialog(html, bindButtons) {
     return new Promise((resolve) => {
       const backdrop = document.createElement("div");
       backdrop.className = "confirm-backdrop";
-
       const dialog = document.createElement("div");
       dialog.className = "confirm-dialog";
-
-      const p = document.createElement("p");
-      p.textContent = message;
-      dialog.appendChild(p);
-
-      const buttonDiv = document.createElement("div");
-      buttonDiv.className = "confirm-buttons";
-
-      const okBtn = document.createElement("button");
-      okBtn.className = "confirm-btn ok";
-      okBtn.textContent = "نعم";
-
-      const cancelBtn = document.createElement("button");
-      cancelBtn.className = "confirm-btn cancel";
-      cancelBtn.textContent = "لا";
-
-      buttonDiv.appendChild(okBtn);
-      buttonDiv.appendChild(cancelBtn);
-      dialog.appendChild(buttonDiv);
+      dialog.innerHTML = html;
       backdrop.appendChild(dialog);
       document.body.appendChild(backdrop);
       window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
@@ -768,12 +749,19 @@ class OverlayManager {
         resolve(result);
       };
 
-      okBtn.addEventListener("click", () => cleanup(true));
-      cancelBtn.addEventListener("click", () => cleanup(false));
-      backdrop.addEventListener("click", (e) => {
-        if (e.target === backdrop) cleanup(false);
-      });
+      backdrop.addEventListener("click", (e) => { if (e.target === backdrop) cleanup(null); });
+      bindButtons(dialog, cleanup);
     });
+  }
+
+  showConfirm(message) {
+    return this._showBackdropDialog(
+      `<p>${message}</p><div class="confirm-buttons"><button class="confirm-btn ok">نعم</button><button class="confirm-btn cancel">لا</button></div>`,
+      (dialog, cleanup) => {
+        dialog.querySelector(".ok").addEventListener("click", () => cleanup(true));
+        dialog.querySelector(".cancel").addEventListener("click", () => cleanup(false));
+      }
+    );
   }
 
   showBookmarks() {
@@ -1022,36 +1010,14 @@ class OverlayManager {
   }
 
   showImportChoice() {
-    return new Promise((resolve) => {
-      const backdrop = document.createElement("div");
-      backdrop.className = "confirm-backdrop";
-      const dialog = document.createElement("div");
-      dialog.className = "confirm-dialog";
-      dialog.innerHTML = `
-        <p>كيف تريد استيراد البيانات (العلامات المرجعية والسور المفضلة)؟</p>
-        <div class="confirm-buttons">
-          <button class="confirm-btn ok" id="mergeBtn">دمج</button>
-          <button class="confirm-btn blue" id="replaceBtn">استبدال</button>
-          <button class="confirm-btn cancel" id="cancelBtn">إلغاء</button>
-        </div>
-      `;
-      backdrop.appendChild(dialog);
-      document.body.appendChild(backdrop);
-      window.dispatchEvent(new CustomEvent("quran:overlayOpened"));
-
-      const cleanup = (result) => {
-        backdrop.remove();
-        window.dispatchEvent(new CustomEvent("quran:overlayClosed"));
-        resolve(result);
-      };
-
-      dialog.querySelector("#mergeBtn").addEventListener("click", () => cleanup("merge"));
-      dialog.querySelector("#replaceBtn").addEventListener("click", () => cleanup("replace"));
-      dialog.querySelector("#cancelBtn").addEventListener("click", () => cleanup(null));
-      backdrop.addEventListener("click", (e) => {
-        if (e.target === backdrop) cleanup(null);
-      });
-    });
+    return this._showBackdropDialog(
+      `<p>كيف تريد استيراد البيانات؟</p><div class="confirm-buttons"><button class="confirm-btn ok" id="mergeBtn">دمج</button><button class="confirm-btn blue" id="replaceBtn">استبدال</button><button class="confirm-btn cancel" id="cancelBtn">إلغاء</button></div>`,
+      (dialog, cleanup) => {
+        dialog.querySelector("#mergeBtn").addEventListener("click", () => cleanup("merge"));
+        dialog.querySelector("#replaceBtn").addEventListener("click", () => cleanup("replace"));
+        dialog.querySelector("#cancelBtn").addEventListener("click", () => cleanup(null));
+      }
+    );
   }
 
   async exportBookmarks() {

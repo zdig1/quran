@@ -20,7 +20,7 @@ const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
       { id: "Ali_Jaber_64kbps", name: "علي جابر" },
       { id: "Ali_Hajjaj_AlSuesy_128kbps", name: "علي حجاج السويسي" },
       { id: "Hudhaify_64kbps", name: "علي الحذيفي" },
-      { id: "AbdulSamad_64kbps_QuranExplorer.Com", name: "عبد الباسط عبد الصمد — مرتل" },
+      { id: "Abdul_Basit_Murattal_64kbps", name: "عبد الباسط عبد الصمد — مرتل" },
       { id: "Abdul_Basit_Mujawwad_128kbps", name: "عبد الباسط — مجوّد" },
       { id: "Abdurrahmaan_As-Sudais_64kbps", name: "عبد الرحمن السديس" },
       { id: "Abdullah_Basfar_64kbps", name: "عبدالله بصفر" },
@@ -112,6 +112,20 @@ class QuranAudioPlayer {
       miniBar: {},
       window: {},
     };
+  }
+
+  // ============================================
+  // CONSTANTES SVG
+  // ============================================
+
+  _SVG_PLAY = `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>`;
+  _SVG_PAUSE = `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7" y="6" width="3" height="12"/><rect x="14" y="6" width="3" height="12"/></svg>`;
+
+  _ensureHighlight() {
+    if (!this.ayaCoords)
+      this._loadAyaCoords().then(() => this._applyHighlight());
+    else
+      this._applyHighlight();
   }
 
   // ============================================
@@ -657,11 +671,7 @@ class QuranAudioPlayer {
       this.audioElement.playbackRate = this.playbackRate;
       this.audioElement.play().catch((e) => console.error("basmala error:", e));
 
-      if (!this.ayaCoords) {
-        this._loadAyaCoords().then(() => this._applyHighlight());
-      } else {
-        this._applyHighlight();
-      }
+      this._ensureHighlight();
 
       if (this._boundListeners.audio.basmalaEnded) {
         this.audioElement.removeEventListener(
@@ -681,11 +691,7 @@ class QuranAudioPlayer {
           this._showStatus("❌ تعذر التشغيل", true);
         });
         this.audioElement.addEventListener("ended", this._boundListeners.audio.ended);
-        if (!this.ayaCoords) {
-          this._loadAyaCoords().then(() => this._applyHighlight());
-        } else {
-          this._applyHighlight();
-        }
+        this._ensureHighlight();
       };
 
       this.audioElement.addEventListener(
@@ -707,11 +713,7 @@ class QuranAudioPlayer {
         console.error("play error:", e);
         this._handlePlayError();
       });
-      if (!this.ayaCoords) {
-        this._loadAyaCoords().then(() => this._applyHighlight());
-      } else {
-        this._applyHighlight();
-      }
+      this._ensureHighlight();
     }
 
     this.isStopped = false;
@@ -1341,9 +1343,7 @@ class QuranAudioPlayer {
       if (!isOnline) {
         miniPlay.innerHTML = '<span class="spinner small"></span>';
       } else {
-        miniPlay.innerHTML = this.isPlaying
-          ? `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7" y="6" width="3" height="12"/><rect x="14" y="6" width="3" height="12"/></svg>`
-          : `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>`;
+        miniPlay.innerHTML = this.isPlaying ? this._SVG_PAUSE : this._SVG_PLAY;
       }
     }
     if (miniStop) miniStop.disabled = !isOnline;
@@ -1372,9 +1372,7 @@ class QuranAudioPlayer {
       btn.disabled = true;
       btn.classList.remove('playing');
     } else {
-      btn.innerHTML = this.isPlaying
-        ? `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7" y="6" width="3" height="12"/><rect x="14" y="6" width="3" height="12"/></svg>`
-        : `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>`;
+      btn.innerHTML = this.isPlaying ? this._SVG_PAUSE : this._SVG_PLAY;
       btn.disabled = !(this.currentReciter && this.currentSurah);
       if (this.isPlaying || this._isTransitioning) {
         btn.classList.add('playing');

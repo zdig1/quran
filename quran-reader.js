@@ -911,6 +911,14 @@ class QuranReader {
   // ============================================
   // AUTO SCROLL
   // ============================================
+  _getAutoScrollBtns() {
+    return {
+      btnScroll: document.getElementById("autoScrollBtn"),
+      btnIcon: document.getElementById("autoScrollIcon"),
+      btnSlower: document.getElementById("autoScrollSlower"),
+      btnFaster: document.getElementById("autoScrollFaster"),
+    };
+  }
 
   startAutoScroll() {
     if (this.autoScrollActive) return;
@@ -923,10 +931,7 @@ class QuranReader {
         .catch((err) => console.warn("Wake Lock error:", err));
     }
 
-    const btnScroll = document.getElementById("autoScrollBtn");
-    const btnIcon = document.getElementById("autoScrollIcon");
-    const btnSlower = document.getElementById("autoScrollSlower");
-    const btnFaster = document.getElementById("autoScrollFaster");
+    const { btnScroll, btnIcon, btnSlower, btnFaster } = this._getAutoScrollBtns();
 
     if (btnScroll) btnScroll.classList.add("playing");
     if (btnIcon) btnIcon.textContent = "⏸️️";
@@ -980,10 +985,7 @@ class QuranReader {
       this.autoScrollRAF = null;
     }
 
-    const btnScroll = document.getElementById("autoScrollBtn");
-    const btnIcon = document.getElementById("autoScrollIcon");
-    const btnSlower = document.getElementById("autoScrollSlower");
-    const btnFaster = document.getElementById("autoScrollFaster");
+    const { btnScroll, btnIcon, btnSlower, btnFaster } = this._getAutoScrollBtns();
 
     if (btnScroll) btnScroll.classList.remove("playing");
     if (btnIcon) btnIcon.textContent = "⏫";

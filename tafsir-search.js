@@ -611,61 +611,65 @@ class TafsirSearchManager {
     window.CustomSelect.render('ayaSelectList', [{ value: '', label: 'اختر الآية', onSelect: () => { } }]);
   }
 
-  async handleSuraChange() {
+  async _withDropdownLock(fn) {
     if (!this.tafsirUIReady || this.updatingDropdowns) return;
     this.updatingDropdowns = true;
-    const sura_n = this.tafsirUI.suraSelect?.value || window.CustomSelect.getValue('suraSelectList');
-    if (sura_n) {
-      const ayat = this.getAyatBySura(parseInt(sura_n));
-      if (ayat.length) {
-        const first = ayat[0];
-        this.updateAyaDropdown(ayat);
-        window.CustomSelect.setValue('ayaSelect', 'ayaSelectList', first[this.F.aya_n]);
-        window.CustomSelect.setValue('pageSelect', 'pageSelectList', first[this.F.page]);
-        this.updateTafsirNavigation(first[this.F.sura_n], first[this.F.aya_n], first[this.F.page]);
-        await this.loadTafsirForPage(first[this.F.page]);
-        setTimeout(() => this.scrollToFirstAyaOfSura(parseInt(sura_n)), 300);
-      }
-    }
-    this.updatingDropdowns = false;
+    try { await fn(); }
+    finally { this.updatingDropdowns = false; }
   }
 
-  async handlePageChange() {
-    if (!this.tafsirUIReady || this.updatingDropdowns) return;
-    this.updatingDropdowns = true;
-    const page = this.tafsirUI.pageSelect?.value || window.CustomSelect.getValue('pageSelectList');
-    if (page) {
-      await this.loadTafsirForPage(page);
-      const ayat = this.getAyatByPage(parseInt(page));
-      if (ayat.length) {
-        const first = this._getFirstAyaOfPage(ayat);
-        window.CustomSelect.setValue('suraSelect', 'suraSelectList', first[this.F.sura_n]);
-        this.updateAyaDropdown(this.getAyatBySura(first[this.F.sura_n]));
-        window.CustomSelect.setValue('ayaSelect', 'ayaSelectList', first[this.F.aya_n]);
-        this.updateTafsirNavigation(first[this.F.sura_n], first[this.F.aya_n], page);
-        setTimeout(() => this.scrollToFirstAyaOfPage(parseInt(page)), 300);
+  handleSuraChange() {
+    return this._withDropdownLock(async () => {
+      const sura_n = this.tafsirUI.suraSelect?.value || window.CustomSelect.getValue('suraSelectList');
+      if (sura_n) {
+        const ayat = this.getAyatBySura(parseInt(sura_n));
+        if (ayat.length) {
+          const first = ayat[0];
+          this.updateAyaDropdown(ayat);
+          window.CustomSelect.setValue('ayaSelect', 'ayaSelectList', first[this.F.aya_n]);
+          window.CustomSelect.setValue('pageSelect', 'pageSelectList', first[this.F.page]);
+          this.updateTafsirNavigation(first[this.F.sura_n], first[this.F.aya_n], first[this.F.page]);
+          await this.loadTafsirForPage(first[this.F.page]);
+          setTimeout(() => this.scrollToFirstAyaOfSura(parseInt(sura_n)), 300);
+        }
       }
-    }
-    this.updatingDropdowns = false;
+    });
   }
 
-  async handleAyaChange() {
-    if (!this.tafsirUIReady || this.updatingDropdowns) return;
-    this.updatingDropdowns = true;
-    const sura_n = this.tafsirUI.suraSelect?.value || window.CustomSelect.getValue('suraSelectList');
-    const aya_n = this.tafsirUI.ayaSelect?.value || window.CustomSelect.getValue('ayaSelectList');
-    if (sura_n && aya_n) {
-      const found = this.getAyatBySura(parseInt(sura_n)).find(
-        (aya) => aya[this.F.aya_n] === parseInt(aya_n),
-      );
-      if (found) {
-        window.CustomSelect.setValue('pageSelect', 'pageSelectList', found[this.F.page]);
-        this.updateTafsirNavigation(found[this.F.sura_n], found[this.F.aya_n], found[this.F.page]);
-        await this.loadTafsirForPage(found[this.F.page]);
-        setTimeout(() => this.scrollToAya(found[this.F.sura_n], found[this.F.aya_n]), 300);
+  handlePageChange() {
+    return this._withDropdownLock(async () => {
+      const page = this.tafsirUI.pageSelect?.value || window.CustomSelect.getValue('pageSelectList');
+      if (page) {
+        await this.loadTafsirForPage(page);
+        const ayat = this.getAyatByPage(parseInt(page));
+        if (ayat.length) {
+          const first = this._getFirstAyaOfPage(ayat);
+          window.CustomSelect.setValue('suraSelect', 'suraSelectList', first[this.F.sura_n]);
+          this.updateAyaDropdown(this.getAyatBySura(first[this.F.sura_n]));
+          window.CustomSelect.setValue('ayaSelect', 'ayaSelectList', first[this.F.aya_n]);
+          this.updateTafsirNavigation(first[this.F.sura_n], first[this.F.aya_n], page);
+          setTimeout(() => this.scrollToFirstAyaOfPage(parseInt(page)), 300);
+        }
       }
-    }
-    this.updatingDropdowns = false;
+    });
+  }
+
+  handleAyaChange() {
+    return this._withDropdownLock(async () => {
+      const sura_n = this.tafsirUI.suraSelect?.value || window.CustomSelect.getValue('suraSelectList');
+      const aya_n = this.tafsirUI.ayaSelect?.value || window.CustomSelect.getValue('ayaSelectList');
+      if (sura_n && aya_n) {
+        const found = this.getAyatBySura(parseInt(sura_n)).find(
+          (aya) => aya[this.F.aya_n] === parseInt(aya_n),
+        );
+        if (found) {
+          window.CustomSelect.setValue('pageSelect', 'pageSelectList', found[this.F.page]);
+          this.updateTafsirNavigation(found[this.F.sura_n], found[this.F.aya_n], found[this.F.page]);
+          await this.loadTafsirForPage(found[this.F.page]);
+          setTimeout(() => this.scrollToAya(found[this.F.sura_n], found[this.F.aya_n]), 300);
+        }
+      }
+    });
   }
 
   updateAyaDropdown(ayat) {
@@ -985,40 +989,22 @@ class TafsirSearchManager {
     }, 100);
   }
 
-  scrollToFirstAyaOfSura(sura_n) {
+  _scrollContainerTo(el, offset = 20) {
     const container = this.tafsirUI?.contentContainer;
-    if (!container) return;
-    const el = container.querySelector(`[data-sura="${sura_n}"]`);
-    if (!el) return;
-    const top =
-      el.getBoundingClientRect().top -
-      container.getBoundingClientRect().top +
-      container.scrollTop -
-      20;
-    if ("scrollBehavior" in document.documentElement.style) {
+    if (!container || !el) return;
+    const top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop - offset;
+    if ("scrollBehavior" in document.documentElement.style)
       container.scrollTo({ top, behavior: "smooth" });
-    } else {
+    else
       container.scrollTop = top;
-    }
+  }
+
+  scrollToFirstAyaOfSura(sura_n) {
+    this._scrollContainerTo(this.tafsirUI?.contentContainer?.querySelector(`[data-sura="${sura_n}"]`));
   }
 
   scrollToAya(sura_n, aya_n) {
-    const container = this.tafsirUI?.contentContainer;
-    if (!container) return;
-    const el = container.querySelector(
-      `[data-sura="${sura_n}"][data-aya="${aya_n}"]`,
-    );
-    if (!el) return;
-    const top =
-      el.getBoundingClientRect().top -
-      container.getBoundingClientRect().top +
-      container.scrollTop -
-      20;
-    if ("scrollBehavior" in document.documentElement.style) {
-      container.scrollTo({ top, behavior: "smooth" });
-    } else {
-      container.scrollTop = top;
-    }
+    this._scrollContainerTo(this.tafsirUI?.contentContainer?.querySelector(`[data-sura="${sura_n}"][data-aya="${aya_n}"]`));
   }
 
   // ============================================
