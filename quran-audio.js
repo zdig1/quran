@@ -12,52 +12,52 @@ const AYA_COORDS_PATH = "./data/ayapage.json";
 const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
   hafs: {
     label: "حفص",
-reciters: [
-  { id: "Ibrahim_Akhdar_64kbps", name: "إبراهيم الأخضر" },
-  { id: "Abu_Bakr_Ash-Shaatree_64kbps", name: "أبو بكر الشاطري" },
-  { id: "Ahmed_ibn_Ali_al-Ajamy_64kbps_QuranExplorer.Com", name: "أحمد العجمي" },
-  { id: "Ahmed_Neana_128kbps", name: "أحمد نعينة" },
-  { id: "Akram_AlAlaqimy_128kbps", name: "أكرم العلاقمي" },
-  { id: "Ayman_Sowaid_64kbps", name: "أيمن سويد" },
-  { id: "Parhizgar_48kbps", name: "پرهیزگار" },
-  { id: "Khaalid_Abdullaah_al-Qahtaanee_192kbps", name: "خالد القحطاني" },
-  { id: "khalefa_al_tunaiji_64kbps", name: "خليفة الطنيجي" },
-  { id: "Ghamadi_40kbps", name: "سعد الغامدي" },
-  { id: "Saood_ash-Shuraym_64kbps", name: "سعود الشريم" },
-  { id: "Sahl_Yassin_128kbps", name: "سهل ياسين" },
-  { id: "Salah_Al_Budair_128kbps", name: "صالح البدير" },
-  { id: "Salaah_AbdulRahman_Bukhatir_128kbps", name: "صلاح بوخاطر" },
-  { id: "Abdul_Basit_Murattal_64kbps", name: "عبد الباسط عبد الصمد — مرتل" },
-  { id: "Abdul_Basit_Mujawwad_128kbps", name: "عبد الباسط عبد الصمد — مجوّد" },
-  { id: "Abdurrahmaan_As-Sudais_64kbps", name: "عبد الرحمن السديس" },
-  { id: "Abdullaah_3awwaad_Al-Juhaynee_128kbps", name: "عبدالله الجهني" },
-  { id: "Abdullah_Basfar_64kbps", name: "عبدالله بصفر" },
-  { id: "Abdullah_Matroud_128kbps", name: "عبدالله مطرود" },
-  { id: "aziz_alili_128kbps", name: "عزيز العليلي" },
-  { id: "Hudhaify_64kbps", name: "علي الحذيفي" },
-  { id: "Ali_Jaber_64kbps", name: "علي جابر" },
-  { id: "Ali_Hajjaj_AlSuesy_128kbps", name: "علي حجاج السويسي" },
-  { id: "Fares_Abbad_64kbps", name: "فارس عباد" },
-  { id: "Karim_Mansoori_40kbps", name: "كريم منصوري" },
-  { id: "Maher_AlMuaiqly_64kbps", name: "ماهر المعيقلي" },
-  { id: "Muhsin_Al_Qasim_192kbps", name: "محسن القاسم" },
-  { id: "Mohammad_al_Tablaway_64kbps", name: "محمد الطبلاوي" },
-  { id: "Muhammad_Ayyoub_64kbps", name: "محمد أيوب" },
-  { id: "Muhammad_Jibreel_64kbps", name: "محمد جبريل" },
-  { id: "mahmoud_ali_al_banna_32kbps", name: "محمود علي البنا" },
-  { id: "Mustafa_Ismail_48kbps", name: "مصطفى إسماعيل" },
-  { id: "Husary_64kbps", name: "محمود خليل الحصري — مرتل" },
-  { id: "Husary_Mujawwad_64kbps", name: "محمود خليل الحصري — مجوّد" },
-  { id: "Husary_Muallim_128kbps", name: "محمود خليل الحصري — معلم" },
-  { id: "Menshawi_32kbps", name: "محمد صديق المنشاوي — مرتل" },
-  { id: "Minshawy_Mujawwad_64kbps", name: "محمد صديق المنشاوي — مجوّد" },
-  { id: "Minshawy_Teacher_128kbps", name: "محمد صديق المنشاوي — معلم" },
-  { id: "Nasser_Alqatami_128kbps", name: "ناصر القطامي" },
-  { id: "Nabil_Rifa3i_48kbps", name: "نبيل الرفاعي" },
-  { id: "Hani_Rifai_64kbps", name: "هاني الرفاعي" },
-  { id: "Yasser_Ad-Dussary_128kbps", name: "ياسر الدوسري" },
-  { id: "Yaser_Salamah_128kbps", name: "ياسر سلامة" }
-],
+    reciters: [
+      { id: "Ibrahim_Akhdar_64kbps", name: "إبراهيم الأخضر" },
+      { id: "Abu_Bakr_Ash-Shaatree_64kbps", name: "أبو بكر الشاطري" },
+      { id: "Ahmed_ibn_Ali_al-Ajamy_64kbps_QuranExplorer.Com", name: "أحمد العجمي" },
+      { id: "Ahmed_Neana_128kbps", name: "أحمد نعينة" },
+      { id: "Akram_AlAlaqimy_128kbps", name: "أكرم العلاقمي" },
+      { id: "Ayman_Sowaid_64kbps", name: "أيمن سويد" },
+      { id: "Parhizgar_48kbps", name: "پرهیزگار" },
+      { id: "Khaalid_Abdullaah_al-Qahtaanee_192kbps", name: "خالد القحطاني" },
+      { id: "khalefa_al_tunaiji_64kbps", name: "خليفة الطنيجي" },
+      { id: "Ghamadi_40kbps", name: "سعد الغامدي" },
+      { id: "Saood_ash-Shuraym_64kbps", name: "سعود الشريم" },
+      { id: "Sahl_Yassin_128kbps", name: "سهل ياسين" },
+      { id: "Salah_Al_Budair_128kbps", name: "صالح البدير" },
+      { id: "Salaah_AbdulRahman_Bukhatir_128kbps", name: "صلاح بوخاطر" },
+      { id: "Abdul_Basit_Murattal_64kbps", name: "عبد الباسط عبد الصمد — مرتل" },
+      { id: "Abdul_Basit_Mujawwad_128kbps", name: "عبد الباسط عبد الصمد — مجوّد" },
+      { id: "Abdurrahmaan_As-Sudais_64kbps", name: "عبد الرحمن السديس" },
+      { id: "Abdullaah_3awwaad_Al-Juhaynee_128kbps", name: "عبدالله الجهني" },
+      { id: "Abdullah_Basfar_64kbps", name: "عبدالله بصفر" },
+      { id: "Abdullah_Matroud_128kbps", name: "عبدالله مطرود" },
+      { id: "aziz_alili_128kbps", name: "عزيز العليلي" },
+      { id: "Hudhaify_64kbps", name: "علي الحذيفي" },
+      { id: "Ali_Jaber_64kbps", name: "علي جابر" },
+      { id: "Ali_Hajjaj_AlSuesy_128kbps", name: "علي حجاج السويسي" },
+      { id: "Fares_Abbad_64kbps", name: "فارس عباد" },
+      { id: "Karim_Mansoori_40kbps", name: "كريم منصوري" },
+      { id: "Maher_AlMuaiqly_64kbps", name: "ماهر المعيقلي" },
+      { id: "Muhsin_Al_Qasim_192kbps", name: "محسن القاسم" },
+      { id: "Mohammad_al_Tablaway_64kbps", name: "محمد الطبلاوي" },
+      { id: "Muhammad_Ayyoub_64kbps", name: "محمد أيوب" },
+      { id: "Muhammad_Jibreel_64kbps", name: "محمد جبريل" },
+      { id: "mahmoud_ali_al_banna_32kbps", name: "محمود علي البنا" },
+      { id: "Mustafa_Ismail_48kbps", name: "مصطفى إسماعيل" },
+      { id: "Husary_64kbps", name: "محمود خليل الحصري — مرتل" },
+      { id: "Husary_Mujawwad_64kbps", name: "محمود خليل الحصري — مجوّد" },
+      { id: "Husary_Muallim_128kbps", name: "محمود خليل الحصري — معلم" },
+      { id: "Menshawi_32kbps", name: "محمد صديق المنشاوي — مرتل" },
+      { id: "Minshawy_Mujawwad_64kbps", name: "محمد صديق المنشاوي — مجوّد" },
+      { id: "Minshawy_Teacher_128kbps", name: "محمد صديق المنشاوي — معلم" },
+      { id: "Nasser_Alqatami_128kbps", name: "ناصر القطامي" },
+      { id: "Nabil_Rifa3i_48kbps", name: "نبيل الرفاعي" },
+      { id: "Hani_Rifai_64kbps", name: "هاني الرفاعي" },
+      { id: "Yasser_Ad-Dussary_128kbps", name: "ياسر الدوسري" },
+      { id: "Yaser_Salamah_128kbps", name: "ياسر سلامة" }
+    ],
   },
   warsh: {
     label: "ورش",
@@ -890,8 +890,11 @@ class QuranAudioPlayer {
   nextAyah() {
     if (!this.currentSurah) return;
     this._isTransitioning = true;
+    const surah = this.surahs.find((s) => s.s_id === this.currentSurah);
+    if (surah) this.totalAyahs = surah.verses_count;
     if (this.currentAyah < this.totalAyahs) {
       this.currentAyah++;
+      this._updateCurrentDisplay();
       this.play();
     } else {
       this._onEndOfSurah();
@@ -903,6 +906,9 @@ class QuranAudioPlayer {
     this._isTransitioning = true;
     if (this.currentAyah > 1) {
       this.currentAyah--;
+      if (window.CustomSelect) {
+        window.CustomSelect.setValue('ayaSelectAudio', 'ayaSelectAudioList', this.currentAyah);
+      }
       this.play();
     } else {
       if (this.currentSurah > 1) {
@@ -1404,6 +1410,10 @@ class QuranAudioPlayer {
     const surah = this.surahs.find((s) => s.s_id === this.currentSurah);
     if (this.elements.currentDisplay && surah) {
       this.elements.currentDisplay.textContent = `${surah.name} : آية ${this.currentAyah} / ${this.totalAyahs}`;
+    }
+    if (window.CustomSelect && this.currentSurah) {
+      window.CustomSelect.setValue('surahSelectAudio', 'surahSelectAudioList', this.currentSurah);
+      window.CustomSelect.setValue('ayaSelectAudio', 'ayaSelectAudioList', this.currentAyah);
     }
     this._syncMiniBar();
   }
