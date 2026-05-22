@@ -497,6 +497,7 @@ class QuranReader {
     if (this.imageCache.has(page)) {
       imgEl.src = this.imageCache.get(page);
       imgEl.dataset.loaded = "true";
+      imgEl.dispatchEvent(new Event("load"));
       return;
     }
 
@@ -1085,6 +1086,14 @@ class QuranReader {
                 }
               }
               if (this.readingMode === "book") this._adjustFooterHeight();
+
+              // FIX: Réappliquer le surlignage après un délais plus long pour s'assurer que l'image est chargée
+              if (window.quranAudioPlayer?.isPlaying || window.quranAudioPlayer?.currentAyah) {
+                // Attendre que l'image soit complètement chargée et affichée
+                setTimeout(() => {
+                  this.reapplyAudioHighlight();
+                }, 100);
+              }
               this.isTransitioning = false;
             },
             isIOS ? 300 : 200,
@@ -1318,8 +1327,8 @@ class QuranReader {
       if (!wrapper) return;
       const img = wrapper.querySelector("img");
       if (!img) return;
-      imgW = img.offsetWidth;
-      imgH = img.offsetHeight;
+      imgW = img.offsetWidth || img.naturalWidth;
+      imgH = img.offsetHeight || Math.round(img.naturalWidth * 1890 / 1260);
       if (!imgW || !imgH) return;
       const offX = img.offsetLeft, offY = img.offsetTop;
       getLeft = (sx, r) => offX + (r.x1 - 40) * sx;
@@ -1344,6 +1353,39 @@ class QuranReader {
       div.style.height = (realY2 - realY1) * sy - SHRINK * 2 * sy + "px";
       appendTo.appendChild(div);
     });
+  }
+
+  reapplyAudioHighlight() {
+    const page = this.currentPage;
+
+    // Attendre que le DOM soit prêt
+    setTimeout(() => {
+      const wrapper = this.elements.pageScroll?.querySelector(`.page-wrapper[data-page="${page}"]`);
+      const img = wrapper?.querySelector("img");
+
+      const applyHighlight = () => {
+        if (window.quranAudioPlayer && window.quranAudioPlayer.currentSurah && window.quranAudioPlayer.currentAyah) {
+          // Appeler directement _applyHighlight si elle existe
+          if (typeof window.quranAudioPlayer._applyHighlight === 'function') {
+            window.quranAudioPlayer._applyHighlight();
+          } else if (typeof window.quranAudioPlayer._ensureHighlight === 'function') {
+            window.quranAudioPlayer._ensureHighlight();
+          }
+        }
+      };
+
+      if (!img) {
+        // Réessayer
+        setTimeout(() => this.reapplyAudioHighlight(), 100);
+        return;
+      }
+
+      if (img.complete && img.naturalWidth > 0) {
+        applyHighlight();
+      } else {
+        img.addEventListener("load", applyHighlight, { once: true });
+      }
+    }, 50);
   }
 
   clearHighlight() {

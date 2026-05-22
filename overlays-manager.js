@@ -1227,9 +1227,8 @@ class OverlayManager {
       }
       this.showOverlay("audio");
       const player = window.quranAudioPlayer;
-      if (player.isPlaying) {
-        player._syncOverlay();
-      } else {
+      player._syncOverlay();
+      if (!player.isPlaying && !player.currentSurah) {
         player.setCurrentSurahFromPage();
       }
     }

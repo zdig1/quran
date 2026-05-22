@@ -486,7 +486,7 @@ class QuranAudioPlayer {
     for (let i = 1; i <= 604; i++) {
       options.push({
         value: String(i),
-        label: `الصفحة ${i}`,
+        label: `ص ${i}`,
         onSelect: (val) => this._handlePageChange({ target: { value: val } })
       });
     }
@@ -780,7 +780,7 @@ class QuranAudioPlayer {
 
     const ayaPage = rects[0]?.p;
     const reader = window.quranReader;
-    if (ayaPage && ayaPage !== reader?.currentPage) {
+    if (ayaPage && ayaPage !== reader?.currentPage && reader?.readingMode === "scroll") {
       window.quranApp?.goToPage(ayaPage);
     }
 
@@ -1037,18 +1037,6 @@ class QuranAudioPlayer {
       this.fabBtn.classList.add("playing");
     } else {
       this.fabBtn.classList.remove("playing");
-    }
-  }
-
-  _updateMiniBarIndicator() {
-    const indicator = this.miniBar?.querySelector(".mini-bar-indicator");
-    if (!indicator) return;
-    if (this.isPlaying) {
-      indicator.style.backgroundColor = "var(--success)";
-      indicator.style.animation = "pulse 1.5s infinite";
-    } else {
-      indicator.style.backgroundColor = "var(--text-lighter)";
-      indicator.style.animation = "none";
     }
   }
 
@@ -1412,8 +1400,12 @@ class QuranAudioPlayer {
       this.elements.currentDisplay.textContent = `${surah.name} : آية ${this.currentAyah} / ${this.totalAyahs}`;
     }
     if (window.CustomSelect && this.currentSurah) {
-      window.CustomSelect.setValue('surahSelectAudio', 'surahSelectAudioList', this.currentSurah);
-      window.CustomSelect.setValue('ayaSelectAudio', 'ayaSelectAudioList', this.currentAyah);
+      const page = this._getPageForAya(this.currentSurah, this.currentAyah);
+      requestAnimationFrame(() => {
+        window.CustomSelect.setValue('surahSelectAudio', 'surahSelectAudioList', String(this.currentSurah));
+        window.CustomSelect.setValue('ayaSelectAudio', 'ayaSelectAudioList', String(this.currentAyah));
+        if (page) window.CustomSelect.setValue('pageSelectAudio', 'pageSelectAudioList', String(page));
+      });
     }
     this._syncMiniBar();
   }

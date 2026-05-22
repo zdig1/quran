@@ -887,13 +887,19 @@ class CustomSelect {
     const btn = document.getElementById(btnId);
     if (!list || !btn) return;
 
-    const opt = list.querySelector(`[data-value="${value}"]`);
+    const opt = list.querySelector(`[data-value="${String(value)}"]`);
     if (!opt) return;
 
     list.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
     opt.classList.add('selected');
-    btn.querySelector('.custom-select-val').textContent = opt.textContent;
-    opt.scrollIntoView({ block: 'nearest' });
+    const valEl = btn.querySelector('.custom-select-val');
+    if (valEl) {
+      const nameSpan = opt.querySelector('.reciter-name') || opt;
+      valEl.textContent = nameSpan.textContent.trim();
+    }
+    if (document.contains(opt)) {
+      opt.scrollIntoView({ block: 'nearest' });
+    }
   }
 
   static getValue(listId) {
