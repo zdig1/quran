@@ -576,17 +576,15 @@ class TafsirSearchManager {
     return this.tafsirUI;
   }
 
-  // ---- helpers custom select (remplacés par window.CustomSelect) ----
   initializeTafsirSelectors() {
     if (!this.tafsirUI) return;
 
-    // Initialiser le comportement global des dropdowns
     if (window.CustomSelect && window.CustomSelect.initToggle) {
       window.CustomSelect.initToggle();
     }
 
-    // Sura
-    const suraOpts = [{ value: '', label: 'اختر السورة', onSelect: () => { } }];
+    // Sura - comme dans audio
+    const suraOpts = [];  // ← vide, comme audio
     this.getSurahsIndex().forEach(s => {
       suraOpts.push({
         value: String(s.id),
@@ -596,19 +594,19 @@ class TafsirSearchManager {
     });
     window.CustomSelect.render('suraSelectList', suraOpts);
 
-    // Page
-    const pageOpts = [{ value: '', label: 'اختر الصفحة', onSelect: () => { } }];
+    // Page - comme dans audio
+    const pageOpts = [];  // ← vide, comme audio
     for (let i = 1; i <= 604; i++) {
       pageOpts.push({
         value: String(i),
-        label: `الصفحة ${i}`,
+        label: `${i}`,
         onSelect: (val) => { this.tafsirUI.pageSelect = { value: val }; this.handlePageChange(); }
       });
     }
     window.CustomSelect.render('pageSelectList', pageOpts);
 
-    // Aya (vide, rempli après sélection sura)
-    window.CustomSelect.render('ayaSelectList', [{ value: '', label: 'اختر الآية', onSelect: () => { } }]);
+    // Aya - comme dans audio
+    window.CustomSelect.render('ayaSelectList', []);  // ← vide, sera rempli après
   }
 
   async _withDropdownLock(fn) {
@@ -673,11 +671,11 @@ class TafsirSearchManager {
   }
 
   updateAyaDropdown(ayat) {
-    const opts = [{ value: '', label: 'اختر الآية', onSelect: () => { } }];
+    const opts = [];  // ← vide, comme audio
     ayat.forEach(a => {
       opts.push({
         value: String(a[this.F.aya_n]),
-        label: `الآية ${a[this.F.aya_n]}`,
+        label: `${a[this.F.aya_n]}`,
         onSelect: (val) => { this.tafsirUI.ayaSelect = { value: val }; this.handleAyaChange(); }
       });
     });

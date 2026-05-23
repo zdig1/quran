@@ -827,6 +827,8 @@ class CustomSelect {
         document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
         if (!isOpen && wrap) {
           wrap.classList.add('open');
+          // ✅ NOUVEAU : Quand le dropdown s'ouvre, scroll vers l'option sélectionnée
+          CustomSelect.scrollToSelectedOption(wrap);
         }
       });
     });
@@ -834,6 +836,26 @@ class CustomSelect {
     document.addEventListener('click', (e) => {
       if (e.target.closest('.custom-select-btn')) return;
       document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
+    });
+  }
+
+  // ✅ NOUVELLE MÉTHODE : Scroll vers l'option sélectionnée
+  static scrollToSelectedOption(wrap) {
+    if (!wrap) return;
+    const dropdown = wrap.querySelector('.custom-select-dropdown');
+    if (!dropdown) return;
+
+    const selected = dropdown.querySelector('.custom-select-option.selected');
+    if (!selected) return;
+
+    // Scroll l'option sélectionnée au milieu du dropdown
+    const dropdownRect = dropdown.getBoundingClientRect();
+    const selectedRect = selected.getBoundingClientRect();
+    const scrollTop = selected.offsetTop - (dropdown.clientHeight / 3) + (selected.clientHeight / 2);
+
+    dropdown.scrollTo({
+      top: Math.max(0, scrollTop),
+      behavior: 'smooth'
     });
   }
 
@@ -881,13 +903,30 @@ class CustomSelect {
 
     list.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
     opt.classList.add('selected');
+
     const valEl = btn.querySelector('.custom-select-val');
     if (valEl) {
       const nameSpan = opt.querySelector('.reciter-name') || opt;
       valEl.textContent = nameSpan.textContent.trim();
     }
-    if (document.contains(opt)) {
-      opt.scrollIntoView({ block: 'nearest' });
+
+    // ✅ NOUVEAU : Scroll automatiquement si le dropdown est actuellement ouvert
+    const parentSelect = list.closest('.custom-select');
+    if (parentSelect && parentSelect.classList.contains('open')) {
+      const scrollContainer = list;
+      const optTop = opt.offsetTop;
+      const optBottom = optTop + opt.offsetHeight;
+      const containerTop = scrollContainer.scrollTop;
+      const containerBottom = containerTop + scrollContainer.clientHeight;
+
+      if (optTop < containerTop) {
+        scrollContainer.scrollTop = optTop - 10;
+      } else if (optBottom > containerBottom) {
+// LIGNE À MODIFIER (vers ligne 820 environ) :
+scrollContainer.scrollTop = optBottom - scrollContainer.clientHeight + 10;
+
+// REMPLACER PAR :
+scrollContainer.scrollTop = optBottom - scrollContainer.clientHeight + (scrollContainer.clientHeight / 3);      }
     }
   }
 

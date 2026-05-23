@@ -418,11 +418,11 @@ class QuranAudioPlayer {
 
   _populateSurahSelect() {
     if (!window.CustomSelect) return;
-    const options = [{ value: '', label: 'اختر السورة', onSelect: () => { } }];
+    const options = [];
     this.surahs.forEach(s => {
       options.push({
         value: String(s.s_id),
-        label: `${s.s_id}. ${s.name}`,
+        label: `${s.s_id}.${s.name}`,
         onSelect: (val) => this._setSurah(val, 1)
       });
     });
@@ -460,7 +460,7 @@ class QuranAudioPlayer {
       window.CustomSelect.render('ayaSelectAudioList', [{ value: '', label: 'اختر الآية', onSelect: () => { } }]);
       return;
     }
-    const options = [{ value: '', label: 'اختر الآية', onSelect: () => { } }];
+    const options = [];
     for (let i = 1; i <= surah.verses_count; i++) {
       options.push({
         value: String(i),
@@ -473,7 +473,7 @@ class QuranAudioPlayer {
 
   _populatePageSelect() {
     if (!window.CustomSelect) return;
-    const options = [{ value: '', label: 'اختر الصفحة', onSelect: () => { } }];
+    const options = [];
     for (let i = 1; i <= 604; i++) {
       options.push({
         value: String(i),

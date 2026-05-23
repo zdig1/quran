@@ -1137,7 +1137,8 @@ class OverlayManager {
           <div class="custom-select-dropdown" id="reciterSelectList"></div>
         </div>
       </div>
-      <div class="audio-select-row">
+      
+<div class="audio-select-row audio-select-grid">
         <div class="custom-select" id="surahSelectAudioWrap">
           <button type="button" class="custom-select-btn select-ok" id="surahSelectAudio">
             <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>

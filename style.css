@@ -607,7 +607,6 @@ body {
 }
 
 .overlay-header {
-  height: 3.75rem;
   padding: 0 var(--space-lg);
   display: flex;
   align-items: center;
@@ -1682,12 +1681,24 @@ body {
   border-color: var(--success);
 }
 
-.audio-select-row {
-  display: flex;
-  flex-wrap: wrap;
+.audio-select-grid {
+  display: grid !important;
+  grid-template-columns: auto auto auto;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.2rem;
   align-items: center;
+}
+
+.audio-select-row:first-child {
+  display: block;
+  width: 100%;
+}
+
+#surahSelectAudio,
+#ayaSelectAudio,
+#pageSelectAudio {
+  width: 100%;
+  min-width: 0;
 }
 
 #reciterSelect {
@@ -1695,10 +1706,13 @@ body {
   text-align-last: right;
 }
 
-#surahSelectAudio,
-#ayaSelectAudio,
-#pageSelectAudio {
-  flex: 1 1 120px;
+#reciterSelectWrap {
+  width: 100%;
+}
+
+#audioOverlay .overlay-content {
+  max-height: 75vh !important;
+  min-height: 50vh;
 }
 
 .select-ok:focus,
