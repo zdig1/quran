@@ -558,7 +558,6 @@ class TafsirSearchManager {
     this.tafsirUI = { suraSelect, ayaSelect, pageSelect, contentContainer, onPageChange, onAyaClick };
     await this.ensureLoaded();
     this.initializeTafsirSelectors();
-    this.initTafsirFontControls();
 
     const currentPage = window.quranApp?.getCurrentPage() || 1;
     const firstAya = this.getFirstAyaForPage(currentPage);
@@ -579,33 +578,26 @@ class TafsirSearchManager {
   initializeTafsirSelectors() {
     if (!this.tafsirUI) return;
 
-    if (window.CustomSelect && window.CustomSelect.initToggle) {
-      window.CustomSelect.initToggle();
-    }
-
-    // Sura - comme dans audio
     const suraOpts = [];  // ← vide, comme audio
     this.getSurahsIndex().forEach(s => {
       suraOpts.push({
         value: String(s.id),
-        label: `${s.id}. ${s.name}`,
+        label: `${s.id}.${s.name}`,
         onSelect: (val) => { this.tafsirUI.suraSelect = { value: val }; this.handleSuraChange(); }
       });
     });
     window.CustomSelect.render('suraSelectList', suraOpts);
 
-    // Page - comme dans audio
     const pageOpts = [];  // ← vide, comme audio
     for (let i = 1; i <= 604; i++) {
       pageOpts.push({
         value: String(i),
-        label: `${i}`,
+        label: `الصفحة ${i}`,
         onSelect: (val) => { this.tafsirUI.pageSelect = { value: val }; this.handlePageChange(); }
       });
     }
     window.CustomSelect.render('pageSelectList', pageOpts);
 
-    // Aya - comme dans audio
     window.CustomSelect.render('ayaSelectList', []);  // ← vide, sera rempli après
   }
 
@@ -675,7 +667,7 @@ class TafsirSearchManager {
     ayat.forEach(a => {
       opts.push({
         value: String(a[this.F.aya_n]),
-        label: `${a[this.F.aya_n]}`,
+        label: `الآية ${a[this.F.aya_n]}`,
         onSelect: (val) => { this.tafsirUI.ayaSelect = { value: val }; this.handleAyaChange(); }
       });
     });
@@ -1053,98 +1045,71 @@ class TafsirSearchManager {
   }
 
   _setupFontSizeObserver(container, getFontSize) {
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type !== "childList" || !mutation.addedNodes.length)
-          return;
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType !== 1) return;
-          const selector =
-            ".item-search-text, .tafsir-explanation, .sura-name-kufi";
-          if (node.matches?.(selector))
-            node.style.fontSize = getFontSize() + "px";
-          node.querySelectorAll?.(selector).forEach((el) => {
-            el.style.fontSize = getFontSize() + "px";
-          });
-        });
-      });
-    });
-    observer.observe(container, { childList: true, subtree: true });
-    return observer;
+    return {
+      disconnect: () => { },
+      observe: () => { },
+    };
   }
 
   initTafsirFontControls() {
-    requestAnimationFrame(() => {
-      if (this.fontSizeObserver) {
-        this.fontSizeObserver.disconnect();
-        this.fontSizeObserver = null;
-      }
-      if (this.themeChangeHandler) {
-        window.removeEventListener(
-          "quran:themeChanged",
-          this.themeChangeHandler,
-        );
-        this.themeChangeHandler = null;
-      }
-
+    // Attendre que les éléments existent dans le DOM
+    const waitForElements = () => {
       const btnDecrease = document.getElementById("tafsirFontDecrease");
       const btnIncrease = document.getElementById("tafsirFontIncrease");
       const btnReset = document.getElementById("tafsirFontReset");
       const btnTheme = document.getElementById("tafsirThemeToggle");
       const container = this.tafsirUI?.contentContainer;
 
-      if (!btnDecrease || !btnIncrease || !btnReset || !btnTheme || !container)
+      if (!btnDecrease || !btnIncrease || !btnReset || !btnTheme || !container) {
+        setTimeout(waitForElements, 50);
         return;
+      }
 
-      let fontSize = Math.min(
-        32,
-        Math.max(12, parseInt(localStorage.getItem("tafsir_font_size")) || 16),
-      );
-      this._applyFontSize(container, fontSize);
-      this._updateThemeToggleBtn(btnTheme);
+      // Éviter les doubles initialisations
+      if (this._tafsirFontReady) return;
+      this._tafsirFontReady = true;
 
-      btnIncrease.addEventListener("click", () => {
+      let fontSize = Math.min(32, Math.max(12, parseInt(localStorage.getItem("tafsir_font_size")) || 16));
+      container.style.fontSize = fontSize + 'px';
+
+      // Mettre à jour l'icône du thème
+      btnTheme.textContent = document.body.classList.contains("night-mode") ? "☀️" : "🌙";
+
+      // Attacher les événements
+      btnIncrease.onclick = () => {
         fontSize = Math.min(32, fontSize + 2);
-        this._applyFontSize(container, fontSize);
+        container.style.fontSize = fontSize + 'px';
         localStorage.setItem("tafsir_font_size", fontSize);
         window.quranApp?.showToast(`📏 حجم النص: ${fontSize}px`);
-      });
+      };
 
-      btnDecrease.addEventListener("click", () => {
+      btnDecrease.onclick = () => {
         fontSize = Math.max(12, fontSize - 2);
-        this._applyFontSize(container, fontSize);
+        container.style.fontSize = fontSize + 'px';
         localStorage.setItem("tafsir_font_size", fontSize);
         window.quranApp?.showToast(`📏 حجم النص: ${fontSize}px`);
-      });
+      };
 
-      btnReset.addEventListener("click", () => {
+      btnReset.onclick = () => {
         fontSize = 16;
-        this._applyFontSize(container, fontSize);
+        container.style.fontSize = fontSize + 'px';
         localStorage.setItem("tafsir_font_size", fontSize);
         window.quranApp?.showToast("📏 تم إعادة الحجم الافتراضي");
-      });
+      };
 
-      btnTheme.addEventListener("click", () => {
-        if (
-          window.quranApp &&
-          typeof window.quranApp.toggleTheme === "function"
-        ) {
+      btnTheme.onclick = () => {
+        if (window.quranApp && typeof window.quranApp.toggleTheme === "function") {
           window.quranApp.toggleTheme();
         } else {
           document.body.classList.toggle("night-mode");
-          window.quranApp?.setPreference("theme", document.body.classList.contains("night-mode") ? "night" : "light",);
         }
-        this._updateThemeToggleBtn(btnTheme);
-      });
+        btnTheme.textContent = document.body.classList.contains("night-mode") ? "☀️" : "🌙";
+      };
+    };
 
-      this.themeChangeHandler = () => this._updateThemeToggleBtn(btnTheme);
-      window.addEventListener("quran:themeChanged", this.themeChangeHandler);
-      this.fontSizeObserver = this._setupFontSizeObserver(
-        container,
-        () => fontSize,
-      );
-    });
+    waitForElements();
   }
+
 }
 
 // ============================================

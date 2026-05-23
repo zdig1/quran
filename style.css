@@ -607,6 +607,7 @@ body {
 }
 
 .overlay-header {
+  height: 3.75rem;
   padding: 0 var(--space-lg);
   display: flex;
   align-items: center;
@@ -811,7 +812,7 @@ body {
    ÉLÉMENTS DE LISTE (harmonisés)
    ============================================ */
 .item-container {
-  padding: 0 3px;
+  padding: 0 var(--space-sm);
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   display: flex;
@@ -949,6 +950,7 @@ body {
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: start;
+  padding: 0 var(--space-sm) !important;
 }
 
 .item-surah .pin-btn {
@@ -1068,7 +1070,7 @@ body {
 .item-surah .surah-page .page-tag {
   background: var(--tag-bg);
   color: var(--tag-color);
-  padding: 2px 6px;
+  padding: 3px 6px;
   border-radius: var(--border-radius);
   font-size: var(--text-sm);
 }
@@ -1417,6 +1419,18 @@ body {
   overflow-anchor: none !important;
   text-align: justify !important;
   text-align-last: right !important;
+  font-size: 16px;
+  transition: font-size 0.1s ease;
+}
+
+.tafsir-content-container .item-search-text,
+.tafsir-content-container .tafsir-explanation,
+.tafsir-content-container .sura-name-kufi {
+  font-size: inherit !important;
+}
+
+.tafsir-content-container * {
+  font-size: inherit;
 }
 
 #tafsirContent {

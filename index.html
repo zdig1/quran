@@ -304,7 +304,7 @@
                     <h2>🎧 الاستماع إلى القرآن</h2>
                     <button type="button" class="btn close-btn" id="closeAudioBtn">✕</button>
                 </div>
-                <div id="audioContent" class="overlay-body audio-body"></div>
+                <div id="audioContentContainer" class="overlay-body audio-body"></div>
             </div>
         </div>
 
@@ -329,6 +329,7 @@
                 </div>
             </div>
         </div>
+
         <!-- 6. TAFSIR (Fullscreen) -->
         <div id="tafsirOverlay" class="overlay" role="dialog" aria-label="التفسير الميسر">
             <div class="overlay-content fullscreen">
@@ -336,40 +337,8 @@
                     <h2>📖 التفسير الميسر</h2>
                     <button type="button" class="btn close-btn" id="closeTafsirBtn">✕</button>
                 </div>
-
-                <div class="tafsir-controls tafsir-container">
-                    <div class="custom-select" id="suraSelectWrap">
-                        <button type="button" class="custom-select-btn select-ok" id="suraSelect">
-                            <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>
-                        </button>
-                        <div class="custom-select-dropdown" id="suraSelectList"></div>
-                    </div>
-                    <div class="custom-select" id="ayaSelectWrap">
-                        <button type="button" class="custom-select-btn select-blue" id="ayaSelect">
-                            <span class="custom-select-val">اختر الآية</span><span class="custom-select-arrow">▾</span>
-                        </button>
-                        <div class="custom-select-dropdown" id="ayaSelectList"></div>
-                    </div>
-                    <div class="custom-select" id="pageSelectWrap">
-                        <button type="button" class="custom-select-btn select-brown" id="pageSelect">
-                            <span class="custom-select-val">اختر الصفحة</span><span class="custom-select-arrow">▾</span>
-                        </button>
-                        <div class="custom-select-dropdown" id="pageSelectList"></div>
-                    </div>
-
-                    <button type="button" class="btn tafsir-font-btn" id="tafsirThemeToggle"
-                        aria-label="تبديل الوضع الليلي">🌙</button>
-
-                    <button type="button" class="btn tafsir-font-btn" id="tafsirFontDecrease"
-                        aria-label="تصغير حجم النص">−</button>
-                    <button type="button" class="btn tafsir-font-btn" id="tafsirFontReset"
-                        aria-label="إعادة الحجم الافتراضي">⟲</button>
-                    <button type="button" class="btn tafsir-font-btn" id="tafsirFontIncrease"
-                        aria-label="تكبير حجم النص">+</button>
-                </div>
-
-                <div id="tafsirContent" class="overlay-body tafsir-content-container">
-                </div>
+                <div id="tafsirContentContainer" class="tafsir-content-container"
+                    style="flex: 1; overflow-y: auto; padding: 0 var(--overlay-padding-x);"></div>
             </div>
         </div>
 

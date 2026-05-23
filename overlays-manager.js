@@ -90,6 +90,7 @@ class OverlayManager {
     audio: {
       element: "audioOverlay",
       closeBtn: "closeAudioBtn",
+      content: "audioContentContainer",
     },
     khatm: {
       element: "khatmOverlay",
@@ -105,7 +106,7 @@ class OverlayManager {
     tafsir: {
       element: "tafsirOverlay",
       closeBtn: "closeTafsirBtn",
-      content: "tafsirContent",
+      content: "tafsirContentContainer",
       suraSelect: "suraSelect",
       ayaSelect: "ayaSelect",
       pageSelect: "pageSelect",
@@ -1112,113 +1113,100 @@ class OverlayManager {
   }
 
   // ============================================
-  // 5. AUDIO OVERLAY
+  // RENDER AUDIO UI (HTML statique)
   // ============================================
 
-  renderAudioContent(overlay) {
-    const contentContainer = document.getElementById("audioContent");
-    if (!contentContainer) return;
+  renderAudioUI() {
+    const riwayaLabel = window.RIWAYAT_CONFIG?.[window.quranAudioPlayer?.currentRiwaya]?.label || "حفص";
+    const coordsStatus = window.quranAudioPlayer?.ayaCoordsLoaded === false
+      ? '<div class="audio-warning">⚠️ بيانات تحديد الآيات غير متوفرة، لن يظهر التظليل</div>'
+      : "";
 
-    const riwayaLabel =
-      window.RIWAYAT_CONFIG?.[window.quranAudioPlayer?.currentRiwaya]?.label || "";
-
-    const coordsStatus =
-      window.quranAudioPlayer?.ayaCoordsLoaded === false
-        ? '<div class="audio-warning">⚠️ بيانات تحديد الآيات غير متوفرة، لن يظهر التظليل</div>'
-        : "";
-
-    contentContainer.innerHTML = `
-      ${coordsStatus}
-      <div class="audio-select-row">
-        <div class="custom-select" id="reciterSelectWrap">
-          <button type="button" class="custom-select-btn select-violet" id="reciterSelect">
-            <span class="custom-select-val">اختر القارئ</span><span class="custom-select-arrow">▾</span>
-          </button>
-          <div class="custom-select-dropdown" id="reciterSelectList"></div>
+    return `
+        ${coordsStatus}
+        <div class="audio-select-row">
+            <div class="custom-select" id="reciterSelectWrap">
+                <button type="button" class="custom-select-btn select-violet" id="reciterSelect">
+                    <span class="custom-select-val">اختر القارئ</span><span class="custom-select-arrow">▾</span>
+                </button>
+                <div class="custom-select-dropdown" id="reciterSelectList"></div>
+            </div>
         </div>
-      </div>
-      
-<div class="audio-select-row audio-select-grid">
-        <div class="custom-select" id="surahSelectAudioWrap">
-          <button type="button" class="custom-select-btn select-ok" id="surahSelectAudio">
-            <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>
-          </button>
-          <div class="custom-select-dropdown" id="surahSelectAudioList"></div>
+        <div class="audio-select-row audio-select-grid">
+            <div class="custom-select" id="surahSelectAudioWrap">
+                <button type="button" class="custom-select-btn select-ok" id="surahSelectAudio">
+                    <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>
+                </button>
+                <div class="custom-select-dropdown" id="surahSelectAudioList"></div>
+            </div>
+            <div class="custom-select" id="ayaSelectAudioWrap">
+                <button type="button" class="custom-select-btn select-blue" id="ayaSelectAudio">
+                    <span class="custom-select-val">اختر الآية</span><span class="custom-select-arrow">▾</span>
+                </button>
+                <div class="custom-select-dropdown" id="ayaSelectAudioList"></div>
+            </div>
+            <div class="custom-select" id="pageSelectAudioWrap">
+                <button type="button" class="custom-select-btn select-brown" id="pageSelectAudio">
+                    <span class="custom-select-val">اختر الصفحة</span><span class="custom-select-arrow">▾</span>
+                </button>
+                <div class="custom-select-dropdown" id="pageSelectAudioList"></div>
+            </div>
         </div>
-        <div class="custom-select" id="ayaSelectAudioWrap">
-          <button type="button" class="custom-select-btn select-blue" id="ayaSelectAudio">
-            <span class="custom-select-val">اختر الآية</span><span class="custom-select-arrow">▾</span>
-          </button>
-          <div class="custom-select-dropdown" id="ayaSelectAudioList"></div>
+        <div id="audioStatus" class="audio-status"></div>
+        <div class="audio-progress-wrap">
+            <span id="audioCurrentTime">0:00</span>
+            <input type="range" id="audioProgress" class="audio-progress" value="0" min="0" max="100" step="0.1">
+            <span id="audioDuration">0:00</span>
         </div>
-        <div class="custom-select" id="pageSelectAudioWrap">
-          <button type="button" class="custom-select-btn select-brown" id="pageSelectAudio">
-            <span class="custom-select-val">اختر الصفحة</span><span class="custom-select-arrow">▾</span>
-          </button>
-          <div class="custom-select-dropdown" id="pageSelectAudioList"></div>
+        <div class="audio-controls">
+            <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
+            <button class="btn audio-btn" id="repeatBtn" title="تكرار">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg>
+            </button>
+            <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 20 12 12 18"/><line x1="21" y1="6" x2="21" y2="18" stroke="currentColor" stroke-width="2"/></svg>
+            </button>
+            <button class="btn audio-btn" id="nextAyahBtn" title="الآية التالية">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
+            </button>
+            <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>
+            </button>
+            <button class="btn audio-btn" id="prevAyahBtn" title="الآية السابقة">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="11 6 3 12 11 18"/><polygon points="21 6 13 12 21 18"/></svg>
+            </button>
+            <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 4 12 12 18"/><line x1="3" y1="6" x2="3" y2="18" stroke="currentColor" stroke-width="2"/></svg>
+            </button>
+            <button class="btn audio-btn" id="stopBtn" title="إيقاف">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7.5" y="7.5" width="9" height="9"/></svg>
+            </button>
         </div>
-      </div>
-      <div id="audioStatus" class="audio-status"></div>
-      <div class="audio-progress-wrap">
-        <span id="audioCurrentTime">0:00</span>
-        <input type="range" id="audioProgress" class="audio-progress" value="0" min="0" max="100" step="0.1">
-        <span id="audioDuration">0:00</span>
-      </div>
-      <div class="audio-controls">
-        <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
-        <button class="btn audio-btn" id="repeatBtn" title="تكرار">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg>
-        </button>
-        <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 20 12 12 18"/><line x1="21" y1="6" x2="21" y2="18" stroke="currentColor" stroke-width="2"/></svg>
-        </button>
-        <button class="btn audio-btn" id="nextAyahBtn" title="الآية التالية">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
-        </button>
-        <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>
-        </button>
-        <button class="btn audio-btn" id="prevAyahBtn" title="الآية السابقة">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="11 6 3 12 11 18"/><polygon points="21 6 13 12 21 18"/></svg>
-        </button>
-        <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 4 12 12 18"/><line x1="3" y1="6" x2="3" y2="18" stroke="currentColor" stroke-width="2"/></svg>
-        </button>
-        <button class="btn audio-btn" id="stopBtn" title="إيقاف">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7.5" y="7.5" width="9" height="9"/></svg>
-        </button>
-      </div>
-      <div class="audio-current-info" style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
-        <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} (عبر النت)</div>
-        <div id="currentSurahDisplay" class="audio-current-display" style="flex: 1; margin: 0; background: transparent; border: none; color: inherit;"></div>
-      </div>
-      <audio id="quranAudioPlayer" preload="none" style="display:none;"></audio>
+        <div class="audio-current-info" style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
+            <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} (عبر النت)</div>
+            <div id="currentSurahDisplay" class="audio-current-display" style="flex: 1; margin: 0; background: transparent; border: none; color: inherit;"></div>
+        </div>
+        <audio id="quranAudioPlayer" preload="none" style="display:none;"></audio>
     `;
-
-    overlay.contentGenerated = true;
-
-    // Initialiser les dropdowns
-    window.CustomSelect.initToggle();
-
-    // Événements de fermeture automatique
-    document.getElementById("playPauseBtn")?.addEventListener("click", () => {
-      setTimeout(() => {
-        if (window.quranAudioPlayer?.isPlaying && !window.quranAudioPlayer?.hasError) this.closeOverlay("audio");
-      }, 100);
-    });
-
-    return overlay;
   }
 
   async showAudio() {
     this.closeMenu();
     const overlay = this.lazyLoadOverlay("audio");
-    if (overlay?.element) {
+    if (overlay?.element && overlay?.content) {
+      // Injecter le HTML si nécessaire
       if (!overlay.contentGenerated) {
-        this.renderAudioContent(overlay);
+        overlay.content.innerHTML = this.renderAudioUI();
+        overlay.contentGenerated = true;
+        // ✅ Utiliser reset() au lieu de modifier _initialized directement
+        if (window.CustomSelect) {
+          window.CustomSelect.reset();
+          window.CustomSelect.initToggle();
+        }
         await window.quranAudioPlayer.init();
       }
       this.showOverlay("audio");
+      window.quranAudioPlayer?._hideMiniBar(false);
       const player = window.quranAudioPlayer;
       player._syncOverlay();
       if (!player.isPlaying && !player.currentSurah) {
@@ -1306,8 +1294,38 @@ class OverlayManager {
   }
 
   // ============================================
-  // 7. TAFSIR OVERLAY
+  // RENDER TAFSIR UI (HTML statique)
   // ============================================
+
+  renderTafsirUI() {
+    return `
+        <div class="tafsir-controls tafsir-container">
+            <div class="custom-select" id="suraSelectWrap">
+                <button type="button" class="custom-select-btn select-ok" id="suraSelect">
+                    <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>
+                </button>
+                <div class="custom-select-dropdown" id="suraSelectList"></div>
+            </div>
+            <div class="custom-select" id="ayaSelectWrap">
+                <button type="button" class="custom-select-btn select-blue" id="ayaSelect">
+                    <span class="custom-select-val">اختر الآية</span><span class="custom-select-arrow">▾</span>
+                </button>
+                <div class="custom-select-dropdown" id="ayaSelectList"></div>
+            </div>
+            <div class="custom-select" id="pageSelectWrap">
+                <button type="button" class="custom-select-btn select-brown" id="pageSelect">
+                    <span class="custom-select-val">اختر الصفحة</span><span class="custom-select-arrow">▾</span>
+                </button>
+                <div class="custom-select-dropdown" id="pageSelectList"></div>
+            </div>
+            <button type="button" class="btn tafsir-font-btn" id="tafsirThemeToggle" aria-label="تبديل الوضع الليلي">🌙</button>
+            <button type="button" class="btn tafsir-font-btn" id="tafsirFontDecrease" aria-label="تصغير حجم النص">−</button>
+            <button type="button" class="btn tafsir-font-btn" id="tafsirFontReset" aria-label="إعادة الحجم الافتراضي">⟲</button>
+            <button type="button" class="btn tafsir-font-btn" id="tafsirFontIncrease" aria-label="تكبير حجم النص">+</button>
+        </div>
+          <div id="tafsirContent" class="overlay-body tafsir-content-container">                </div>
+    `;
+  }
 
   async showTafsir() {
     this.closeMenu();
@@ -1315,23 +1333,36 @@ class OverlayManager {
       this._tafsirSavedPage = window.quranReader.getCurrentPage();
     }
     if (!(await window.quranApp?.loadTafsir())) return;
+
     const overlay = this.lazyLoadOverlay("tafsir");
     if (!overlay?.content) return;
 
+    // Injecter le HTML si nécessaire
+    if (!overlay.content.innerHTML) {
+      overlay.content.innerHTML = this.renderTafsirUI();
+      overlay.contentGenerated = true;
+      // ✅ Réinitialiser CustomSelect
+      if (window.CustomSelect) {
+        window.CustomSelect.reset();
+        window.CustomSelect.initToggle();
+      }
+    }
+
     this.showOverlay("tafsir");
 
-    await new Promise(r => requestAnimationFrame(r));
+    await new Promise(r => setTimeout(r, 50));
 
-    const suraSelect = overlay.suraSelect || document.getElementById("suraSelect");
-    const ayaSelect = overlay.ayaSelect || document.getElementById("ayaSelect");
-    const pageSelect = overlay.pageSelect || document.getElementById("pageSelect");
+    const suraSelect = document.getElementById("suraSelect");
+    const ayaSelect = document.getElementById("ayaSelect");
+    const pageSelect = document.getElementById("pageSelect");
+    const tafsirContent = document.getElementById("tafsirContent");
 
-    if (suraSelect && ayaSelect && pageSelect) {
+    if (suraSelect && ayaSelect && pageSelect && tafsirContent) {
       await window.tafsirManager.initTafsirUI(
         suraSelect,
         ayaSelect,
         pageSelect,
-        overlay.content,
+        tafsirContent,
         (page) => {
           this.closeOverlay("tafsir");
           setTimeout(() => window.quranApp?.goToPage(page), 200);
@@ -1339,6 +1370,7 @@ class OverlayManager {
         (sura, aya) => this.goToAya(sura, aya)
       );
       this.lazyLoaded.add("tafsirUI");
+      window.tafsirManager.initTafsirFontControls();
     }
   }
 
@@ -1603,7 +1635,7 @@ class OverlayManager {
     const overlay = this.overlays[name];
     if (!overlay?.element) return;
     overlay.element.classList.remove("show");
-    if (name === "audio" && window.quranAudioPlayer?.isPlaying) {
+    if (name === "audio" && !window.quranAudioPlayer?.isStopped) {
       window.quranAudioPlayer?._showMiniBar();
     }
     if (name === "surahInfo") {

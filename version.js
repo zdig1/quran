@@ -3,6 +3,8 @@
 
   const APP_ID = "quranreader";
   const APP_VERSION = "1.1.0";
+  const CHECK_DELAY_MS = 5000; // Délai après chargement (5 secondes)
+  
   const escapeHtml = (t) => window.quranApp?.escapeHtml(t) ?? String(t || '');
 
   function isNewerVersion(remote, local) {
@@ -51,21 +53,28 @@
       .addEventListener("click", () => banner.remove());
   }
 
+  let hasChecked = false;
+
   window.updateChecker = {
     check() {
+      if (hasChecked) return; // Une seule vérification par session
+      
       fetch(`https://quran-58c7cd.gitlab.io/updates.json?t=${Date.now()}`)
         .then((r) => r.json())
         .then((data) => {
+          hasChecked = true; // Marquer comme vérifié même en cas d'échec pour ne pas réessayer
           const app = data.apps?.[APP_ID];
           if (!app) return;
           if (isNewerVersion(app.version, APP_VERSION)) showUpdateBanner(app);
         })
-        .catch(() => { });
+        .catch(() => {
+          hasChecked = true; // Marquer comme vérifié même en cas d'erreur réseau
+        });
     },
   };
 
   // ============================================
-  // DÉCLENCHEMENT
+  // DÉCLENCHEMENT UNIQUE
   // ============================================
 
   let fired = false;
@@ -75,9 +84,9 @@
     window.updateChecker.check();
   };
 
-  window.addEventListener("quran:appReady", () => setTimeout(run, 5000),
-    { once: true, });
-  window.addEventListener("quran:appError", () => { fired = true; }, { once: true },);
-  setTimeout(run, 10000);
-})
-  ();
+  window.addEventListener("quran:appReady", () => setTimeout(run, CHECK_DELAY_MS), { once: true });
+  
+  setTimeout(() => {
+    if (!fired) run();
+  }, 15000);
+})();

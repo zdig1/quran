@@ -111,6 +111,7 @@ class QuranAudioPlayer {
     this._wakeLock = null;
     this._isTransitioning = false;
     this._retrying = false;
+    this._pendingHighlight = null;  // Pour stocker le surlignage en attente
 
     this._boundListeners = {
       audio: {},
@@ -127,14 +128,109 @@ class QuranAudioPlayer {
   _SVG_PLAY = `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>`;
   _SVG_PAUSE = `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7" y="6" width="3" height="12"/><rect x="14" y="6" width="3" height="12"/></svg>`;
 
+  // ============================================
+  // HIGHLIGHT - LOGIQUE CENTRALISÉE
+  // ============================================
+
+  _applyHighlight() {
+    if (!this.ayaCoordsLoaded) {
+      window.quranReader?.clearHighlight();
+      return;
+    }
+
+    const rects = this._getAyaRects(this.currentSurah, this.currentAyah);
+    if (!rects?.length) {
+      window.quranReader?.clearHighlight();
+      return;
+    }
+
+    const ayaPage = rects[0]?.p;
+    const reader = window.quranReader;
+
+    // Si la page n'est pas la page courante, naviguer d'abord
+    if (ayaPage && ayaPage !== reader?.currentPage) {
+      if (this._autoNavigate) {
+        // Stocker les rects pour les réappliquer après navigation
+        this._pendingHighlight = { surah: this.currentSurah, ayah: this.currentAyah, rects };
+        window.quranApp?.goToPage(ayaPage);
+        // Attendre que la navigation soit terminée
+        setTimeout(() => this._applyPendingHighlight(), 300);
+      } else {
+        reader?.clearHighlight();
+      }
+      return;
+    }
+
+    this._performHighlight(rects, ayaPage);
+  }
+
+  _applyPendingHighlight() {
+    if (!this._pendingHighlight) return;
+    const { surah, ayah, rects } = this._pendingHighlight;
+    // Vérifier que la sourate/aya n'a pas changé entre-temps
+    if (surah === this.currentSurah && ayah === this.currentAyah) {
+      this._performHighlight(rects, rects[0]?.p);
+    }
+    this._pendingHighlight = null;
+  }
+
+  _performHighlight(rects, ayaPage) {
+    const reader = window.quranReader;
+    if (!reader) return;
+
+    // Attendre que l'image soit chargée en mode book
+    const waitForImage = (callback) => {
+      if (reader.readingMode !== "book") {
+        callback();
+        return;
+      }
+      const wrapper = reader.elements?.pageScroll?.querySelector(`.page-wrapper[data-page="${ayaPage}"]`);
+      const img = wrapper?.querySelector("img");
+      if (img && img.complete && img.naturalWidth > 0) {
+        callback();
+      } else if (img) {
+        img.addEventListener("load", () => callback(), { once: true });
+      } else {
+        callback();
+      }
+    };
+
+    waitForImage(() => {
+      reader.highlightAya(this.currentSurah, this.currentAyah, rects);
+      this._autoScrollToHighlight(rects, ayaPage);
+    });
+  }
+
+  _autoScrollToHighlight(rects, ayaPage) {
+    const reader = window.quranReader;
+    if (reader?.readingMode !== "scroll") return;
+
+    const container = reader.elements?.pageScroll;
+    const pageHeight = reader.pageHeight ?? 0;
+    if (!container || !pageHeight) return;
+
+    const sy = pageHeight / 1890;
+    const headerH = 3.75 * 16;
+    const marginBottom = 80;
+    const ayaY1 = rects[0]?.y1 ?? 0;
+    const ayaY2 = rects[rects.length - 1]?.y2 ?? ayaY1;
+    const ayaTop = (ayaPage - 1) * pageHeight + ayaY1 * sy;
+    const ayaBottom = (ayaPage - 1) * pageHeight + ayaY2 * sy;
+    const viewTop = container.scrollTop + headerH;
+    const viewBottom = container.scrollTop + container.clientHeight - marginBottom;
+
+    if (ayaTop < viewTop || ayaBottom > viewBottom) {
+      container.scrollTo({
+        top: ayaTop - headerH - 20,
+        behavior: "smooth"
+      });
+    }
+  }
+
   _ensureHighlight() {
     this._autoNavigate = true;
-    if (!this.ayaCoords)
-      this._loadAyaCoords().then(() => { this._applyHighlight(); this._autoNavigate = false; });
-    else {
-      this._applyHighlight();
-      this._autoNavigate = false;
-    }
+    this._applyHighlight();
+    this._autoNavigate = false;
   }
 
   // ============================================
@@ -153,7 +249,7 @@ class QuranAudioPlayer {
     this._populatePageSelect();
     this._populateSurahSelect();
     this._populateReciterSelect(ACTIVE_RIWAYA);
-    this._selectReciter(localStorage.getItem(`quran_reciter_${ACTIVE_RIWAYA}`) || null, false,);
+    this._selectReciter(localStorage.getItem(`quran_reciter_${ACTIVE_RIWAYA}`) || null, false);
     this._setupAudioEvents();
     this._setupOverlayEvents();
     this._setupMiniBarEvents();
@@ -164,10 +260,6 @@ class QuranAudioPlayer {
     this.repeatMode = parseInt(localStorage.getItem("quran_repeat") || "0");
     this._updateRepeatBtn();
     this._setupOnlineOffline();
-
-    if (window.CustomSelect && window.CustomSelect.initToggle) {
-      window.CustomSelect.initToggle();
-    }
   }
 
   _cacheElements() {
@@ -238,10 +330,6 @@ class QuranAudioPlayer {
   }
 
   _populateReciterSelect(riwaya) {
-    if (window.CustomSelect && window.CustomSelect.initToggle) {
-      window.CustomSelect.initToggle();
-    }
-
     const listContainer = document.getElementById('reciterSelectList');
     if (!listContainer) return;
 
@@ -311,14 +399,15 @@ class QuranAudioPlayer {
       found = reciters.find((r) => r.id === id);
     }
     if (!found) {
-      found = reciters[0]; // premier récitant par défaut
+      found = reciters[0];
     }
 
     this.currentReciter = found;
     if (window.CustomSelect) {
       window.CustomSelect.setValue('reciterSelect', 'reciterSelectList', found.id);
     }
-    if (save) localStorage.setItem(`quran_reciter_${this.currentRiwaya}`, found.id); this._updateCurrentReciterName();
+    if (save) localStorage.setItem(`quran_reciter_${this.currentRiwaya}`, found.id);
+    this._updateCurrentReciterName();
     this._updateReciterSelectButton();
     this._updateUI();
     if (this.isPlaying && !this.hasError) {
@@ -617,57 +706,6 @@ class QuranAudioPlayer {
     }
   }
 
-  _applyHighlight() {
-    if (!this.ayaCoordsLoaded) {
-      window.quranReader?.clearHighlight();
-      return;
-    }
-    const rects = this._getAyaRects(this.currentSurah, this.currentAyah);
-    if (!rects?.length) {
-      window.quranReader?.clearHighlight();
-      return;
-    }
-
-    const ayaPage = rects[0]?.p;
-    const reader = window.quranReader;
-
-    if (ayaPage && ayaPage !== reader?.currentPage) {
-      if (this._autoNavigate) {
-        window.quranApp?.goToPage(ayaPage);
-        setTimeout(() => this._applyHighlight(), 200);
-      } else {
-        reader?.clearHighlight();
-      }
-      return;
-    }
-
-    const doHighlight = () => {
-      reader?.highlightAya(this.currentSurah, this.currentAyah, rects);
-      if (reader?.readingMode === "scroll") {
-        const container = reader?.elements?.pageScroll;
-        const pageHeight = reader?.pageHeight ?? 0;
-        const sy = pageHeight / 1890;
-        const headerH = 3.75 * 16;
-        const marginBottom = 80;
-        const ayaY1 = rects[0]?.y1 ?? 0;
-        const ayaY2 = rects[rects.length - 1]?.y2 ?? ayaY1;
-        const ayaTop = (ayaPage - 1) * pageHeight + ayaY1 * sy;
-        const ayaBottom = (ayaPage - 1) * pageHeight + ayaY2 * sy;
-        const viewTop = container.scrollTop + headerH;
-        const viewBottom = container.scrollTop + container.clientHeight - marginBottom;
-        if (ayaTop < viewTop || ayaBottom > viewBottom) {
-          container.scrollTop = ayaTop - headerH - 20;
-        }
-      }
-    };
-
-    if (ayaPage && ayaPage !== reader?.currentPage && reader?.readingMode === "book") {
-      setTimeout(doHighlight, 300);
-    } else {
-      doHighlight();
-    }
-  }
-
   pause() {
     this.audioElement.pause();
     this._releaseWakeLock();
@@ -692,6 +730,7 @@ class QuranAudioPlayer {
     this._showStatus("", false);
     this._releaseWakeLock();
     this._preloadTriggered = false;
+    this._hideMiniBar(false);
   }
 
   togglePlay() {
@@ -752,7 +791,7 @@ class QuranAudioPlayer {
     if (this.currentAyah < this.totalAyahs) {
       this.currentAyah++;
       this._updateCurrentDisplay();
-      this.play();
+      if (this.isPlaying) this.play(); else { this._updateCurrentDisplay(); this._ensureHighlight(); }
     } else {
       this._onEndOfSurah();
     }
@@ -766,14 +805,14 @@ class QuranAudioPlayer {
       if (window.CustomSelect) {
         window.CustomSelect.setValue('ayaSelectAudio', 'ayaSelectAudioList', this.currentAyah);
       }
-      this.play();
+      if (this.isPlaying) this.play(); else { this._updateCurrentDisplay(); this._ensureHighlight(); }
     } else {
       if (this.currentSurah > 1) {
         const prevSurah = this.currentSurah - 1;
         const prevSurahData = this.surahs.find((s) => s.s_id === prevSurah);
         if (prevSurahData) {
           this._setSurah(prevSurah, prevSurahData.verses_count);
-          this.play();
+          if (this.isPlaying) this.play(); else { this._updateCurrentDisplay(); this._ensureHighlight(); }
         }
       }
     }
@@ -782,13 +821,13 @@ class QuranAudioPlayer {
   nextSurah() {
     if (!this.currentSurah || this.currentSurah >= 114) return;
     this._setSurah(this.currentSurah + 1, 1);
-    if (!this.isStopped) this.play();
+    if (this.isPlaying) this.play(); else if (!this.isStopped) { this._updateCurrentDisplay(); this._ensureHighlight(); }
   }
 
   prevSurah() {
     if (!this.currentSurah || this.currentSurah <= 1) return;
     this._setSurah(this.currentSurah - 1, 1);
-    if (!this.isStopped) this.play();
+    if (this.isPlaying) this.play(); else if (!this.isStopped) { this._updateCurrentDisplay(); this._ensureHighlight(); }
   }
 
   _onEndOfSurah() {
@@ -919,7 +958,6 @@ class QuranAudioPlayer {
   _showMiniBar() {
     this.miniBar?.classList.remove("hidden");
     this.fabBtn?.classList.add("hidden");
-    // Force le recalcul de la hauteur et masque le footer
     window.quranReader?._adjustFooterHeight();
     setTimeout(() => {
       if (window.quranReader && typeof window.quranReader._adjustFooterHeight === 'function') {
@@ -995,7 +1033,6 @@ class QuranAudioPlayer {
         this.play();
         return;
       }
-      // ... reste inchangé
 
       if (this.currentAyah >= this.totalAyahs) {
         this._onEndOfSurah();

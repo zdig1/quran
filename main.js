@@ -810,9 +810,14 @@ class ListItemRenderer {
 // ============================================
 
 class CustomSelect {
+  static _initialized = false;  // Flag pour éviter les doubles initialisations
   static _toggleReady = false;
 
   static initToggle() {
+    // ✅ Éviter les appels multiples
+    if (CustomSelect._initialized) return;
+    CustomSelect._initialized = true;
+
     if (CustomSelect._toggleReady) return;
     CustomSelect._toggleReady = true;
 
@@ -928,6 +933,11 @@ class CustomSelect {
     const list = document.getElementById(listId);
     return list?.querySelector('.selected')?.dataset.value || '';
   }
+
+  static reset() {
+    CustomSelect._initialized = false;
+    CustomSelect._toggleReady = false;
+  }
 }
 
 // ============================================
@@ -943,3 +953,15 @@ window.CustomSelect = CustomSelect;
 if (!window.quranApp) window.quranApp = new QuranApp();
 if (typeof window !== "undefined" && !window.currentQuranPage)
   window.currentQuranPage = 1;
+
+// ============================================
+// INITIALISATION UNIQUE DES CUSTOM SELECTS
+// ============================================
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    CustomSelect.initToggle();
+  });
+} else {
+  CustomSelect.initToggle();
+}
