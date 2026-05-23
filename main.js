@@ -180,7 +180,7 @@ class QuranApp {
   setPreference(key, value) {
     try {
       localStorage.setItem(`quran_${key}`, value);
-    } catch (e) {
+    } catch {
       // ignore
     }
   }

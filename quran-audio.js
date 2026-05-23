@@ -153,22 +153,18 @@ class QuranAudioPlayer {
     this._populatePageSelect();
     this._populateSurahSelect();
     this._populateReciterSelect(ACTIVE_RIWAYA);
-    this._selectReciter(
-      window.quranApp.getPreference(`reciter_${ACTIVE_RIWAYA}`) || null,
-      false,
-    );
+    this._selectReciter(localStorage.getItem(`quran_reciter_${ACTIVE_RIWAYA}`) || null, false,);
     this._setupAudioEvents();
     this._setupOverlayEvents();
     this._setupMiniBarEvents();
-    const savedRate = window.quranApp.getPreference("rate") || 1.0;
+    const savedRate = parseFloat(localStorage.getItem("quran_rate")) || 1.0;
     this._applyRate(savedRate);
     const index = this.speedOptions.indexOf(parseFloat(savedRate));
     this.currentSpeedIndex = index !== -1 ? index : 1;
-    this.repeatMode = parseInt(window.quranApp.getPreference("repeat") || "0");
+    this.repeatMode = parseInt(localStorage.getItem("quran_repeat") || "0");
     this._updateRepeatBtn();
     this._setupOnlineOffline();
 
-    // Initialiser le système de dropdowns global
     if (window.CustomSelect && window.CustomSelect.initToggle) {
       window.CustomSelect.initToggle();
     }
@@ -242,9 +238,6 @@ class QuranAudioPlayer {
   }
 
   _populateReciterSelect(riwaya) {
-    // On n'appelle pas CustomSelect.render ici car la liste contient des boutons pin intégrés.
-    // On utilise notre construction manuelle, mais on s'assure que l'ouverture/fermeture globale fonctionne.
-    // On appelle tout de même initToggle pour garantir le comportement.
     if (window.CustomSelect && window.CustomSelect.initToggle) {
       window.CustomSelect.initToggle();
     }
@@ -325,8 +318,7 @@ class QuranAudioPlayer {
     if (window.CustomSelect) {
       window.CustomSelect.setValue('reciterSelect', 'reciterSelectList', found.id);
     }
-    if (save) window.quranApp.setPreference(`reciter_${this.currentRiwaya}`, found.id);
-    this._updateCurrentReciterName();
+    if (save) localStorage.setItem(`quran_reciter_${this.currentRiwaya}`, found.id); this._updateCurrentReciterName();
     this._updateReciterSelectButton();
     this._updateUI();
     if (this.isPlaying && !this.hasError) {
@@ -816,7 +808,7 @@ class QuranAudioPlayer {
   cycleRepeat() {
     this.repeatMode = (this.repeatMode + 1) % 3;
     this._updateRepeatBtn();
-    window.quranApp.setPreference("repeat", this.repeatMode);
+    localStorage.setItem("quran_repeat", this.repeatMode);
     const titles = ["بدون تكرار", "تكرار الآية", "تكرار السورة"];
     if (window.quranApp && window.quranApp.showToast) {
       window.quranApp.showToast(titles[this.repeatMode]);
@@ -856,7 +848,7 @@ class QuranAudioPlayer {
     }
     const index = this.speedOptions.indexOf(numRate);
     if (index !== -1) this.currentSpeedIndex = index;
-    window.quranApp.setPreference("rate", numRate);
+    localStorage.setItem("quran_rate", numRate);
   }
 
   _buildMiniBar() {

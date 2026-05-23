@@ -1134,10 +1134,7 @@ class TafsirSearchManager {
           window.quranApp.toggleTheme();
         } else {
           document.body.classList.toggle("night-mode");
-          localStorage.setItem(
-            "quran_theme",
-            document.body.classList.contains("night-mode") ? "night" : "light",
-          );
+          window.quranApp?.setPreference("theme", document.body.classList.contains("night-mode") ? "night" : "light",);
         }
         this._updateThemeToggleBtn(btnTheme);
       });
