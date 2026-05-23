@@ -839,7 +839,6 @@ class CustomSelect {
     });
   }
 
-  // ✅ NOUVELLE MÉTHODE : Scroll vers l'option sélectionnée
   static scrollToSelectedOption(wrap) {
     if (!wrap) return;
     const dropdown = wrap.querySelector('.custom-select-dropdown');
@@ -848,7 +847,6 @@ class CustomSelect {
     const selected = dropdown.querySelector('.custom-select-option.selected');
     if (!selected) return;
 
-    // Scroll l'option sélectionnée au milieu du dropdown
     const dropdownRect = dropdown.getBoundingClientRect();
     const selectedRect = selected.getBoundingClientRect();
     const scrollTop = selected.offsetTop - (dropdown.clientHeight / 3) + (selected.clientHeight / 2);
@@ -910,7 +908,6 @@ class CustomSelect {
       valEl.textContent = nameSpan.textContent.trim();
     }
 
-    // ✅ NOUVEAU : Scroll automatiquement si le dropdown est actuellement ouvert
     const parentSelect = list.closest('.custom-select');
     if (parentSelect && parentSelect.classList.contains('open')) {
       const scrollContainer = list;
@@ -922,11 +919,8 @@ class CustomSelect {
       if (optTop < containerTop) {
         scrollContainer.scrollTop = optTop - 10;
       } else if (optBottom > containerBottom) {
-// LIGNE À MODIFIER (vers ligne 820 environ) :
-scrollContainer.scrollTop = optBottom - scrollContainer.clientHeight + 10;
-
-// REMPLACER PAR :
-scrollContainer.scrollTop = optBottom - scrollContainer.clientHeight + (scrollContainer.clientHeight / 3);      }
+        scrollContainer.scrollTop = optBottom - scrollContainer.clientHeight + (scrollContainer.clientHeight / 3);
+      }
     }
   }
 
