@@ -23,6 +23,19 @@ class QuranCalculator {
   // INDEX DES PAGES
   // ============================================
 
+  _propagateIndex(indexData, valueKey, flagKey, pageMap) {
+    let currentValue = 1;
+    let idx = 0;
+    for (let p = 1; p <= 604; p++) {
+      if (indexData[idx]?.page === p) {
+        currentValue = indexData[idx][valueKey];
+        pageMap[p][flagKey] = true;
+        idx++;
+      }
+      pageMap[p][valueKey] = currentValue;
+    }
+  }
+
   buildPageIndex() {
     const map = this.pageMap;
     map[0] = null;
@@ -44,10 +57,8 @@ class QuranCalculator {
       sajda_index: sajdaIndex = [],
     } = this.data || {};
 
-    // Map pour accès rapide aux données des sourates
     const surahMap = new Map(surahIndex.map((s) => [s.s_id, s]));
 
-    // Tableau des départs : pour chaque page, la liste des s_id qui y commencent
     const startsAtPage = Array.from({ length: 605 }, () => []);
     surahIndex.forEach((surah) => {
       const page = surah.page_start;
@@ -56,14 +67,11 @@ class QuranCalculator {
       }
     });
 
-    // Propagation de la sourate courante
     let currentSurahId = null;
     for (let p = 1; p <= 604; p++) {
-      // S'il y a un ou plusieurs départs, on prend le plus petit s_id (ordre coranique)
       if (startsAtPage[p].length > 0) {
         currentSurahId = Math.min(...startsAtPage[p]);
       }
-      // Si une sourate courante est définie (toujours vrai à partir de la page 1)
       if (currentSurahId !== null) {
         const surah = surahMap.get(currentSurahId);
         map[p].surah = {
@@ -76,31 +84,11 @@ class QuranCalculator {
       }
     }
 
-    // ===== Traitement des Hizbs =====
-    let currentHizb = 1;
-    let hizbIdx = 0;
-    for (let p = 1; p <= 604; p++) {
-      if (hizbIndex[hizbIdx]?.page === p) {
-        currentHizb = hizbIndex[hizbIdx].hizb;
-        map[p].isHizbStart = true;
-        hizbIdx++;
-      }
-      map[p].hizb = currentHizb;
-    }
+    // ✅ NOUVEAU : Propagation factorisée
+    this._propagateIndex(hizbIndex, 'hizb', 'isHizbStart', map);
+    this._propagateIndex(juzIndex, 'juz', 'isJuzStart', map);
 
-    // ===== Traitement des Juz =====
-    let currentJuz = 1;
-    let juzIdx = 0;
-    for (let p = 1; p <= 604; p++) {
-      if (juzIndex[juzIdx]?.page === p) {
-        currentJuz = juzIndex[juzIdx].juz;
-        map[p].isJuzStart = true;
-        juzIdx++;
-      }
-      map[p].juz = currentJuz;
-    }
-
-    // ===== Traitement des Sajdas =====
+    // Traitement des Sajdas
     const sajdaPages = new Set(sajdaIndex.map((s) => s.page));
     for (let p = 1; p <= 604; p++) map[p].sajda = sajdaPages.has(p);
 

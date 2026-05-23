@@ -3,16 +3,7 @@
 
   const APP_ID = "quranreader";
   const APP_VERSION = "1.1.0";
-
-  function escapeHtml(text) {
-    if (!text) return "";
-    return String(text)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
+  const escapeHtml = (t) => window.quranApp?.escapeHtml(t) ?? String(t || '');
 
   function isNewerVersion(remote, local) {
     const remoteParts = remote.split(".").map(Number);

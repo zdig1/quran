@@ -508,12 +508,15 @@ class QuranApp {
     window.overlayManager?.updateThemeButtonText();
   }
 
+  _saveCurrentState() {
+    if (!this.isInitialized) return;
+    const readerPage = window.quranReader?.getCurrentPage?.();
+    if (readerPage) this.lastPage = readerPage;
+    this.saveToLocalStorage();
+  }
+
   applyTheme() {
-    if (this.theme === "night") {
-      document.body.classList.add("night-mode");
-    } else {
-      document.body.classList.remove("night-mode");
-    }
+    document.body.classList.toggle("night-mode", this.theme === "night");
   }
 
   // ============================================
@@ -643,29 +646,15 @@ class QuranApp {
   // ============================================
 
   setupCleanupHandlers() {
-    this._pageHideHandler = () => {
-      if (this.isInitialized) {
-        const readerPage = window.quranReader?.getCurrentPage?.();
-        if (readerPage) this.lastPage = readerPage;
-        this.saveToLocalStorage();
-      }
-    };
+    this._pageHideHandler = () => this._saveCurrentState();
     window.addEventListener("pagehide", this._pageHideHandler);
 
     // Cordova
-    document.addEventListener("pause", () => {
-      if (this.isInitialized) {
-        const readerPage = window.quranReader?.getCurrentPage?.();
-        if (readerPage) this.lastPage = readerPage;
-        this.saveToLocalStorage();
-      }
-    }, false);
+    document.addEventListener("pause", () => this._saveCurrentState(), false);
 
     this._visibilityChangeHandler = () => {
       if (document.visibilityState === "hidden") {
-        const readerPage = window.quranReader?.getCurrentPage?.();
-        if (readerPage) this.lastPage = readerPage;
-        this.saveToLocalStorage();
+        this._saveCurrentState();
         window.quranReader?.imageCache.clear();
       } else if (document.visibilityState === "visible") {
         if (typeof window.quranReader?.onAppResume === "function") {

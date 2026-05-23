@@ -295,8 +295,8 @@ class OverlayManager {
   }
 
   _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
-    // Utiliser ListItemRenderer pour la structure de base
-    const container = ListItemRenderer.createContainer('surah', surah.s_id);
+    // Utiliser window.ListItemRenderer pour la structure de base
+    const container = window.ListItemRenderer.createContainer('surah', surah.s_id);
     container.classList.add('item-surah');
 
     // Bouton épingle
@@ -315,7 +315,7 @@ class OverlayManager {
     const row1Right = document.createElement("div");
     row1Right.className = "surah-row-right";
 
-    const badge = ListItemRenderer.createBadge(String(surah.s_id));
+    const badge = window.ListItemRenderer.createBadge(String(surah.s_id));
     const nameSpan = document.createElement("span");
     nameSpan.className = "surah-name";
     nameSpan.textContent = surah.name;
@@ -478,30 +478,22 @@ class OverlayManager {
 
     // Mettre en évidence la sourate courante
     const currentSurah = window.quranCalculator?.getFirstSurahForPage(this.getCurrentPage());
+    const allSectionNew = container.querySelector('.surah-section-all');
     if (currentSurah?.s_id) {
-      const allSectionNew = container.querySelector('.surah-section-all');
-      const currentEl = allSectionNew
-        ? allSectionNew.querySelector(`.item-surah[data-surah-id="${currentSurah.s_id}"]`)
-        : container.querySelector(`.item-surah[data-surah-id="${currentSurah.s_id}"]`);
+      const currentEl = allSectionNew?.querySelector(`.item-surah[data-surah-id="${currentSurah.s_id}"]`);
       if (currentEl) currentEl.classList.add("current-item");
     }
 
     // Revenir à l'élément préservé
     if (preserveSurahId) {
-      const allSectionNew = container.querySelector('.surah-section-all');
-      const newEl = allSectionNew
-        ? allSectionNew.querySelector(`.item-surah[data-surah-id="${preserveSurahId}"]`)
-        : null;
+      const newEl = allSectionNew?.querySelector(`.item-surah[data-surah-id="${preserveSurahId}"]`);
       if (newEl) {
         requestAnimationFrame(() => {
           container.scrollTop = newEl.offsetTop - initialClickOffset;
         });
       }
     } else if (scrollToCurrent && currentSurah?.s_id) {
-      const allSectionNew = container.querySelector('.surah-section-all');
-      const el = allSectionNew
-        ? allSectionNew.querySelector(`.item-surah[data-surah-id="${currentSurah.s_id}"]`)
-        : null;
+      const el = allSectionNew?.querySelector(`.item-surah[data-surah-id="${currentSurah.s_id}"]`);
       if (el) {
         requestAnimationFrame(() => el.scrollIntoView({ block: "center", behavior: "auto" }));
       }
@@ -680,21 +672,21 @@ class OverlayManager {
       const juzNum = Math.ceil(parseInt(hizb.hizb) / 2);
       const suraId = hizb.s_id; const ayaText = (hizb.aya_txt || "").replace(/\s*\(\d+\)\s*$/, "").trim();
       const prefix = `${window.quranApp.escapeHtml(String(suraId))}. ${window.quranApp.escapeHtml(hizb.sura)} - آية (${window.quranApp.escapeHtml(String(hizb.aya))})`;
-      const container = ListItemRenderer.createContainer('juzhizb', hizb.hizb);
+      const container = window.ListItemRenderer.createContainer('juzhizb', hizb.hizb);
 
       // Première ligne
       const rightElements = [];
-      const badgeSpan = ListItemRenderer.createBadge(isNewJuz ? `ج${juzNum}` : "ج0");
+      const badgeSpan = window.ListItemRenderer.createBadge(isNewJuz ? `ج${juzNum}` : "ج0");
       if (!isNewJuz) badgeSpan.style.visibility = "hidden";
       rightElements.push(badgeSpan);
-      const titleSpan = ListItemRenderer.createTitle(`الحزب ${hizb.hizb}`);
+      const titleSpan = window.ListItemRenderer.createTitle(`الحزب ${hizb.hizb}`);
       rightElements.push(titleSpan);
 
       const leftElements = [];
-      if (hasBookmarkInRange) leftElements.push(ListItemRenderer.createIcon("🔖"));
-      leftElements.push(ListItemRenderer.createPageTag(hizb.page_start));
+      if (hasBookmarkInRange) leftElements.push(window.ListItemRenderer.createIcon("🔖"));
+      leftElements.push(window.ListItemRenderer.createPageTag(hizb.page_start));
 
-      const line1 = ListItemRenderer.buildLine1({ rightElements, leftElements });
+      const line1 = window.ListItemRenderer.buildLine1({ rightElements, leftElements });
       container.appendChild(line1);
 
       // Ligne 2 : texte de l'ayah
@@ -892,7 +884,7 @@ class OverlayManager {
   }
 
   createBookmarkElement(bookmark) {
-    const item = ListItemRenderer.createContainer('bookmark', bookmark.id);
+    const item = window.ListItemRenderer.createContainer('bookmark', bookmark.id);
     this.renderBookmarkDisplayMode(item, bookmark);
     return item;
   }
@@ -927,7 +919,7 @@ class OverlayManager {
     ];
 
     const leftElements = [
-      ListItemRenderer.createPageTag(bookmark.page),
+      window.ListItemRenderer.createPageTag(bookmark.page),
       (() => {
         const btn = document.createElement("button");
         btn.className = "action-icon bordered icon-btn--replace";
@@ -946,7 +938,7 @@ class OverlayManager {
       })(),
     ];
 
-    const line1 = ListItemRenderer.buildLine1({ rightElements, leftElements });
+    const line1 = window.ListItemRenderer.buildLine1({ rightElements, leftElements });
     item.appendChild(line1);
 
     // Ligne 2 : date
