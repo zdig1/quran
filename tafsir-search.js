@@ -470,11 +470,7 @@ class TafsirSearchManager {
       }, 300);
     };
 
-    // Clone pour éviter les doublons d'écouteurs
-    const clonedInput = inputEl.cloneNode(true);
-    inputEl.parentNode.replaceChild(clonedInput, inputEl);
-    inputEl = clonedInput;
-    this.inputElement = clonedInput;
+    this.inputElement = inputEl;
 
     inputEl.addEventListener("input", performSearch);
     inputEl.addEventListener("keypress", (e) => {

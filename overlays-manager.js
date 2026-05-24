@@ -1233,7 +1233,6 @@ class OverlayManager {
         overlay.results,
         (sura, aya) => this.goToAya(sura, aya)
       );
-      overlay.input = document.getElementById("searchInput");
 
       if (window.tafsirManager.lastResults) {
         overlay.results.innerHTML = window.tafsirManager.lastResults;
