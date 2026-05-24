@@ -216,7 +216,7 @@ class QuranAudioPlayer {
 
     container.scrollTo({
       top: ayaTop - offset,
-      behavior: "smooth"
+      behavior: "auto"
     });
   }
 

@@ -576,11 +576,11 @@ class QuranApp {
         switch (e.key) {
           case "ArrowDown":
             e.preventDefault();
-            body?.scrollBy({ top: 120, behavior: "smooth" });
+            body?.scrollBy({ top: 120, behavior: "auto" });
             break;
           case "ArrowUp":
             e.preventDefault();
-            body?.scrollBy({ top: -120, behavior: "smooth" });
+            body?.scrollBy({ top: -120, behavior: "auto" });
             break;
           case "Home":
             e.preventDefault();
@@ -615,7 +615,7 @@ class QuranApp {
           if (reader.readingMode === "scroll")
             reader.elements.pageScroll?.scrollBy({
               top: -120,
-              behavior: "smooth",
+              behavior: "auto",
             });
           break;
         case "ArrowDown":
@@ -623,7 +623,7 @@ class QuranApp {
           if (reader.readingMode === "scroll")
             reader.elements.pageScroll?.scrollBy({
               top: 120,
-              behavior: "smooth",
+              behavior: "auto",
             });
           break;
         case "Home":
@@ -851,13 +851,14 @@ class CustomSelect {
     const selected = dropdown.querySelector('.custom-select-option.selected');
     if (!selected) return;
 
-    const dropdownRect = dropdown.getBoundingClientRect();
-    const selectedRect = selected.getBoundingClientRect();
-    const scrollTop = selected.offsetTop - (dropdown.clientHeight / 3) + (selected.clientHeight / 2);
-
-    dropdown.scrollTo({
-      top: Math.max(0, scrollTop),
-      behavior: 'smooth'
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const scrollTop = selected.offsetTop - (dropdown.clientHeight / 4) + (selected.clientHeight / 2);
+        dropdown.scrollTo({
+          top: Math.max(0, scrollTop),
+          behavior: 'auto'
+        });
+      });
     });
   }
 

@@ -53,9 +53,6 @@ class TafsirSearchManager {
     this.lastResults = "";
     this.inputElement = null;
     this.resultsElement = null;
-
-    this.searchIndex = null;
-    this.ayatById = null;
   }
 
   // ============================================
@@ -103,8 +100,6 @@ class TafsirSearchManager {
       const response = await fetch(this.config.dataUrl);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       this.data = await response.json();
-      this.searchIndex = null;
-      this.ayatById = null;
       this.initializeDataStructures();
       window.dispatchEvent(
         new CustomEvent("tafsir:loaded", {
@@ -247,84 +242,23 @@ class TafsirSearchManager {
   // INDEX INVERSÉ POUR LA RECHERCHE
   // ============================================
 
-  _buildSearchIndex() {
-    if (this.searchIndex) return;
-
-    this.searchIndex = new Map(); // mot -> Set d'IDs d'ayat
-    this.ayatById = new Map();    // ID -> aya (pour récupération rapide)
-
-    for (const aya of this.data) {
-      const id = aya[this.F.id];
-      const text = aya[this.F.text];
-      if (!text) continue;
-
-      this.ayatById.set(id, aya);
-
-      // Nettoyer et tokenizer le texte
-      const normalized = this.normalizeArabic(text.toLowerCase());
-      // Split sur les espaces et la ponctuation courante
-      const words = normalized.split(/[\s،;:؟!()\-"'\s]+/).filter(w => w.length > 1);
-
-      const uniqueWords = new Set(words);
-      for (const word of uniqueWords) {
-        if (!this.searchIndex.has(word)) {
-          this.searchIndex.set(word, new Set());
-        }
-        this.searchIndex.get(word).add(id);
-      }
-    }
-  }
-
   searchWithStatsOptimized(query) {
     if (!this.data) return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
     if (!query || query.trim() === '') return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
 
-    // Construire l'index si nécessaire
-    this._buildSearchIndex();
-
-    // Normaliser la requête
     const normalizedQuery = this.normalizeArabic(query.toLowerCase());
 
-    // ✅ Vérifier le cache d'abord
-    const cacheKey = `inv_${normalizedQuery}`;
-    if (this.searchCache.has(cacheKey)) {
-      return this.searchCache.get(cacheKey);
-    }
+    const cacheKey = `alif_exact_${normalizedQuery}`;
+    if (this.searchCache.has(cacheKey)) return this.searchCache.get(cacheKey);
 
-    const queryWords = normalizedQuery.split(/[\s،;:؟!()\-"'\s]+/).filter(w => w.length > 1);
-
-    if (queryWords.length === 0) {
-      return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
-    }
-
-    // Récupérer les IDs pour chaque mot et faire l'intersection
-    let resultIds = null;
-    for (const word of queryWords) {
-      const ids = this.searchIndex.get(word);
-      if (!ids || ids.size === 0) {
-        return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
-      }
-      if (resultIds === null) {
-        resultIds = new Set(ids);
-      } else {
-        for (const id of resultIds) {
-          if (!ids.has(id)) resultIds.delete(id);
-        }
-      }
-      if (resultIds.size === 0) break;
-    }
-
-    if (!resultIds || resultIds.size === 0) {
-      return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
-    }
-
-    // Récupérer les résultats
     const results = [];
     const surasFound = new Set();
 
-    for (const id of resultIds) {
-      const aya = this.ayatById.get(id);
-      if (!aya) continue;
+    for (const aya of this.data) {
+      const text = aya[this.F.text];
+      if (!text) continue;
+      const normalizedText = this.normalizeArabic(text.toLowerCase());
+      if (!normalizedText.includes(normalizedQuery)) continue;
 
       surasFound.add(aya[this.F.sura_n]);
       results.push({
@@ -333,18 +267,16 @@ class TafsirSearchManager {
         aya_n: aya[this.F.aya_n],
         text: aya[this.F.text],
         page: aya[this.F.page],
-        id: id,
+        id: aya[this.F.id],
       });
-
-      if (results.length >= 500) break;
     }
 
+    const total = results.length;
     const cached = {
-      results: this._sortByQuranOrder(results),
-      stats: { resultsCount: resultIds.size, totalSuras: surasFound.size }
+      results: this._sortByQuranOrder(results).slice(0, 500),
+      stats: { resultsCount: total, totalSuras: surasFound.size }
     };
 
-    // ✅ Mettre en cache
     if (this.searchCache.size >= this.config.searchCacheSize) {
       this.searchCache.delete(this.searchCache.keys().next().value);
     }
@@ -353,8 +285,6 @@ class TafsirSearchManager {
     return cached;
   }
 
-  // Remplacer l'ancienne méthode searchWithStats par la version optimisée
-  // Ou garder les deux pour compatibilité
   searchWithStats(query) {
     return this.searchWithStatsOptimized(query);
   }
@@ -1043,7 +973,7 @@ class TafsirSearchManager {
     if (!container || !el) return;
     const top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop - offset;
     if ("scrollBehavior" in document.documentElement.style)
-      container.scrollTo({ top, behavior: "smooth" });
+      container.scrollTo({ top, behavior: "auto" });
     else
       container.scrollTop = top;
   }

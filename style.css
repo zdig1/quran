@@ -541,7 +541,7 @@ body {
   overflow-x: hidden !important;
   overflow-y: auto !important;
   display: block !important;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   transition: all 0.3s ease;
 }
 
@@ -1244,11 +1244,13 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   min-height: 0;
 }
 
 .search-wrapper {
   position: relative;
+  flex-shrink: 0;
   width: 100%;
 }
 
@@ -1296,6 +1298,7 @@ body {
 
 .search-stats {
   padding: var(--space-sm) 0;
+  flex-shrink: 0;
 }
 
 .search-stats-content {

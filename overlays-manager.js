@@ -1014,14 +1014,24 @@ class OverlayManager {
   }
 
   async exportBookmarks() {
-    const data = window.quranApp.exportUserData();
+    const app = window.quranApp;
+    const hasBookmarks = app.bookmarks?.length > 0;
+    const hasPinnedSurahs = app.pinnedSurahs?.length > 0;
+    const hasPinnedReciters = Object.keys(window.RIWAYAT_CONFIG || {}).some(r => {
+      const s = app.getPreference(`pinnedReciters_${r}`);
+      return s && JSON.parse(s).length > 0;
+    });
+    if (!hasBookmarks && !hasPinnedSurahs && !hasPinnedReciters) {
+      app.showToast("⚠️ لا توجد بيانات للتصدير");
+      return;
+    }
+    const data = app.exportUserData();
     const date = new Date().toISOString().slice(2, 10);
     const fileName = `quran_backup_${date}`;
     const bytes = new TextEncoder().encode(data);
     let binary = "";
     bytes.forEach((b) => (binary += String.fromCharCode(b)));
     const base64 = btoa(binary);
-
     if (typeof cordova !== "undefined" && window.plugins?.socialsharing) {
       window.plugins.socialsharing.shareWithOptions(
         {
@@ -1030,8 +1040,8 @@ class OverlayManager {
           files: ["data:application/json;base64," + base64],
           chooserTitle: "حفظ أو مشاركة الملف",
         },
-        () => window.quranApp.showToast("✅ تم التصدير"),
-        (err) => window.quranApp.showToast("❌ " + err)
+        () => app.showToast("✅ تم التصدير"),
+        (err) => app.showToast("❌ " + err)
       );
     } else {
       const a = document.createElement("a");
@@ -1040,7 +1050,7 @@ class OverlayManager {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      window.quranApp.showToast("✅ تم التصدير");
+      app.showToast("✅ تم التصدير");
     }
   }
 
@@ -1322,7 +1332,6 @@ class OverlayManager {
             <button type="button" class="btn tafsir-font-btn" id="tafsirFontReset" aria-label="إعادة الحجم الافتراضي">⟲</button>
             <button type="button" class="btn tafsir-font-btn" id="tafsirFontIncrease" aria-label="تكبير حجم النص">+</button>
         </div>
-          <div id="tafsirContent" class="overlay-body tafsir-content-container">                </div>
     `;
   }
 
@@ -1336,11 +1345,11 @@ class OverlayManager {
     const overlay = this.lazyLoadOverlay("tafsir");
     if (!overlay?.content) return;
 
-    // Injecter le HTML si nécessaire
-    if (!overlay.content.innerHTML) {
-      overlay.content.innerHTML = this.renderTafsirUI();
+    // Injecter les contrôles dans leur container fixe (hors scroll)
+    if (!overlay.contentGenerated) {
+      const controlsEl = document.getElementById("tafsirControlsContainer");
+      if (controlsEl) controlsEl.innerHTML = this.renderTafsirUI();
       overlay.contentGenerated = true;
-      // ✅ Réinitialiser CustomSelect
       if (window.CustomSelect) {
         window.CustomSelect.reset();
         window.CustomSelect.initToggle();
@@ -1354,7 +1363,7 @@ class OverlayManager {
     const suraSelect = document.getElementById("suraSelect");
     const ayaSelect = document.getElementById("ayaSelect");
     const pageSelect = document.getElementById("pageSelect");
-    const tafsirContent = document.getElementById("tafsirContent");
+    const tafsirContent = document.getElementById("tafsirContentContainer");
 
     if (suraSelect && ayaSelect && pageSelect && tafsirContent) {
       await window.tafsirManager.initTafsirUI(

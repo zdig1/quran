@@ -1373,7 +1373,7 @@ class QuranReader {
         const first = this.spacer.querySelector(".aya-highlight");
         if (first) {
           const top = parseFloat(first.style.top);
-          this.elements.pageScroll.scrollTo({ top: top - 40, behavior: "smooth" });
+          this.elements.pageScroll.scrollTo({ top: top - 40, behavior: "auto" });
         }
       }
     });
