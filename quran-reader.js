@@ -1,4 +1,14 @@
 // ============================================
+// CONFIGURATION RIWAYA
+// ============================================
+
+const RIWAYA_CONFIG = {
+  hafs: { WEBP_TOP: 50, WEBP_BOT: 50, SHRINK: 5, LEFT_OFFSET: -40, SCROLL_OFFSET: 8 },
+  warsh: { WEBP_TOP: 5, WEBP_BOT: 45, SHRINK: 5, LEFT_OFFSET: +20, SCROLL_OFFSET: 10 },
+  qaloon: { WEBP_TOP: 50, WEBP_BOT: 50, SHRINK: 5, LEFT_OFFSET: -40, SCROLL_OFFSET: 8 },
+};
+
+// ============================================
 // LRU CACHE
 // ============================================
 
@@ -1314,7 +1324,8 @@ class QuranReader {
     }
 
     const page = this.currentPage;
-    const WEBP_TOP = 50, WEBP_BOT = 50, SHRINK = 5;
+    const rc = RIWAYA_CONFIG[window.ACTIVE_RIWAYA] ?? RIWAYA_CONFIG.hafs;
+    const { WEBP_TOP, WEBP_BOT, SHRINK } = rc;
 
     const pageCoords = (window.quranAudioPlayer?.ayaCoords || []).filter(r => r.p === page);
     const lineMap = {};
@@ -1335,7 +1346,7 @@ class QuranReader {
       imgH = this.pageHeight;
       if (!imgW || !imgH) return;
       const pageOffsetTop = (page - 1) * imgH;
-      getLeft = (sx, r) => (r.x1 - 40) * sx;
+      getLeft = (sx, r) => (r.x1 + rc.LEFT_OFFSET) * sx;
       getTop = (sy, realY1, yCorrect) => pageOffsetTop + realY1 * sy + yCorrect + SHRINK * sy;
       appendTo = this.spacer;
     } else {
@@ -1348,7 +1359,7 @@ class QuranReader {
       imgH = img.offsetHeight || Math.round(img.naturalWidth * 1890 / 1260);
       if (!imgW || !imgH) return;
       const offX = img.offsetLeft, offY = img.offsetTop;
-      getLeft = (sx, r) => offX + (r.x1 - 40) * sx;
+      getLeft = (sx, r) => offX + (r.x1 + rc.LEFT_OFFSET) * sx;
       getTop = (sy, realY1, yCorrect) => offY + realY1 * sy + yCorrect + SHRINK * sy;
       appendTo = wrapper;
     }
@@ -1369,14 +1380,17 @@ class QuranReader {
       div.style.top = getTop(sy, realY1, yCorrect) + "px";
       div.style.height = (realY2 - realY1) * sy - SHRINK * 2 * sy + "px";
       appendTo.appendChild(div);
-      if (this.readingMode === "scroll") {
-        const first = this.spacer.querySelector(".aya-highlight");
-        if (first) {
-          const top = parseFloat(first.style.top);
-          this.elements.pageScroll.scrollTo({ top: top - 40, behavior: "auto" });
-        }
-      }
     });
+
+    // Auto-scroll vers l'ayah (scroll mode uniquement)
+    if (this.readingMode === "scroll") {
+      const first = this.spacer.querySelector(".aya-highlight");
+      if (first) {
+        const container = this.elements.pageScroll;
+        const offset = container.getBoundingClientRect().top + rc.SCROLL_OFFSET;
+        container.scrollTo({ top: parseFloat(first.style.top) - offset, behavior: "auto" });
+      }
+    }
   }
 
   clearHighlight() {

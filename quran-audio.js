@@ -1,10 +1,6 @@
 // ============================================
-// CONFIGURATION
+// CONFIGURATION RIWAYA
 // ============================================
-
-const ACTIVE_RIWAYA = "hafs";
-// const ACTIVE_RIWAYA = "warsh";
-// const ACTIVE_RIWAYA = "qaloun";
 
 const EVERYAYAH_BASE = "https://everyayah.com/data/";
 const AYA_COORDS_PATH = "./data/ayapage.json";
@@ -62,12 +58,12 @@ const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
   warsh: {
     label: "ورش",
     reciters: [
-      { id: "warsh/warsh_Abdul_Basit_128kbps", name: "عبد الباسط — ورش" },
       { id: "warsh/warsh_ibrahim_aldosary_128kbps", name: "إبراهيم الدوسري" },
+      { id: "warsh/warsh_Abdul_Basit_128kbps", name: "عبد الباسط عبد الصمد — ورش" },
       { id: "warsh/warsh_yassin_al_jazaery_64kbps", name: "ياسين الجزائري" },
     ],
   },
-  qaloun: {
+  qaloon: {
     label: "قالون",
     reciters: [
       { id: "qaloon/Ayman_Sowaid_64kbps", name: "أيمن سويد — قالون" },
@@ -81,7 +77,7 @@ const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
 
 class QuranAudioPlayer {
   constructor() {
-    this.currentRiwaya = ACTIVE_RIWAYA;
+    this.currentRiwaya = window.ACTIVE_RIWAYA;
     this.currentReciter = null;
 
     this.currentSurah = null;
@@ -197,26 +193,6 @@ class QuranAudioPlayer {
 
     waitForImage(() => {
       reader.highlightAya(this.currentSurah, this.currentAyah, rects);
-      this._autoScrollToHighlight(rects, ayaPage);
-    });
-  }
-
-  _autoScrollToHighlight(rects, ayaPage) {
-    const reader = window.quranReader;
-    if (reader?.readingMode !== "scroll") return;
-
-    const container = reader.elements?.pageScroll;
-    const pageHeight = reader.pageHeight ?? 0;
-    if (!container || !pageHeight) return;
-
-    const sy = pageHeight / 1890;
-    const ayaY1 = rects[0]?.y1 ?? 0;
-    const ayaTop = (ayaPage - 1) * pageHeight + ayaY1 * sy;
-    const offset = container.getBoundingClientRect().top + 8;
-
-    container.scrollTo({
-      top: ayaTop - offset,
-      behavior: "auto"
     });
   }
 
@@ -224,6 +200,26 @@ class QuranAudioPlayer {
     this._autoNavigate = true;
     this._applyHighlight();
     this._autoNavigate = false;
+  }
+
+  // Bloc partagé après navigation manuelle (sans lecture)
+  _afterNavigate() {
+    this.isStopped = false;
+    this._updateCurrentDisplay();
+    this._ensureHighlight();
+    this._showMiniBar();
+    this._updateUI();
+  }
+
+  // Centralise le seek via progress bar (overlay + miniBar)
+  _onProgressInput(e) {
+    const dur = this.audioElement.duration;
+    if (dur) this.audioElement.currentTime = (e.target.value / 100) * dur;
+  }
+
+  // Centralise l'erreur réseau
+  _showOfflineError() {
+    this._showStatus("❌ لا يوجد اتصال بالإنترنت", true);
   }
 
   // ============================================
@@ -241,8 +237,8 @@ class QuranAudioPlayer {
     this._setupPinReciterButton();
     this._populatePageSelect();
     this._populateSurahSelect();
-    this._populateReciterSelect(ACTIVE_RIWAYA);
-    this._selectReciter(localStorage.getItem(`quran_reciter_${ACTIVE_RIWAYA}`) || null, false);
+    this._populateReciterSelect(window.ACTIVE_RIWAYA);
+    this._selectReciter(localStorage.getItem(`quran_reciter_${window.ACTIVE_RIWAYA}`) || null, false);
     this._setupAudioEvents();
     this._setupOverlayEvents();
     this._setupMiniBarEvents();
@@ -622,7 +618,7 @@ class QuranAudioPlayer {
       );
     } else {
       if (!navigator.onLine) {
-        this._showStatus("❌ لا يوجد اتصال بالإنترنت", true);
+        this._showOfflineError();
         return;
       }
       if (this.audioElement.src !== url) {
@@ -670,7 +666,7 @@ class QuranAudioPlayer {
           }
         })
         .catch(() => {
-          this._showStatus("❌ لا يوجد اتصال بالإنترنت", true);
+          this._showOfflineError();
           this.stop();
         });
     } else {
@@ -767,25 +763,11 @@ class QuranAudioPlayer {
     if (surah) this.totalAyahs = surah.verses_count;
     if (this.currentAyah < this.totalAyahs) {
       this.currentAyah++;
-      if (this.isPlaying) {
-        this.play();
-      } else {
-        this.isStopped = false;
-        this._updateCurrentDisplay();
-        this._ensureHighlight();
-        this._showMiniBar();
-        this._updateUI();
-      }
+      if (this.isPlaying) this.play();
+      else this._afterNavigate();
     } else {
-      if (this.isPlaying) {
-        this._onEndOfSurah();
-      } else {
-        this.isStopped = false;
-        this._updateCurrentDisplay();
-        this._ensureHighlight();
-        this._showMiniBar();
-        this._updateUI();
-      }
+      if (this.isPlaying) this._onEndOfSurah();
+      else this._afterNavigate();
     }
   }
 
@@ -797,30 +779,16 @@ class QuranAudioPlayer {
       if (window.CustomSelect) {
         window.CustomSelect.setValue('ayaSelectAudio', 'ayaSelectAudioList', this.currentAyah);
       }
-      if (this.isPlaying) {
-        this.play();
-      } else {
-        this.isStopped = false;
-        this._updateCurrentDisplay();
-        this._ensureHighlight();
-        this._showMiniBar();
-        this._updateUI();
-      }
+      if (this.isPlaying) this.play();
+      else this._afterNavigate();
     } else {
       if (this.currentSurah > 1) {
         const prevSurah = this.currentSurah - 1;
         const prevSurahData = this.surahs.find((s) => s.s_id === prevSurah);
         if (prevSurahData) {
           this._setSurah(prevSurah, prevSurahData.verses_count);
-          if (this.isPlaying) {
-            this.play();
-          } else {
-            this.isStopped = false;
-            this._updateCurrentDisplay();
-            this._ensureHighlight();
-            this._showMiniBar();
-            this._updateUI();
-          }
+          if (this.isPlaying) this.play();
+          else this._afterNavigate();
         }
       }
     }
@@ -829,27 +797,15 @@ class QuranAudioPlayer {
   nextSurah() {
     if (!this.currentSurah || this.currentSurah >= 114) return;
     this._setSurah(this.currentSurah + 1, 1);
-    if (this.isPlaying) {
-      this.play();
-    } else if (!this.isStopped) {
-      this._updateCurrentDisplay();
-      this._ensureHighlight();
-      this._showMiniBar();
-      this._updateUI();
-    }
+    if (this.isPlaying) this.play();
+    else if (!this.isStopped) this._afterNavigate();
   }
 
   prevSurah() {
     if (!this.currentSurah || this.currentSurah <= 1) return;
     this._setSurah(this.currentSurah - 1, 1);
-    if (this.isPlaying) {
-      this.play();
-    } else if (!this.isStopped) {
-      this._updateCurrentDisplay();
-      this._ensureHighlight();
-      this._showMiniBar();
-      this._updateUI();
-    }
+    if (this.isPlaying) this.play();
+    else if (!this.isStopped) this._afterNavigate();
   }
 
   _onEndOfSurah() {
@@ -980,12 +936,7 @@ class QuranAudioPlayer {
   _showMiniBar() {
     this.miniBar?.classList.remove("hidden");
     this.fabBtn?.classList.add("hidden");
-    window.quranReader?._adjustFooterHeight();
-    setTimeout(() => {
-      if (window.quranReader && typeof window.quranReader._adjustFooterHeight === 'function') {
-        window.quranReader._adjustFooterHeight();
-      }
-    }, 50);
+    setTimeout(() => window.quranReader?._adjustFooterHeight(), 50);
   }
 
   _hideMiniBar(showFab = true) {
@@ -1075,9 +1026,7 @@ class QuranAudioPlayer {
         this.audioElement.play().catch(() => this.nextAyah());
 
         this._updateCurrentDisplay();
-        this._autoNavigate = true;
-        this._applyHighlight();
-        this._autoNavigate = false;
+        this._ensureHighlight();
         this._preloadNextAyah();
       } else {
         this.nextAyah();
@@ -1101,7 +1050,7 @@ class QuranAudioPlayer {
     this._boundListeners.audio.error = (e) => {
       const code = e.target?.error?.code;
       if (!navigator.onLine || code === 2) {
-        this._showStatus("❌ لا يوجد اتصال بالإنترنت", true);
+        this._showOfflineError();
         this.stop();
         window.quranApp?.showToast("✈️ تحقق من الاتصال بالإنترنت");
         return;
@@ -1146,10 +1095,7 @@ class QuranAudioPlayer {
     this._boundListeners.overlay.nextSurahClick = () => this.nextSurah();
     this._boundListeners.overlay.prevAyahClick = () => this.prevAyah();
     this._boundListeners.overlay.nextAyahClick = () => this.nextAyah();
-    this._boundListeners.overlay.progressInput = (e) => {
-      const dur = this.audioElement.duration;
-      if (dur) this.audioElement.currentTime = (e.target.value / 100) * dur;
-    };
+    this._boundListeners.overlay.progressInput = (e) => this._onProgressInput(e);
     this._boundListeners.overlay.repeatClick = () => this.cycleRepeat();
     this._boundListeners.overlay.speedClick = () => this.cycleSpeed();
 
@@ -1173,10 +1119,7 @@ class QuranAudioPlayer {
     this._boundListeners.miniBar.nextAyahClick = () => this.nextAyah();
     this._boundListeners.miniBar.optionsClick = () => window.overlayManager?.showAudio();
     this._boundListeners.miniBar.hideClick = () => this._hideMiniBar(true);
-    this._boundListeners.miniBar.progressInput = (e) => {
-      const dur = this.audioElement.duration;
-      if (dur) this.audioElement.currentTime = (e.target.value / 100) * dur;
-    };
+    this._boundListeners.miniBar.progressInput = (e) => this._onProgressInput(e);
     this._boundListeners.miniBar.speedClick = () => this.cycleSpeed();
     this._boundListeners.miniBar.repeatClick = () => this.cycleRepeat();
 
