@@ -1247,10 +1247,16 @@ class QuranReader {
       type: "quran:overlayClosed",
       handler: onOverlayClosed,
     });
-    window.addEventListener('quran:buttonsVisibilityChanged', () => {
+    const onButtonsVisibilityChanged = () => {
       if (this.readingMode === 'book') {
         this._adjustFooterHeight();
       }
+    };
+    window.addEventListener('quran:buttonsVisibilityChanged', onButtonsVisibilityChanged);
+    this.eventListeners.push({
+      element: window,
+      type: 'quran:buttonsVisibilityChanged',
+      handler: onButtonsVisibilityChanged,
     });
   }
 
