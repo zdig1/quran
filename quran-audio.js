@@ -706,6 +706,7 @@ class QuranAudioPlayer {
     this._releaseWakeLock();
     this._preloadTriggered = false;
     this._hideMiniBar(false);
+    this.setCurrentSurahFromPage();
   }
 
   togglePlay() {
@@ -1204,6 +1205,12 @@ class QuranAudioPlayer {
     window.addEventListener("online", this._boundListeners.window.online);
     window.addEventListener("offline", this._boundListeners.window.offline);
     this._updateOnlineStatus();
+    this._boundListeners.window.pageChanged = (e) => {
+      if (this.isStopped && e.detail?.page) {
+        this.setCurrentSurahFromPage();
+      }
+    };
+    window.addEventListener("quran:pageChanged", this._boundListeners.window.pageChanged);
   }
 
   _updateOnlineStatus() {
@@ -1363,7 +1370,7 @@ class QuranAudioPlayer {
 
     window.removeEventListener("online", this._boundListeners.window.online);
     window.removeEventListener("offline", this._boundListeners.window.offline);
-
+    window.removeEventListener("quran:pageChanged", this._boundListeners.window.pageChanged);
     if (this.miniBar) this.miniBar.remove();
     if (this.fabBtn) this.fabBtn.remove();
   }
