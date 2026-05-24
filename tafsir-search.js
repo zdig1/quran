@@ -50,16 +50,12 @@ class TafsirSearchManager {
     this.stats = { totalAyat: 0, totalSuras: 0, loadedPages: 0 };
     this.updatingDropdowns = false;
 
-    this._suraChangeHandler = null;
-    this._pageChangeHandler = null;
-    this._ayaChangeHandler = null;
-
-    this.fontSizeObserver = null;
-    this.themeChangeHandler = null;
     this.lastResults = "";
-
     this.inputElement = null;
     this.resultsElement = null;
+
+    this.searchIndex = null;
+    this.ayatById = null;
   }
 
   // ============================================
@@ -107,12 +103,15 @@ class TafsirSearchManager {
       const response = await fetch(this.config.dataUrl);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       this.data = await response.json();
+      this.searchIndex = null;
+      this.ayatById = null;
       this.initializeDataStructures();
       window.dispatchEvent(
         new CustomEvent("tafsir:loaded", {
           detail: { ayatCount: this.data.length },
-        }),
+        })
       );
+
       return this.data;
     } catch (err) {
       console.error("Erreur de chargement des données Tafsir:", err);
@@ -244,56 +243,120 @@ class TafsirSearchManager {
   // RECHERCHE
   // ============================================
 
-  searchWithStats(query) {
-    // Si la base de données n'est pas chargée, retour vide
-    if (!this.data) return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
+  // ============================================
+  // INDEX INVERSÉ POUR LA RECHERCHE
+  // ============================================
 
-    // Vérifier si la requête est vide (après suppression des espaces inutiles)
-    // Mais on conserve les espaces saisis pour la recherche elle-même.
-    if (!query || query.trim() === '')
-      return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
+  _buildSearchIndex() {
+    if (this.searchIndex) return;
 
-    // Normalisation et minuscule SANS supprimer les espaces en début/fin
-    const normalizedQuery = this.normalizeArabic(query.toLowerCase());
-
-    // Clé de cache qui reflète la chaîne exacte (avec espaces)
-    const cacheKey = `alif_exact_${normalizedQuery}`;
-    if (this.searchCache.has(cacheKey)) return this.searchCache.get(cacheKey);
-
-    const results = [];
-    const surasFound = new Set();
-    let totalCount = 0;
+    this.searchIndex = new Map(); // mot -> Set d'IDs d'ayat
+    this.ayatById = new Map();    // ID -> aya (pour récupération rapide)
 
     for (const aya of this.data) {
+      const id = aya[this.F.id];
       const text = aya[this.F.text];
       if (!text) continue;
-      const normalizedText = this.normalizeArabic(text.toLowerCase());
-      if (!normalizedText.includes(normalizedQuery)) continue;
 
-      totalCount++;
-      surasFound.add(aya[this.F.sura_n]);
-      if (results.length < 1000) {
-        results.push({
-          sura_n: aya[this.F.sura_n],
-          sura: aya[this.F.sura],
-          aya_n: aya[this.F.aya_n],
-          text: aya[this.F.text],
-          page: aya[this.F.page],
-          id: aya[this.F.id],
-        });
+      this.ayatById.set(id, aya);
+
+      // Nettoyer et tokenizer le texte
+      const normalized = this.normalizeArabic(text.toLowerCase());
+      // Split sur les espaces et la ponctuation courante
+      const words = normalized.split(/[\s،;:؟!()\-"'\s]+/).filter(w => w.length > 1);
+
+      const uniqueWords = new Set(words);
+      for (const word of uniqueWords) {
+        if (!this.searchIndex.has(word)) {
+          this.searchIndex.set(word, new Set());
+        }
+        this.searchIndex.get(word).add(id);
       }
+    }
+  }
+
+  searchWithStatsOptimized(query) {
+    if (!this.data) return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
+    if (!query || query.trim() === '') return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
+
+    // Construire l'index si nécessaire
+    this._buildSearchIndex();
+
+    // Normaliser la requête
+    const normalizedQuery = this.normalizeArabic(query.toLowerCase());
+
+    // ✅ Vérifier le cache d'abord
+    const cacheKey = `inv_${normalizedQuery}`;
+    if (this.searchCache.has(cacheKey)) {
+      return this.searchCache.get(cacheKey);
+    }
+
+    const queryWords = normalizedQuery.split(/[\s،;:؟!()\-"'\s]+/).filter(w => w.length > 1);
+
+    if (queryWords.length === 0) {
+      return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
+    }
+
+    // Récupérer les IDs pour chaque mot et faire l'intersection
+    let resultIds = null;
+    for (const word of queryWords) {
+      const ids = this.searchIndex.get(word);
+      if (!ids || ids.size === 0) {
+        return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
+      }
+      if (resultIds === null) {
+        resultIds = new Set(ids);
+      } else {
+        for (const id of resultIds) {
+          if (!ids.has(id)) resultIds.delete(id);
+        }
+      }
+      if (resultIds.size === 0) break;
+    }
+
+    if (!resultIds || resultIds.size === 0) {
+      return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
+    }
+
+    // Récupérer les résultats
+    const results = [];
+    const surasFound = new Set();
+
+    for (const id of resultIds) {
+      const aya = this.ayatById.get(id);
+      if (!aya) continue;
+
+      surasFound.add(aya[this.F.sura_n]);
+      results.push({
+        sura_n: aya[this.F.sura_n],
+        sura: aya[this.F.sura],
+        aya_n: aya[this.F.aya_n],
+        text: aya[this.F.text],
+        page: aya[this.F.page],
+        id: id,
+      });
+
+      if (results.length >= 500) break;
     }
 
     const cached = {
-      results: this._sortByQuranOrder(results).slice(0, 500),
-      stats: { resultsCount: totalCount, totalSuras: surasFound.size },
+      results: this._sortByQuranOrder(results),
+      stats: { resultsCount: resultIds.size, totalSuras: surasFound.size }
     };
 
+    // ✅ Mettre en cache
     if (this.searchCache.size >= this.config.searchCacheSize) {
       this.searchCache.delete(this.searchCache.keys().next().value);
     }
     this.searchCache.set(cacheKey, cached);
+
     return cached;
+  }
+
+  // Remplacer l'ancienne méthode searchWithStats par la version optimisée
+  // Ou garder les deux pour compatibilité
+  searchWithStats(query) {
+    return this.searchWithStatsOptimized(query);
   }
 
   // ============================================
@@ -1027,28 +1090,10 @@ class TafsirSearchManager {
   // CONTRÔLES POLICE ET THÈME TAFSIR
   // ============================================
 
-  _applyFontSize(container, size) {
-    container.style.fontSize = size + "px";
-    container
-      .querySelectorAll(
-        ".item-search-text, .tafsir-explanation, .sura-name-kufi",
-      )
-      .forEach((el) => {
-        el.style.fontSize = size + "px";
-      });
-  }
-
   _updateThemeToggleBtn(btn) {
     const isNight = document.body.classList.contains("night-mode");
     btn.textContent = isNight ? "☀️" : "🌙";
     btn.setAttribute("aria-label", isNight ? "الوضع النهاري" : "الوضع الليلي");
-  }
-
-  _setupFontSizeObserver(container, getFontSize) {
-    return {
-      disconnect: () => { },
-      observe: () => { },
-    };
   }
 
   initTafsirFontControls() {
@@ -1109,6 +1154,7 @@ class TafsirSearchManager {
 
     waitForElements();
   }
+
 
 }
 

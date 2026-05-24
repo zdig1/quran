@@ -210,21 +210,14 @@ class QuranAudioPlayer {
     if (!container || !pageHeight) return;
 
     const sy = pageHeight / 1890;
-    const headerH = 3.75 * 16;
-    const marginBottom = 80;
     const ayaY1 = rects[0]?.y1 ?? 0;
-    const ayaY2 = rects[rects.length - 1]?.y2 ?? ayaY1;
     const ayaTop = (ayaPage - 1) * pageHeight + ayaY1 * sy;
-    const ayaBottom = (ayaPage - 1) * pageHeight + ayaY2 * sy;
-    const viewTop = container.scrollTop + headerH;
-    const viewBottom = container.scrollTop + container.clientHeight - marginBottom;
+    const offset = container.getBoundingClientRect().top + 8;
 
-    if (ayaTop < viewTop || ayaBottom > viewBottom) {
-      container.scrollTo({
-        top: ayaTop - headerH - 20,
-        behavior: "smooth"
-      });
-    }
+    container.scrollTo({
+      top: ayaTop - offset,
+      behavior: "smooth"
+    });
   }
 
   _ensureHighlight() {
@@ -460,23 +453,6 @@ class QuranAudioPlayer {
 
   isReciterPinned(reciterId) {
     return this.getPinnedReciters().includes(reciterId);
-  }
-
-  _updateReciterPinButton() {
-    const pinBtn = document.getElementById('pinReciterBtn');
-    if (!pinBtn || !this.currentReciter) return;
-    const isPinned = this.isReciterPinned(this.currentReciter.id);
-    pinBtn.textContent = isPinned ? '⭐' : '📌';
-    pinBtn.title = isPinned ? 'إزالة من المفضلين' : 'إضافة إلى المفضلين';
-    pinBtn.style.color = isPinned ? 'var(--color-gold)' : '';
-    const btn = document.getElementById('reciterSelect');
-    if (btn) {
-      const valEl = btn.querySelector('.custom-select-val');
-      if (valEl && this.currentReciter) {
-        const name = this.currentReciter.name;
-        valEl.textContent = isPinned ? `⭐ ${name}` : name;
-      }
-    }
   }
 
   _updateCurrentReciterName() { }
@@ -715,7 +691,6 @@ class QuranAudioPlayer {
     this.audioElement.pause();
     this.audioElement.volume = 1;
     this.audioElement.currentTime = 0;
-    this.audioElement.dataset.mp3qMode = "false";
     this._mp3qEndTime = null;
     this.isPlaying = false;
     this.isStopped = true;
@@ -794,14 +769,14 @@ class QuranAudioPlayer {
         this.play();
       } else {
         this.isStopped = false;
-      this._updateCurrentDisplay();
+        this._updateCurrentDisplay();
         this._ensureHighlight();
         this._showMiniBar();
         this._updateUI();
       }
     } else {
       if (this.isPlaying) {
-      this._onEndOfSurah();
+        this._onEndOfSurah();
       } else {
         this.isStopped = false;
         this._updateCurrentDisplay();

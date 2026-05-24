@@ -17,7 +17,6 @@ class QuranApp {
 
     this._toastTimeout = null;
     this._savePageTimeout = null;
-    this._beforeUnloadHandler = null;
     this._pageHideHandler = null;
     this._visibilityChangeHandler = null;
     this._onlineHandler = null;

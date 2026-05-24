@@ -559,7 +559,9 @@ class QuranReader {
   scrollToPage(page) {
     const container = this.elements.pageScroll;
     if (!container || this.readingMode !== "scroll") return;
-    container.scrollTo({ top: (page - 1) * this.pageHeight, behavior: "auto" });
+    if (!window.quranAudioPlayer || window.quranAudioPlayer.isStopped) {
+      container.scrollTo({ top: (page - 1) * this.pageHeight, behavior: "auto" });
+    }
   }
 
   preloadAdjacentPages(page) {
@@ -1362,6 +1364,13 @@ class QuranReader {
       div.style.top = getTop(sy, realY1, yCorrect) + "px";
       div.style.height = (realY2 - realY1) * sy - SHRINK * 2 * sy + "px";
       appendTo.appendChild(div);
+      if (this.readingMode === "scroll") {
+        const first = this.spacer.querySelector(".aya-highlight");
+        if (first) {
+          const top = parseFloat(first.style.top);
+          this.elements.pageScroll.scrollTo({ top: top - 40, behavior: "smooth" });
+        }
+      }
     });
   }
 
