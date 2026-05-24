@@ -551,7 +551,10 @@ class QuranReader {
     const img = this.elements.pageScroll
       .querySelector(`.page-wrapper[data-page="${this.currentPage}"] img`);
     if (!img) return;
-    const apply = () => this.highlightAya(player.currentSurah, player.currentAyah, rects);
+    const apply = () => {
+      if (player.isStopped) return;
+      this.highlightAya(player.currentSurah, player.currentAyah, rects);
+    };
     if (img.complete && img.naturalWidth > 0) apply();
     else img.addEventListener("load", apply, { once: true });
   }
@@ -1094,12 +1097,8 @@ class QuranReader {
               }
               if (this.readingMode === "book") this._adjustFooterHeight();
 
-              // FIX: Réappliquer le surlignage après un délais plus long pour s'assurer que l'image est chargée
-              if (window.quranAudioPlayer?.isPlaying || window.quranAudioPlayer?.currentAyah) {
-                // Attendre que l'image soit complètement chargée et affichée
-                setTimeout(() => {
-                  this.reapplyAudioHighlight();
-                }, 100);
+              if (!window.quranAudioPlayer?.isStopped && (window.quranAudioPlayer?.isPlaying || window.quranAudioPlayer?.currentAyah)) {
+                setTimeout(() => { this._reapplyHighlightIfNeeded(); }, 100);
               }
               this.isTransitioning = false;
             },
@@ -1378,36 +1377,6 @@ class QuranReader {
         }
       }
     });
-  }
-
-  reapplyAudioHighlight() {
-    const page = this.currentPage;
-    setTimeout(() => {
-      const wrapper = this.elements.pageScroll?.querySelector(`.page-wrapper[data-page="${page}"]`);
-      const img = wrapper?.querySelector("img");
-
-      const applyHighlight = () => {
-        if (window.quranAudioPlayer && window.quranAudioPlayer.currentSurah && window.quranAudioPlayer.currentAyah) {
-          if (typeof window.quranAudioPlayer._applyHighlight === 'function') {
-            window.quranAudioPlayer._applyHighlight();
-          } else if (typeof window.quranAudioPlayer._ensureHighlight === 'function') {
-            window.quranAudioPlayer._ensureHighlight();
-          }
-        }
-      };
-
-      if (!img) {
-        // Réessayer
-        setTimeout(() => this.reapplyAudioHighlight(), 100);
-        return;
-      }
-
-      if (img.complete && img.naturalWidth > 0) {
-        applyHighlight();
-      } else {
-        img.addEventListener("load", applyHighlight, { once: true });
-      }
-    }, 50);
   }
 
   clearHighlight() {

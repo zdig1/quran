@@ -700,6 +700,7 @@ class QuranAudioPlayer {
       this._nextAudioBuffer.currentTime = 0;
     }
     window.quranReader?.clearHighlight();
+    this._pendingHighlight = null;
     this._updateUI();
     this._retrying = false;
     this._showStatus("", false);

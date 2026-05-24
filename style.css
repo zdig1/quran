@@ -108,7 +108,7 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-family: "Segoe UI", Tahoma, sans-serif;
   background: var(--bg);
   color: var(--text);
 }
@@ -137,8 +137,8 @@ body {
 }
 
 @font-face {
-  font-family: 'MyNotoKufi';
-  src: url('./media/NotoKufiArabic-Bold.woff2') format('woff2');
+  font-family: "MyNotoKufi";
+  src: url("./media/NotoKufiArabic-Bold.woff2") format("woff2");
   font-weight: bold;
   font-display: swap;
 }
@@ -167,7 +167,9 @@ body {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   height: var(--footer-height);
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
   transform: translateZ(0);
 }
 
@@ -388,7 +390,9 @@ body {
   border: 1px solid var(--border) !important;
   opacity: 0;
   transform: scale(0.7);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
   pointer-events: none;
 }
 
@@ -567,7 +571,8 @@ body {
   display: none;
   align-items: flex-start;
   justify-content: center;
-  padding: 15vh var(--overlay-padding-x) var(--overlay-padding-x) var(--overlay-padding-x);
+  padding: 15vh var(--overlay-padding-x) var(--overlay-padding-x)
+    var(--overlay-padding-x);
 }
 
 .overlay {
@@ -618,7 +623,7 @@ body {
 }
 
 .overlay-header h2 {
-  font-family: 'MyNotoKufi', sans-serif;
+  font-family: "MyNotoKufi", sans-serif;
   font-size: var(--text-lg);
   font-weight: 600;
   color: var(--text);
@@ -659,7 +664,7 @@ body {
   color: var(--menu-text);
   font-size: var(--text-lg);
   margin: 0;
-  font-family: 'MyNotoKufi', sans-serif;
+  font-family: "MyNotoKufi", sans-serif;
 }
 
 .menu-icon-svg {
@@ -675,7 +680,7 @@ body {
   flex: 1;
   text-align: right;
   font-size: var(--text-md);
-  font-family: 'MyNotoKufi', sans-serif;
+  font-family: "MyNotoKufi", sans-serif;
   padding-right: var(--space-md);
   white-space: nowrap;
   overflow: hidden;
@@ -994,7 +999,7 @@ body {
 .item-surah .surah-name {
   font-size: var(--text-lg);
   font-weight: 700;
-  font-family: 'MyNotoKufi';
+  font-family: "MyNotoKufi";
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
@@ -1096,10 +1101,9 @@ body {
 .surah-info-title {
   font-weight: bold;
   text-decoration: underline;
-  font-family: 'MyNotoKufi', sans-serif;
+  font-family: "MyNotoKufi", sans-serif;
   font-size: var(--text-lg);
   color: var(--color-gold);
-
 }
 
 /* ============================================
@@ -1107,9 +1111,13 @@ body {
    ============================================ */
 .item-juzhizb .juz-line2,
 .item-juzhizb .juz-line3 {
-  margin-right: calc(2.2rem + var(--space-md));
+  margin-right: calc(2rem + var(--space-md));
   width: auto;
   display: block;
+}
+
+.item-juzhizb .item-right {
+  gap: calc(var(--space-md) - 0.2rem);
 }
 
 .aya-text {
@@ -1118,7 +1126,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--color-red);
-  font-family: 'MyNotoKufi', sans-serif;
+  font-family: "MyNotoKufi", sans-serif;
   font-size: var(--text-sm);
   margin-bottom: 4px;
 }
@@ -1332,7 +1340,7 @@ body {
 }
 
 .item-search-text {
-  font-family: 'MyNotoKufi', sans-serif;
+  font-family: "MyNotoKufi", sans-serif;
   font-weight: bold;
   font-size: 14px;
   color: var(--search-text-color);
@@ -1399,7 +1407,7 @@ body {
 
 .tafsir-explanation {
   color: var(--text);
-  font-family: 'Segoe UI', sans-serif;
+  font-family: "Segoe UI", sans-serif;
   font-weight: normal;
   text-align: justify !important;
   text-align-last: right !important;
@@ -1445,7 +1453,7 @@ body {
 }
 
 .sura-name-kufi {
-  font-family: 'MyNotoKufi', sans-serif;
+  font-family: "MyNotoKufi", sans-serif;
   font-weight: bold;
   font-size: 1.5rem;
   color: var(--primary);
@@ -1795,7 +1803,9 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-default), transform 0.1s;
+  transition:
+    var(--transition-default),
+    transform 0.1s;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1831,7 +1841,9 @@ body {
   background: var(--mini-bar-bg);
   backdrop-filter: blur(8px);
   transform: translateY(0);
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   opacity: 1;
   visibility: visible;
@@ -1890,7 +1902,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s, opacity 0.2s;
+  transition:
+    transform 0.2s,
+    opacity 0.2s;
   opacity: 1;
   transform: scale(1);
 }
@@ -1983,7 +1997,9 @@ body {
 }
 
 #pinReciterBtn {
-  transition: transform 0.2s, color 0.2s;
+  transition:
+    transform 0.2s,
+    color 0.2s;
 }
 
 #pinReciterBtn:active {
