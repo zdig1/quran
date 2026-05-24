@@ -1123,7 +1123,7 @@ class OverlayManager {
   }
 
   // ============================================
-  // RENDER AUDIO UI (HTML statique)
+  // 5. RENDER AUDIO
   // ============================================
 
   renderAudioUI() {
@@ -1303,7 +1303,7 @@ class OverlayManager {
   }
 
   // ============================================
-  // RENDER TAFSIR UI (HTML statique)
+  // 7. TAFSIR OVERLAY
   // ============================================
 
   renderTafsirUI() {

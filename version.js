@@ -3,7 +3,7 @@
 
   const APP_ID = "quranreader";
   const APP_VERSION = "1.1.0";
-  const CHECK_DELAY_MS = 5000; // Délai après chargement (5 secondes)
+  const CHECK_DELAY_MS = 5000; 
   
   const escapeHtml = (t) => window.quranApp?.escapeHtml(t) ?? String(t || '');
 
