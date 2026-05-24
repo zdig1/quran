@@ -812,7 +812,7 @@ body {
    ÉLÉMENTS DE LISTE (harmonisés)
    ============================================ */
 .item-container {
-  padding: 0 var(--space-sm);
+  padding: 0 var(--space-sm) 0 0;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   display: flex;
@@ -950,7 +950,7 @@ body {
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: start;
-  padding: 0 var(--space-sm) !important;
+  padding: 0 0 0 var(--space-sm) !important;
 }
 
 .item-surah .pin-btn {
@@ -1127,11 +1127,6 @@ body {
   color: var(--text-light);
   font-size: var(--text-sm);
   display: block;
-}
-
-.item-search,
-.item-juzhizb {
-  padding: 0 var(--space-sm) !important;
 }
 
 /* ============================================

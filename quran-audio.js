@@ -790,10 +790,25 @@ class QuranAudioPlayer {
     if (surah) this.totalAyahs = surah.verses_count;
     if (this.currentAyah < this.totalAyahs) {
       this.currentAyah++;
+      if (this.isPlaying) {
+        this.play();
+      } else {
+        this.isStopped = false;
       this._updateCurrentDisplay();
-      if (this.isPlaying) this.play(); else { this._updateCurrentDisplay(); this._ensureHighlight(); }
+        this._ensureHighlight();
+        this._showMiniBar();
+        this._updateUI();
+      }
     } else {
+      if (this.isPlaying) {
       this._onEndOfSurah();
+      } else {
+        this.isStopped = false;
+        this._updateCurrentDisplay();
+        this._ensureHighlight();
+        this._showMiniBar();
+        this._updateUI();
+      }
     }
   }
 
@@ -805,14 +820,30 @@ class QuranAudioPlayer {
       if (window.CustomSelect) {
         window.CustomSelect.setValue('ayaSelectAudio', 'ayaSelectAudioList', this.currentAyah);
       }
-      if (this.isPlaying) this.play(); else { this._updateCurrentDisplay(); this._ensureHighlight(); }
+      if (this.isPlaying) {
+        this.play();
+      } else {
+        this.isStopped = false;
+        this._updateCurrentDisplay();
+        this._ensureHighlight();
+        this._showMiniBar();
+        this._updateUI();
+      }
     } else {
       if (this.currentSurah > 1) {
         const prevSurah = this.currentSurah - 1;
         const prevSurahData = this.surahs.find((s) => s.s_id === prevSurah);
         if (prevSurahData) {
           this._setSurah(prevSurah, prevSurahData.verses_count);
-          if (this.isPlaying) this.play(); else { this._updateCurrentDisplay(); this._ensureHighlight(); }
+          if (this.isPlaying) {
+            this.play();
+          } else {
+            this.isStopped = false;
+            this._updateCurrentDisplay();
+            this._ensureHighlight();
+            this._showMiniBar();
+            this._updateUI();
+          }
         }
       }
     }
@@ -821,13 +852,27 @@ class QuranAudioPlayer {
   nextSurah() {
     if (!this.currentSurah || this.currentSurah >= 114) return;
     this._setSurah(this.currentSurah + 1, 1);
-    if (this.isPlaying) this.play(); else if (!this.isStopped) { this._updateCurrentDisplay(); this._ensureHighlight(); }
+    if (this.isPlaying) {
+      this.play();
+    } else if (!this.isStopped) {
+      this._updateCurrentDisplay();
+      this._ensureHighlight();
+      this._showMiniBar();
+      this._updateUI();
+    }
   }
 
   prevSurah() {
     if (!this.currentSurah || this.currentSurah <= 1) return;
     this._setSurah(this.currentSurah - 1, 1);
-    if (this.isPlaying) this.play(); else if (!this.isStopped) { this._updateCurrentDisplay(); this._ensureHighlight(); }
+    if (this.isPlaying) {
+      this.play();
+    } else if (!this.isStopped) {
+      this._updateCurrentDisplay();
+      this._ensureHighlight();
+      this._showMiniBar();
+      this._updateUI();
+    }
   }
 
   _onEndOfSurah() {

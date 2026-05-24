@@ -541,8 +541,7 @@ class QuranReader {
 
   _reapplyHighlightIfNeeded() {
     const player = window.quranAudioPlayer;
-    if (!player?.currentSurah || !player?.ayaCoordsLoaded) return;
-    const rects = player._getAyaRects(player.currentSurah, player.currentAyah);
+    if (!player?.currentSurah || !player?.ayaCoordsLoaded || player?.isStopped) return; const rects = player._getAyaRects(player.currentSurah, player.currentAyah);
     if (!rects?.length) return;
     if (rects[0].p !== this.currentPage) {
       this.clearHighlight();
@@ -1357,7 +1356,7 @@ class QuranReader {
 
       const div = document.createElement("div");
       div.className = "aya-highlight";
-      if (this.readingMode === "scroll") div.style.position = "absolute";
+      div.style.position = "absolute";
       div.style.left = getLeft(sx, r) + "px";
       div.style.width = (r.x2 - r.x1) * sx + "px";
       div.style.top = getTop(sy, realY1, yCorrect) + "px";
