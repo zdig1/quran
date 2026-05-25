@@ -1,3 +1,10 @@
+// ============================================
+// CONFIGURATION
+// ============================================
+window.ACTIVE_RIWAYA = "warsh";
+
+// "hafs" | "warsh" | "qaloon"
+// ============================================
 class OverlayManager {
   constructor() {
     this.config = {
@@ -1365,7 +1372,7 @@ class OverlayManager {
     const pageSelect = document.getElementById("pageSelect");
     const tafsirContent = document.getElementById("tafsirContentContainer");
 
-    if (suraSelect && ayaSelect && pageSelect && tafsirContent) {
+    if (suraSelect && ayaSelect && pageSelect && tafsirContent && !this.lazyLoaded.has("tafsirUI")) {
       await window.tafsirManager.initTafsirUI(
         suraSelect,
         ayaSelect,

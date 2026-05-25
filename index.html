@@ -5,10 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>القرآن الكريم</title>
-    <link rel="canonical" href="https://zdig1.github.io/quran/">
     <meta name="description" content="تطبيق متكامل للقراءة والبحث والاستماع إلى التلاوات">
     <meta name="author" content="zdig1">
     <meta name="keywords" content="تطبيق القرآن الكريم, مصحف حفص, رواية حفص, قراءة القرآن بدون إنترنت, تفسير القرآن">
+    
+    <link rel="canonical" href="https://zdig1.github.io/quran/">
     <meta name="robots" content="index, follow, max-image-preview:large">
 
     <script type="application/ld+json">
@@ -67,24 +68,23 @@
     <meta name="twitter:image" content="https://zdig1.github.io/quran/media/screenshot.webp">
     <meta name="twitter:site" content="@zdig1">
 
-    <meta name="application-name" content="القرآن الكريم">
-    <meta name="format-detection" content="telephone=no">
-
     <link rel="me" href="https://www.youtube.com/@zdig01">
     <link rel="me" href="https://www.linkedin.com/in/zdig1/">
 
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="stylesheet" href="./style.css">
+
+    <meta name="application-name" content="القرآن الكريم">
+    <meta name="format-detection" content="telephone=no">
     <link rel="icon" href="./media/icon-192.png" type="image/png">
     <link rel="apple-touch-icon" href="./media/icon-192.png">
     <link rel="apple-touch-startup-image" href="./media/icon-512.png">
-    <link rel="manifest" href="./manifest.webmanifest">
 
     <meta name="theme-color" content="#1a5e25">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="القرآن">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-    <link rel="stylesheet" href="./style.css">
 
     <meta http-equiv="Content-Security-Policy"
         content="default-src 'self' file: data:; script-src 'self' file: 'unsafe-inline'; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data:; connect-src 'self' file: https://quran-58c7cd.gitlab.io https://zdig1.github.io/quran/ https://everyayah.com; media-src 'self' https://everyayah.com;">
@@ -423,11 +423,6 @@
     <script src="cordova.js"></script>
 
     <!-- ===== SCRIPT OPTIMISÉ ===== -->
-
-    <script>
-        window.ACTIVE_RIWAYA = "hafs"; // "hafs" | "warsh" | "qaloon"
-    </script>
-
     <script>
         (function () {
             const modules = [
@@ -503,5 +498,4 @@
     </script>
 
 </body>
-
 </html>

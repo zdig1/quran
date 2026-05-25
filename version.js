@@ -19,7 +19,7 @@
 
   function showUpdateBanner(app) {
     const color = escapeHtml(app.color);
-    const message = escapeHtml(app.message || "Nouvelle version disponible");
+    const message = escapeHtml(app.message || "تحديث جديد");
     const version = escapeHtml(app.version);
     const log = escapeHtml(app.log || "");
     const url = /^https?:\/\//.test(app.url) ? app.url : "#";

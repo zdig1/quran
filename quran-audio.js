@@ -58,15 +58,15 @@ const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
   warsh: {
     label: "ورش",
     reciters: [
-      { id: "warsh/warsh_ibrahim_aldosary_128kbps", name: "إبراهيم الدوسري" },
       { id: "warsh/warsh_Abdul_Basit_128kbps", name: "عبد الباسط عبد الصمد — ورش" },
-      { id: "warsh/warsh_yassin_al_jazaery_64kbps", name: "ياسين الجزائري" },
     ],
   },
   qaloon: {
     label: "قالون",
     reciters: [
-      { id: "qaloon/Ayman_Sowaid_64kbps", name: "أيمن سويد — قالون" },
+      { id: "warsh/warsh_ibrahim_aldosary_128kbps", name: "إبراهيم الدوسري" },
+      { id: "warsh/warsh_yassin_al_jazaery_64kbps", name: "ياسين الجزائري" },
+
     ],
   },
 });

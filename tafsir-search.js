@@ -682,8 +682,6 @@ class TafsirSearchManager {
 
   updateTafsirNavigation(sura_n, aya_n, page) {
     this.currentTafsirPage = parseInt(page);
-    this.previousTafsirPage = Math.max(1, this.currentTafsirPage - 1);
-    this.nextTafsirPage = Math.min(604, this.currentTafsirPage + 1);
     this.currentSuraInView = parseInt(sura_n);
   }
 
@@ -694,44 +692,38 @@ class TafsirSearchManager {
   async loadTafsirForPage(page) {
     if (!this.tafsirUI?.contentContainer) return;
     const { contentContainer } = this.tafsirUI;
-    await this.smartPreloadAround(page);
+    const p = parseInt(page);
 
-    const cachedPages = Array.from(this.pageCache.keys()).sort((a, b) => a - b);
-    const pageIndex = cachedPages.indexOf(parseInt(page));
-    if (pageIndex === -1) {
-      contentContainer.innerHTML = "";
+    // Si la page est déjà dans le DOM, on scrolle juste
+    if (contentContainer.querySelector(`[data-page="${p}"]`)) {
+      this.scrollToFirstAyaOfPage(p);
       return;
     }
 
+    // Sinon : chargement initial — vider et rendre
+    await this.smartPreloadAround(p);
+    const cachedPages = Array.from(this.pageCache.keys()).sort((a, b) => a - b);
+    const pageIndex = cachedPages.indexOf(p);
+    if (pageIndex === -1) { contentContainer.innerHTML = ""; return; }
+
     const from = Math.max(0, pageIndex - this.config.preloadRadius);
-    const to = Math.min(
-      cachedPages.length - 1,
-      pageIndex + this.config.preloadRadius,
-    );
+    const to = Math.min(cachedPages.length - 1, pageIndex + this.config.preloadRadius);
     let allAyat = [];
-    cachedPages.slice(from, to + 1).forEach((p) => {
-      const ayat = this.pageCache.get(p);
+    cachedPages.slice(from, to + 1).forEach((cp) => {
+      const ayat = this.pageCache.get(cp);
       if (ayat) allAyat = allAyat.concat(ayat);
     });
-
     allAyat = this._sortByQuranOrder(allAyat);
 
     if (allAyat.length) {
       this.renderTafsirContent(contentContainer, allAyat);
-      const pageAyat = this.getAyatByPage(page);
+      const pageAyat = this.getAyatByPage(p);
       if (pageAyat?.length) {
         const first = this._getFirstAyaOfPage(pageAyat);
-        this.updateTafsirNavigation(
-          first[this.F.sura_n],
-          first[this.F.aya_n],
-          page,
-        );
-        this.syncDropdowns(
-          first[this.F.sura_n],
-          first[this.F.aya_n],
-          page,
-          "init",
-        );
+        this.updateTafsirNavigation(first[this.F.sura_n], first[this.F.aya_n], p);
+        this.previousTafsirPage = Math.max(1, p - 1);
+        this.nextTafsirPage = Math.min(604, p + 1);
+        this.syncDropdowns(first[this.F.sura_n], first[this.F.aya_n], p, "init");
       }
     } else {
       contentContainer.innerHTML = "";
@@ -764,12 +756,12 @@ class TafsirSearchManager {
 
     const handler = () => {
       const now = Date.now();
-      if (now - lastScrollTime < 150) {
+      if (now - lastScrollTime < 50) {
         if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
         this.scrollTimeout = setTimeout(() => {
           this.processScroll(container);
           lastScrollTime = Date.now();
-        }, 150);
+        }, 50);
         return;
       }
       lastScrollTime = now;
@@ -790,7 +782,7 @@ class TafsirSearchManager {
     if (this.isScrolling || this.isLoadingMore) return;
     this.handleScrollPosition(container);
     this.checkAndLoadMorePages(container);
-    this.cleanupDistantPages();
+    if (!this.isScrolling) this.cleanupDistantPages();
   }
 
   handleScrollPosition(container) {
@@ -803,7 +795,7 @@ class TafsirSearchManager {
     for (let i = 0; i < ayaEls.length; i++) {
       const el = ayaEls[i];
       const elRect = el.getBoundingClientRect();
-      if (elRect.bottom > top) {
+      if (elRect.bottom > rect.top && elRect.top < rect.bottom) {
         visible = el;
         break;
       }
@@ -819,22 +811,19 @@ class TafsirSearchManager {
         this.updateTafsirNavigation(sura_n, aya_n, page);
         this.syncDropdowns(sura_n, aya_n, page, "scroll");
       });
-    }, 100);
+    }, 300);
   }
 
   async checkAndLoadMorePages(container) {
     if (this.isScrolling || this.isLoadingMore) return;
     const { scrollTop, scrollHeight, clientHeight } = container;
     if (scrollHeight <= 0 || clientHeight <= 0) return;
-    if (scrollTop + clientHeight >= 0.8 * scrollHeight && this.nextTafsirPage) {
+    if (scrollTop + clientHeight >= scrollHeight - 300 && this.nextTafsirPage) {
       await this.loadNextPage(container);
-    } else if (
-      scrollTop <= 0.1 * scrollHeight &&
-      this.previousTafsirPage &&
-      this.previousTafsirPage > 1
-    ) {
-      await this.loadPreviousPage(container);
-    }
+    } else
+      if (scrollTop <= 300 && this.previousTafsirPage && this.previousTafsirPage > 1) {
+        await this.loadPreviousPage(container);
+      }
   }
 
   async loadNextPage(container) {
@@ -848,7 +837,6 @@ class TafsirSearchManager {
       if (ayat && this.tafsirUI?.contentContainer) {
         this.appendAyatToContainer(container, ayat);
         this.nextTafsirPage = Math.min(604, page + 1);
-        this.cleanupDistantPages();
       }
     } catch {
       // Ignorer
@@ -873,9 +861,9 @@ class TafsirSearchManager {
       if (ayat && this.tafsirUI?.contentContainer) {
         const prevHeight = container.scrollHeight;
         this.prependAyatToContainer(container, ayat);
+        await new Promise(r => requestAnimationFrame(r));
         container.scrollTop += container.scrollHeight - prevHeight;
         this.previousTafsirPage = Math.max(1, page - 1);
-        this.cleanupDistantPages();
       }
     } catch {
       // Ignorer
@@ -920,12 +908,27 @@ class TafsirSearchManager {
   }
 
   cleanupDistantPages() {
-    if (!this.tafsirUI?.contentContainer || !this.currentTafsirPage) return;
+    if (!this.tafsirUI?.contentContainer) return;
     const container = this.tafsirUI.contentContainer;
-    const radius = this.config.preloadRadius + 1;
-    const minPage = Math.max(1, this.currentTafsirPage - radius);
-    const maxPage = Math.min(604, this.currentTafsirPage + radius);
-    container.querySelectorAll(".tafsir-aya-container").forEach((el) => {
+    const allAyas = container.querySelectorAll(".tafsir-aya-container");
+    const containerRect = container.getBoundingClientRect();
+    let visibleAya = null;
+    for (const el of allAyas) {
+      const r = el.getBoundingClientRect();
+      if (r.bottom > containerRect.top && r.top < containerRect.bottom) {
+        visibleAya = el;
+        break;
+      }
+    }
+    if (!visibleAya && allAyas.length) visibleAya = allAyas[Math.floor(allAyas.length / 2)];
+    const refPage = visibleAya ? parseInt(visibleAya.dataset.page) : this.currentTafsirPage;
+    if (!refPage) return;
+
+    const radius = this.config.preloadRadius + 3;
+    const minPage = Math.max(1, refPage - radius);
+    const maxPage = Math.min(604, refPage + radius);
+
+    container.querySelectorAll(".tafsir-aya-container, .sura-title-container").forEach((el) => {
       const p = parseInt(el.dataset.page);
       if (!isNaN(p) && (p < minPage || p > maxPage)) {
         el.remove();
