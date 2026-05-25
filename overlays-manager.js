@@ -1,8 +1,7 @@
 // ============================================
 // CONFIGURATION
 // ============================================
-window.ACTIVE_RIWAYA = "warsh";
-
+window.ACTIVE_RIWAYA = "hafs";
 // "hafs" | "warsh" | "qaloon"
 // ============================================
 class OverlayManager {
