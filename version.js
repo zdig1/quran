@@ -5,7 +5,19 @@
   const APP_VERSION = "1.1.0";
   const CHECK_DELAY_MS = 5000; 
   
-  const escapeHtml = (t) => window.quranApp?.escapeHtml(t) ?? String(t || '');
+  // ============================================================
+  //  CODE STANDARD
+  // ============================================================
+
+  function escapeHtml(text) {
+    if (!text) return "";
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
   function isNewerVersion(remote, local) {
     const remoteParts = remote.split(".").map(Number);
@@ -24,9 +36,7 @@
     const log = escapeHtml(app.log || "");
     const url = /^https?:\/\//.test(app.url) ? app.url : "#";
     const btnText = escapeHtml(app.button_text || "تحميــل");
-    const logHtml = log
-      ? `<div style="font-size:0.85rem;margin-top:4px;">📝 ${log}</div>`
-      : "";
+    const logHtml = log ? `<div style="font-size:0.85rem;margin-top:4px;">📝 ${log}</div>` : "";
 
     const banner = document.createElement("div");
     banner.id = "update-banner";
@@ -84,9 +94,6 @@
     window.updateChecker.check();
   };
 
-  window.addEventListener("quran:appReady", () => setTimeout(run, CHECK_DELAY_MS), { once: true });
-  
-  setTimeout(() => {
-    if (!fired) run();
-  }, 15000);
+  window.addEventListener(`${APP_ID}:appReady`, () => setTimeout(run, CHECK_DELAY_MS), { once: true });
+  setTimeout(() => { if (!fired) run(); }, 15000);
 })();
