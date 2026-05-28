@@ -811,6 +811,7 @@ class ListItemRenderer {
 class CustomSelect {
   static _initialized = false;  // Flag pour éviter les doubles initialisations
   static _toggleReady = false;
+  static _clickOutsideAttached = false;
 
   static initToggle() {
     // ✅ Éviter les appels multiples
@@ -837,10 +838,13 @@ class CustomSelect {
       });
     });
 
-    document.addEventListener('click', (e) => {
-      if (e.target.closest('.custom-select-btn')) return;
-      document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
-    });
+    if (!CustomSelect._clickOutsideAttached) {
+      CustomSelect._clickOutsideAttached = true;
+      document.addEventListener('click', (e) => {
+        if (e.target.closest('.custom-select-btn')) return;
+        document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
+      });
+    }
   }
 
   static scrollToSelectedOption(wrap) {

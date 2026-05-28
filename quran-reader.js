@@ -3,9 +3,9 @@
 // ============================================
 
 const RIWAYA_CONFIG = {
-  hafs: { WEBP_TOP: 50, WEBP_BOT: 50, SHRINK: 5, LEFT_OFFSET: -40, SCROLL_OFFSET: 8 },
-  warsh: { WEBP_TOP: 5, WEBP_BOT: 45, SHRINK: 5, LEFT_OFFSET: +20, SCROLL_OFFSET: 40 },
-  qaloon: { WEBP_TOP: 50, WEBP_BOT: 50, SHRINK: 5, LEFT_OFFSET: -40, SCROLL_OFFSET: 8 },
+  hafs: { WEBP_TOP: 50, WEBP_BOT: 50, SHRINK: 5, LEFT_OFFSET: -40, SCROLL_OFFSET: 10 },
+  warsh: { WEBP_TOP: 5, WEBP_BOT: 45, SHRINK: 5, LEFT_OFFSET: 20, SCROLL_OFFSET: 40 },
+  qaloon: { WEBP_TOP: 0, WEBP_BOT: 70, SHRINK: 5, LEFT_OFFSET: 0, SCROLL_OFFSET: 20 },
 };
 
 // ============================================
