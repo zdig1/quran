@@ -1435,12 +1435,12 @@ class OverlayManager {
   shareApp() {
     const appName = "مصحف التجويد - حفص";
     const appUrl = "https://zdig1.gitlab.io/quran/";
-    const shortMessage = `📖 ${appName} - تطبيق قرآن كامل بدون إنترنت: ${appUrl}`;
+    const message = `📖 ${appName}\nتطبيق قرآن كامل بدون إنترنت`;
 
     if (typeof cordova !== "undefined" && window.plugins?.socialsharing) {
       window.plugins.socialsharing.shareWithOptions(
         {
-          message: shortMessage,
+          message: message,
           subject: appName,
           url: appUrl,
           chooserTitle: "مشاركة التطبيق",
@@ -1452,12 +1452,11 @@ class OverlayManager {
         }
       );
     } else if (navigator.share) {
-      navigator
-        .share({
-          title: appName,
-          text: shortMessage,
-          url: appUrl,
-        })
+      navigator.share({
+        title: appName,
+        text: message,
+        url: appUrl,
+      })
         .then(() => window.quranApp?.showToast("✅ تمت المشاركة"))
         .catch((err) => {
           if (err.name !== "AbortError") {
@@ -1491,7 +1490,7 @@ class OverlayManager {
     overlay.content.innerHTML = `<div class="about-content">
       <p class="about-title">
         <strong>مصحف التجويد - حفص</strong>
-        <span class="about-version">v1.1.0</span>
+        <span class="about-version">v1.1.1</span>
       </p>
       <p class="about-desc">
         تطبيق لقراءة القرآن الكريم كاملاً بجودة عالية ودون اتصال بالإنترنت، مطابق للمصحف الورقي المعتمد :
@@ -1507,7 +1506,7 @@ class OverlayManager {
         <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item contact-brown">
           <span>🌐 زيارة الموقع</span>
         </a>
-        <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%201.1.0%0A---%0A%0A" class="contact-box-item contact-violet">
+        <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%201.1.1%0A---%0A%0A" class="contact-box-item contact-violet">
           <span>📧 تواصل معنا</span>
         </a>
       </div>

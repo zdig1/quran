@@ -66,7 +66,6 @@ const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
     reciters: [
       { id: "warsh/warsh_ibrahim_aldosary_128kbps", name: "إبراهيم الدوسري" },
       { id: "warsh/warsh_yassin_al_jazaery_64kbps", name: "ياسين الجزائري" },
-
     ],
   },
 });
@@ -92,7 +91,14 @@ class QuranAudioPlayer {
     this.speedOptions = [0.75, 1.0, 1.25, 1.5];
     this.currentSpeedIndex = 1.0;
 
-    this.audioElement = null;
+    // ⭐ CRÉATION DES 2 ÉLÉMENTS AUDIO
+    this.audioA = new Audio();
+    this.audioB = new Audio();
+    this.audioA.preload = "auto";
+    this.audioB.preload = "auto";
+    this.currentAudio = this.audioA;   // celui qui joue actuellement
+    this.audioElement = this.audioA;   // référence principale
+
     this.miniBar = null;
     this.fabBtn = null;
     this.elements = {};
@@ -107,7 +113,7 @@ class QuranAudioPlayer {
     this._wakeLock = null;
     this._isTransitioning = false;
     this._retrying = false;
-    this._pendingHighlight = null;  // Pour stocker le surlignage en attente
+    this._pendingHighlight = null;
 
     this._boundListeners = {
       audio: {},
@@ -143,13 +149,10 @@ class QuranAudioPlayer {
     const ayaPage = rects[0]?.p;
     const reader = window.quranReader;
 
-    // Si la page n'est pas la page courante, naviguer d'abord
     if (ayaPage && ayaPage !== reader?.currentPage) {
       if (this._autoNavigate) {
-        // Stocker les rects pour les réappliquer après navigation
         this._pendingHighlight = { surah: this.currentSurah, ayah: this.currentAyah, rects };
         window.quranApp?.goToPage(ayaPage);
-        // Attendre que la navigation soit terminée
         setTimeout(() => this._applyPendingHighlight(), 300);
       } else {
         reader?.clearHighlight();
@@ -163,7 +166,6 @@ class QuranAudioPlayer {
   _applyPendingHighlight() {
     if (!this._pendingHighlight) return;
     const { surah, ayah, rects } = this._pendingHighlight;
-    // Vérifier que la sourate/aya n'a pas changé entre-temps
     if (surah === this.currentSurah && ayah === this.currentAyah) {
       this._performHighlight(rects, rects[0]?.p);
     }
@@ -174,7 +176,6 @@ class QuranAudioPlayer {
     const reader = window.quranReader;
     if (!reader) return;
 
-    // Attendre que l'image soit chargée en mode book
     const waitForImage = (callback) => {
       if (reader.readingMode !== "book") {
         callback();
@@ -202,7 +203,6 @@ class QuranAudioPlayer {
     this._autoNavigate = false;
   }
 
-  // Bloc partagé après navigation manuelle (sans lecture)
   _afterNavigate() {
     this.isStopped = false;
     this._updateCurrentDisplay();
@@ -211,13 +211,11 @@ class QuranAudioPlayer {
     this._updateUI();
   }
 
-  // Centralise le seek via progress bar (overlay + miniBar)
   _onProgressInput(e) {
     const dur = this.audioElement.duration;
     if (dur) this.audioElement.currentTime = (e.target.value / 100) * dur;
   }
 
-  // Centralise l'erreur réseau
   _showOfflineError() {
     this._showStatus("❌ لا يوجد اتصال بالإنترنت", true);
   }
@@ -231,7 +229,8 @@ class QuranAudioPlayer {
     this._buildFab();
     await this._loadAyaCoords();
     this.surahs = window.quranCalculator?.getAllSurahs() || [];
-    this.audioElement = document.getElementById("quranAudioPlayer");
+    // ⭐ On n'utilise plus document.getElementById("quranAudioPlayer")
+    // car on a nos propres éléments audioA et audioB
     this._nextAudioBuffer = null;
     this._cacheElements();
     this._setupPinReciterButton();
@@ -239,7 +238,7 @@ class QuranAudioPlayer {
     this._populateSurahSelect();
     this._populateReciterSelect(window.ACTIVE_RIWAYA);
     this._selectReciter(localStorage.getItem(`quran_reciter_${window.ACTIVE_RIWAYA}`) || null, false);
-    this._setupAudioEvents();
+    this._setupAudioEvents(); // ⭐ Attache les événements aux deux éléments
     this._setupOverlayEvents();
     this._setupMiniBarEvents();
     const savedRate = parseFloat(localStorage.getItem("quran_rate")) || 1.0;
@@ -569,6 +568,9 @@ class QuranAudioPlayer {
   play() {
     if (!this.currentReciter || !this.currentSurah || !this.currentAyah) return;
 
+    // ⭐ FORCER l'élément principal à pointer vers l'élément actif
+    this.audioElement = this.currentAudio;
+
     const url = this._buildAyahUrl(this.currentSurah, this.currentAyah);
     if (!url) return;
     this.hasError = false;
@@ -687,6 +689,12 @@ class QuranAudioPlayer {
     this.audioElement.pause();
     this.audioElement.volume = 1;
     this.audioElement.currentTime = 0;
+    // ⭐ Arrêter aussi l'autre élément
+    this.audioA.pause();
+    this.audioA.currentTime = 0;
+    this.audioB.pause();
+    this.audioB.currentTime = 0;
+
     this._mp3qEndTime = null;
     this.isPlaying = false;
     this.isStopped = true;
@@ -711,6 +719,7 @@ class QuranAudioPlayer {
     else this.play();
   }
 
+  // ⭐ MODIFICATION : précharger dans l'élément inactif
   _preloadNextAyah() {
     if (!this.currentSurah || !this.currentAyah) return;
     let nextSurah = this.currentSurah;
@@ -729,10 +738,12 @@ class QuranAudioPlayer {
     }
     const url = this._buildAyahUrl(nextSurah, nextAyah);
     if (url) {
-      this._nextAudioBuffer = new Audio();
-      this._nextAudioBuffer.preload = "auto";
-      this._nextAudioBuffer.src = url;
-      this._nextAudioBuffer.load();
+      // Choisir l'élément INACTIF
+      const next = this.currentAudio === this.audioA ? this.audioB : this.audioA;
+      next.src = url;
+      next.preload = "auto";
+      next.load();
+      this._nextAudioBuffer = next;
     }
   }
 
@@ -858,6 +869,9 @@ class QuranAudioPlayer {
     if (isNaN(numRate)) return;
     this.playbackRate = numRate;
     if (this.audioElement) this.audioElement.playbackRate = this.playbackRate;
+    // ⭐ Appliquer aussi à l'autre élément pour qu'il soit prêt
+    if (this.audioA) this.audioA.playbackRate = this.playbackRate;
+    if (this.audioB) this.audioB.playbackRate = this.playbackRate;
     const speedBtn = document.getElementById("miniBarSpeed");
     if (speedBtn) speedBtn.textContent = numRate.toFixed(2) + "×";
     if (this.elements.overlaySpeedBtn) {
@@ -977,10 +991,13 @@ class QuranAudioPlayer {
     this._updateCurrentDisplay();
   }
 
+  // ⭐ ATTACHER LES ÉVÉNEMENTS AUX DEUX ÉLÉMENTS
   _setupAudioEvents() {
-    const audio = this.audioElement;
+    const audioA = this.audioA;
+    const audioB = this.audioB;
 
-    this._boundListeners.audio.play = () => {
+    // Définir les gestionnaires une fois
+    const onPlay = () => {
       this.isPlaying = true;
       this._isTransitioning = false;
       if (this.hasError) {
@@ -990,11 +1007,11 @@ class QuranAudioPlayer {
       }
       this._updateUI();
     };
-    this._boundListeners.audio.pause = () => {
+    const onPause = () => {
       this.isPlaying = false;
       this._updateUI();
     };
-    this._boundListeners.audio.ended = () => {
+    const onEnded = () => {
       if (this.audioElement.dataset.basmala === "true") return;
       this.isPlaying = false;
       this.audioElement.volume = 1;
@@ -1012,18 +1029,22 @@ class QuranAudioPlayer {
         return;
       }
 
+      // ⭐ Utiliser le buffer préchargé (readyState >= 2)
       if (this._nextAudioBuffer && this._nextAudioBuffer.readyState >= 2) {
-        const nextUrl = this._nextAudioBuffer.src;
-        this._nextAudioBuffer.pause();
-        this._nextAudioBuffer.currentTime = 0;
+        const next = this._nextAudioBuffer;
+        // Copier volume et vitesse
+        next.volume = this.audioElement.volume;
+        next.playbackRate = this.playbackRate;
 
+        // ⭐ Lecture IMMÉDIATE (pas de changement de src)
+        next.play().catch(() => this.nextAyah());
+
+        // Mettre à jour les références
+        this.audioElement = next;
+        this.currentAudio = next;
         this.currentAyah++;
         this._preloadTriggered = false;
         this._crossfading = false;
-
-        this.audioElement.src = nextUrl;
-        this.audioElement.playbackRate = this.playbackRate;
-        this.audioElement.play().catch(() => this.nextAyah());
 
         this._updateCurrentDisplay();
         this._ensureHighlight();
@@ -1032,10 +1053,9 @@ class QuranAudioPlayer {
         this.nextAyah();
       }
     };
-    this._boundListeners.audio.timeupdate = () => {
-      const cur = audio.currentTime;
-      const dur = audio.duration || 0;
-
+    const onTimeUpdate = () => {
+      const cur = this.audioElement.currentTime;
+      const dur = this.audioElement.duration || 0;
       const pct = dur ? (cur / dur) * 100 : 0;
       if (this.elements.progressBar) this.elements.progressBar.value = pct;
       if (this.elements.currentTime) this.elements.currentTime.textContent = this._fmt(cur);
@@ -1047,7 +1067,7 @@ class QuranAudioPlayer {
       if (tLeft) tLeft.textContent = this._fmt(cur);
       if (tRight) tRight.textContent = this._fmt(dur);
     };
-    this._boundListeners.audio.error = (e) => {
+    const onError = (e) => {
       const code = e.target?.error?.code;
       if (!navigator.onLine || code === 2) {
         this._showOfflineError();
@@ -1081,11 +1101,21 @@ class QuranAudioPlayer {
       }
     };
 
-    audio.addEventListener("play", this._boundListeners.audio.play);
-    audio.addEventListener("pause", this._boundListeners.audio.pause);
-    audio.addEventListener("ended", this._boundListeners.audio.ended);
-    audio.addEventListener("timeupdate", this._boundListeners.audio.timeupdate);
-    audio.addEventListener("error", this._boundListeners.audio.error);
+    // Attacher aux deux éléments
+    [audioA, audioB].forEach(audio => {
+      audio.addEventListener("play", onPlay);
+      audio.addEventListener("pause", onPause);
+      audio.addEventListener("ended", onEnded);
+      audio.addEventListener("timeupdate", onTimeUpdate);
+      audio.addEventListener("error", onError);
+    });
+
+    // Conserver les références pour le nettoyage
+    this._boundListeners.audio.play = onPlay;
+    this._boundListeners.audio.pause = onPause;
+    this._boundListeners.audio.ended = onEnded;
+    this._boundListeners.audio.timeupdate = onTimeUpdate;
+    this._boundListeners.audio.error = onError;
   }
 
   _setupOverlayEvents() {
@@ -1270,17 +1300,26 @@ class QuranAudioPlayer {
     return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
   }
 
+  // ⭐ MISE À JOUR DE destroy() pour les deux éléments
   destroy() {
     this.stop();
     this._releaseWakeLock();
 
-    const audio = this.audioElement;
-    if (audio) {
-      audio.removeEventListener("play", this._boundListeners.audio.play);
-      audio.removeEventListener("pause", this._boundListeners.audio.pause);
-      audio.removeEventListener("ended", this._boundListeners.audio.ended);
-      audio.removeEventListener("timeupdate", this._boundListeners.audio.timeupdate);
-      audio.removeEventListener("error", this._boundListeners.audio.error);
+    const audioA = this.audioA;
+    const audioB = this.audioB;
+    if (audioA) {
+      audioA.removeEventListener("play", this._boundListeners.audio.play);
+      audioA.removeEventListener("pause", this._boundListeners.audio.pause);
+      audioA.removeEventListener("ended", this._boundListeners.audio.ended);
+      audioA.removeEventListener("timeupdate", this._boundListeners.audio.timeupdate);
+      audioA.removeEventListener("error", this._boundListeners.audio.error);
+    }
+    if (audioB) {
+      audioB.removeEventListener("play", this._boundListeners.audio.play);
+      audioB.removeEventListener("pause", this._boundListeners.audio.pause);
+      audioB.removeEventListener("ended", this._boundListeners.audio.ended);
+      audioB.removeEventListener("timeupdate", this._boundListeners.audio.timeupdate);
+      audioB.removeEventListener("error", this._boundListeners.audio.error);
     }
 
     const els = this.elements;
