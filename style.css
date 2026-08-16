@@ -1096,6 +1096,7 @@ body {
   display: inline-block;
   flex-shrink: 0;
   text-align: right;
+  padding: 0 5px;
 }
 
 .surah-info-title {
