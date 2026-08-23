@@ -1493,8 +1493,8 @@ class OverlayManager {
         <span class="about-version">v1.1.1</span>
       </p>
       <p class="about-desc">
-        تطبيق شامل لقراءة واستماع ودراسة القرآن الكريم بدون إنترنت، مطابق للمصحف الورقي المعتمد: 
-        <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (دار المعرفة).
+         تطبيق شامل لقراءة القرآن الكريم. مطابق للمصحف الورقي المعتمد:
+         <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (دار المعرفة).
       </p>
       <div class="contact-grid-container">
         <button id="aboutBackupBtn" class="contact-box-item contact-green">
