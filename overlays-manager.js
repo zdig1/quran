@@ -1433,9 +1433,9 @@ class OverlayManager {
   // ============================================
 
   shareApp() {
-    const appName = "مصحف التجويد - حفص";
-    const appUrl = "https://zdig1.gitlab.io/quran/";
-    const message = `📖 ${appName}\nتطبيق قرآن كامل بدون إنترنت`;
+    const appName = "مصحف التجويد - حفص"; 
+    const appUrl = "https://zdig1.gitlab.io/quran";
+    const message = `📖 مصحف التجويد الملون برواية حفص \nتطبيق متكامل لقراءة القرآن الكريم والاستماع إليه ودراسته. يضم التفسير الميسّر، والبحث المتقدم، بالإضافة إلى قواعد التجويد.`;
 
     if (typeof cordova !== "undefined" && window.plugins?.socialsharing) {
       window.plugins.socialsharing.shareWithOptions(
