@@ -1033,7 +1033,7 @@ class OverlayManager {
     }
     const data = app.exportUserData();
     const date = new Date().toISOString().slice(2, 10);
-    const fileName = `quran_backup_${date}`;
+    const fileName = `hafs_backup_${date}`;
     const bytes = new TextEncoder().encode(data);
     let binary = "";
     bytes.forEach((b) => (binary += String.fromCharCode(b)));
@@ -1490,7 +1490,7 @@ class OverlayManager {
     overlay.content.innerHTML = `<div class="about-content">
       <p class="about-title">
         <strong>مصحف التجويد - حفص</strong>
-        <span class="about-version">v1.1.1</span>
+        <span class="about-version">v1.1.2</span>
       </p>
       <p class="about-desc">
          تطبيق شامل لقراءة القرآن الكريم. مطابق للمصحف الورقي المعتمد:
@@ -1506,7 +1506,7 @@ class OverlayManager {
         <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item contact-brown">
           <span>🌐 زيارة الموقع</span>
         </a>
-        <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%201.1.1%0A---%0A%0A" class="contact-box-item contact-violet">
+        <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%201.1.2%0A---%0A%0A" class="contact-box-item contact-violet">
           <span>📧 تواصل معنا</span>
         </a>
       </div>

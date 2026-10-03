@@ -22,7 +22,7 @@
   "url": "https://zdig1.github.io/quran/",
   "applicationCategory": "EducationApplication",
   "operatingSystem": "Android, iOS, Windows, Web",
-  "softwareVersion": "1.1.1",
+  "softwareVersion": "1.1.2",
   "description": "تطبيق مصحف حفص كامل لقراءة واستماع وبداية دراسة وتدبر القرآن الكريم مع التفسير الميسر والبحث المتقدم وبطاقات معلومات السور وقواعد التجويد بدون إنترنت.",
   "image": "https://zdig1.github.io/quran/media/icon-512.png",
   "screenshot": "https://zdig1.github.io/quran/media/screenshot.webp",
@@ -33,7 +33,7 @@
     "thumbnailUrl": "https://img.youtube.com/vi/quVCFsKA85o/maxresdefault.jpg",
     "contentUrl": "https://www.youtube.com/watch?v=quVCFsKA85o",
     "embedUrl": "https://www.youtube.com/embed/quVCFsKA85o",
-    "uploadDate": "2026-05-26"
+    "uploadDate": "2026-09-30"
   },
   "audience": {    "@type": "Audience",    "audienceType": "General"  },
   "offers": {    "@type": "Offer",    "price": "0",    "priceCurrency": "USD"  },
@@ -99,8 +99,15 @@
     <meta name="apple-mobile-web-app-title" content="القرآن">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self' file: data:; script-src 'self' file: 'unsafe-inline'; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data:; connect-src 'self' file: https://quran-58c7cd.gitlab.io https://zdig1.github.io/quran/ https://everyayah.com; media-src 'self' https://everyayah.com;">
+    <meta http-equiv="Content-Security-Policy" content="
+            default-src 'self';
+            script-src 'self' 'unsafe-inline';
+            style-src 'self' 'unsafe-inline';
+            img-src 'self' data:;
+            connect-src 'self' https://quran-58c7cd.gitlab.io https://everyayah.com;
+            media-src 'self' https://everyayah.com;
+            object-src 'none';
+            base-uri 'self';">
 
 </head>
 
@@ -452,10 +459,8 @@
                     const script = document.createElement('script');
                     script.src = src;
                     script.async = false;
-
                     script.onload = resolve;
                     script.onerror = () => reject(new Error(`Erreur: ${src}`));
-
                     document.head.appendChild(script);
                 });
             };
@@ -511,4 +516,5 @@
     </script>
 
 </body>
+
 </html>

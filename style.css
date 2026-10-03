@@ -1735,7 +1735,24 @@ body {
   max-height: 75vh !important;
   min-height: 50vh;
 }
+/* L'overlay audio doit laisser le dropdown sortir */
+#audioOverlay .overlay-content,
+#audioOverlay .overlay-body,
+#audioOverlay .audio-body,
+#audioOverlay .audio-select-row,
+#audioOverlay .audio-select-grid,
+#audioOverlay .custom-select {
+  overflow: visible !important;
+}
 
+#audioOverlay .overlay-content {
+  max-height: none !important; /* ⬅️ retire la limite de hauteur */
+}
+
+#audioOverlay .overlay-body {
+  max-height: none !important;
+  overflow-y: visible !important;
+}
 .select-ok:focus,
 .select-blue:focus,
 .select-brown:focus,
@@ -2203,7 +2220,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--border-radius);
-  max-height: 50vh;
+  max-height: 60vh;
   overflow-y: auto;
   z-index: 10050;
   box-shadow: var(--shadow-heavy);
