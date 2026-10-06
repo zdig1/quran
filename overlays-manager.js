@@ -310,7 +310,7 @@ class OverlayManager {
     const pinBtn = document.createElement("button");
     pinBtn.className = `action-icon pin-btn surah-pin ${isPinned ? "pinned" : ""}`;
     pinBtn.setAttribute("data-sura-id", surah.s_id);
-    pinBtn.textContent = isPinned ? "⭐" : "📌";
+    pinBtn.textContent = isPinned ? "💫" : "📌";
 
     // Colonne principale
     const mainColumn = document.createElement("div");
@@ -422,7 +422,7 @@ class OverlayManager {
       if (!window.quranApp) return;
       const added = window.quranApp.togglePinSurah(surah.s_id);
       pinBtn.classList.toggle("pinned", added);
-      pinBtn.textContent = added ? "⭐" : "📌";
+      pinBtn.textContent = added ? "💫" : "📌";
       this.renderSurahsList(true, surah.s_id);
     });
 
