@@ -316,19 +316,38 @@ class OverlayManager {
     const mainColumn = document.createElement("div");
     mainColumn.className = "surah-rows";
 
-    // Ligne 1 : numéro + nom
+// Ligne 1 : numéro + nom (أو الخط الزخرفي)
     const row1 = document.createElement("div");
     row1.className = "surah-row";
     const row1Right = document.createElement("div");
     row1Right.className = "surah-row-right";
 
     const badge = window.ListItemRenderer.createBadge(String(surah.s_id));
-    const nameSpan = document.createElement("span");
-    nameSpan.className = "surah-name";
-    nameSpan.textContent = surah.name;
-
     row1Right.appendChild(badge);
-    row1Right.appendChild(nameSpan);
+
+    // تجهيز رمز السورة التجميعي (surah001, surah002 ...)
+    const surahCode = `surah${String(surah.s_id).padStart(3, "0")}`;
+    const calligSpan = document.createElement("span");
+    calligSpan.className = "surah-calligraphy";
+    calligSpan.textContent = surahCode;
+
+    // معرفة اللغة الحالية للتطبيق
+    const currentLang = window.quranApp?.getSetting?.("langue") || "ar";
+
+    if (currentLang === "ar") {
+      // 1. في الوضع العربي: عرض الرسم الخطّي فقط
+      row1Right.appendChild(calligSpan);
+    } else {
+      // 2. في وضع الترجمة: عرض الاسم باللاتينية + الرسم الخطّي بجانبه
+      const latinName = window.quranReader?.getSurahName?.(surah.s_id) || surah.name;
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "surah-name";
+      nameSpan.textContent = latinName;
+
+      row1Right.appendChild(nameSpan);
+      row1Right.appendChild(calligSpan);
+    }
+
     row1.appendChild(row1Right);
 
     // Ligne 2 : ordre de révélation + icône + info
