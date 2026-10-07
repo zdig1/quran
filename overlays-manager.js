@@ -301,165 +301,150 @@ class OverlayManager {
     }
   }
 
-  _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
-    // Utiliser window.ListItemRenderer pour la structure de base
-    const container = window.ListItemRenderer.createContainer('surah', surah.s_id);
-    container.classList.add('item-surah');
+_createSurahItem(surah, isPinned, bookmarkedSurahIds) {
+  const container = window.ListItemRenderer.createContainer('surah', surah.s_id);
+  container.classList.add('item-surah');
 
-    // Bouton épingle
-    const pinBtn = document.createElement("button");
-    pinBtn.className = `action-icon pin-btn surah-pin ${isPinned ? "pinned" : ""}`;
-    pinBtn.setAttribute("data-sura-id", surah.s_id);
-    pinBtn.textContent = isPinned ? "💫" : "📌";
+  // ============================================
+  // TABLEAU 2 lignes × 7 colonnes (RTL)
+  // ============================================
+  const grid = document.createElement("div");
+  grid.className = "surah-grid";
 
-    // Colonne principale
-    const mainColumn = document.createElement("div");
-    mainColumn.className = "surah-rows";
+  // --- Données ---
+  const currentLang = window.quranApp?.getSetting?.("langue") || "ar";
+  const surahCode = `surah${String(surah.s_id).padStart(3, "0")}`;
+  const juzStarts = window.quranCalculator._juzBySurahId?.get(surah.s_id)?.slice(0, 1) || [];
+  const hasSajda = window.quranCalculator.hasSajdaInSurah(surah.s_id);
+  const hasBookmark = bookmarkedSurahIds?.has(surah.s_id);
 
-    // Ligne 1 : Badge + Nom de la sourate + Bouton Information (ℹ️)
-    const row1 = document.createElement("div");
-    row1.className = "surah-row";
-    const row1Right = document.createElement("div");
-    row1Right.className = "surah-row-right";
+  // ============================================
+  // COL 1 — Pin 📌 (fusion 2 lignes)
+  // ============================================
+  const pinBtn = document.createElement("button");
+  pinBtn.className = `g-col g-pin action-icon pin-btn surah-pin ${isPinned ? "pinned" : ""}`;
+  pinBtn.setAttribute("data-sura-id", surah.s_id);
+  pinBtn.textContent = isPinned ? "💫" : "📌";
+  grid.appendChild(pinBtn);
 
-    const badge = window.ListItemRenderer.createBadge(String(surah.s_id));
-    row1Right.appendChild(badge);
+  // ============================================
+  // COL 2 — Badge (ligne 1 uniquement)
+  // ============================================
+  const badge = window.ListItemRenderer.createBadge(String(surah.s_id));
+  badge.classList.add("g-col", "g-badge");
+  grid.appendChild(badge);
 
-    const surahCode = `surah${String(surah.s_id).padStart(3, "0")}`;
-    const calligSpan = document.createElement("span");
-    calligSpan.className = "surah-calligraphy";
-    calligSpan.textContent = surahCode;
+  // ============================================
+  // COL 3 — Nom (ligne 1) + النزول (ligne 2)
+  // ============================================
+  const nameCell = document.createElement("div");
+  nameCell.className = "g-col g-name";
 
-    const currentLang = window.quranApp?.getSetting?.("langue") || "ar";
+  const callig = document.createElement("span");
+  callig.className = "surah-calligraphy";
+  callig.textContent = surahCode;
 
-    if (currentLang === "ar") {
-      row1Right.appendChild(calligSpan);
-    } else {
-      const latinName = window.quranReader?.getSurahName?.(surah.s_id) || surah.name;
-      const nameSpan = document.createElement("span");
-      nameSpan.className = "surah-name";
-      nameSpan.textContent = latinName;
-
-      row1Right.appendChild(nameSpan);
-      row1Right.appendChild(calligSpan);
-    }
-
-    // Bouton Information (ℹ️) à la fin de la 1ère ligne
-    const infoBtn = document.createElement("button");
-    infoBtn.className = "action-icon info-btn surah-info";
-    infoBtn.setAttribute("data-sura-id", surah.s_id);
-    infoBtn.textContent = "ℹ️";
-
-    row1.appendChild(row1Right);
-    row1.appendChild(infoBtn);
-
-    // Ligne 2 : Spacer (sous le badge) + Ordre de descente (sous le nom) + Icône Révélation (sous ℹ️)
-    const row2 = document.createElement("div");
-    row2.className = "surah-row";
-    const row2Right = document.createElement("div");
-    row2Right.className = "surah-row-right";
-
-    // Spacer aligné sous le badge
-    const badgeSpacer = document.createElement("span");
-    badgeSpacer.className = "badge-spacer";
-
-    // Ordre de descente (النزول) aligné sous le nom de la sourate
-    const orderSpan = document.createElement("span");
-    orderSpan.className = "note-small";
-    orderSpan.textContent = `النزول: ${surah.order}`;
-
-    row2Right.appendChild(badgeSpacer);
-    row2Right.appendChild(orderSpan);
-
-    // Icône Révélation (🕋 / 🕌) alignée sous le bouton ℹ️
-    const revelSpan = document.createElement("span");
-    revelSpan.className = "surah-revel";
-    revelSpan.textContent = surah.type === "مدنية" ? "🕌" : "🕋";
-
-    row2.appendChild(row2Right);
-    row2.appendChild(revelSpan);
-
-    // Partie gauche (bookmark, juz, page, sajda, versets)
-    const rowLeft = document.createElement("div");
-    rowLeft.className = "surah-row-left";
-
-    const juzStarts = window.quranCalculator._juzBySurahId?.get(surah.s_id)?.slice(0, 1) || [];
-
-    // bookmark
-    const bookmarkDiv = document.createElement("div");
-    bookmarkDiv.className = "surah-bookmark";
-    if (bookmarkedSurahIds?.has(surah.s_id)) {
-      bookmarkDiv.innerHTML = '<span class="item-icon">🔖</span>';
-    }
-
-    // juz
-    const juzDiv = document.createElement("div");
-    juzDiv.className = "surah-juz";
-    if (juzStarts.length) {
-      juzDiv.innerHTML = `<span class="juz-badge">${juzStarts.map(j => `ج${j}`).join(" ")}</span>`;
-    } else {
-      juzDiv.innerHTML = '<span class="juz-badge"></span>';
-    }
-
-    // page
-    const pageDiv = document.createElement("div");
-    pageDiv.className = "surah-page";
-    pageDiv.innerHTML = `<span class="page-tag">ص ${surah.page_start}</span>`;
-
-    // sajda
-    const sajdaDiv = document.createElement("div");
-    sajdaDiv.className = "surah-sajda";
-    if (window.quranCalculator.hasSajdaInSurah(surah.s_id)) {
-      const sajdaSpan = document.createElement("span");
-      sajdaSpan.className = "item-sajda-icon";
-      sajdaSpan.textContent = "۩";
-      sajdaDiv.appendChild(sajdaSpan);
-    }
-
-    // versets
-    const versesDiv = document.createElement("div");
-    versesDiv.className = "surah-verses";
-    versesDiv.textContent = `(${surah.verses}) آية`;
-
-    // Ajout dans l'ordre de la grille
-    rowLeft.appendChild(bookmarkDiv);
-    rowLeft.appendChild(juzDiv);
-    rowLeft.appendChild(pageDiv);
-    rowLeft.appendChild(sajdaDiv);
-    rowLeft.appendChild(versesDiv);
-
-    mainColumn.appendChild(row1);
-    mainColumn.appendChild(row2);
-    mainColumn.appendChild(rowLeft);
-
-    container.appendChild(pinBtn);
-    container.appendChild(mainColumn);
-
-    // Événements
-    container.addEventListener("click", (e) => {
-      if (e.target.closest('.pin-btn') || e.target.closest('.info-btn')) return;
-      window.quranApp?.goToPage(surah.page_start);
-      this.closeOverlay("surahs");
-    });
-
-    pinBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (!window.quranApp) return;
-      const added = window.quranApp.togglePinSurah(surah.s_id);
-      pinBtn.classList.toggle("pinned", added);
-      pinBtn.textContent = added ? "💫" : "📌";
-      this.renderSurahsList(true, surah.s_id);
-    });
-
-    infoBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.showSurahInfo(surah.s_id);
-    });
-
-    return container;
+  if (currentLang === "ar") {
+    nameCell.appendChild(callig);
+  } else {
+    const latin = window.quranReader?.getSurahName?.(surah.s_id) || surah.name;
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "surah-name";
+    nameSpan.textContent = latin;
+    nameCell.appendChild(nameSpan);
+    nameCell.appendChild(callig);
   }
+  grid.appendChild(nameCell);
+
+  const orderCell = document.createElement("div");
+  orderCell.className = "g-col g-order";
+  orderCell.innerHTML = `<span class="note-small">النزول: ${surah.order}</span>`;
+  grid.appendChild(orderCell);
+
+  // ============================================
+  // COL 4 — Info ℹ️ (ligne 1) + Révélation 🕋/🕌 (ligne 2)
+  // ============================================
+  const infoBtn = document.createElement("button");
+  infoBtn.className = "g-col g-info action-icon info-btn surah-info";
+  infoBtn.setAttribute("data-sura-id", surah.s_id);
+  infoBtn.textContent = "ℹ️";
+  grid.appendChild(infoBtn);
+
+  const revelCell = document.createElement("div");
+  revelCell.className = "g-col g-revel";
+  revelCell.innerHTML = `<span class="surah-revel">${surah.type === "مدنية" ? "🕌" : "🕋"}</span>`;
+  grid.appendChild(revelCell);
+
+  // ============================================
+  // COL 5 — Bookmark 🔖 (ligne 1 uniquement)
+  // ============================================
+  const bookmarkCell = document.createElement("div");
+  bookmarkCell.className = "g-col g-bookmark";
+  if (hasBookmark) bookmarkCell.textContent = "🔖";
+  grid.appendChild(bookmarkCell);
+
+  // ============================================
+  // COL 6 — Juz (ligne 1) + Sajda ۩ (ligne 2)
+  // ============================================
+  const juzCell = document.createElement("div");
+  juzCell.className = "g-col g-juz";
+  if (juzStarts.length) {
+    juzCell.innerHTML = `<span class="juz-badge">${juzStarts.map(j => `ج${j}`).join(" ")}</span>`;
+  }
+  grid.appendChild(juzCell);
+
+  const sajdaCell = document.createElement("div");
+  sajdaCell.className = "g-col g-sajda";
+  if (hasSajda) {
+    sajdaCell.innerHTML = `<span class="item-sajda-icon">۩</span>`;
+  }
+  grid.appendChild(sajdaCell);
+
+  // ============================================
+  // COL 7 — Page (ligne 1) + Versets (ligne 2)
+  // ============================================
+  const pageCell = document.createElement("div");
+  pageCell.className = "g-col g-page";
+  pageCell.innerHTML = `<span class="page-tag">ص ${surah.page_start}</span>`;
+  grid.appendChild(pageCell);
+
+  const versesCell = document.createElement("div");
+  versesCell.className = "g-col g-verses";
+  versesCell.innerHTML = `<span class="surah-verses">(${surah.verses}) آية</span>`;
+  grid.appendChild(versesCell);
+
+  // ============================================
+  // Assemblage
+  // ============================================
+  container.appendChild(grid);
+
+  // ============================================
+  // Événements
+  // ============================================
+  container.addEventListener("click", (e) => {
+    if (e.target.closest('.pin-btn') || e.target.closest('.info-btn')) return;
+    window.quranApp?.goToPage(surah.page_start);
+    this.closeOverlay("surahs");
+  });
+
+  pinBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.quranApp) return;
+    const added = window.quranApp.togglePinSurah(surah.s_id);
+    pinBtn.classList.toggle("pinned", added);
+    pinBtn.textContent = added ? "💫" : "📌";
+    this.renderSurahsList(true, surah.s_id);
+  });
+
+  infoBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.showSurahInfo(surah.s_id);
+  });
+
+  return container;
+}
 
   renderSurahsList(scrollToCurrent = true, preserveSurahId = null) {
     const overlay = this.overlays.surahs;
