@@ -198,6 +198,7 @@ body {
 .footer-item:first-child {
   justify-content: flex-start;
 }
+
 .footer-item:last-child {
   justify-content: flex-end;
 }
@@ -303,12 +304,13 @@ body {
 .night-mode .icon-btn {
   color: var(--success);
 }
+
 .icon-btn:hover {
   background: var(--primary-light);
 }
 
 /* ============================================
-   BOUTONS DE CONFIRMATION — version sobre
+   5. BOUTONS DE CONFIRMATION
    ============================================ */
 .confirm-btn {
   min-width: 80px;
@@ -323,77 +325,61 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  /* ✅ Base neutre pour tous les boutons */
   background: var(--surface-alt);
   color: var(--text);
   border: 1px solid var(--border);
 }
 
-/* ✅ Hover : vert discret, identique pour tous */
 .confirm-btn:hover {
   border-color: var(--primary);
   background: var(--primary-light);
   color: var(--primary);
 }
 
-/* ✅ Focus clavier : vert */
 .confirm-btn:focus-visible {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 2px var(--primary-light);
 }
 
-/* ✅ Seul le bouton "ok" garde un léger accent : action principale */
+/* Seul le bouton "ok" garde un accent */
 .confirm-btn.ok {
   color: var(--primary);
   border-color: var(--primary);
   background: var(--surface);
 }
+
 .confirm-btn.ok:hover {
   background: var(--primary-light);
   color: var(--primary-dark);
 }
 
-/* Tous les autres variants deviennent neutres */
-.confirm-btn.cancel,
-.confirm-btn.blue,
-.confirm-btn.brown {
-  background: var(--surface-alt);
-  color: var(--text);
-  border-color: var(--border);
-}
-
-.confirm-btn.cancel:hover,
-.confirm-btn.blue:hover,
-.confirm-btn.brown:hover {
-  border-color: var(--primary);
-  background: var(--primary-light);
-  color: var(--primary);
-}
-
-/* Mode nuit */
 .night-mode .confirm-btn {
   background: var(--surface-alt);
   color: var(--text);
   border-color: var(--border);
 }
+
 .night-mode .confirm-btn.ok {
   color: var(--success);
   border-color: var(--success);
   background: var(--surface);
 }
+
 .night-mode .confirm-btn.ok:hover {
   background: var(--primary-light);
   color: var(--success);
 }
-.night-mode .confirm-btn.cancel:hover,
-.night-mode .confirm-btn.blue:hover,
-.night-mode .confirm-btn.brown:hover {
+
+.night-mode .confirm-btn:not(.ok):hover {
   border-color: var(--success);
   background: var(--primary-light);
   color: var(--success);
 }
 
+/* ============================================
+   6. AUTRES BOUTONS (autoscroll, tafsir font)
+   ============================================ */
 .autoscroll-speed-btn {
   font-size: 1.3rem;
   font-weight: 900;
@@ -407,16 +393,19 @@ body {
     transform 0.2s ease;
   pointer-events: none;
 }
+
 .night-mode .autoscroll-speed-btn {
   background: #2d2d2d !important;
   color: var(--success) !important;
   border-color: var(--border-dark) !important;
 }
+
 .autoscroll-speed-btn.visible {
   opacity: 1;
   transform: scale(1);
   pointer-events: auto;
 }
+
 .autoscroll-speed-btn:disabled {
   opacity: 0.3 !important;
   pointer-events: none;
@@ -438,17 +427,19 @@ body {
   cursor: pointer;
   transition: var(--transition-default);
 }
+
 .night-mode .tafsir-font-btn {
   background: #2d2d2d;
   color: var(--success);
   border-color: var(--border-dark);
 }
+
 .tafsir-font-btn:hover {
   background: var(--primary-light);
 }
 
 /* ============================================
-   5. PAGE SCROLL & IMAGES
+   7. PAGE SCROLL & IMAGES
    ============================================ */
 .page-scroll {
   position: relative;
@@ -486,10 +477,12 @@ body {
   padding: 0;
   background-color: #fff;
 }
+
 .page-image[data-loaded="false"] {
   opacity: 0;
   transition: opacity 0.3s ease;
 }
+
 .page-image[data-loaded="true"] {
   opacity: 1;
 }
@@ -498,6 +491,7 @@ body {
   filter: invert(1) hue-rotate(-180deg);
   content-visibility: auto;
 }
+
 .night-mode .tajweed-image img,
 .night-mode .khatm-page img {
   filter: invert(0.93) hue-rotate(180deg) brightness(0.9) contrast(1.1);
@@ -515,6 +509,7 @@ body {
   background: var(--bg);
   z-index: 1;
 }
+
 .mode-portrait .page-wrapper {
   width: 100vw;
   height: 100vh;
@@ -528,9 +523,11 @@ body {
   transition: opacity 0.2s ease;
   background: var(--bg);
 }
+
 .mode-portrait .page-wrapper.active {
   display: flex;
 }
+
 .mode-portrait .portrait-image {
   width: 100%;
   display: block;
@@ -545,11 +542,13 @@ body {
   scroll-behavior: auto;
   transition: all 0.3s ease;
 }
+
 .mode-landscape .page-wrapper {
   width: 100vw !important;
   display: flex !important;
   transition: none !important;
 }
+
 .mode-landscape .landscape-image {
   width: 100% !important;
   height: auto !important;
@@ -560,7 +559,7 @@ body {
 }
 
 /* ============================================
-   6. OVERLAYS GÉNÉRIQUES & MENU
+   8. OVERLAYS GÉNÉRIQUES & MENU
    ============================================ */
 .overlay,
 .menu-overlay {
@@ -570,15 +569,17 @@ body {
   display: none;
   align-items: flex-start;
   justify-content: center;
-  padding: 15vh var(--overlay-padding-x) var(--overlay-padding-x)
-    var(--overlay-padding-x);
+  padding: 15vh var(--overlay-padding-x) var(--overlay-padding-x) var(--overlay-padding-x);
 }
+
 .overlay {
   background: var(--overlay-bg);
 }
+
 .menu-overlay {
   background: rgba(0, 0, 0, 0.5);
 }
+
 .overlay.show,
 .menu-overlay.show {
   display: flex;
@@ -595,6 +596,7 @@ body {
   overflow: hidden;
   box-shadow: var(--shadow-heavy);
 }
+
 .overlay-content.fullscreen {
   width: 100vw;
   height: 100vh;
@@ -616,6 +618,7 @@ body {
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
+
 .overlay-header h2 {
   font-family: "MyNotoKufi", sans-serif;
   font-size: var(--text-lg);
@@ -623,6 +626,7 @@ body {
   color: var(--text);
   margin: 0;
 }
+
 .overlay-body {
   flex: 1;
   overflow-y: auto;
@@ -645,6 +649,7 @@ body {
   display: flex;
   flex-direction: column;
 }
+
 .menu-header {
   padding: var(--space-sm);
   border-bottom: 1px solid var(--menu-border);
@@ -652,12 +657,14 @@ body {
   align-items: center;
   justify-content: space-between;
 }
+
 .menu-header h2 {
   color: var(--menu-text);
   font-size: var(--text-lg);
   margin: 0;
   font-family: "MyNotoKufi", sans-serif;
 }
+
 .menu-icon-svg {
   width: 1.375rem;
   height: 1.375rem;
@@ -665,6 +672,7 @@ body {
   stroke: white;
   flex-shrink: 0;
 }
+
 .menu-text {
   color: white;
   flex: 1;
@@ -675,6 +683,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
 }
+
 .menu-item {
   display: flex;
   align-items: center;
@@ -689,12 +698,13 @@ body {
   transition: background-color 0.2s;
   white-space: nowrap;
 }
+
 .menu-item:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
 /* ============================================
-   7. BADGES & BOUTONS D'ACTION
+   9. BADGES & ICÔNES
    ============================================ */
 .badge,
 .surah-number,
@@ -712,22 +722,28 @@ body {
   background: var(--primary);
   color: white;
 }
+
 .surah-number {
   background: var(--primary);
 }
+
 .item-badge {
   --badge-bg: var(--primary);
   background: var(--badge-bg);
 }
+
 .item-search .item-badge {
   --badge-bg: var(--badge-search);
 }
+
 .item-juzhizb .item-badge {
   --badge-bg: var(--badge-juzhizb);
 }
+
 .sura-badge {
   background: var(--primary);
 }
+
 .night-mode .sura-badge {
   background: var(--success);
 }
@@ -747,18 +763,22 @@ body {
   color: var(--text-light);
   flex-shrink: 0;
 }
+
 .action-icon.bordered {
   border: 1px solid var(--border);
   background: var(--surface-alt);
   color: var(--primary);
 }
+
 .action-icon.pinned {
   color: var(--color-gold);
 }
+
 .action-icon:active {
   transform: scale(0.94);
   background: var(--primary-light);
 }
+
 .action-icon:hover {
   background: var(--primary-light);
   color: var(--primary);
@@ -770,25 +790,8 @@ body {
   color: var(--success);
 }
 
-.pin-btn:hover,
-.info-btn:hover,
-.icon-btn--edit:hover,
-.icon-btn--replace:hover,
-.icon-btn--remove:hover {
-  background: var(--primary-light);
-  color: var(--primary);
-}
-.night-mode .pin-btn:hover,
-.night-mode .info-btn:hover,
-.night-mode .icon-btn--edit:hover,
-.night-mode .icon-btn--replace:hover,
-.night-mode .icon-btn--remove:hover {
-  background: rgba(76, 175, 80, 0.2);
-  color: var(--success);
-}
-
 /* ============================================
-   8. ÉLÉMENTS DE LISTE (génériques)
+   10. ÉLÉMENTS DE LISTE (génériques)
    ============================================ */
 .item-container {
   padding: 0 var(--space-sm) 0 0;
@@ -799,12 +802,15 @@ body {
   width: 100%;
   transition: background 0.2s ease;
 }
+
 .item-container:last-child {
   border-bottom: none;
 }
+
 .item-container.current-item {
   background-color: var(--current-item-bg);
 }
+
 .item-container.current-item .item-title,
 .item-container.current-item .page-tag,
 .item-container.current-item .item-sajda-icon {
@@ -828,6 +834,7 @@ body {
   flex: 1;
   min-width: 0;
 }
+
 .item-left {
   display: flex;
   align-items: center;
@@ -835,6 +842,7 @@ body {
   margin-left: 5px;
   flex-shrink: 0;
 }
+
 .item-title {
   font-size: var(--text-lg);
   font-weight: 700;
@@ -845,6 +853,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .item-icon {
   display: inline-flex;
   align-items: center;
@@ -852,6 +861,7 @@ body {
   min-width: 2rem;
   font-size: var(--text-md);
 }
+
 .item-sajda-icon {
   color: var(--primary);
   font-size: 1.25em;
@@ -860,6 +870,7 @@ body {
   justify-content: center;
   line-height: 1;
 }
+
 .page-tag {
   background: var(--tag-bg);
   color: var(--tag-color);
@@ -873,6 +884,7 @@ body {
   min-width: auto;
   justify-content: center;
 }
+
 .note-small {
   color: var(--text-light);
   font-size: var(--text-sm);
@@ -892,1086 +904,8 @@ body {
 }
 
 /* ============================================
-   10. JUZ / HIZB
+   11. SOURATES — TABLEAU 2 lignes × 7 colonnes (RTL)
    ============================================ */
-.item-juzhizb .juz-line2,
-.item-juzhizb .juz-line3 {
-  margin-right: calc(2rem + var(--space-md));
-  width: auto;
-  display: block;
-}
-.item-juzhizb .item-right {
-  gap: calc(var(--space-md) - 0.2rem);
-}
-.aya-text {
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--color-red);
-  font-family: "MyNotoKufi", sans-serif;
-  font-size: var(--text-sm);
-  margin-bottom: 4px;
-}
-
-/* ============================================
-   11. MARQUE-PAGES (bookmarks)
-   ============================================ */
-.bookmarks-overlay-content {
-  width: 100%;
-  padding: 5px 10px 10px 10px;
-  margin: 0;
-}
-.bookmarks-list {
-  flex: 1;
-  overflow-y: auto;
-}
-.bookmarks-add-form {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  flex-direction: row-reverse;
-  margin-top: 5px;
-  padding: 0;
-}
-.bookmarks-add-form .search-input {
-  flex: 1;
-  min-width: 120px;
-  padding: var(--space-md);
-  border: 1px solid #ccc;
-  border-radius: var(--border-radius);
-  width: 100%;
-}
-.bookmarks-add-form .btn {
-  flex: 0 0 auto;
-  padding: var(--space-md) var(--space-lg);
-  border: none;
-  border-radius: var(--border-radius);
-  font-weight: bold;
-  cursor: pointer;
-}
-.item-bookmark.editing-bookmark {
-  background-color: var(--primary-light);
-  border: 2px solid var(--primary);
-  border-radius: 8px;
-}
-.bookmarks-button-container {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-/* ============================================
-   12. KHATM & TAJWEED
-   ============================================ */
-.khatm-content {
-  flex: 1;
-  width: auto;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
-  padding: 0;
-  gap: 0;
-  align-items: stretch;
-}
-.khatm-page {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-.khatm-page img {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-  border-radius: 0;
-  box-shadow: none;
-  margin: 0;
-  padding: 0;
-}
-.tajweed-image img {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-  box-shadow: var(--shadow);
-}
-.tajweed-text {
-  line-height: 1.9;
-  font-size: var(--text-md);
-  color: var(--text);
-  padding: 5px 2px;
-  margin-right: 5px;
-  gap: 15px;
-  text-align: justify !important;
-  text-align-last: right !important;
-}
-.tajweed-text ul {
-  text-align: justify !important;
-  text-align-last: right !important;
-  padding-right: 10px !important;
-}
-
-/* ============================================
-   13. RECHERCHE   ============================================ */
-.search-container {
-  padding: 3px;
-  background: var(--surface);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-}
-.search-wrapper {
-  position: relative;
-  flex-shrink: 0;
-  width: 100%;
-}
-.search-input {
-  width: 100%;
-  padding: var(--space-md) var(--space-lg);
-  padding-left: 40px;
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  font-size: var(--text-md);
-  background: var(--surface);
-  color: var(--text);
-  text-align: right;
-}
-.search-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
-}
-.clear-search-btn {
-  position: absolute;
-  left: 5px;
-  top: 0;
-  width: 40px;
-  height: 40px;
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: var(--text-light);
-  padding: 0;
-  line-height: 1;
-  z-index: 10;
-  transition: color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.clear-search-btn:hover {
-  color: var(--text);
-}
-.search-stats {
-  padding: var(--space-sm) 0;
-  flex-shrink: 0;
-}
-.search-stats-content {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  color: var(--text);
-  font-size: var(--text-sm);
-  gap: var(--space-sm);
-}
-.stat-results,
-.stat-suras {
-  font-weight: bold;
-}
-.stat-results {
-  color: var(--stat-results);
-}
-.stat-suras {
-  color: var(--stat-suras);
-}
-
-#searchResults {
-  padding: 0;
-  text-align: center !important;
-}
-#searchResults .search-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  color: var(--text-light);
-}
-#searchResults .search-empty p {
-  margin: 0.5rem 0;
-  text-align: center;
-}
-
-.item-search-text {
-  font-family: "MyNotoKufi", sans-serif;
-  font-weight: bold;
-  font-size: 14px;
-  color: var(--search-text-color);
-  text-align: justify !important;
-  text-align-last: right !important;
-  line-height: 2.2 !important;
-  word-spacing: -1px !important;
-  padding: 0 var(--overlay-padding-x);
-}
-.item-search .item-line-2[data-clickable="true"] {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-.item-search .item-line-2[data-clickable="true"]:hover {
-  background-color: var(--primary-light);
-}
-.night-mode .item-search .item-line-2[data-clickable="true"]:hover {
-  background-color: rgba(76, 175, 80, 0.2);
-}
-
-/* ============================================
-   14. TAFSIR
-   ============================================ */
-.tafsir-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  overflow: visible;
-}
-.tafsir-controls .custom-select {
-  flex: 1 1 120px;
-  min-width: 100px;
-}
-.tafsir-controls .tafsir-font-btn {
-  flex: 0 0 auto;
-}
-
-.tafsir-container {
-  margin: 0;
-  border-radius: 0;
-  box-shadow: none;
-  border: none;
-  background: var(--surface);
-}
-.tafsir-aya-container {
-  margin-bottom: 0;
-  padding: 8px 5px;
-  border-bottom: var(--border-width) solid var(--border);
-  scroll-margin-top: 70px;
-}
-.tafsir-aya-container:last-child {
-  border-bottom: 1px solid var(--border);
-}
-
-.tafsir-explanation {
-  color: var(--text);
-  font-family: "Segoe UI", sans-serif;
-  font-weight: normal;
-  text-align: justify !important;
-  text-align-last: right !important;
-  line-height: 1.5 !important;
-  font-size: 16px;
-}
-.tafsir-content-container {
-  padding: 0 var(--overlay-padding-x) !important;
-  line-height: 1.8;
-  scroll-behavior: auto !important;
-  overflow-anchor: none !important;
-  text-align: justify !important;
-  text-align-last: right !important;
-  font-size: 16px;
-  transition: font-size 0.1s ease;
-}
-.tafsir-content-container .item-search-text,
-.tafsir-content-container .tafsir-explanation,
-.tafsir-content-container .sura-name-kufi {
-  font-size: inherit !important;
-}
-.tafsir-content-container * {
-  font-size: inherit;
-}
-
-#tafsirContent {
-  scroll-behavior: auto !important;
-  overflow-anchor: none !important;
-}
-.sura-title-container {
-  text-align: center;
-  margin: 1.5rem 0 1rem 0;
-  padding: 0.5rem 0;
-  border-bottom: var(--border-width) solid var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-}
-.sura-name-kufi {
-  font-family: "MyNotoKufi", sans-serif;
-  font-weight: bold;
-  font-size: 1.5rem;
-  color: var(--primary);
-  line-height: 1.4;
-}
-.night-mode .sura-title-container {
-  border-bottom-color: var(--success);
-}
-.night-mode .sura-name-kufi {
-  color: var(--success);
-}
-
-/* ============================================
-   15. À PROPOS — version sobre
-   ============================================ */
-.about-content {
-  flex: 1;
-  width: auto;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
-  padding: var(--space-md);
-  gap: var(--space-sm);
-  color: var(--text);
-  text-align: justify;
-  text-align-last: right;
-}
-.about-content strong {
-  color: var(--text);
-  font-weight: bold;
-}
-.night-mode .about-content strong {
-  color: var(--text);
-}
-
-.about-title {
-  text-align: center;
-  font-size: var(--text-lg);
-  color: var(--text);
-  line-height: 1.5;
-}
-.night-mode .about-title {
-  color: var(--text);
-}
-.about-version {
-  font-size: var(--text-sm);
-  color: var(--text-light);
-}
-.about-desc {
-  font-size: var(--text-md);
-  line-height: 1.7;
-  color: var(--text);
-  text-align: justify;
-}
-.about-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-md);
-  margin: var(--space-md) 0;
-}
-.about-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  padding: var(--space-md);
-  gap: 0.25rem;
-}
-.about-stat span {
-  font-size: var(--text-sm);
-  color: var(--text-light);
-}
-.about-stat strong {
-  font-size: var(--text-lg);
-  font-weight: bold;
-  color: var(--text);
-}
-.night-mode .about-stat strong {
-  color: var(--text);
-}
-.about-footer {
-  text-align: center;
-  text-align-last: center;
-  font-size: var(--text-sm);
-  color: var(--text-light);
-  line-height: 1.8;
-  margin-top: auto;
-  padding-top: var(--space-md);
-}
-.about-footer a {
-  color: var(--text-light);
-  text-decoration: none;
-}
-.night-mode .about-footer a {
-  color: var(--text-light);
-}
-
-.contact-grid-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin: 15px 0;
-}
-.contact-box-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 5px;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius-lg);
-  text-decoration: none;
-  transition: var(--transition-default);
-  min-height: 60px;
-  cursor: pointer;
-  font-family: inherit;
-  color: var(--text);
-}
-
-/* ✅ Toutes les couleurs → neutres */
-.contact-box-item.contact-green,
-.contact-box-item.contact-blue,
-.contact-box-item.contact-brown,
-.contact-box-item.contact-violet {
-  color: var(--text) !important;
-  border-color: var(--border) !important;
-}
-
-/* ✅ Hover : léger vert, discret */
-.contact-box-item:hover {
-  border-color: var(--primary) !important;
-  background: var(--primary-light);
-}
-
-.contact-box-item span {
-  font-size: var(--text-sm);
-  font-weight: bold;
-  text-align: center;
-}
-.contact-box-item:active {
-  transform: scale(0.96);
-  filter: brightness(0.95);
-}
-.night-mode .contact-box-item {
-  background: var(--surface-alt);
-}
-.night-mode .contact-box-item:hover {
-  border-color: var(--success) !important;
-}
-/* ============================================
-   16. AUDIO – OVERLAY & MINI-BAR
-   ============================================ */
-.audio-body {
-  padding: var(--space-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-.audio-riwaya-info {
-  text-align: center;
-  font-size: var(--text-sm);
-  color: var(--text-light);
-  border-radius: var(--border-radius);
-  background: var(--surface-alt);
-}
-.audio-current-info {
-  background: var(--surface-alt);
-  border-radius: var(--border-radius);
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 4px 0;
-}
-.audio-current-info span {
-  white-space: nowrap;
-  font-size: var(--text-sm);
-  color: var(--text-light);
-}
-.audio-current-info .audio-current-display {
-  flex: 1;
-  margin: 0;
-  background: transparent;
-  border: none;
-  color: inherit;
-  padding: 0.2rem 0;
-  font-size: var(--text-sm);
-  text-align: center;
-}
-.night-mode .audio-current-display {
-  background: rgba(76, 175, 80, 0.15);
-  color: var(--success);
-  border-color: var(--success);
-}
-
-.audio-select-grid {
-  display: grid !important;
-  grid-template-columns: auto auto auto;
-  gap: 0.5rem;
-  margin-bottom: 0.2rem;
-  align-items: center;
-}
-.audio-select-row:first-child {
-  display: block;
-  width: 100%;
-}
-#surahSelectAudio,
-#ayaSelectAudio,
-#pageSelectAudio {
-  width: 100%;
-  min-width: 0;
-}
-#reciterSelect {
-  text-align: right;
-  text-align-last: right;
-}
-#reciterSelectWrap {
-  width: 100%;
-}
-
-#audioOverlay .overlay-content {
-  max-height: none !important;
-  min-height: 50vh;
-}
-#audioOverlay .overlay-content,
-#audioOverlay .overlay-body,
-#audioOverlay .audio-body,
-#audioOverlay .audio-select-row,
-#audioOverlay .audio-select-grid,
-#audioOverlay .custom-select {
-  overflow: visible !important;
-}
-#audioOverlay .overlay-body {
-  max-height: none !important;
-  overflow-y: visible !important;
-}
-
-.select-ok:focus,
-.select-blue:focus,
-.select-brown:focus,
-.select-violet:focus {
-  outline: none;
-  border-color: #ff9800 !important;
-  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.3) !important;
-}
-
-.audio-progress-wrap {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  font-size: var(--text-sm);
-  color: var(--text-light);
-  margin: 0.2rem 0;
-}
-.audio-progress {
-  flex: 1;
-  height: 4px;
-  accent-color: var(--primary);
-  cursor: pointer;
-}
-.audio-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0.2rem 0;
-}
-.audio-status {
-  text-align: center;
-  color: var(--text-light);
-  font-size: var(--text-sm);
-  padding: 0.3rem;
-  display: none;
-}
-.audio-status:not(:empty) {
-  display: block;
-}
-.audio-warning {
-  background: rgba(255, 193, 7, 0.2);
-  color: #b45f06;
-  padding: var(--space-md);
-  border-radius: var(--border-radius);
-  font-size: var(--text-sm);
-  text-align: center;
-  margin-bottom: var(--space-md);
-}
-.night-mode .audio-warning {
-  background: rgba(255, 193, 7, 0.1);
-  color: #ffb74d;
-}
-.audio-btn {
-  font-size: 1.2rem;
-  width: var(--btn-sm);
-  height: var(--btn-sm);
-  border: none;
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    var(--transition-default),
-    transform 0.1s;
-  -webkit-tap-highlight-color: transparent;
-}
-.audio-btn:active {
-  transform: scale(0.92);
-  background: var(--primary-light);
-}
-.audio-btn:disabled {
-  opacity: 0.4;
-  pointer-events: none;
-}
-.audio-btn.speed-btn {
-  font-family: monospace;
-  font-size: 1rem;
-  background: var(--surface-alt);
-  border-radius: 2rem;
-  letter-spacing: -3px;
-  padding: 2px 4px;
-  min-width: 2.2rem;
-}
-.audio-controls .audio-btn.speed-btn {
-  width: 2.8rem;
-  min-width: 2.8rem;
-}
-
-.audio-mini-bar {
-  position: fixed;
-  inset: auto 0 0 0;
-  z-index: 1200;
-  background: var(--mini-bar-bg);
-  backdrop-filter: blur(8px);
-  transform: translateY(0);
-  transition:
-    transform 0.3s ease,
-    opacity 0.3s ease;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.audio-mini-bar .mini-bar-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 5px 10px 0 10px;
-  flex-shrink: 0;
-}
-.audio-mini-bar.hidden {
-  transform: translateY(100%);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-.audio-mini-bar .mini-bar-controls {
-  display: flex;
-  flex: 1;
-  justify-content: space-around;
-}
-.audio-mini-bar .audio-btn svg {
-  width: 30px;
-  height: 30px;
-}
-.audio-controls .audio-btn svg {
-  width: 32px;
-  height: 32px;
-}
-
-.audio-fab {
-  position: fixed;
-  bottom: calc(1rem + env(safe-area-inset-bottom));
-  left: 1rem;
-  z-index: 1100;
-  width: 3.2rem;
-  height: 3.2rem;
-  border-radius: 50%;
-  background: var(--mini-bar-bg);
-  color: white;
-  font-size: 1.5rem;
-  border: none;
-  cursor: pointer;
-  box-shadow: var(--shadow-heavy);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    transform 0.2s,
-    opacity 0.2s;
-  opacity: 1;
-  transform: scale(1);
-}
-.audio-fab.hidden {
-  opacity: 0;
-  transform: scale(0);
-  pointer-events: none;
-}
-.audio-fab:active {
-  transform: scale(0.9);
-}
-.night-mode .audio-fab {
-  background: var(--mini-bar-bg);
-}
-.fab-indicator {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: var(--text-lighter);
-  transition: background-color 0.2s;
-}
-.audio-fab.playing .fab-indicator {
-  background-color: var(--success);
-}
-
-/* ============================================
-   SÉLECTEURS — version sobre
-   ============================================ */
-
-/* Tous les sélecteurs partagent la même base */
-.select-ok,
-.select-blue,
-.select-brown,
-.select-violet {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-/* Hover : légère teinte verte */
-.select-ok:hover,
-.select-blue:hover,
-.select-brown:hover,
-.select-violet:hover {
-  border-color: var(--primary);
-  background: var(--primary-light);
-}
-
-/* Focus / ouvert : vert + halo */
-.select-ok:focus,
-.select-blue:focus,
-.select-brown:focus,
-.select-violet:focus,
-.custom-select.open .select-ok,
-.custom-select.open .select-blue,
-.custom-select.open .select-brown,
-.custom-select.open .select-violet {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
-  background: var(--surface);
-}
-
-/* Mode nuit : tout suit les variables */
-.night-mode .select-ok,
-.night-mode .select-blue,
-.night-mode .select-brown,
-.night-mode .select-violet {
-  background-color: var(--surface);
-  border-color: var(--border);
-  color: var(--text);
-}
-
-.night-mode .select-ok:hover,
-.night-mode .select-blue:hover,
-.night-mode .select-brown:hover,
-.night-mode .select-violet:hover {
-  border-color: var(--success);
-  background: var(--primary-light);
-}
-
-.night-mode .select-ok:focus,
-.night-mode .select-blue:focus,
-.night-mode .select-brown:focus,
-.night-mode .select-violet:focus,
-.night-mode .custom-select.open .select-ok,
-.night-mode .custom-select.open .select-blue,
-.night-mode .custom-select.open .select-brown,
-.night-mode .custom-select.open .select-violet {
-  border-color: var(--success);
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.25);
-}
-
-#pinReciterBtn {
-  transition:
-    transform 0.2s,
-    color 0.2s;
-}
-#pinReciterBtn:active {
-  transform: scale(0.9);
-}
-
-/* ============================================
-   18. UTILITAIRES & DIVERS
-   ============================================ */
-.loading-placeholder,
-.empty-message {
-  text-align: center;
-  color: var(--text-light);
-  padding: var(--overlay-padding-x);
-}
-.loading-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-.spinner {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 3px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: var(--space-lg) auto;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-.spinner.small {
-  width: 1.2rem;
-  height: 1.2rem;
-  border-width: 2px;
-  margin: 0;
-}
-
-.toast {
-  position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: var(--space-md) var(--space-lg);
-  border-radius: 10px;
-  z-index: 10000;
-  max-width: 80%;
-  text-align: center;
-  display: none;
-  font-size: var(--text-sm);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  white-space: pre-line;
-  line-height: 1.5;
-  font-weight: 500;
-}
-.autoscroll-group {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-::-webkit-scrollbar {
-  width: 0;
-  background: transparent;
-}
-
-.confirm-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-}
-.confirm-dialog {
-  background: var(--surface);
-  border-radius: var(--border-radius-lg);
-  padding: var(--space-lg);
-  max-width: 20rem;
-  width: 90%;
-  text-align: center;
-  box-shadow: var(--shadow-heavy);
-}
-.confirm-dialog p {
-  color: var(--text);
-  margin-bottom: var(--space-lg);
-  font-size: var(--text-md);
-}
-.confirm-buttons {
-  display: flex;
-  gap: var(--space-md);
-  justify-content: center;
-}
-
-.aya-highlight {
-  position: absolute;
-  background: rgba(0, 200, 100, 0.25);
-  border-radius: 4px;
-  pointer-events: none;
-  transition: all 0.2s ease;
-  z-index: 10;
-}
-.night-mode .aya-highlight {
-  background: rgba(255, 213, 0, 0.2);
-}
-
-.error-title {
-  color: var(--error);
-}
-.noscript-fallback {
-  text-align: center;
-  padding: 2rem;
-  font-family: Arial, sans-serif;
-  background: #fff;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 9999;
-}
-.noscript-title {
-  color: #004494;
-}
-.hidden {
-  display: none !important;
-}
-
-/* ============================================
-   19. CUSTOM SELECT — remplacement <select>
-   ============================================ */
-.custom-select {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-}
-.custom-select-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.45rem 0.6rem;
-  border-radius: var(--border-radius);
-  font-size: var(--text-md);
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  gap: 4px;
-  min-height: 2.4rem;
-}
-.custom-select-val {
-  flex: 1;
-  text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.custom-select-arrow {
-  flex-shrink: 0;
-  font-size: 0.7rem;
-  transition: transform 0.2s;
-}
-.custom-select.open .custom-select-arrow {
-  transform: rotate(180deg);
-}
-.custom-select-dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  left: 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  max-height: 60vh;
-  overflow-y: auto;
-  z-index: 10050;
-  box-shadow: var(--shadow-heavy);
-}
-.custom-select.open .custom-select-dropdown {
-  display: block;
-}
-
-.tafsir-controls,
-.tafsir-content-container,
-.overlay-body {
-  overflow-anchor: none;
-}
-
-.custom-select-group {
-  padding: 0.4rem 0.75rem 0.2rem;
-  font-size: var(--text-sm);
-  color: var(--text-lighter);
-  background: var(--surface-alt);
-  font-weight: 600;
-  text-align: right;
-  border-bottom: 1px solid var(--border);
-}
-.custom-select-option {
-  padding: 0.65rem 0.75rem;
-  font-size: var(--text-md);
-  cursor: pointer;
-  text-align: right;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-  background: var(--surface);
-  min-height: 2.6rem;
-  display: flex;
-  align-items: center;
-}
-.custom-select-option:last-child {
-  border-bottom: none;
-}
-.custom-select-option:active,
-.custom-select-option.selected {
-  background: var(--primary-light);
-  color: var(--primary);
-}
-.night-mode .custom-select-option.selected {
-  background: rgba(76, 175, 80, 0.2);
-  color: var(--success);
-}
-.night-mode .custom-select-dropdown {
-  background: var(--surface);
-  border-color: var(--border-dark);
-}
-.custom-select-option.reciter-option {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-}
-.reciter-name {
-  flex: 1;
-  cursor: pointer;
-  text-align: right;
-}
-.custom-select-option.reciter-option.selected {
-  background: var(--primary-light);
-}
-.night-mode .custom-select-option.reciter-option.selected {
-  background: rgba(76, 175, 80, 0.2);
-}
-/* ============================================
-   SOURATES — tableau 2 lignes × 7 colonnes (RTL)
-   ============================================ */
-
 .item-surah {
   padding: 0 var(--space-sm) !important;
   cursor: pointer;
@@ -1983,7 +917,6 @@ body {
   background-color: var(--current-item-bg);
 }
 
-/* -------- Conteneur : grille 7 colonnes × 2 lignes -------- */
 .item-surah .surah-grid {
   display: grid;
   grid-template-columns: auto auto 1fr auto auto auto minmax(2.6rem, auto);
@@ -1995,9 +928,7 @@ body {
   width: 100%;
 }
 
-/* ============================================
-   COL 1 — Pin 📌 (fusion 2 lignes, extrême droite)
-   ============================================ */
+/* COL 1 — Pin 📌 */
 .item-surah .g-pin {
   grid-column: 1;
   grid-row: 1 / span 2;
@@ -2005,9 +936,7 @@ body {
   justify-self: center;
 }
 
-/* ============================================
-   COL 2 — Badge (ligne 1 uniquement)
-   ============================================ */
+/* COL 2 — Badge */
 .item-surah .g-badge {
   grid-column: 2;
   grid-row: 1;
@@ -2015,15 +944,13 @@ body {
   justify-self: center;
 }
 
-/* ============================================
-   COL 3 — Nom (ligne 1) + النزول (ligne 2)
-   ============================================ */
+/* COL 3 — Nom + النزول */
 .item-surah .g-name {
   grid-column: 3;
   grid-row: 1;
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* RTL : collé à droite de sa cellule */
+  justify-content: flex-start;
   gap: 6px;
   min-width: 0;
   padding-right: 4px;
@@ -2039,9 +966,7 @@ body {
   padding-right: 4px;
 }
 
-/* ============================================
-   COL 4 — Info ℹ️ (ligne 1) + Révélation (ligne 2)
-   ============================================ */
+/* COL 4 — Info + Révélation */
 .item-surah .g-info {
   grid-column: 4;
   grid-row: 1;
@@ -2057,9 +982,7 @@ body {
   justify-content: center;
 }
 
-/* ============================================
-   COL 5 — Bookmark 🔖 (ligne 1 uniquement)
-   ============================================ */
+/* COL 5 — Bookmark */
 .item-surah .g-bookmark {
   grid-column: 5;
   grid-row: 1;
@@ -2070,9 +993,7 @@ body {
   min-width: 1.2rem;
 }
 
-/* ============================================
-   COL 6 — Juz (ligne 1) + Sajda (ligne 2)
-   ============================================ */
+/* COL 6 — Juz + Sajda */
 .item-surah .g-juz {
   grid-column: 6;
   grid-row: 1;
@@ -2095,9 +1016,7 @@ body {
   min-width: 2rem;
 }
 
-/* ============================================
-   COL 7 — Page (ligne 1) + Versets (ligne 2)
-   ============================================ */
+/* COL 7 — Page + Versets */
 .item-surah .g-page {
   grid-column: 7;
   grid-row: 1;
@@ -2114,9 +1033,7 @@ body {
   justify-content: center;
 }
 
-/* ============================================
-   ÉLÉMENTS INTERNES
-   ============================================ */
+/* Éléments internes */
 .item-surah .surah-calligraphy {
   font-family: "SurahNamesFont", sans-serif !important;
   font-size: 2.5rem;
@@ -2168,11 +1085,11 @@ body {
 }
 
 .item-surah .surah-revel {
-  font-size: 1.1rem; /* ← remet 1.1rem */
+  font-size: 1.1rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem; /* ← remet 2rem pour aligner sous ℹ️ */
+  width: 2rem;
   height: 2rem;
 }
 
@@ -2204,12 +1121,11 @@ body {
   font-size: var(--text-sm);
 }
 
-/* ============================================
-   SECTIONS (titres ⭐ / 📖)
-   ============================================ */
+/* Sections (titres ⭐ / 📖) */
 .surah-section {
   margin-bottom: 1rem;
 }
+
 .surah-section-pinned,
 .surah-section-all {
   width: 100%;
@@ -2225,18 +1141,1143 @@ body {
   color: var(--text-light);
   border-bottom: 1px solid var(--border);
 }
+
 .surah-section-pinned {
   border-bottom: 1px solid var(--border);
   margin-bottom: 0.5rem;
 }
 
-/* ============================================
-   TITRE INFO SOURATE
-   ============================================ */
 .surah-info-title {
   font-weight: bold;
   text-decoration: underline;
   font-family: "MyNotoKufi", sans-serif;
   font-size: var(--text-lg);
   color: var(--color-gold);
+}
+
+/* ============================================
+   12. JUZ / HIZB
+   ============================================ */
+.item-juzhizb .juz-line2,
+.item-juzhizb .juz-line3 {
+  margin-right: calc(2rem + var(--space-md));
+  width: auto;
+  display: block;
+}
+
+.item-juzhizb .item-right {
+  gap: calc(var(--space-md) - 0.2rem);
+}
+
+.aya-text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-red);
+  font-family: "MyNotoKufi", sans-serif;
+  font-size: var(--text-sm);
+  margin-bottom: 4px;
+}
+
+/* ============================================
+   13. MARQUE-PAGES
+   ============================================ */
+.bookmarks-overlay-content {
+  width: 100%;
+  padding: 5px 10px 10px 10px;
+  margin: 0;
+}
+
+.bookmarks-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.bookmarks-add-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  flex-direction: row-reverse;
+  margin-top: 5px;
+  padding: 0;
+}
+
+.bookmarks-add-form .search-input {
+  flex: 1;
+  min-width: 120px;
+  padding: var(--space-md);
+  border: 1px solid #ccc;
+  border-radius: var(--border-radius);
+  width: 100%;
+}
+
+.bookmarks-add-form .btn {
+  flex: 0 0 auto;
+  padding: var(--space-md) var(--space-lg);
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.item-bookmark.editing-bookmark {
+  background-color: var(--primary-light);
+  border: 2px solid var(--primary);
+  border-radius: 8px;
+}
+
+.bookmarks-button-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   14. KHATM & TAJWEED
+   ============================================ */
+.khatm-content {
+  flex: 1;
+  width: auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  padding: 0;
+  gap: 0;
+  align-items: stretch;
+}
+
+.khatm-page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.khatm-page img {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tajweed-image img {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  box-shadow: var(--shadow);
+}
+
+.tajweed-text {
+  line-height: 1.9;
+  font-size: var(--text-md);
+  color: var(--text);
+  padding: 5px 2px;
+  margin-right: 5px;
+  gap: 15px;
+  text-align: justify !important;
+  text-align-last: right !important;
+}
+
+.tajweed-text ul {
+  text-align: justify !important;
+  text-align-last: right !important;
+  padding-right: 10px !important;
+}
+
+/* ============================================
+   15. RECHERCHE
+   ============================================ */
+.search-container {
+  padding: 3px;
+  background: var(--surface);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.search-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  padding-left: 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  font-size: var(--text-md);
+  background: var(--surface);
+  color: var(--text);
+  text-align: right;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.clear-search-btn {
+  position: absolute;
+  left: 5px;
+  top: 0;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-light);
+  padding: 0;
+  line-height: 1;
+  z-index: 10;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-search-btn:hover {
+  color: var(--text);
+}
+
+.search-stats {
+  padding: var(--space-sm) 0;
+  flex-shrink: 0;
+}
+
+.search-stats-content {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  color: var(--text);
+  font-size: var(--text-sm);
+  gap: var(--space-sm);
+}
+
+.stat-results,
+.stat-suras {
+  font-weight: bold;
+}
+
+.stat-results {
+  color: var(--stat-results);
+}
+
+.stat-suras {
+  color: var(--stat-suras);
+}
+
+#searchResults {
+  padding: 0;
+  text-align: center !important;
+}
+
+#searchResults .search-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  color: var(--text-light);
+}
+
+#searchResults .search-empty p {
+  margin: 0.5rem 0;
+  text-align: center;
+}
+
+.item-search-text {
+  font-family: "MyNotoKufi", sans-serif;
+  font-weight: bold;
+  font-size: 14px;
+  color: var(--search-text-color);
+  text-align: justify !important;
+  text-align-last: right !important;
+  line-height: 2.2 !important;
+  word-spacing: -1px !important;
+  padding: 0 var(--overlay-padding-x);
+}
+
+.item-search .item-line-2[data-clickable="true"] {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.item-search .item-line-2[data-clickable="true"]:hover {
+  background-color: var(--primary-light);
+}
+
+.night-mode .item-search .item-line-2[data-clickable="true"]:hover {
+  background-color: rgba(76, 175, 80, 0.2);
+}
+
+/* ============================================
+   16. TAFSIR
+   ============================================ */
+.tafsir-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow: visible;
+}
+
+.tafsir-controls .custom-select {
+  flex: 1 1 120px;
+  min-width: 100px;
+}
+
+.tafsir-controls .tafsir-font-btn {
+  flex: 0 0 auto;
+}
+
+.tafsir-container {
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  background: var(--surface);
+}
+
+.tafsir-aya-container {
+  margin-bottom: 0;
+  padding: 8px 5px;
+  border-bottom: var(--border-width) solid var(--border);
+  scroll-margin-top: 70px;
+}
+
+.tafsir-aya-container:last-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.tafsir-explanation {
+  color: var(--text);
+  font-family: "Segoe UI", sans-serif;
+  font-weight: normal;
+  text-align: justify !important;
+  text-align-last: right !important;
+  line-height: 1.5 !important;
+  font-size: 16px;
+}
+
+.tafsir-content-container {
+  padding: 0 var(--overlay-padding-x) !important;
+  line-height: 1.8;
+  scroll-behavior: auto !important;
+  overflow-anchor: none !important;
+  text-align: justify !important;
+  text-align-last: right !important;
+  font-size: 16px;
+  transition: font-size 0.1s ease;
+}
+
+.tafsir-content-container .item-search-text,
+.tafsir-content-container .tafsir-explanation,
+.tafsir-content-container .sura-name-kufi {
+  font-size: inherit !important;
+}
+
+.tafsir-content-container * {
+  font-size: inherit;
+}
+
+#tafsirContent {
+  scroll-behavior: auto !important;
+  overflow-anchor: none !important;
+}
+
+.sura-title-container {
+  text-align: center;
+  margin: 1.5rem 0 1rem 0;
+  padding: 0.5rem 0;
+  border-bottom: var(--border-width) solid var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.sura-name-kufi {
+  font-family: "MyNotoKufi", sans-serif;
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: var(--primary);
+  line-height: 1.4;
+}
+
+.night-mode .sura-title-container {
+  border-bottom-color: var(--success);
+}
+
+.night-mode .sura-name-kufi {
+  color: var(--success);
+}
+
+/* ============================================
+   17. À PROPOS
+   ============================================ */
+.about-content {
+  flex: 1;
+  width: auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  padding: var(--space-md);
+  gap: var(--space-sm);
+  color: var(--text);
+  text-align: justify;
+  text-align-last: right;
+}
+
+.about-content strong {
+  color: var(--text);
+  font-weight: bold;
+}
+
+.night-mode .about-content strong {
+  color: var(--text);
+}
+
+.about-title {
+  text-align: center;
+  font-size: var(--text-lg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.night-mode .about-title {
+  color: var(--text);
+}
+
+.about-version {
+  font-size: var(--text-sm);
+  color: var(--text-light);
+}
+
+.about-desc {
+  font-size: var(--text-md);
+  line-height: 1.7;
+  color: var(--text);
+  text-align: justify;
+}
+
+.about-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  margin: var(--space-md) 0;
+}
+
+.about-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  padding: var(--space-md);
+  gap: 0.25rem;
+}
+
+.about-stat span {
+  font-size: var(--text-sm);
+  color: var(--text-light);
+}
+
+.about-stat strong {
+  font-size: var(--text-lg);
+  font-weight: bold;
+  color: var(--text);
+}
+
+.night-mode .about-stat strong {
+  color: var(--text);
+}
+
+.about-footer {
+  text-align: center;
+  text-align-last: center;
+  font-size: var(--text-sm);
+  color: var(--text-light);
+  line-height: 1.8;
+  margin-top: auto;
+  padding-top: var(--space-md);
+}
+
+.about-footer a {
+  color: var(--text-light);
+  text-decoration: none;
+}
+
+.night-mode .about-footer a {
+  color: var(--text-light);
+}
+
+.contact-grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 15px 0;
+}
+
+.contact-box-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 5px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  text-decoration: none;
+  transition: var(--transition-default);
+  min-height: 60px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.contact-box-item:hover {
+  border-color: var(--primary) !important;
+  background: var(--primary-light);
+}
+
+.contact-box-item span {
+  font-size: var(--text-sm);
+  font-weight: bold;
+  text-align: center;
+}
+
+.contact-box-item:active {
+  transform: scale(0.96);
+  filter: brightness(0.95);
+}
+
+.night-mode .contact-box-item {
+  background: var(--surface-alt);
+}
+
+.night-mode .contact-box-item:hover {
+  border-color: var(--success) !important;
+}
+
+/* ============================================
+   18. AUDIO – OVERLAY & MINI-BAR
+   ============================================ */
+.audio-body {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.audio-riwaya-info {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-light);
+  border-radius: var(--border-radius);
+  background: var(--surface-alt);
+}
+
+.audio-current-info {
+  background: var(--surface-alt);
+  border-radius: var(--border-radius);
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.audio-current-info span {
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  color: var(--text-light);
+}
+
+.audio-current-info .audio-current-display {
+  flex: 1;
+  margin: 0;
+  background: transparent;
+  border: none;
+  color: inherit;
+  padding: 0.2rem 0;
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.night-mode .audio-current-display {
+  background: rgba(76, 175, 80, 0.15);
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.audio-select-grid {
+  display: grid !important;
+  grid-template-columns: auto auto auto;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+  align-items: center;
+}
+
+.audio-select-row:first-child {
+  display: block;
+  width: 100%;
+}
+
+#surahSelectAudio,
+#ayaSelectAudio,
+#pageSelectAudio {
+  width: 100%;
+  min-width: 0;
+}
+
+#reciterSelect {
+  text-align: right;
+  text-align-last: right;
+}
+
+#reciterSelectWrap {
+  width: 100%;
+}
+
+#audioOverlay .overlay-content {
+  max-height: none !important;
+  min-height: 50vh;
+}
+
+#audioOverlay .overlay-content,
+#audioOverlay .overlay-body,
+#audioOverlay .audio-body,
+#audioOverlay .audio-select-row,
+#audioOverlay .audio-select-grid,
+#audioOverlay .custom-select {
+  overflow: visible !important;
+}
+
+#audioOverlay .overlay-body {
+  max-height: none !important;
+  overflow-y: visible !important;
+}
+
+.audio-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font-size: var(--text-sm);
+  color: var(--text-light);
+  margin: 0.2rem 0;
+}
+
+.audio-progress {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.audio-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.2rem 0;
+}
+
+.audio-status {
+  text-align: center;
+  color: var(--text-light);
+  font-size: var(--text-sm);
+  padding: 0.3rem;
+  display: none;
+}
+
+.audio-status:not(:empty) {
+  display: block;
+}
+
+.audio-warning {
+  background: rgba(255, 193, 7, 0.2);
+  color: #b45f06;
+  padding: var(--space-md);
+  border-radius: var(--border-radius);
+  font-size: var(--text-sm);
+  text-align: center;
+  margin-bottom: var(--space-md);
+}
+
+.night-mode .audio-warning {
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffb74d;
+}
+
+.audio-btn {
+  font-size: 1.2rem;
+  width: var(--btn-sm);
+  height: var(--btn-sm);
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    var(--transition-default),
+    transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.audio-btn:active {
+  transform: scale(0.92);
+  background: var(--primary-light);
+}
+
+.audio-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.audio-btn.speed-btn {
+  font-family: monospace;
+  font-size: 1rem;
+  background: var(--surface-alt);
+  border-radius: 2rem;
+  letter-spacing: -3px;
+  padding: 2px 4px;
+  min-width: 2.2rem;
+}
+
+.audio-controls .audio-btn.speed-btn {
+  width: 2.8rem;
+  min-width: 2.8rem;
+}
+
+.audio-mini-bar {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 1200;
+  background: var(--mini-bar-bg);
+  backdrop-filter: blur(8px);
+  transform: translateY(0);
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.audio-mini-bar .mini-bar-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px 0 10px;
+  flex-shrink: 0;
+}
+
+.audio-mini-bar.hidden {
+  transform: translateY(100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.audio-mini-bar .mini-bar-controls {
+  display: flex;
+  flex: 1;
+  justify-content: space-around;
+}
+
+.audio-mini-bar .audio-btn svg {
+  width: 30px;
+  height: 30px;
+}
+
+.audio-controls .audio-btn svg {
+  width: 32px;
+  height: 32px;
+}
+
+.audio-fab {
+  position: fixed;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  left: 1rem;
+  z-index: 1100;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  background: var(--mini-bar-bg);
+  color: white;
+  font-size: 1.5rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-heavy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.2s,
+    opacity 0.2s;
+  opacity: 1;
+  transform: scale(1);
+}
+
+.audio-fab.hidden {
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+.audio-fab:active {
+  transform: scale(0.9);
+}
+
+.night-mode .audio-fab {
+  background: var(--mini-bar-bg);
+}
+
+.fab-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--text-lighter);
+  transition: background-color 0.2s;
+}
+
+.audio-fab.playing .fab-indicator {
+  background-color: var(--success);
+}
+
+/* ============================================
+   19. CUSTOM SELECT — version sobre
+   ============================================ */
+.custom-select {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.custom-select-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--border-radius);
+  font-size: var(--text-md);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  gap: 4px;
+  min-height: 2.4rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.custom-select-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.custom-select-btn:focus,
+.custom-select.open .custom-select-btn {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+  background: var(--surface);
+}
+
+.night-mode .custom-select-btn {
+  background-color: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.night-mode .custom-select-btn:hover {
+  border-color: var(--success);
+  background: var(--primary-light);
+}
+
+.night-mode .custom-select-btn:focus,
+.night-mode .custom-select.open .custom-select-btn {
+  border-color: var(--success);
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.25);
+}
+
+.custom-select-val {
+  flex: 1;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-select-arrow {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+}
+
+.custom-select.open .custom-select-arrow {
+  transform: rotate(180deg);
+}
+
+.custom-select-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  max-height: 60vh;
+  overflow-y: auto;
+  z-index: 10050;
+  box-shadow: var(--shadow-heavy);
+}
+
+.custom-select.open .custom-select-dropdown {
+  display: block;
+}
+
+.custom-select-group {
+  padding: 0.4rem 0.75rem 0.2rem;
+  font-size: var(--text-sm);
+  color: var(--text-lighter);
+  background: var(--surface-alt);
+  font-weight: 600;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+
+.custom-select-option {
+  padding: 0.65rem 0.75rem;
+  font-size: var(--text-md);
+  cursor: pointer;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  background: var(--surface);
+  min-height: 2.6rem;
+  display: flex;
+  align-items: center;
+}
+
+.custom-select-option:last-child {
+  border-bottom: none;
+}
+
+.custom-select-option:active,
+.custom-select-option.selected {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.night-mode .custom-select-option.selected {
+  background: rgba(76, 175, 80, 0.2);
+  color: var(--success);
+}
+
+.night-mode .custom-select-dropdown {
+  background: var(--surface);
+  border-color: var(--border-dark);
+}
+
+.custom-select-option.reciter-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reciter-name {
+  flex: 1;
+  cursor: pointer;
+  text-align: right;
+}
+
+.custom-select-option.reciter-option.selected {
+  background: var(--primary-light);
+}
+
+.night-mode .custom-select-option.reciter-option.selected {
+  background: rgba(76, 175, 80, 0.2);
+}
+
+/* ============================================
+   20. UTILITAIRES & DIVERS
+   ============================================ */
+.loading-placeholder,
+.empty-message {
+  text-align: center;
+  color: var(--text-light);
+  padding: var(--overlay-padding-x);
+}
+
+.loading-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: var(--space-lg) auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner.small {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-width: 2px;
+  margin: 0;
+}
+
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: 10px;
+  z-index: 10000;
+  max-width: 80%;
+  text-align: center;
+  display: none;
+  font-size: var(--text-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  white-space: pre-line;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.autoscroll-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.confirm-dialog {
+  background: var(--surface);
+  border-radius: var(--border-radius-lg);
+  padding: var(--space-lg);
+  max-width: 20rem;
+  width: 90%;
+  text-align: center;
+  box-shadow: var(--shadow-heavy);
+}
+
+.confirm-dialog p {
+  color: var(--text);
+  margin-bottom: var(--space-lg);
+  font-size: var(--text-md);
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+}
+
+.aya-highlight {
+  position: absolute;
+  background: rgba(0, 200, 100, 0.25);
+  border-radius: 4px;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.night-mode .aya-highlight {
+  background: rgba(255, 213, 0, 0.2);
+}
+
+.error-title {
+  color: var(--error);
+}
+
+.noscript-fallback {
+  text-align: center;
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+  background: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+}
+
+.noscript-title {
+  color: #004494;
+}
+
+.hidden {
+  display: none !important;
 }

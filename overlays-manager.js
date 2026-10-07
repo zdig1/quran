@@ -301,150 +301,150 @@ class OverlayManager {
     }
   }
 
-_createSurahItem(surah, isPinned, bookmarkedSurahIds) {
-  const container = window.ListItemRenderer.createContainer('surah', surah.s_id);
-  container.classList.add('item-surah');
+  _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
+    const container = window.ListItemRenderer.createContainer('surah', surah.s_id);
+    container.classList.add('item-surah');
 
-  // ============================================
-  // TABLEAU 2 lignes × 7 colonnes (RTL)
-  // ============================================
-  const grid = document.createElement("div");
-  grid.className = "surah-grid";
+    // ============================================
+    // TABLEAU 2 lignes × 7 colonnes (RTL)
+    // ============================================
+    const grid = document.createElement("div");
+    grid.className = "surah-grid";
 
-  // --- Données ---
-  const currentLang = window.quranApp?.getSetting?.("langue") || "ar";
-  const surahCode = `surah${String(surah.s_id).padStart(3, "0")}`;
-  const juzStarts = window.quranCalculator._juzBySurahId?.get(surah.s_id)?.slice(0, 1) || [];
-  const hasSajda = window.quranCalculator.hasSajdaInSurah(surah.s_id);
-  const hasBookmark = bookmarkedSurahIds?.has(surah.s_id);
+    // --- Données ---
+    const currentLang = window.quranApp?.getSetting?.("langue") || "ar";
+    const surahCode = `surah${String(surah.s_id).padStart(3, "0")}`;
+    const juzStarts = window.quranCalculator._juzBySurahId?.get(surah.s_id)?.slice(0, 1) || [];
+    const hasSajda = window.quranCalculator.hasSajdaInSurah(surah.s_id);
+    const hasBookmark = bookmarkedSurahIds?.has(surah.s_id);
 
-  // ============================================
-  // COL 1 — Pin 📌 (fusion 2 lignes)
-  // ============================================
-  const pinBtn = document.createElement("button");
-  pinBtn.className = `g-col g-pin action-icon pin-btn surah-pin ${isPinned ? "pinned" : ""}`;
-  pinBtn.setAttribute("data-sura-id", surah.s_id);
-  pinBtn.textContent = isPinned ? "💫" : "📌";
-  grid.appendChild(pinBtn);
+    // ============================================
+    // COL 1 — Pin 📌 (fusion 2 lignes)
+    // ============================================
+    const pinBtn = document.createElement("button");
+    pinBtn.className = `g-col g-pin action-icon pin-btn surah-pin ${isPinned ? "pinned" : ""}`;
+    pinBtn.setAttribute("data-sura-id", surah.s_id);
+    pinBtn.textContent = isPinned ? "💫" : "📌";
+    grid.appendChild(pinBtn);
 
-  // ============================================
-  // COL 2 — Badge (ligne 1 uniquement)
-  // ============================================
-  const badge = window.ListItemRenderer.createBadge(String(surah.s_id));
-  badge.classList.add("g-col", "g-badge");
-  grid.appendChild(badge);
+    // ============================================
+    // COL 2 — Badge (ligne 1 uniquement)
+    // ============================================
+    const badge = window.ListItemRenderer.createBadge(String(surah.s_id));
+    badge.classList.add("g-col", "g-badge");
+    grid.appendChild(badge);
 
-  // ============================================
-  // COL 3 — Nom (ligne 1) + النزول (ligne 2)
-  // ============================================
-  const nameCell = document.createElement("div");
-  nameCell.className = "g-col g-name";
+    // ============================================
+    // COL 3 — Nom (ligne 1) + النزول (ligne 2)
+    // ============================================
+    const nameCell = document.createElement("div");
+    nameCell.className = "g-col g-name";
 
-  const callig = document.createElement("span");
-  callig.className = "surah-calligraphy";
-  callig.textContent = surahCode;
+    const callig = document.createElement("span");
+    callig.className = "surah-calligraphy";
+    callig.textContent = surahCode;
 
-  if (currentLang === "ar") {
-    nameCell.appendChild(callig);
-  } else {
-    const latin = window.quranReader?.getSurahName?.(surah.s_id) || surah.name;
-    const nameSpan = document.createElement("span");
-    nameSpan.className = "surah-name";
-    nameSpan.textContent = latin;
-    nameCell.appendChild(nameSpan);
-    nameCell.appendChild(callig);
+    if (currentLang === "ar") {
+      nameCell.appendChild(callig);
+    } else {
+      const latin = window.quranReader?.getSurahName?.(surah.s_id) || surah.name;
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "surah-name";
+      nameSpan.textContent = latin;
+      nameCell.appendChild(nameSpan);
+      nameCell.appendChild(callig);
+    }
+    grid.appendChild(nameCell);
+
+    const orderCell = document.createElement("div");
+    orderCell.className = "g-col g-order";
+    orderCell.innerHTML = `<span class="note-small">النزول: ${surah.order}</span>`;
+    grid.appendChild(orderCell);
+
+    // ============================================
+    // COL 4 — Info ℹ️ (ligne 1) + Révélation 🕋/🕌 (ligne 2)
+    // ============================================
+    const infoBtn = document.createElement("button");
+    infoBtn.className = "g-col g-info action-icon info-btn surah-info";
+    infoBtn.setAttribute("data-sura-id", surah.s_id);
+    infoBtn.textContent = "ℹ️";
+    grid.appendChild(infoBtn);
+
+    const revelCell = document.createElement("div");
+    revelCell.className = "g-col g-revel";
+    revelCell.innerHTML = `<span class="surah-revel">${surah.type === "مدنية" ? "🕌" : "🕋"}</span>`;
+    grid.appendChild(revelCell);
+
+    // ============================================
+    // COL 5 — Bookmark 🔖 (ligne 1 uniquement)
+    // ============================================
+    const bookmarkCell = document.createElement("div");
+    bookmarkCell.className = "g-col g-bookmark";
+    if (hasBookmark) bookmarkCell.textContent = "🔖";
+    grid.appendChild(bookmarkCell);
+
+    // ============================================
+    // COL 6 — Juz (ligne 1) + Sajda ۩ (ligne 2)
+    // ============================================
+    const juzCell = document.createElement("div");
+    juzCell.className = "g-col g-juz";
+    if (juzStarts.length) {
+      juzCell.innerHTML = `<span class="juz-badge">${juzStarts.map(j => `ج${j}`).join(" ")}</span>`;
+    }
+    grid.appendChild(juzCell);
+
+    const sajdaCell = document.createElement("div");
+    sajdaCell.className = "g-col g-sajda";
+    if (hasSajda) {
+      sajdaCell.innerHTML = `<span class="item-sajda-icon">۩</span>`;
+    }
+    grid.appendChild(sajdaCell);
+
+    // ============================================
+    // COL 7 — Page (ligne 1) + Versets (ligne 2)
+    // ============================================
+    const pageCell = document.createElement("div");
+    pageCell.className = "g-col g-page";
+    pageCell.innerHTML = `<span class="page-tag">ص ${surah.page_start}</span>`;
+    grid.appendChild(pageCell);
+
+    const versesCell = document.createElement("div");
+    versesCell.className = "g-col g-verses";
+    versesCell.innerHTML = `<span class="surah-verses">(${surah.verses}) آية</span>`;
+    grid.appendChild(versesCell);
+
+    // ============================================
+    // Assemblage
+    // ============================================
+    container.appendChild(grid);
+
+    // ============================================
+    // Événements
+    // ============================================
+    container.addEventListener("click", (e) => {
+      if (e.target.closest('.pin-btn') || e.target.closest('.info-btn')) return;
+      window.quranApp?.goToPage(surah.page_start);
+      this.closeOverlay("surahs");
+    });
+
+    pinBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!window.quranApp) return;
+      const added = window.quranApp.togglePinSurah(surah.s_id);
+      pinBtn.classList.toggle("pinned", added);
+      pinBtn.textContent = added ? "💫" : "📌";
+      this.renderSurahsList(true, surah.s_id);
+    });
+
+    infoBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.showSurahInfo(surah.s_id);
+    });
+
+    return container;
   }
-  grid.appendChild(nameCell);
-
-  const orderCell = document.createElement("div");
-  orderCell.className = "g-col g-order";
-  orderCell.innerHTML = `<span class="note-small">النزول: ${surah.order}</span>`;
-  grid.appendChild(orderCell);
-
-  // ============================================
-  // COL 4 — Info ℹ️ (ligne 1) + Révélation 🕋/🕌 (ligne 2)
-  // ============================================
-  const infoBtn = document.createElement("button");
-  infoBtn.className = "g-col g-info action-icon info-btn surah-info";
-  infoBtn.setAttribute("data-sura-id", surah.s_id);
-  infoBtn.textContent = "ℹ️";
-  grid.appendChild(infoBtn);
-
-  const revelCell = document.createElement("div");
-  revelCell.className = "g-col g-revel";
-  revelCell.innerHTML = `<span class="surah-revel">${surah.type === "مدنية" ? "🕌" : "🕋"}</span>`;
-  grid.appendChild(revelCell);
-
-  // ============================================
-  // COL 5 — Bookmark 🔖 (ligne 1 uniquement)
-  // ============================================
-  const bookmarkCell = document.createElement("div");
-  bookmarkCell.className = "g-col g-bookmark";
-  if (hasBookmark) bookmarkCell.textContent = "🔖";
-  grid.appendChild(bookmarkCell);
-
-  // ============================================
-  // COL 6 — Juz (ligne 1) + Sajda ۩ (ligne 2)
-  // ============================================
-  const juzCell = document.createElement("div");
-  juzCell.className = "g-col g-juz";
-  if (juzStarts.length) {
-    juzCell.innerHTML = `<span class="juz-badge">${juzStarts.map(j => `ج${j}`).join(" ")}</span>`;
-  }
-  grid.appendChild(juzCell);
-
-  const sajdaCell = document.createElement("div");
-  sajdaCell.className = "g-col g-sajda";
-  if (hasSajda) {
-    sajdaCell.innerHTML = `<span class="item-sajda-icon">۩</span>`;
-  }
-  grid.appendChild(sajdaCell);
-
-  // ============================================
-  // COL 7 — Page (ligne 1) + Versets (ligne 2)
-  // ============================================
-  const pageCell = document.createElement("div");
-  pageCell.className = "g-col g-page";
-  pageCell.innerHTML = `<span class="page-tag">ص ${surah.page_start}</span>`;
-  grid.appendChild(pageCell);
-
-  const versesCell = document.createElement("div");
-  versesCell.className = "g-col g-verses";
-  versesCell.innerHTML = `<span class="surah-verses">(${surah.verses}) آية</span>`;
-  grid.appendChild(versesCell);
-
-  // ============================================
-  // Assemblage
-  // ============================================
-  container.appendChild(grid);
-
-  // ============================================
-  // Événements
-  // ============================================
-  container.addEventListener("click", (e) => {
-    if (e.target.closest('.pin-btn') || e.target.closest('.info-btn')) return;
-    window.quranApp?.goToPage(surah.page_start);
-    this.closeOverlay("surahs");
-  });
-
-  pinBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!window.quranApp) return;
-    const added = window.quranApp.togglePinSurah(surah.s_id);
-    pinBtn.classList.toggle("pinned", added);
-    pinBtn.textContent = added ? "💫" : "📌";
-    this.renderSurahsList(true, surah.s_id);
-  });
-
-  infoBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    this.showSurahInfo(surah.s_id);
-  });
-
-  return container;
-}
 
   renderSurahsList(scrollToCurrent = true, preserveSurahId = null) {
     const overlay = this.overlays.surahs;
@@ -1153,7 +1153,7 @@ _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
         ${coordsStatus}
         <div class="audio-select-row">
             <div class="custom-select" id="reciterSelectWrap">
-                <button type="button" class="custom-select-btn select-violet" id="reciterSelect">
+                <button type="button" class="custom-select-btn" id="reciterSelect">
                     <span class="custom-select-val">اختر القارئ</span><span class="custom-select-arrow">▾</span>
                 </button>
                 <div class="custom-select-dropdown" id="reciterSelectList"></div>
@@ -1161,19 +1161,19 @@ _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
         </div>
         <div class="audio-select-row audio-select-grid">
             <div class="custom-select" id="surahSelectAudioWrap">
-                <button type="button" class="custom-select-btn select-ok" id="surahSelectAudio">
+                <button type="button" class="custom-select-btn" id="surahSelectAudio">
                     <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>
                 </button>
                 <div class="custom-select-dropdown" id="surahSelectAudioList"></div>
             </div>
             <div class="custom-select" id="ayaSelectAudioWrap">
-                <button type="button" class="custom-select-btn select-blue" id="ayaSelectAudio">
+                <button type="button" class="custom-select-btn" id="ayaSelectAudio">
                     <span class="custom-select-val">اختر الآية</span><span class="custom-select-arrow">▾</span>
                 </button>
                 <div class="custom-select-dropdown" id="ayaSelectAudioList"></div>
             </div>
             <div class="custom-select" id="pageSelectAudioWrap">
-                <button type="button" class="custom-select-btn select-brown" id="pageSelectAudio">
+                <button type="button" class="custom-select-btn" id="pageSelectAudio">
                     <span class="custom-select-val">اختر الصفحة</span><span class="custom-select-arrow">▾</span>
                 </button>
                 <div class="custom-select-dropdown" id="pageSelectAudioList"></div>
@@ -1327,19 +1327,19 @@ _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
     return `
         <div class="tafsir-controls tafsir-container">
             <div class="custom-select" id="suraSelectWrap">
-                <button type="button" class="custom-select-btn select-ok" id="suraSelect">
+                <button type="button" class="custom-select-btn" id="suraSelect">
                     <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>
                 </button>
                 <div class="custom-select-dropdown" id="suraSelectList"></div>
             </div>
             <div class="custom-select" id="ayaSelectWrap">
-                <button type="button" class="custom-select-btn select-blue" id="ayaSelect">
+                <button type="button" class="custom-select-btn" id="ayaSelect">
                     <span class="custom-select-val">اختر الآية</span><span class="custom-select-arrow">▾</span>
                 </button>
                 <div class="custom-select-dropdown" id="ayaSelectList"></div>
             </div>
             <div class="custom-select" id="pageSelectWrap">
-                <button type="button" class="custom-select-btn select-brown" id="pageSelect">
+                <button type="button" class="custom-select-btn" id="pageSelect">
                     <span class="custom-select-val">اختر الصفحة</span><span class="custom-select-arrow">▾</span>
                 </button>
                 <div class="custom-select-dropdown" id="pageSelectList"></div>
@@ -1446,12 +1446,12 @@ _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
   shareApp() {
     const appName = "مصحف التجويد - حفص";
     const appUrl = "https://zdig1.gitlab.io/quran";
-    const message = `📖 مصحف التجويد الملون برواية حفص \nتطبيق متكامل لقراءة القرآن الكريم والاستماع إليه ودراسته. يضم التفسير الميسّر، والبحث المتقدم، بالإضافة إلى قواعد التجويد.`;
+    const shortMessage = `📖  تطبيق متكامل لقراءة القرآن الكريم والاستماع إليه ودراسته.      \n يضم التفسير الميسّر، والبحث المتقدم، بالإضافة إلى قواعد التجويد.`;
 
     if (typeof cordova !== "undefined" && window.plugins?.socialsharing) {
       window.plugins.socialsharing.shareWithOptions(
         {
-          message: message,
+          message: shortMessage,
           subject: appName,
           url: appUrl,
           chooserTitle: "مشاركة التطبيق",
@@ -1465,7 +1465,7 @@ _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
     } else if (navigator.share) {
       navigator.share({
         title: appName,
-        text: message,
+        text: shortMessage,
         url: appUrl,
       })
         .then(() => window.quranApp?.showToast("✅ تمت المشاركة"))
@@ -1498,26 +1498,27 @@ _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
   renderAboutContent() {
     const overlay = this.overlays.about;
     if (!overlay?.content) return;
-    overlay.content.innerHTML = `<div class="about-content">
+    overlay.content.innerHTML = `
+    <div class="about-content">
       <p class="about-title">
         <strong>مصحف التجويد - حفص</strong>
         <span class="about-version">v1.1.2</span>
       </p>
       <p class="about-desc">
-         تطبيق شامل لقراءة القرآن الكريم. مطابق للمصحف الورقي المعتمد:
-         <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (دار المعرفة).
+        تطبيق شامل لقراءة القرآن الكريم. مطابق للمصحف الورقي المعتمد:
+        <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (دار المعرفة).
       </p>
       <div class="contact-grid-container">
-        <button id="aboutBackupBtn" class="contact-box-item contact-green">
+        <button id="aboutBackupBtn" class="contact-box-item">
           <span>💾 نسخ احتياطي</span>
         </button>
-        <button id="shareAppBtn" class="contact-box-item contact-blue">
+        <button id="shareAppBtn" class="contact-box-item">
           <span>🔗 شارك التطبيق</span>
         </button>
-        <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item contact-brown">
+        <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item">
           <span>🌐 زيارة الموقع</span>
         </a>
-        <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%201.1.2%0A---%0A%0A" class="contact-box-item contact-violet">
+        <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%201.1.2%0A---%0A%0A" class="contact-box-item">
           <span>📧 تواصل معنا</span>
         </a>
       </div>
@@ -1547,7 +1548,6 @@ _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
       });
     }
   }
-
   showBackupDialog() {
     this.closeMenu();
     const overlay = this.lazyLoadOverlay("backup");

@@ -229,16 +229,13 @@ class QuranAudioPlayer {
     this._buildFab();
     await this._loadAyaCoords();
     this.surahs = window.quranCalculator?.getAllSurahs() || [];
-    // ⭐ On n'utilise plus document.getElementById("quranAudioPlayer")
-    // car on a nos propres éléments audioA et audioB
     this._nextAudioBuffer = null;
     this._cacheElements();
-    this._setupPinReciterButton();
     this._populatePageSelect();
     this._populateSurahSelect();
     this._populateReciterSelect(window.ACTIVE_RIWAYA);
     this._selectReciter(localStorage.getItem(`quran_reciter_${window.ACTIVE_RIWAYA}`) || null, false);
-    this._setupAudioEvents(); // ⭐ Attache les événements aux deux éléments
+    this._setupAudioEvents();
     this._setupOverlayEvents();
     this._setupMiniBarEvents();
     const savedRate = parseFloat(localStorage.getItem("quran_rate")) || 1.0;
@@ -352,7 +349,7 @@ class QuranAudioPlayer {
 
         const pinBtn = document.createElement('button');
         pinBtn.className = `pin-reciter-btn action-icon ${isPinned ? 'pinned' : ''}`;
-        pinBtn.textContent = isPinned ? '⭐' : '📌';
+        pinBtn.textContent = isPinned ? '💫' : '📌';
         pinBtn.setAttribute('data-id', reciter.id);
         pinBtn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -409,7 +406,7 @@ class QuranAudioPlayer {
     if (!btn || !this.currentReciter) return;
     const valSpan = btn.querySelector('.custom-select-val');
     const isPinned = this.isReciterPinned(this.currentReciter.id);
-    valSpan.textContent = isPinned ? `⭐ ${this.currentReciter.name}` : this.currentReciter.name;
+    valSpan.textContent = isPinned ? `💫 ${this.currentReciter.name}` : this.currentReciter.name;
   }
 
   getPinnedReciters() {
@@ -451,26 +448,6 @@ class QuranAudioPlayer {
   }
 
   _updateCurrentReciterName() { }
-
-  _setupPinReciterButton() {
-    const pinBtn = document.getElementById('pinReciterBtn');
-    if (!pinBtn) return;
-    if (this._pinReciterHandler) {
-      pinBtn.removeEventListener('click', this._pinReciterHandler);
-    }
-    this._pinReciterHandler = () => {
-      if (!this.currentReciter) {
-        window.quranApp?.showToast('⚠️ اختر قارئاً أولاً');
-        return;
-      }
-      const added = this.togglePinReciter(this.currentReciter.id);
-      this._updateReciterSelectButton();
-      window.quranApp?.showToast(
-        added ? '⭐ تمت الإضافة إلى المفضلين' : '📌 تمت الإزالة من المفضلين'
-      );
-    };
-    pinBtn.addEventListener('click', this._pinReciterHandler);
-  }
 
   // ============================================
   // SOURATES
