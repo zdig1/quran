@@ -316,7 +316,7 @@ class OverlayManager {
     const mainColumn = document.createElement("div");
     mainColumn.className = "surah-rows";
 
-// Ligne 1 : numéro + nom (أو الخط الزخرفي)
+    // Ligne 1 : Badge + Nom de la sourate + Bouton Information (ℹ️)
     const row1 = document.createElement("div");
     row1.className = "surah-row";
     const row1Right = document.createElement("div");
@@ -325,20 +325,16 @@ class OverlayManager {
     const badge = window.ListItemRenderer.createBadge(String(surah.s_id));
     row1Right.appendChild(badge);
 
-    // تجهيز رمز السورة التجميعي (surah001, surah002 ...)
     const surahCode = `surah${String(surah.s_id).padStart(3, "0")}`;
     const calligSpan = document.createElement("span");
     calligSpan.className = "surah-calligraphy";
     calligSpan.textContent = surahCode;
 
-    // معرفة اللغة الحالية للتطبيق
     const currentLang = window.quranApp?.getSetting?.("langue") || "ar";
 
     if (currentLang === "ar") {
-      // 1. في الوضع العربي: عرض الرسم الخطّي فقط
       row1Right.appendChild(calligSpan);
     } else {
-      // 2. في وضع الترجمة: عرض الاسم باللاتينية + الرسم الخطّي بجانبه
       const latinName = window.quranReader?.getSurahName?.(surah.s_id) || surah.name;
       const nameSpan = document.createElement("span");
       nameSpan.className = "surah-name";
@@ -348,31 +344,42 @@ class OverlayManager {
       row1Right.appendChild(calligSpan);
     }
 
-    row1.appendChild(row1Right);
-
-    // Ligne 2 : ordre de révélation + icône + info
-    const row2 = document.createElement("div");
-    row2.className = "surah-row";
-    const row2Right = document.createElement("div");
-    row2Right.className = "surah-row-right";
-
-    const orderSpan = document.createElement("span");
-    orderSpan.className = "note-small";
-    orderSpan.textContent = `النزول: ${surah.order}`;
-    const revelSpan = document.createElement("span");
-    revelSpan.className = "surah-revel";
-    revelSpan.textContent = surah.type === "مدنية" ? "🕌" : "🕋";
+    // Bouton Information (ℹ️) à la fin de la 1ère ligne
     const infoBtn = document.createElement("button");
     infoBtn.className = "action-icon info-btn surah-info";
     infoBtn.setAttribute("data-sura-id", surah.s_id);
     infoBtn.textContent = "ℹ️";
 
-    row2Right.appendChild(orderSpan);
-    row2Right.appendChild(revelSpan);
-    row2Right.appendChild(infoBtn);
-    row2.appendChild(row2Right);
+    row1.appendChild(row1Right);
+    row1.appendChild(infoBtn);
 
-    // Partie droite (bookmark, juz, page, sajda, versets)
+    // Ligne 2 : Spacer (sous le badge) + Ordre de descente (sous le nom) + Icône Révélation (sous ℹ️)
+    const row2 = document.createElement("div");
+    row2.className = "surah-row";
+    const row2Right = document.createElement("div");
+    row2Right.className = "surah-row-right";
+
+    // Spacer aligné sous le badge
+    const badgeSpacer = document.createElement("span");
+    badgeSpacer.className = "badge-spacer";
+
+    // Ordre de descente (النزول) aligné sous le nom de la sourate
+    const orderSpan = document.createElement("span");
+    orderSpan.className = "note-small";
+    orderSpan.textContent = `النزول: ${surah.order}`;
+
+    row2Right.appendChild(badgeSpacer);
+    row2Right.appendChild(orderSpan);
+
+    // Icône Révélation (🕋 / 🕌) alignée sous le bouton ℹ️
+    const revelSpan = document.createElement("span");
+    revelSpan.className = "surah-revel";
+    revelSpan.textContent = surah.type === "مدنية" ? "🕌" : "🕋";
+
+    row2.appendChild(row2Right);
+    row2.appendChild(revelSpan);
+
+    // Partie gauche (bookmark, juz, page, sajda, versets)
     const rowLeft = document.createElement("div");
     rowLeft.className = "surah-row-left";
 
@@ -1452,7 +1459,7 @@ class OverlayManager {
   // ============================================
 
   shareApp() {
-    const appName = "مصحف التجويد - حفص"; 
+    const appName = "مصحف التجويد - حفص";
     const appUrl = "https://zdig1.gitlab.io/quran";
     const message = `📖 مصحف التجويد الملون برواية حفص \nتطبيق متكامل لقراءة القرآن الكريم والاستماع إليه ودراسته. يضم التفسير الميسّر، والبحث المتقدم، بالإضافة إلى قواعد التجويد.`;
 
