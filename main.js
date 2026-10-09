@@ -341,9 +341,8 @@ class QuranApp {
     icon.textContent = hasBookmark ? "⭐" : "🔖";
     icon.title = hasBookmark ? "علامة مرجعية موجودة" : "إضافة علامة مرجعية";
   }
-
   /**
-   * Exporte toutes les données utilisateur (signets + épingles)
+   * Exporte toutes les données utilisateur (signets + épingles + préférences)
    */
   exportUserData() {
     const pinnedReciters = {};
@@ -355,6 +354,8 @@ class QuranApp {
       bookmarks: this.bookmarks,
       pinnedSurahs: this.pinnedSurahs,
       pinnedReciters,
+      lastPage: this.lastPage,
+      theme: this.theme,
     };
     return JSON.stringify(data, null, 2);
   }
@@ -417,6 +418,7 @@ class QuranApp {
         this.pinnedSurahs = newPinned;
         this._updateBookmarkedPagesSet();
 
+        // 🎙️ Récitateurs épinglés
         if (imported.pinnedReciters && typeof imported.pinnedReciters === 'object') {
           Object.entries(imported.pinnedReciters).forEach(([riwaya, ids]) => {
             if (Array.isArray(ids)) {
@@ -430,6 +432,26 @@ class QuranApp {
             }
           });
         }
+
+        // 📄 Dernière page consultée
+        if (
+          typeof imported.lastPage === "number" &&
+          imported.lastPage >= 1 &&
+          imported.lastPage <= 604
+        ) {
+          this.lastPage = imported.lastPage;
+          if (window.quranReader?.goToPage) {
+            window.quranReader.goToPage(imported.lastPage);
+          }
+        }
+
+        // 🌙 Thème clair/sombre
+        if (imported.theme === "light" || imported.theme === "night") {
+          this.theme = imported.theme;
+          this.applyTheme();
+          this.updateAllThemeIcons();
+        }
+
         this.saveToLocalStorage();
         window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
         window.dispatchEvent(new CustomEvent("quran:pinnedSurahsUpdated"));
