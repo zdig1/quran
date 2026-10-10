@@ -2,7 +2,7 @@
   "use strict";
 
   const APP_ID = "quranreader";
-  const APP_VERSION = "1.1.2";
+  const APP_VERSION = "1.1.3";
   const CHECK_DELAY_MS = 5000; 
   
   // ============================================================
