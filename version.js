@@ -1,11 +1,11 @@
 (function () {
   "use strict";
 
-  const APP_ID = "holyquran";
-  const APP_VERSION = "1.0.1";
+  const APP_ID = "quranreader";
+  const APP_VERSION = "1.1.3";
   window.APP_VERSION = APP_VERSION;
   const UPDATE_URL = "https://quran-58c7cd.gitlab.io/updates.json";
-  const CHECK_DELAY_MS = 5000; 
+  const CHECK_DELAY_MS = 5000;
   const FETCH_TIMEOUT_MS = 8000;
   const FALLBACK_DELAY_MS = 15000;
 

@@ -1502,8 +1502,7 @@ class OverlayManager {
     <div class="about-content">
       <p class="about-title">
         <strong>مصحف التجويد - حفص</strong>
-        <span class="about-version">v1.1.3</span>
-      </p>
+        <span class="about-version">v${encodeURIComponent(window.APP_VERSION || "?")}</span>      </p>
       <p class="about-desc">
         تطبيق شامل لقراءة القرآن الكريم. مطابق للمصحف الورقي المعتمد:
         <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (دار المعرفة).
@@ -1518,7 +1517,7 @@ class OverlayManager {
         <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item">
           <span>🌐 زيارة الموقع</span>
         </a>
-        <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%201.1.3%0A---%0A%0A" class="contact-box-item">
+        <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%20${encodeURIComponent(window.APP_VERSION)}%0A---%0A%0A" class="contact-box-item">
           <span>📧 تواصل معنا</span>
         </a>
       </div>
