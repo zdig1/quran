@@ -672,7 +672,9 @@ class QuranApp {
 
     // Cordova
     document.addEventListener("pause", () => this._saveCurrentState(), false);
-
+    document.addEventListener("deviceready", () => {
+      document.addEventListener("backbutton", () => this.handleBack(), false);
+    }, false);
     this._visibilityChangeHandler = () => {
       if (document.visibilityState === "hidden") {
         this._saveCurrentState();
@@ -699,7 +701,24 @@ class QuranApp {
   // ============================================
   // DESTROY (NETTOYAGE COMPLET)
   // ============================================
+  handleBack() {
+    // 1) Fermer l'overlay ouvert (via le manager)
+    const om = window.overlayManager;
+    if (om?.currentOverlay) { om.closeCurrentOverlay(); return; }
 
+    // 2) Fermer le menu principal
+    const menuEl = document.querySelector(".menu-overlay.show");
+    if (menuEl) { om?.closeMenu(); return; }
+
+    // 3) Double tap pour quitter
+    const now = Date.now();
+    if (now - (this._lastBack || 0) < 2000) {
+      navigator.app?.exitApp?.();
+      return;
+    }
+    this._lastBack = now;
+    this.showToast("↩️ اضغط مرة أخرى للخروج");
+  }
   destroy() {
     if (this._toastTimeout) {
       clearTimeout(this._toastTimeout);

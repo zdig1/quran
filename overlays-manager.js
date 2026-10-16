@@ -196,8 +196,7 @@ class OverlayManager {
 
     const handleEscape = (e) => {
       if (e.key === "Escape") {
-        this.closeCurrentOverlay();
-        this.closeMenu();
+        window.quranApp?.handleBack?.();
       }
     };
     document.addEventListener("keydown", handleEscape);
