@@ -110,7 +110,6 @@ class QuranAudioPlayer {
     this._preloadTriggered = false;
     this._nextAudioBuffer = null;
     this._crossfading = false;
-    this._wakeLock = null;
     this._isTransitioning = false;
     this._retrying = false;
     this._pendingHighlight = null;
@@ -617,7 +616,6 @@ class QuranAudioPlayer {
     else this._syncMiniBar();
     this._updateCurrentDisplay();
 
-    this._requestWakeLock();
     this._crossfading = false;
     this._preloadTriggered = false;
     this._preloadNextAyah();
@@ -659,7 +657,6 @@ class QuranAudioPlayer {
 
   pause() {
     this.audioElement.pause();
-    this._releaseWakeLock();
   }
 
   stop() {
@@ -685,7 +682,6 @@ class QuranAudioPlayer {
     this._updateUI();
     this._retrying = false;
     this._showStatus("", false);
-    this._releaseWakeLock();
     this._preloadTriggered = false;
     this._hideMiniBar(false);
     this.setCurrentSurahFromPage();
@@ -721,26 +717,6 @@ class QuranAudioPlayer {
       next.preload = "auto";
       next.load();
       this._nextAudioBuffer = next;
-    }
-  }
-
-  async _requestWakeLock() {
-    if ("wakeLock" in navigator && !this._wakeLock) {
-      try {
-        this._wakeLock = await navigator.wakeLock.request("screen");
-        this._wakeLock.addEventListener("release", () => {
-          this._wakeLock = null;
-        });
-      } catch (err) {
-        console.warn("Wake Lock error:", err);
-      }
-    }
-  }
-
-  _releaseWakeLock() {
-    if (this._wakeLock) {
-      this._wakeLock.release();
-      this._wakeLock = null;
     }
   }
 
@@ -1280,7 +1256,6 @@ class QuranAudioPlayer {
   // ⭐ MISE À JOUR DE destroy() pour les deux éléments
   destroy() {
     this.stop();
-    this._releaseWakeLock();
 
     const audioA = this.audioA;
     const audioB = this.audioB;
