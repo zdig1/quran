@@ -222,6 +222,7 @@ class QuranReader {
     this.showCurrentPageImage();
   }
 
+  // ✅ Cordova-safe : display + style + chargement en une seule passe
   showCurrentPageImage() {
     if (this.readingMode !== "book") return;
     const wrappers = this.elements.pageScroll.querySelectorAll(".page-wrapper");
@@ -244,24 +245,73 @@ class QuranReader {
       img.setAttribute("data-loaded", "false");
       img.src = "";
       wrapper.style.display = page === this.currentPage ? "flex" : "none";
-      if (page === this.currentPage) {
-        const naturalH = (1100 * window.innerWidth) / 700;
-        const maxStretch = naturalH * 1.3;
-        if (naturalH >= window.innerHeight) {
-          img.style.cssText = "width:100%;height:auto;";
-        } else if (window.innerHeight <= maxStretch) {
-          img.style.cssText =
-            "width:100%;height:" + window.innerHeight + "px;object-fit:fill;";
-        } else {
-          img.style.cssText =
-            "width:100%;height:" + maxStretch + "px;object-fit:fill;";
-        }
-        this._adjustFooterHeight();
-      }
       wrapper.classList.toggle("active", page === this.currentPage);
+
+      if (page === this.currentPage) {
+        // ✅ Cordova Android : forcer un reflow fiable avant de mesurer
+        void wrapper.offsetHeight;
+        void wrapper.getBoundingClientRect();
+        this._applyBookImageStyle(img);
+      }
+
       this.loadPageImage(page, page === this.currentPage ? "high" : "low");
     });
-    setTimeout(() => this._adjustFooterHeight(), 100);
+
+    // ✅ Ajuster le footer (garde-fou : attend le load de l'image)
+    this._adjustFooterHeight();
+  }
+
+  // ✅ Nouvelle méthode Cordova-safe : mesure sur le conteneur réel
+  _applyBookImageStyle(img) {
+    if (!img) return;
+
+    const apply = () => {
+      if (this.readingMode !== "book") return;
+
+      // ✅ Mesure sur le conteneur réel (Android WebView : innerHeight parfois faux)
+      const container =
+        this.elements.pageScroll ||
+        document.getElementById("app") ||
+        document.body;
+      const containerH = container.clientHeight || window.innerHeight;
+      const containerW = container.clientWidth || window.innerWidth;
+      if (!containerH || !containerW) return;
+
+      // ✅ Hauteur naturelle (ratio 700/1100)
+      const naturalH = (1100 * containerW) / 700;
+      const maxStretch = naturalH * 1.3;
+
+      if (naturalH >= containerH) {
+        img.style.cssText = "width:100%;height:auto;";
+      } else if (containerH <= maxStretch) {
+        img.style.cssText =
+          "width:100%;height:" + containerH + "px;object-fit:fill;";
+      } else {
+        img.style.cssText =
+          "width:100%;height:" + maxStretch + "px;object-fit:fill;";
+      }
+
+      // ✅ Forcer un reflow après application
+      void img.offsetHeight;
+      this._adjustFooterHeight();
+    };
+
+    // ✅ Double rAF : le WebView Android a parfois besoin de 2 frames
+    if (img.complete && img.naturalWidth > 0) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(apply);
+      });
+    } else {
+      img.addEventListener(
+        "load",
+        () => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(apply);
+          });
+        },
+        { once: true }
+      );
+    }
   }
 
   createPagesForScrollMode() {
@@ -360,32 +410,37 @@ class QuranReader {
     }
   }
 
+  // ✅ Cordova Android : debounce 150ms (clavier virtuel, barre nav, rotation)
   handleResize() {
     if (this.readingMode !== "scroll" || !this.spacer || this.resizePending)
       return;
     this.resizePending = true;
-    requestAnimationFrame(() => {
-      if (!this.elements.pageScroll) {
+
+    clearTimeout(this.resizeTimeout);
+    this.resizeTimeout = setTimeout(() => {
+      requestAnimationFrame(() => {
+        if (!this.elements.pageScroll) {
+          this.resizePending = false;
+          return;
+        }
+        const savedPage = this.currentPage;
+        this.updatePageHeight();
+        const scrollTarget = (savedPage - 1) * this.pageHeight;
+        if (this.spacer) this.spacer.style.height = this.totalHeight + "px";
+        this.wrapperPool.forEach((wrapper) => {
+          wrapper.style.height = this.pageHeight + "px";
+          const p = parseInt(wrapper.dataset.page);
+          if (!isNaN(p) && p > 0)
+            wrapper.style.top = (p - 1) * this.pageHeight + "px";
+        });
+        this.elements.pageScroll.scrollTo({
+          top: scrollTarget,
+          behavior: "auto",
+        });
+        this.updateVisiblePages();
         this.resizePending = false;
-        return;
-      }
-      const savedPage = this.currentPage;
-      this.updatePageHeight();
-      const scrollTarget = (savedPage - 1) * this.pageHeight;
-      if (this.spacer) this.spacer.style.height = this.totalHeight + "px";
-      this.wrapperPool.forEach((wrapper) => {
-        wrapper.style.height = this.pageHeight + "px";
-        const p = parseInt(wrapper.dataset.page);
-        if (!isNaN(p) && p > 0)
-          wrapper.style.top = (p - 1) * this.pageHeight + "px";
       });
-      this.elements.pageScroll.scrollTo({
-        top: scrollTarget,
-        behavior: "auto",
-      });
-      this.updateVisiblePages();
-      this.resizePending = false;
-    });
+    }, 150);
   }
 
   // ============================================
@@ -537,13 +592,15 @@ class QuranReader {
     this.isTransitioning = true;
     this.currentPage = pageNum;
     this.updatePageInfo(pageNum);
+
     if (this.readingMode === "book") {
+      // ✅ Une seule méthode gère display + style + chargement
       this.showCurrentPageImage();
-      this.loadPageImage(pageNum, "high");
       this.preloadAdjacentPages(pageNum);
     } else {
       this.scrollToPage(pageNum);
     }
+
     this.notifyPageChange(true);
     if (this.readingMode === "book") this._reapplyHighlightIfNeeded();
     setTimeout(() => { this.isTransitioning = false; }, 200);
@@ -551,13 +608,13 @@ class QuranReader {
 
   _reapplyHighlightIfNeeded() {
     const player = window.quranAudioPlayer;
-    if (!player?.currentSurah || !player?.ayaCoordsLoaded || player?.isStopped) return; const rects = player._getAyaRects(player.currentSurah, player.currentAyah);
+    if (!player?.currentSurah || !player?.ayaCoordsLoaded || player?.isStopped) return;
+    const rects = player._getAyaRects(player.currentSurah, player.currentAyah);
     if (!rects?.length) return;
     if (rects[0].p !== this.currentPage) {
       this.clearHighlight();
       return;
     }
-    // page courante = page de l'aya → recréer le surlignage
     const img = this.elements.pageScroll
       .querySelector(`.page-wrapper[data-page="${this.currentPage}"] img`);
     if (!img) return;
@@ -607,19 +664,14 @@ class QuranReader {
   // ============================================
 
   detectReadingMode() {
-    // 1. Essayer l'API moderne screen.orientation
     if (window.screen && window.screen.orientation) {
       this.isPortraitMode =
         window.screen.orientation.type.startsWith("portrait");
-    }
-    // 2. Fallback avec matchMedia
-    else if (window.matchMedia) {
+    } else if (window.matchMedia) {
       this.isPortraitMode = window.matchMedia(
         "(orientation: portrait)",
       ).matches;
-    }
-    // 3. Dernier recours : ratio hauteur/largeur
-    else {
+    } else {
       this.isPortraitMode = window.innerHeight > window.innerWidth;
     }
     return this.isPortraitMode ? "book" : "scroll";
@@ -748,8 +800,8 @@ class QuranReader {
       () => {
         if (!this.isTransitioning && !this._dialogOpen) this.goToPreviousPage();
       },
-      50,    // seuil
-      300    // cooldown (déjà dans enableSwipe, mais on le précise)
+      50,
+      300
     );
   }
 
@@ -876,6 +928,8 @@ class QuranReader {
       el?.classList.toggle("hidden", !this.buttonsVisible)
     );
   }
+
+  // ✅ Cordova-safe : garde-fou dimensions image
   _adjustFooterHeight() {
     if (this.readingMode !== "book") return;
     if (this.isTransitioning) return;
@@ -885,6 +939,8 @@ class QuranReader {
     if (!img) return;
 
     const apply = () => {
+      if (!img.complete || img.naturalWidth === 0) return;
+      if (img.getBoundingClientRect().height === 0) return;
       requestAnimationFrame(() => {
         this._applyFooterAdjustment(img);
       });
@@ -897,12 +953,21 @@ class QuranReader {
     }
   }
 
+  // ✅ Cordova-safe : mesure sur conteneur, pas window.innerHeight
   _applyFooterAdjustment(img) {
     const footer = this.elements.footer;
     if (!footer) return;
 
+    const container =
+      this.elements.pageScroll ||
+      document.getElementById("app") ||
+      document.body;
+    const containerH = container.clientHeight || window.innerHeight;
+
     const imgRect = img.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - imgRect.bottom;
+    const containerRect = container.getBoundingClientRect();
+
+    const spaceBelow = (containerRect.bottom || containerH) - imgRect.bottom;
     const minFooterHeight = 56;
 
     let footerHeight = minFooterHeight;
@@ -910,25 +975,18 @@ class QuranReader {
       footerHeight = spaceBelow;
     }
 
-    // Ajuster le footer
     footer.style.height = `${footerHeight}px`;
     footer.style.minHeight = `${footerHeight}px`;
 
-    // Gérer la mini bar audio
     const miniBar = document.getElementById('audioMiniBar');
     const isMiniBarVisible = miniBar && !miniBar.classList.contains('hidden');
 
     if (isMiniBarVisible) {
-      // La mini bar prend la même hauteur que le footer
       miniBar.style.height = `${footerHeight}px`;
       miniBar.style.minHeight = `${footerHeight}px`;
-    } else {
-      // Réinitialiser la hauteur de la mini bar
-      if (miniBar) {
-        miniBar.style.height = '';
-        miniBar.style.minHeight = '';
-      }
-
+    } else if (miniBar) {
+      miniBar.style.height = '';
+      miniBar.style.minHeight = '';
     }
   }
 
@@ -956,7 +1014,8 @@ class QuranReader {
       navigator.wakeLock
         .request("screen")
         .then((lock) => (this._wakeLock = lock))
-  .catch(() => { });    }
+        .catch(() => { });
+    }
 
     const { btnScroll, btnIcon, btnSlower, btnFaster } = this._getAutoScrollBtns();
 
@@ -1069,6 +1128,7 @@ class QuranReader {
       if (this.readingMode === "book") {
         this.loadPageImage(this.currentPage, "high");
         this.preloadAdjacentPages(this.currentPage);
+        this._adjustFooterHeight();
       }
     }, 50);
     this.updateAutoScrollButton();
@@ -1090,7 +1150,6 @@ class QuranReader {
             () => {
               this.goToPage(savedPage);
 
-              // Sur iOS, forcer le rechargement de l'image en mode portrait
               if (isIOS && this.readingMode === "book") {
                 const img = document.querySelector(
                   `img[data-page="${savedPage}"]`,
@@ -1281,7 +1340,6 @@ class QuranReader {
     setTimeout(() => {
       if (this.readingMode === "book") {
         this.loadPageImage(this.currentPage, "high");
-        // --- AJOUTER CETTE LIGNE ---
         this._adjustFooterHeight();
       }
     }, 100);
@@ -1310,6 +1368,7 @@ class QuranReader {
     this.removeSwipeNavigation();
     this.imageCache.clear();
   }
+
   // ============================================
   // HIGHLIGHT AYA
   // ============================================
@@ -1349,7 +1408,6 @@ class QuranReader {
       getTop = (sy, realY1, yCorrect) => pageOffsetTop + realY1 * sy + yCorrect + SHRINK * sy;
       appendTo = this.spacer;
     } else {
-      // Mode book: trouver le wrapper actif
       const wrapper = this.elements.pageScroll.querySelector(`.page-wrapper[data-page="${page}"]`);
       if (!wrapper) return;
       const img = wrapper.querySelector("img");
@@ -1381,7 +1439,6 @@ class QuranReader {
       appendTo.appendChild(div);
     });
 
-    // Auto-scroll vers l'ayah (scroll mode uniquement)
     if (this.readingMode === "scroll") {
       const first = this.spacer.querySelector(".aya-highlight");
       if (first) {

@@ -1607,6 +1607,18 @@ class OverlayManager {
       overlay.classList.remove("show");
       document.body.style.overflow = "";
       window.dispatchEvent(new CustomEvent("quran:overlayClosed"));
+
+      if (window.quranReader?.readingMode === "book") {
+        setTimeout(() => {
+          window.quranReader._adjustFooterHeight();
+          const img = window.quranReader.elements.pageScroll?.querySelector(
+            '.page-wrapper.active img'
+          );
+          if (img && window.quranReader._applyBookImageStyle) {
+            window.quranReader._applyBookImageStyle(img);
+          }
+        }, 350);
+      }
     };
 
     const confirm = () => {

@@ -4,7 +4,7 @@ class QuranApp {
     this.isInitializing = false;
 
     this.bookmarks = [];
-    this.bookmarkedPagesSet = new Set(); // ⭐ Ajout
+    this.bookmarkedPagesSet = new Set(); 
     this.pinnedSurahs = [];
     this.lastPage = 1;
     this.theme = "light";

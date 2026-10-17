@@ -91,7 +91,6 @@ class QuranAudioPlayer {
     this.speedOptions = [0.75, 1.0, 1.25, 1.5];
     this.currentSpeedIndex = 1.0;
 
-    // ⭐ CRÉATION DES 2 ÉLÉMENTS AUDIO
     this.audioA = new Audio();
     this.audioB = new Audio();
     this.audioA.preload = "auto";
@@ -114,11 +113,12 @@ class QuranAudioPlayer {
     this._retrying = false;
     this._pendingHighlight = null;
 
-    // ⭐ FIX CORDOBA — MUSIC CONTROLS
     this._musicControlsReady = false;
     this._musicControlsInitDone = false;
-    this._notificationCreated = false;   // ⭐ FIX CORDOBA : flag pour éviter create() multiple
-    this._inited = false;                // ⭐ FIX CORDOBA : éviter double init()
+    this._notificationCreated = false;
+    this._inited = false;
+    this._musicControlsRetryCount = 0;
+    this._musicControlsRetryTimer = null;
 
     this._boundListeners = {
       audio: {},
@@ -213,7 +213,6 @@ class QuranAudioPlayer {
     this._ensureHighlight();
     this._showMiniBar();
     this._updateUI();
-    // ⭐ FIX CORDOBA : ne notifier que si on n'est pas en basmala
     if (this.audioElement?.dataset?.basmala !== "true") {
       this._updateMediaNotification();
     }
@@ -233,7 +232,6 @@ class QuranAudioPlayer {
   // ============================================
 
   async init() {
-    // ⭐ FIX CORDOBA : éviter double init
     if (this._inited) return;
     this._inited = true;
 
@@ -257,7 +255,16 @@ class QuranAudioPlayer {
     this.repeatMode = parseInt(localStorage.getItem("quran_repeat") || "0");
     this._updateRepeatBtn();
     this._setupOnlineOffline();
+
     this._initMusicControls();
+
+    document.addEventListener("deviceready", () => {
+      this._initMusicControls();
+    });
+
+    window.addEventListener("quran:appReady", () => {
+      this._initMusicControls();
+    }, { once: true });
   }
 
   _cacheElements() {
@@ -289,75 +296,94 @@ class QuranAudioPlayer {
 
   // ============================================
   // MUSIC CONTROLS — Notification + écran verrouillé
-  // ⭐ FIX CORDOBA : version adaptée pour cordova-plugin-music-controls2
   // ============================================
 
   _initMusicControls() {
-    if (this._musicControlsInitDone) return;
+    if (this._musicControlsInitDone && this._musicControlsReady) return;
+
     if (!window.MusicControls) {
+      this._scheduleMusicControlsRetry();
       return;
     }
 
-    window.MusicControls.subscribe((event) => {
-      let message;
-      try {
-        message = typeof event === "string" ? JSON.parse(event).message : event.message;
-      } catch {
-        message = event;
-      }
+    if (this._musicControlsInitDone) return;
 
-      switch (message) {
-        case "music-controls-next":
-        case "music-controls-next-click":
-          this.nextAyah();
-          break;
-        case "music-controls-previous":
-        case "music-controls-previous-click":
-          this.prevAyah();
-          break;
-        case "music-controls-pause":
-        case "music-controls-pause-click":
-          this.pause();
-          this._updateMediaNotification();
-          break;
-        case "music-controls-play":
-        case "music-controls-play-click":
-          this.play();
-          break;
-        case "music-controls-toggle-play-pause":
-          this.togglePlay();
-          break;
-        case "music-controls-headset-unplugged":
-        case "music-controls-headset-plugged":
-          this.pause();
-          this._updateMediaNotification();
-          break;
-        case "music-controls-destroy":
-        case "music-controls-notification-dismissed":
-        case "music-controls-close":
-          this.stop();
-          this._destroyMediaNotification();
-          break;
-        default:
-          break;
-      }
-    });
+    try {
+      window.MusicControls.subscribe((event) => {
+        let message;
+        try {
+          message = typeof event === "string" ? JSON.parse(event).message : event.message;
+        } catch {
+          message = event;
+        }
 
-    window.MusicControls.listen();
-    this._musicControlsReady = true;
-    this._musicControlsInitDone = true;
+        switch (message) {
+          case "music-controls-next":
+          case "music-controls-next-click":
+            this.nextAyah();
+            break;
+          case "music-controls-previous":
+          case "music-controls-previous-click":
+            this.prevAyah();
+            break;
+          case "music-controls-pause":
+          case "music-controls-pause-click":
+            this.pause();
+            this._updateMediaNotification();
+            break;
+          case "music-controls-play":
+          case "music-controls-play-click":
+            this.play();
+            break;
+          case "music-controls-toggle-play-pause":
+            this.togglePlay();
+            break;
+          case "music-controls-headset-unplugged":
+          case "music-controls-headset-plugged":
+            this.pause();
+            this._updateMediaNotification();
+            break;
+          case "music-controls-destroy":
+          case "music-controls-notification-dismissed":
+          case "music-controls-close":
+            this.stop();
+            this._destroyMediaNotification();
+            break;
+          default:
+            break;
+        }
+      });
+
+      window.MusicControls.listen();
+      this._musicControlsReady = true;
+      this._musicControlsInitDone = true;
+      this._musicControlsRetryCount = 0;
+    } catch (err) {
+      this._scheduleMusicControlsRetry();
+    }
   }
 
-  // ⭐ FIX CORDOBA : ne jamais notifier pendant la basmala,
-  // et ne pas recréer la notif si elle existe déjà (utiliser updateIsPlaying)
+  _scheduleMusicControlsRetry() {
+    if (this._musicControlsRetryTimer) return;
+    if (this._musicControlsRetryCount >= 10) return;   // abandon après 10 essais
+
+    const delays = [500, 500, 1000, 1000, 2000, 2000, 3000, 3000, 5000, 5000];
+    const delay = delays[this._musicControlsRetryCount] || 5000;
+    this._musicControlsRetryCount++;
+
+    this._musicControlsRetryTimer = setTimeout(() => {
+      this._musicControlsRetryTimer = null;
+      this._initMusicControls();
+    }, delay);
+  }
+
   _updateMediaNotification() {
     if (this.isStopped) return;
+
+    if (!this._musicControlsReady) this._initMusicControls();
     if (!window.MusicControls || !this._musicControlsReady) return;
 
-    // ⛔ NE JAMAIS notifier pendant la Basmala
     if (this.audioElement?.dataset?.basmala === "true") return;
-
-    // ⛔ Pas de notif sans sourate/ayah
     if (!this.currentSurah || !this.currentAyah) return;
 
     const surah = this.surahs?.find((s) => s.s_id === this.currentSurah);
@@ -370,15 +396,15 @@ class QuranAudioPlayer {
       : "القرآن الكريم";
 
     try {
-      // ⭐ FIX CORDOBA : si la notif existe déjà, on met juste à jour play/pause
-      if (this._notificationCreated) {
+      const notifKey = `${track}|${reciterName}`;
+      if (this._notificationCreated && this._notifKey === notifKey) {
         if (typeof window.MusicControls.updateIsPlaying === "function") {
           window.MusicControls.updateIsPlaying(this.isPlaying);
         }
         return;
       }
+      this._notifKey = notifKey;
 
-      // Sinon, on la crée UNE SEULE FOIS
       window.MusicControls.create(
         {
           track,
@@ -398,13 +424,13 @@ class QuranAudioPlayer {
 
       this._notificationCreated = true;
     } catch (err) {
-      console.warn("MusicControls create error:", err);
     }
   }
 
   _destroyMediaNotification() {
     if (!window.MusicControls) return;
-    this._notificationCreated = false;   // ⭐ FIX CORDOBA
+    this._notificationCreated = false;
+
     const kill = () => {
       try { window.MusicControls.destroy(() => { }, () => { }); } catch { /* ignoré */ }
     };
@@ -532,7 +558,6 @@ class QuranAudioPlayer {
     this._updateCurrentReciterName();
     this._updateReciterSelectButton();
     this._updateUI();
-    // ⭐ FIX CORDOBA : notifier uniquement si on joue déjà
     if (this.isPlaying) this._updateMediaNotification();
     if (this.isPlaying && !this.hasError) {
       this.audioElement.pause();
@@ -623,7 +648,6 @@ class QuranAudioPlayer {
     this._updateCurrentDisplay();
     this._updateUI();
     this._preloadTriggered = false;
-    // ⭐ FIX CORDOBA : notifier uniquement si on joue
     if (this.isPlaying) this._updateMediaNotification();
   }
 
@@ -726,7 +750,6 @@ class QuranAudioPlayer {
         });
         this.audioElement.addEventListener("ended", this._boundListeners.audio.ended);
         this._ensureHighlight();
-        // ⭐ FIX CORDOBA : créer la notif SEULEMENT après la basmala
         this._updateMediaNotification();
       };
 
@@ -740,7 +763,6 @@ class QuranAudioPlayer {
         this._showStatus("❌ تعذر التشغيل", true);
       });
     } else {
-      // ⭐ FIX CORDOBA : marquer comme non-basmala
       this.audioElement.dataset.basmala = "false";
       if (!navigator.onLine) {
         this._showOfflineError();
@@ -835,6 +857,13 @@ class QuranAudioPlayer {
     this._hideMiniBar(false);
     this.setCurrentSurahFromPage();
     this._destroyMediaNotification();
+    [this.audioA, this.audioB].forEach((a) => {
+      try { a.pause(); a.removeAttribute("src"); a.load(); } catch { /* ignoré */ }
+    });
+    if (navigator.mediaSession) {
+      navigator.mediaSession.playbackState = "none";
+      navigator.mediaSession.metadata = null;
+    }
   }
 
   togglePlay() {
@@ -1105,7 +1134,6 @@ class QuranAudioPlayer {
         setTimeout(() => this._showStatus('', false), 3000);
       }
       this._updateUI();
-      // ⭐ FIX CORDOBA : ne pas notifier pendant la basmala
       if (this.audioElement.dataset.basmala !== "true") {
         this._updateMediaNotification();
       }
@@ -1113,7 +1141,6 @@ class QuranAudioPlayer {
     const onPause = () => {
       this.isPlaying = false;
       this._updateUI();
-      // ⭐ FIX CORDOBA : ne pas notifier pendant la basmala ni en fin de piste
       if (this.audioElement.dataset.basmala !== "true" && !this.audioElement.ended) {
         this._updateMediaNotification();
       }
@@ -1152,7 +1179,6 @@ class QuranAudioPlayer {
         this._updateCurrentDisplay();
         this._ensureHighlight();
         this._preloadNextAyah();
-        // ⭐ FIX CORDOBA
         this._updateMediaNotification();
       } else {
         this.nextAyah();
@@ -1457,6 +1483,11 @@ class QuranAudioPlayer {
     window.removeEventListener("quran:pageChanged", this._boundListeners.window.pageChanged);
     if (this.miniBar) this.miniBar.remove();
     if (this.fabBtn) this.fabBtn.remove();
+
+    if (this._musicControlsRetryTimer) {
+      clearTimeout(this._musicControlsRetryTimer);
+      this._musicControlsRetryTimer = null;
+    }
 
     this._destroyMediaNotification();
   }
