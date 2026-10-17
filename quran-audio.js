@@ -338,36 +338,38 @@ class QuranAudioPlayer {
     this._musicControlsInitDone = true;
   }
 
-  _updateMediaNotification() {
-    if (this.isStopped) return;
-    if (!window.MusicControls || !this._musicControlsReady) return;
-    const surah = this.surahs?.find((s) => s.s_id === this.currentSurah);
-    const surahName = surah?.name || "القرآن الكريم";
-    const reciterName = this.currentReciter?.name || "قارئ";
+ _updateMediaNotification() {
+  if (this.isStopped) return;
+  if (!window.MusicControls || !this._musicControlsReady) return;
 
-    const track = this.currentSurah
-      ? `${surahName} - آية ${this.currentAyah}`
-      : "القرآن الكريم";
+  const surah = this.surahs?.find((s) => s.s_id === this.currentSurah);
+  const surahName = surah?.name || "القرآن الكريم";
+  const surahNumber = surah?.s_id ? `${surah.s_id}. ` : "";
+  const reciterName = this.currentReciter?.name || "قارئ";
 
-    try {
-      window.MusicControls.create(
-        {
-          track,
-          artist: reciterName,
-          album: "Holy Quran",
-          cover: "media/icon-192.png",
-          isPlaying: this.isPlaying,
-          dismissable: true,
-          hasPrev: true,
-          hasNext: true,
-          hasClose: true,
-          ticker: `🎧 ${track}`,
-        },
-        () => { },
-        () => { });
-    } catch (err) {
-    }
+  const track = this.currentSurah
+    ? `${surahNumber}.${surahName} - آية ${this.currentAyah}`
+    : "القرآن الكريم";
+
+  try {
+    window.MusicControls.create(
+      {
+        track,
+        artist: reciterName,
+        album: "Holy Quran",
+        cover: "media/icon-192.png",
+        isPlaying: this.isPlaying,
+        dismissable: true,
+        hasPrev: true,
+        hasNext: true,
+        hasClose: true,
+        ticker: `🎧 ${track}`,
+      },
+      () => { },
+      () => { });
+  } catch (err) {
   }
+}
 
   _destroyMediaNotification() {
     if (!window.MusicControls) return;

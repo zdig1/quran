@@ -1504,7 +1504,7 @@ class OverlayManager {
     </p>
     <p class="about-desc">
       تطبيق شامل لقراءة القرآن الكريم. مطابق للمصحف الورقي المعتمد:
-      <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (دار المعرفة).
+      <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية.
     </p>
     <div class="contact-grid-container">
       <button id="aboutBackupBtn" class="contact-box-item">
