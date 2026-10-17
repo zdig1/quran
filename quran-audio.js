@@ -114,9 +114,11 @@ class QuranAudioPlayer {
     this._retrying = false;
     this._pendingHighlight = null;
 
-    // ⭐ MUSIC CONTROLS
+    // ⭐ FIX CORDOBA — MUSIC CONTROLS
     this._musicControlsReady = false;
     this._musicControlsInitDone = false;
+    this._notificationCreated = false;   // ⭐ FIX CORDOBA : flag pour éviter create() multiple
+    this._inited = false;                // ⭐ FIX CORDOBA : éviter double init()
 
     this._boundListeners = {
       audio: {},
@@ -211,7 +213,10 @@ class QuranAudioPlayer {
     this._ensureHighlight();
     this._showMiniBar();
     this._updateUI();
-    this._updateMediaNotification();
+    // ⭐ FIX CORDOBA : ne notifier que si on n'est pas en basmala
+    if (this.audioElement?.dataset?.basmala !== "true") {
+      this._updateMediaNotification();
+    }
   }
 
   _onProgressInput(e) {
@@ -228,6 +233,10 @@ class QuranAudioPlayer {
   // ============================================
 
   async init() {
+    // ⭐ FIX CORDOBA : éviter double init
+    if (this._inited) return;
+    this._inited = true;
+
     this._buildMiniBar();
     this._buildFab();
     await this._loadAyaCoords();
@@ -280,6 +289,7 @@ class QuranAudioPlayer {
 
   // ============================================
   // MUSIC CONTROLS — Notification + écran verrouillé
+  // ⭐ FIX CORDOBA : version adaptée pour cordova-plugin-music-controls2
   // ============================================
 
   _initMusicControls() {
@@ -338,41 +348,63 @@ class QuranAudioPlayer {
     this._musicControlsInitDone = true;
   }
 
- _updateMediaNotification() {
-  if (this.isStopped) return;
-  if (!window.MusicControls || !this._musicControlsReady) return;
+  // ⭐ FIX CORDOBA : ne jamais notifier pendant la basmala,
+  // et ne pas recréer la notif si elle existe déjà (utiliser updateIsPlaying)
+  _updateMediaNotification() {
+    if (this.isStopped) return;
+    if (!window.MusicControls || !this._musicControlsReady) return;
 
-  const surah = this.surahs?.find((s) => s.s_id === this.currentSurah);
-  const surahName = surah?.name || "القرآن الكريم";
-  const surahNumber = surah?.s_id ? `${surah.s_id}. ` : "";
-  const reciterName = this.currentReciter?.name || "قارئ";
+    // ⛔ NE JAMAIS notifier pendant la Basmala
+    if (this.audioElement?.dataset?.basmala === "true") return;
 
-  const track = this.currentSurah
-    ? `${surahNumber}.${surahName} - آية ${this.currentAyah}`
-    : "القرآن الكريم";
+    // ⛔ Pas de notif sans sourate/ayah
+    if (!this.currentSurah || !this.currentAyah) return;
 
-  try {
-    window.MusicControls.create(
-      {
-        track,
-        artist: reciterName,
-        album: "Holy Quran",
-        cover: "media/icon-192.png",
-        isPlaying: this.isPlaying,
-        dismissable: true,
-        hasPrev: true,
-        hasNext: true,
-        hasClose: true,
-        ticker: `🎧 ${track}`,
-      },
-      () => { },
-      () => { });
-  } catch (err) {
+    const surah = this.surahs?.find((s) => s.s_id === this.currentSurah);
+    const surahName = surah?.name || "القرآن الكريم";
+    const surahNumber = surah?.s_id ? `${surah.s_id}. ` : "";
+    const reciterName = this.currentReciter?.name || "قارئ";
+
+    const track = this.currentSurah
+      ? `${surahNumber}.${surahName} - آية ${this.currentAyah}`
+      : "القرآن الكريم";
+
+    try {
+      // ⭐ FIX CORDOBA : si la notif existe déjà, on met juste à jour play/pause
+      if (this._notificationCreated) {
+        if (typeof window.MusicControls.updateIsPlaying === "function") {
+          window.MusicControls.updateIsPlaying(this.isPlaying);
+        }
+        return;
+      }
+
+      // Sinon, on la crée UNE SEULE FOIS
+      window.MusicControls.create(
+        {
+          track,
+          artist: reciterName,
+          album: "Holy Quran",
+          cover: "media/icon-192.png",
+          isPlaying: this.isPlaying,
+          dismissable: true,
+          hasPrev: true,
+          hasNext: true,
+          hasClose: true,
+          ticker: `🎧 ${track}`,
+        },
+        () => { },
+        () => { }
+      );
+
+      this._notificationCreated = true;
+    } catch (err) {
+      console.warn("MusicControls create error:", err);
+    }
   }
-}
 
   _destroyMediaNotification() {
     if (!window.MusicControls) return;
+    this._notificationCreated = false;   // ⭐ FIX CORDOBA
     const kill = () => {
       try { window.MusicControls.destroy(() => { }, () => { }); } catch { /* ignoré */ }
     };
@@ -500,7 +532,8 @@ class QuranAudioPlayer {
     this._updateCurrentReciterName();
     this._updateReciterSelectButton();
     this._updateUI();
-    this._updateMediaNotification();
+    // ⭐ FIX CORDOBA : notifier uniquement si on joue déjà
+    if (this.isPlaying) this._updateMediaNotification();
     if (this.isPlaying && !this.hasError) {
       this.audioElement.pause();
       this.play();
@@ -590,6 +623,7 @@ class QuranAudioPlayer {
     this._updateCurrentDisplay();
     this._updateUI();
     this._preloadTriggered = false;
+    // ⭐ FIX CORDOBA : notifier uniquement si on joue
     if (this.isPlaying) this._updateMediaNotification();
   }
 
@@ -692,6 +726,8 @@ class QuranAudioPlayer {
         });
         this.audioElement.addEventListener("ended", this._boundListeners.audio.ended);
         this._ensureHighlight();
+        // ⭐ FIX CORDOBA : créer la notif SEULEMENT après la basmala
+        this._updateMediaNotification();
       };
 
       this.audioElement.addEventListener(
@@ -699,7 +735,13 @@ class QuranAudioPlayer {
         this._boundListeners.audio.basmalaEnded,
         { once: true },
       );
+
+      this.audioElement.play().catch((e) => {
+        this._showStatus("❌ تعذر التشغيل", true);
+      });
     } else {
+      // ⭐ FIX CORDOBA : marquer comme non-basmala
+      this.audioElement.dataset.basmala = "false";
       if (!navigator.onLine) {
         this._showOfflineError();
         return;
@@ -1063,12 +1105,18 @@ class QuranAudioPlayer {
         setTimeout(() => this._showStatus('', false), 3000);
       }
       this._updateUI();
-      this._updateMediaNotification();
+      // ⭐ FIX CORDOBA : ne pas notifier pendant la basmala
+      if (this.audioElement.dataset.basmala !== "true") {
+        this._updateMediaNotification();
+      }
     };
     const onPause = () => {
       this.isPlaying = false;
       this._updateUI();
-      if (!this.audioElement.ended) this._updateMediaNotification();
+      // ⭐ FIX CORDOBA : ne pas notifier pendant la basmala ni en fin de piste
+      if (this.audioElement.dataset.basmala !== "true" && !this.audioElement.ended) {
+        this._updateMediaNotification();
+      }
     };
     const onEnded = () => {
       if (this.audioElement.dataset.basmala === "true") return;
@@ -1104,6 +1152,7 @@ class QuranAudioPlayer {
         this._updateCurrentDisplay();
         this._ensureHighlight();
         this._preloadNextAyah();
+        // ⭐ FIX CORDOBA
         this._updateMediaNotification();
       } else {
         this.nextAyah();
