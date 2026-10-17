@@ -2281,3 +2281,38 @@ body {
 .hidden {
   display: none !important;
 }
+
+/* ✅ Crédits — une seule ligne centrée */
+.about-credits-line {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.9rem;
+  line-height: 1.8;
+  text-align: center;
+  text-align-last: center;
+  /* ✅ force le centrage */
+  color: var(--text-light);
+}
+
+.about-credits-line span {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.about-credits-line a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+.about-credits-line a:hover,
+.about-credits-line a:focus-visible {
+  opacity: 0.75;
+}
+
+.night-mode .about-credits-line a {
+  color: var(--success);
+}

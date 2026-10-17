@@ -397,11 +397,18 @@ class QuranApp {
           }));
           newBookmarks = [...this.bookmarks, ...toAddBookmarks];
 
+          // 🔒 Validation des pinnedSurahs AVANT merge
+          const validPinned = Array.isArray(imported.pinnedSurahs)
+            ? imported.pinnedSurahs.filter(
+              (id) => typeof id === "number" && Number.isInteger(id) && id >= 1 && id <= 114,
+            )
+            : [];
+
           const existingPinned = new Set(this.pinnedSurahs);
-          imported.pinnedSurahs = imported.pinnedSurahs || [];
-          const toAddPinned = imported.pinnedSurahs.filter((id) => !existingPinned.has(id));
+          const toAddPinned = validPinned.filter((id) => !existingPinned.has(id));
           newPinned = [...this.pinnedSurahs, ...toAddPinned];
-        } else {
+        }
+        else {
           newBookmarks = imported.bookmarks.map((b) => ({
             ...b,
             id: b.id || `bookmark_${b.page}_${Date.now()}_${Math.random()}`,
@@ -461,7 +468,6 @@ class QuranApp {
 
       throw new Error("Format inconnu");
     } catch (err) {
-      console.error("Import error:", err);
       return false;
     }
   }

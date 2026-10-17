@@ -109,7 +109,6 @@ class TafsirSearchManager {
 
       return this.data;
     } catch (err) {
-      console.error("Erreur de chargement des données Tafsir:", err);
       throw err;
     }
   }

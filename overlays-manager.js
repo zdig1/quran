@@ -1457,7 +1457,6 @@ class OverlayManager {
         },
         () => window.quranApp?.showToast("✅ تم فتح المشاركة"),
         (err) => {
-          console.error("Share error:", err);
           window.quranApp?.showToast("❌ تعذر فتح المشاركة");
         }
       );
@@ -1498,54 +1497,61 @@ class OverlayManager {
     const overlay = this.overlays.about;
     if (!overlay?.content) return;
     overlay.content.innerHTML = `
-    <div class="about-content">
-      <p class="about-title">
-        <strong>مصحف التجويد - حفص</strong>
-        <span class="about-version">v${encodeURIComponent(window.APP_VERSION || "?")}</span>      </p>
-      <p class="about-desc">
-        تطبيق شامل لقراءة القرآن الكريم. مطابق للمصحف الورقي المعتمد:
-        <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (دار المعرفة).
-      </p>
-      <div class="contact-grid-container">
-        <button id="aboutBackupBtn" class="contact-box-item">
-          <span>💾 نسخ احتياطي</span>
-        </button>
-        <button id="shareAppBtn" class="contact-box-item">
-          <span>🔗 شارك التطبيق</span>
-        </button>
-        <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item">
-          <span>🌐 زيارة الموقع</span>
-        </a>
-        <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%20${encodeURIComponent(window.APP_VERSION)}%0A---%0A%0A" class="contact-box-item">
-          <span>📧 تواصل معنا</span>
-        </a>
-      </div>
-      <div class="about-stats">
-        <div class="about-stat"><span>السور</span><strong>114</strong></div>
-        <div class="about-stat"><span>الآيات</span><strong>6236</strong></div>
-        <div class="about-stat"><span>الصفحات</span><strong>604</strong></div>
-        <div class="about-stat"><span>الأجزاء</span><strong>30</strong></div>
-        <div class="about-stat"><span>الأحزاب</span><strong>60</strong></div>
-        <div class="about-stat"><span>السجدات</span><strong>15</strong></div>
-      </div>
-      <p class="about-footer">
-        جميع الحقوق محفوظة © 2026<br>
-        GDZ 🍉
-      </p>
-    </div>`;
+  <div class="about-content">
+    <p class="about-title">
+      <strong>مصحف التجويد - حفص</strong>
+      <span class="about-version">v${encodeURIComponent(window.APP_VERSION || "?")}</span>
+    </p>
+    <p class="about-desc">
+      تطبيق شامل لقراءة القرآن الكريم. مطابق للمصحف الورقي المعتمد:
+      <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية (دار المعرفة).
+    </p>
+    <div class="contact-grid-container">
+      <button id="aboutBackupBtn" class="contact-box-item">
+        <span>💾 نسخ احتياطي</span>
+      </button>
+      <button id="shareAppBtn" class="contact-box-item">
+        <span>🔗 شارك التطبيق</span>
+      </button>
+      <a href="https://zdig1.gitlab.io/quran/" target="_blank" class="contact-box-item">
+        <span>🌐 زيارة الموقع</span>
+      </a>
+      <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%20${encodeURIComponent(window.APP_VERSION)}%0A---%0A%0A" class="contact-box-item">
+        <span>📧 تواصل معنا</span>
+      </a>
+    </div>
+    <div class="about-stats">
+      <div class="about-stat"><span>السور</span><strong>114</strong></div>
+      <div class="about-stat"><span>الآيات</span><strong>6236</strong></div>
+      <div class="about-stat"><span>الصفحات</span><strong>604</strong></div>
+      <div class="about-stat"><span>الأجزاء</span><strong>30</strong></div>
+      <div class="about-stat"><span>الأحزاب</span><strong>60</strong></div>
+      <div class="about-stat"><span>السجدات</span><strong>15</strong></div>
+    </div>
 
-    const shareBtn = document.getElementById("shareAppBtn");
-    if (shareBtn) {
-      shareBtn.addEventListener("click", () => this.shareApp());
-    }
-    const backupBtn = document.getElementById("aboutBackupBtn");
-    if (backupBtn) {
-      backupBtn.addEventListener("click", () => {
-        this.closeOverlay("about");
-        this.showBackupDialog();
-      });
-    }
+       <!-- ✅ قسم الشكر والمصادر — سطر واحد -->
+    <p class="about-credits-line">
+      <span>صفحات المصحف:</span>
+      <a href="https://easyquran.com/" target="_blank" rel="noopener">دار المعرفة</a>
+      · <span>النص والتفسير:</span>
+      <a href="https://quran.ksu.edu.sa/" target="_blank" rel="noopener">Quran.ksu.edu.sa</a>
+      · <span>التلاوات:</span>
+      <a href="https://everyayah.com" target="_blank" rel="noopener">EveryAyah.com</a>
+    </p>
+
+    <p class="about-footer">
+      جميع الحقوق محفوظة © 2026<br>
+      GDZ 🍉
+    </p>
+  </div>`;
+
+    document.getElementById("shareAppBtn")?.addEventListener("click", () => this.shareApp());
+    document.getElementById("aboutBackupBtn")?.addEventListener("click", () => {
+      this.closeOverlay("about");
+      this.showBackupDialog();
+    });
   }
+
   showBackupDialog() {
     this.closeMenu();
     const overlay = this.lazyLoadOverlay("backup");
