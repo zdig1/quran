@@ -2291,7 +2291,6 @@ body {
   line-height: 1.8;
   text-align: center;
   text-align-last: center;
-  /* ✅ force le centrage */
   color: var(--text-light);
 }
 
