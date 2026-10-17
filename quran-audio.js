@@ -362,7 +362,7 @@ class QuranAudioPlayer {
 
     const surah = this.surahs?.find((s) => s.s_id === this.currentSurah);
     const surahName = surah?.name || "القرآن الكريم";
-    const surahNumber = surah?.s_id ? `${surah.s_id}. ` : "";
+    const surahNumber = surah?.s_id ? `${surah.s_id}` : "";
     const reciterName = this.currentReciter?.name || "قارئ";
 
     const track = this.currentSurah
