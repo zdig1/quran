@@ -1406,12 +1406,30 @@ body {
   font-family: "MyNotoKufi", sans-serif;
   font-weight: bold;
   font-size: 14px;
-  color: var(--search-text-color);
+  color: var(--text) !important;
   text-align: justify !important;
   text-align-last: right !important;
   line-height: 2.2 !important;
   word-spacing: -1px !important;
   padding: 0 var(--overlay-padding-x);
+  direction: rtl;
+  display: block;
+}
+
+.item-search-text .search-hit {
+  color: var(--search-text-color) !important;
+  font-weight: 900;
+  background: transparent !important;
+  padding: 0;
+}
+
+.night-mode .item-search-text .search-hit {
+  color: var(--color-red) !important;
+}
+
+mark {
+  background: transparent !important;
+  color: inherit;
 }
 
 .item-search .item-line-2[data-clickable="true"] {

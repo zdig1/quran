@@ -74,6 +74,45 @@ class TafsirSearchManager {
     if (!text) return '';
     return String(text).replace(/[أإآٱ]/g, 'ا');
   }
+  // ✅ Échappe les caractères regex
+  _escapeRegex(str) {
+    return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  _highlightQuery(text, query) {
+    if (!text || !query) return window.quranApp.escapeHtml(text);
+
+    const escaped = window.quranApp.escapeHtml(text);
+    const normalizedQuery = this.normalizeArabic(query.toLowerCase());
+    if (!normalizedQuery) return escaped;
+
+    const variantMap = {
+      "ا": "[اأإآٱ]",
+      "ي": "[يى]",
+      "ه": "[هة]",
+    };
+
+    const patternParts = [];
+    for (const ch of normalizedQuery) {
+      if (variantMap[ch]) {
+        patternParts.push(variantMap[ch]);
+      } else {
+        patternParts.push(this._escapeRegex(ch));
+      }
+    }
+    const pattern = patternParts.join("");
+
+    let regex;
+    try {
+      regex = new RegExp(`(${pattern})`, "gi");
+    } catch {
+      return escaped;
+    }
+
+    // On enveloppe TOUT (même les chiffres) dans le span
+    return escaped.replace(regex, '<span class="search-hit">$1</span>');
+  }
+
   // ============================================
   // CHARGEMENT DES DONNÉES
   // ============================================
@@ -318,10 +357,10 @@ class TafsirSearchManager {
   _renderSearchResults(resultsEl, results, query, onAyaClick) {
     if (results.length === 0) {
       resultsEl.innerHTML = `<div class="search-empty">
-      <p><b>لا توجد نتائج لــ :</b></p>
-      <p>"${window.quranApp.escapeHtml(query)}"</p>
-      <p>جرب 🔍 كلمة بحث أخرى</p>
-    </div>`;
+    <p><b>لا توجد نتائج لــ :</b></p>
+    <p>"${window.quranApp.escapeHtml(query)}"</p>
+    <p>جرب 🔍 كلمة بحث أخرى</p>
+   </div>`;
       this.lastResults = resultsEl.innerHTML;
       return;
     }
@@ -329,17 +368,17 @@ class TafsirSearchManager {
     let html = "";
     results.forEach((item, index) => {
       html += `<div class="item-container item-search" data-sura="${item.sura_n}" data-aya="${item.aya_n}">
-      <div class="item-line-1">
-        <div class="item-right">
-          <span class="item-badge badge">${index + 1}</span>
-          <span class="item-title">${item.sura_n}. ${window.quranApp.escapeHtml(item.sura)}</span>
-        </div>
-        <div class="item-left">
-          <span class="page-tag">ص ${item.page}</span>
-        </div>
+    <div class="item-line-1">
+      <div class="item-right">
+        <span class="item-badge badge">${index + 1}</span>
+        <span class="item-title">${item.sura_n}. ${window.quranApp.escapeHtml(item.sura)}</span>
       </div>
-      <div class="item-line-2 item-search-text" data-clickable="true">${window.quranApp.escapeHtml(item.text)}</div>
-    </div>`;
+      <div class="item-left">
+        <span class="page-tag">ص ${item.page}</span>
+      </div>
+    </div>
+    <div class="item-line-2 item-search-text" data-clickable="true">${this._highlightQuery(item.text, query)}</div>
+  </div>`;
     });
 
     resultsEl.innerHTML = html;
@@ -693,13 +732,11 @@ class TafsirSearchManager {
     const { contentContainer } = this.tafsirUI;
     const p = parseInt(page);
 
-    // Si la page est déjà dans le DOM, on scrolle juste
     if (contentContainer.querySelector(`[data-page="${p}"]`)) {
       this.scrollToFirstAyaOfPage(p);
       return;
     }
 
-    // Sinon : chargement initial — vider et rendre
     await this.smartPreloadAround(p);
     const cachedPages = Array.from(this.pageCache.keys()).sort((a, b) => a - b);
     const pageIndex = cachedPages.indexOf(p);
@@ -946,11 +983,8 @@ class TafsirSearchManager {
       const el = container.querySelector(`[data-page="${page}"]`);
       if (!el) return;
       this.isScrolling = true;
-      const offset =
-        el.getBoundingClientRect().top -
-        container.getBoundingClientRect().top +
-        container.scrollTop;
-      container.scrollTop = offset;
+      const offset = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+      container.scrollTo({ top: offset - 10, behavior: "auto" });
       if (el.classList.contains("tafsir-aya-container")) {
         const sura_n = parseInt(el.dataset.sura);
         const aya_n = parseInt(el.dataset.aya);
@@ -967,7 +1001,7 @@ class TafsirSearchManager {
       setTimeout(() => {
         this.isScrolling = false;
       }, 100);
-    }, 100);
+    }, 300);
   }
 
   _scrollContainerTo(el, offset = 20) {

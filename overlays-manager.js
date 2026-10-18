@@ -1396,6 +1396,22 @@ class OverlayManager {
       this.lazyLoaded.add("tafsirUI");
       window.tafsirManager.initTafsirFontControls();
     }
+    else if (this.lazyLoaded.has("tafsirUI")) {
+      const currentPage = window.quranApp?.getCurrentPage() || 1;
+
+      await window.tafsirManager.loadTafsirForPage(currentPage);
+
+      const firstAya = window.tafsirManager.getFirstAyaForPage(currentPage);
+      if (firstAya) {
+        window.tafsirManager.updateTafsirNavigation(firstAya.sura_n, firstAya.aya_n, currentPage);
+        window.tafsirManager.syncDropdowns(firstAya.sura_n, firstAya.aya_n, currentPage, "init");
+
+        // ✅ Utilise la nouvelle fonction de scroll corrigée
+        setTimeout(() => {
+          window.tafsirManager.scrollToFirstAyaOfPage(currentPage);
+        }, 200);
+      }
+    }
   }
 
   // ============================================
