@@ -185,7 +185,12 @@ class QuranReader {
       const relevant = notifications.filter(
         (n) => n.includes("الجزء") || n.includes("الحزب") || n.includes("سجدة"),
       );
-      if (relevant.length) window.quranApp?.showToast(relevant.join(" - "));
+      if (relevant.length) {
+        let msg = relevant.join(" - ");
+        msg = msg.replace(/ - (.*سجدة.*)/, "\n$1");
+
+        window.quranApp?.showToast(msg, "hizb");
+      }
     }
 
     this.applyButtonsVisibility();
