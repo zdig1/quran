@@ -25,6 +25,21 @@ class OverlayManager {
     this._clearSearchHandler = null;
     this.currentSurahInfoId = null;
     this._surahInfoSwipeInitialized = false;
+
+    this._surahsVirtual = {
+      container: null,
+      items: [],
+      itemHeight: 0,
+      poolSize: 25,
+      pool: [],
+      spacer: null,
+      startIndex: -1,
+      pinnedCount: 0,
+      allTitle: null,
+      scrollHandler: null,
+      rafPending: false,
+      rendered: false,
+    };
   }
 
   init(config = {}) {
@@ -106,16 +121,12 @@ class OverlayManager {
     search: {
       element: "searchOverlay",
       closeBtn: "closeSearchBtn",
-      input: "searchInput",
-      results: "searchResults",
+      content: "searchContentContainer",  // ✅ Container unique
     },
     tafsir: {
       element: "tafsirOverlay",
       closeBtn: "closeTafsirBtn",
-      content: "tafsirContentContainer",
-      suraSelect: "suraSelect",
-      ayaSelect: "ayaSelect",
-      pageSelect: "pageSelect",
+      content: "tafsirContentContainer",  // ✅ Le container du contenu
     },
     tajweed: {
       element: "tajweedOverlay",
@@ -212,11 +223,10 @@ class OverlayManager {
       { btn: this.elements.surahsBtn, action: () => this.showSurahs() },
       { btn: this.elements.juzHizbBtn, action: () => this.showJuzHizb() },
       { btn: this.elements.bookmarksBtn, action: () => this.showBookmarks() },
-      { btn: this.elements.audioBtn, action: () => this.showAudio() },
+      { btn: this.elements.audioBtn, action: () => window.quranAudioPlayer?.showOverlay() },
       { btn: this.elements.khatmBtn, action: () => this.showKhatm() },
-      { btn: this.elements.searchBtn, action: () => this.showSearch() },
-      { btn: this.elements.tafsirBtn, action: () => this.showTafsir() },
-      { btn: this.elements.tajweedBtn, action: () => this.showTajweed() },
+      { btn: this.elements.searchBtn, action: () => window.tafsirManager?.showSearchOverlay() },
+      { btn: this.elements.tafsirBtn, action: () => window.tafsirManager?.showTafsirOverlay() }, { btn: this.elements.tajweedBtn, action: () => this.showTajweed() },
       { btn: this.elements.themeBtn, action: () => { this.closeMenu(); setTimeout(() => window.quranApp?.toggleTheme(), 50); } },
       { btn: this.elements.aboutBtn, action: () => this.showAbout() },
     ];
@@ -450,73 +460,179 @@ class OverlayManager {
     if (!overlay?.content || !window.quranCalculator) return;
 
     const container = overlay.content;
+    const v = this._surahsVirtual;
 
-    // Capture position
-    let initialClickOffset = 0;
-    if (preserveSurahId) {
-      const allSectionOld = container.querySelector('.surah-section-all');
-      const clickedEl = allSectionOld
-        ? allSectionOld.querySelector(`.item-surah[data-surah-id="${preserveSurahId}"]`)
-        : container.querySelector(`.item-surah[data-surah-id="${preserveSurahId}"]`);
-      if (clickedEl) {
-        initialClickOffset = clickedEl.offsetTop - container.scrollTop;
-      }
-    }
-
-    container.innerHTML = "";
+    // ✅ 1. Construire la liste logique
     const bookmarks = window.quranApp?.getBookmarks() || [];
     const surahs = window.quranCalculator.getAllSurahs();
     const pinnedIds = window.quranApp?.getPinnedSurahs() || [];
-    const bookmarkedSurahIds = new Set();
-    bookmarks.forEach(b => {
-      if (b.surahId) {
-        bookmarkedSurahIds.add(b.surahId);
-      }
-    });
+    const bookmarkedSurahIds = new Set(
+      bookmarks.filter(b => b.surahId).map(b => b.surahId)
+    );
 
-    // Section Favorites
+    const items = [];
     const pinnedSurahs = surahs.filter(s => pinnedIds.includes(s.s_id));
+    pinnedSurahs.forEach(s => items.push({
+      surah: s, isPinned: true, hasBookmark: bookmarkedSurahIds.has(s.s_id)
+    }));
+    surahs.forEach(s => items.push({
+      surah: s, isPinned: pinnedIds.includes(s.s_id), hasBookmark: bookmarkedSurahIds.has(s.s_id)
+    }));
+
+    v.items = items;
+    v.pinnedCount = pinnedSurahs.length;
+    v.container = container;
+    v.startIndex = -1;
+    v.rendered = false;
+
+    // ✅ 2. Reset DOM
+    container.innerHTML = "";
+
+    // ✅ 3. Titre "Favoris"
     if (pinnedSurahs.length > 0) {
-      const pinnedSection = document.createElement("div");
-      pinnedSection.className = "surah-section surah-section-pinned";
-      pinnedSection.innerHTML = '<h3 class="section-title">⭐ السور المفضلة</h3>';
-      pinnedSurahs.forEach(s => pinnedSection.appendChild(this._createSurahItem(s, true, bookmarkedSurahIds)));
-      container.appendChild(pinnedSection);
+      const t = document.createElement('h3');
+      t.className = 'section-title';
+      t.textContent = '⭐ السور المفضلة';
+      container.appendChild(t);
     }
 
-    // Section Globale
-    const allSection = document.createElement("div");
-    allSection.className = "surah-section surah-section-all";
-    allSection.innerHTML = '<h3 class="section-title">📖 جميع السور</h3>';
-    surahs.forEach(s => {
-      allSection.appendChild(this._createSurahItem(s, pinnedIds.includes(s.s_id), bookmarkedSurahIds));
-    });
-    container.appendChild(allSection);
+    // ✅ 4. Spacer global
+    const spacer = document.createElement('div');
+    spacer.style.position = 'relative';
+    spacer.style.width = '100%';
+    container.appendChild(spacer);
+    v.spacer = spacer;
 
-    // Mettre en évidence la sourate courante
-    const currentSurah = window.quranCalculator?.getFirstSurahForPage(this.getCurrentPage());
-    const allSectionNew = container.querySelector('.surah-section-all');
-    if (currentSurah?.s_id) {
-      const currentEl = allSectionNew?.querySelector(`.item-surah[data-surah-id="${currentSurah.s_id}"]`);
-      if (currentEl) currentEl.classList.add("current-item");
+    // ✅ 5. Pool
+    v.pool = [];
+    for (let i = 0; i < v.poolSize; i++) {
+      const el = document.createElement('div');
+      el.style.position = 'absolute';
+      el.style.left = '0';
+      el.style.right = '0';
+      el.style.display = 'none';
+      spacer.appendChild(el);
+      v.pool.push(el);
     }
-
-    // Revenir à l'élément préservé
-    if (preserveSurahId) {
-      const newEl = allSectionNew?.querySelector(`.item-surah[data-surah-id="${preserveSurahId}"]`);
-      if (newEl) {
+    // ✅ 7. Listener scroll (toujours attaché, même si on skip le probe)
+    if (!v.scrollHandler) {
+      v.scrollHandler = () => {
+        if (v.rafPending) return;
+        v.rafPending = true;
         requestAnimationFrame(() => {
-          container.scrollTop = newEl.offsetTop - initialClickOffset;
+          this._updateVisibleSurahs();
+          v.rafPending = false;
         });
-      }
-    } else if (scrollToCurrent && currentSurah?.s_id) {
-      const el = allSectionNew?.querySelector(`.item-surah[data-surah-id="${currentSurah.s_id}"]`);
-      if (el) {
-        requestAnimationFrame(() => el.scrollIntoView({ block: "center", behavior: "auto" }));
-      }
+      };
+      container.addEventListener('scroll', v.scrollHandler, { passive: true });
     }
+
+    // ✅ 6. Skip du probe si la hauteur est déjà connue
+    //    (la structure d'un item ne change pas entre 2 renders — 2 lignes × 7 col)
+    if (v.itemHeight > 0) {
+      // Hauteur déjà mesurée : on layout immédiatement, sans flash
+      this._layoutVirtualSurahs(scrollToCurrent, preserveSurahId, bookmarkedSurahIds);
+      return;
+    }
+
+    // Premier render : mesurer via un probe fantôme
+    const probe = this._createSurahItem(items[0].surah, items[0].isPinned, bookmarkedSurahIds);
+    probe.style.position = 'absolute';
+    probe.style.visibility = 'hidden';
+    probe.style.top = '0';
+    probe.style.left = '0';
+    probe.style.right = '0';
+    spacer.appendChild(probe);
+
+    requestAnimationFrame(() => {
+      v.itemHeight = probe.offsetHeight || 80;
+      probe.remove();
+      this._layoutVirtualSurahs(scrollToCurrent, preserveSurahId, bookmarkedSurahIds);
+    });
   }
 
+  _layoutVirtualSurahs(scrollToCurrent, preserveSurahId, bookmarkedSurahIds) {
+    const v = this._surahsVirtual;
+    const totalHeight = v.items.length * v.itemHeight;
+    v.spacer.style.height = (totalHeight + 50) + 'px';
+
+    // ✅ FIX : retirer un éventuel ancien titre "Toutes" avant d'en recréer un
+    if (v.allTitle && v.allTitle.parentNode) {
+      v.allTitle.remove();
+    }
+
+    // Titre "Toutes les sourates"
+    const allTitle = document.createElement('h3');
+    allTitle.className = 'section-title';
+    allTitle.textContent = '📖 جميع السور';
+    allTitle.style.position = 'absolute';
+    allTitle.style.left = '0';
+    allTitle.style.right = '0';
+    allTitle.style.top = (v.pinnedCount * v.itemHeight) + 'px';
+    v.spacer.appendChild(allTitle);
+    v.allTitle = allTitle;
+
+    // Scroll cible
+    const currentSurah = window.quranCalculator?.getFirstSurahForPage(this.getCurrentPage());
+    let targetIndex = -1;
+    if (preserveSurahId) {
+      targetIndex = v.items.findIndex(it => it.surah.s_id === preserveSurahId);
+    } else if (scrollToCurrent && currentSurah?.s_id) {
+      targetIndex = v.items.findIndex(it => it.surah.s_id === currentSurah.s_id);
+    }
+    if (targetIndex >= 0) {
+      const titleOffset = v.pinnedCount > 0 && targetIndex >= v.pinnedCount ? 40 : 0;
+      const targetTop = targetIndex * v.itemHeight + titleOffset;
+      v.container.scrollTop = Math.max(0, targetTop - v.container.clientHeight / 2 + v.itemHeight / 2);
+    }
+
+    this._updateVisibleSurahs();
+  }
+
+  _updateVisibleSurahs() {
+    const v = this._surahsVirtual;
+    if (!v.container || !v.itemHeight) return;
+
+    const scrollTop = v.container.scrollTop;
+    const half = Math.floor(v.poolSize / 2);
+    let start = Math.max(0, Math.floor(scrollTop / v.itemHeight) - half);
+    let end = Math.min(v.items.length - 1, start + v.poolSize - 1);
+    if (end - start + 1 < v.poolSize) {
+      start = Math.max(0, end - v.poolSize + 1);
+    }
+
+    if (start === v.startIndex && v.rendered) return;
+    v.startIndex = start;
+
+    const bookmarkedSurahIds = new Set(
+      (window.quranApp?.getBookmarks() || []).filter(b => b.surahId).map(b => b.surahId)
+    );
+    const currentSurah = window.quranCalculator?.getFirstSurahForPage(this.getCurrentPage());
+
+    for (let i = 0; i < v.poolSize; i++) {
+      const idx = start + i;
+      const el = v.pool[i];
+      if (idx >= v.items.length) {
+        el.style.display = 'none';
+        el.dataset.index = '';
+        continue;
+      }
+      const item = v.items[idx];
+      el.style.display = 'block';
+      el.style.top = (idx * v.itemHeight) + 'px';
+      el.style.height = v.itemHeight + 'px';
+
+      // Ne reconstruire que si l'index a changé
+      if (el.dataset.index === String(idx)) continue;
+      el.dataset.index = String(idx);
+      el.innerHTML = '';
+
+      const itemEl = this._createSurahItem(item.surah, item.isPinned, bookmarkedSurahIds);
+      if (currentSurah?.s_id === item.surah.s_id) itemEl.classList.add('current-item');
+      el.appendChild(itemEl);
+    }
+    v.rendered = true;
+  }
   // ============================================
   // 1.5 SURAH INFO OVERLAY
   // ============================================
@@ -1139,280 +1255,9 @@ class OverlayManager {
   }
 
   // ============================================
-  // 5. RENDER AUDIO
-  // ============================================
-
-  renderAudioUI() {
-    const riwayaLabel = window.RIWAYAT_CONFIG?.[window.quranAudioPlayer?.currentRiwaya]?.label || "حفص";
-    const coordsStatus = window.quranAudioPlayer?.ayaCoordsLoaded === false
-      ? '<div class="audio-warning">⚠️ بيانات تحديد الآيات غير متوفرة، لن يظهر التظليل</div>'
-      : "";
-
-    return `
-        ${coordsStatus}
-        <div class="audio-select-row">
-            <div class="custom-select" id="reciterSelectWrap">
-                <button type="button" class="custom-select-btn" id="reciterSelect">
-                    <span class="custom-select-val">اختر القارئ</span><span class="custom-select-arrow">▾</span>
-                </button>
-                <div class="custom-select-dropdown" id="reciterSelectList"></div>
-            </div>
-        </div>
-        <div class="audio-select-row audio-select-grid">
-            <div class="custom-select" id="surahSelectAudioWrap">
-                <button type="button" class="custom-select-btn" id="surahSelectAudio">
-                    <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>
-                </button>
-                <div class="custom-select-dropdown" id="surahSelectAudioList"></div>
-            </div>
-            <div class="custom-select" id="ayaSelectAudioWrap">
-                <button type="button" class="custom-select-btn" id="ayaSelectAudio">
-                    <span class="custom-select-val">اختر الآية</span><span class="custom-select-arrow">▾</span>
-                </button>
-                <div class="custom-select-dropdown" id="ayaSelectAudioList"></div>
-            </div>
-            <div class="custom-select" id="pageSelectAudioWrap">
-                <button type="button" class="custom-select-btn" id="pageSelectAudio">
-                    <span class="custom-select-val">اختر الصفحة</span><span class="custom-select-arrow">▾</span>
-                </button>
-                <div class="custom-select-dropdown" id="pageSelectAudioList"></div>
-            </div>
-        </div>
-        <div id="audioStatus" class="audio-status"></div>
-        <div class="audio-progress-wrap">
-            <span id="audioCurrentTime">0:00</span>
-            <input type="range" id="audioProgress" class="audio-progress" value="0" min="0" max="100" step="0.1">
-            <span id="audioDuration">0:00</span>
-        </div>
-        <div class="audio-controls">
-            <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
-            <button class="btn audio-btn" id="repeatBtn" title="تكرار">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg>
-            </button>
-            <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 20 12 12 18"/><line x1="21" y1="6" x2="21" y2="18" stroke="currentColor" stroke-width="2"/></svg>
-            </button>
-            <button class="btn audio-btn" id="nextAyahBtn" title="الآية التالية">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
-            </button>
-            <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>
-            </button>
-            <button class="btn audio-btn" id="prevAyahBtn" title="الآية السابقة">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="11 6 3 12 11 18"/><polygon points="21 6 13 12 21 18"/></svg>
-            </button>
-            <button class="btn audio-btn" id="prevSurahBtn" title="السورة السابقة">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 4 12 12 18"/><line x1="3" y1="6" x2="3" y2="18" stroke="currentColor" stroke-width="2"/></svg>
-            </button>
-            <button class="btn audio-btn" id="stopBtn" title="إيقاف">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7.5" y="7.5" width="9" height="9"/></svg>
-            </button>
-        </div>
-        <div class="audio-current-info" style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
-            <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} (عبر النت)</div>
-            <div id="currentSurahDisplay" class="audio-current-display" style="flex: 1; margin: 0; background: transparent; border: none; color: inherit;"></div>
-        </div>
-        <audio id="quranAudioPlayer" preload="none" style="display:none;"></audio>
-    `;
-  }
-
-  async showAudio() {
-    this.closeMenu();
-    const overlay = this.lazyLoadOverlay("audio");
-    if (overlay?.element && overlay?.content) {
-      // Injecter le HTML si nécessaire
-      if (!overlay.contentGenerated) {
-        overlay.content.innerHTML = this.renderAudioUI();
-        overlay.contentGenerated = true;
-        // ✅ Utiliser reset() au lieu de modifier _initialized directement
-        if (window.CustomSelect) {
-          window.CustomSelect.reset();
-          window.CustomSelect.initToggle();
-        }
-        await window.quranAudioPlayer.init();
-      }
-      this.showOverlay("audio");
-      window.quranAudioPlayer?._hideMiniBar(false);
-      const player = window.quranAudioPlayer;
-      player._syncOverlay();
-      if (!player.isPlaying && !player.currentSurah) {
-        player.setCurrentSurahFromPage();
-      }
-    }
-  }
-
-  // ============================================
   // 6. SEARCH OVERLAY
-  // ============================================
-
-  async showSearch() {
-    this.closeMenu();
-    if (!(await window.quranApp?.loadTafsir())) return;
-    const overlay = this.lazyLoadOverlay("search");
-    if (!overlay?.input || !overlay?.results) return;
-
-    this.showOverlay("search");
-
-    if (window.tafsirManager?.setupSearchUI) {
-      window.tafsirManager.setupSearchUI(
-        overlay.input,
-        overlay.results,
-        (sura, aya) => this.goToAya(sura, aya)
-      );
-
-      if (window.tafsirManager.lastResults) {
-        overlay.results.innerHTML = window.tafsirManager.lastResults;
-      } else if (overlay.input.value.trim() !== "") {
-        overlay.input.dispatchEvent(new Event("input"));
-      }
-    }
-
-    this._setupClearButton(overlay);
-    setTimeout(() => overlay.input?.focus(), 100);
-  }
-
-  _setupClearButton(overlay) {
-    const clearBtn = document.getElementById("clearSearchBtn");
-    if (!clearBtn) return;
-    clearBtn.classList.remove("hidden");
-
-    if (this._clearSearchHandler) {
-      clearBtn.removeEventListener("click", this._clearSearchHandler);
-    }
-
-    const updateVisibility = () => {
-      clearBtn.style.display = overlay.input.value ? "block" : "none";
-    };
-
-    this._clearSearchHandler = () => {
-      overlay.input.value = "";
-      updateVisibility();
-      if (window.tafsirManager?.clearSearch) {
-        window.tafsirManager.clearSearch();
-      } else {
-        overlay.results.innerHTML = "";
-      }
-      overlay.input.focus();
-    };
-
-    clearBtn.addEventListener("click", this._clearSearchHandler);
-    overlay.input.addEventListener("input", updateVisibility);
-    updateVisibility();
-  }
-
-  async goToAya(sura, aya) {
-    if (!sura || !aya) return;
-    if (!window.tafsirManager?.getAya) {
-      window.quranApp?.showToast("❌ نظام البحث غير متوفر");
-      return;
-    }
-    const ayaInfo = window.tafsirManager.getAya(sura, aya);
-    if (!ayaInfo?.page) {
-      window.quranApp?.showToast("❌ لم يتم العثور على الآية");
-      return;
-    }
-    this.closeOverlay("search");
-    setTimeout(() => {
-      window.quranApp?.goToPage(ayaInfo.page);
-      window.quranApp?.showToast(`📖 ${ayaInfo.sura} - الآية ${ayaInfo.aya_n}`);
-    }, 200);
-  }
-
-  // ============================================
   // 7. TAFSIR OVERLAY
   // ============================================
-
-  renderTafsirUI() {
-    return `
-        <div class="tafsir-controls tafsir-container">
-            <div class="custom-select" id="suraSelectWrap">
-                <button type="button" class="custom-select-btn" id="suraSelect">
-                    <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>
-                </button>
-                <div class="custom-select-dropdown" id="suraSelectList"></div>
-            </div>
-            <div class="custom-select" id="ayaSelectWrap">
-                <button type="button" class="custom-select-btn" id="ayaSelect">
-                    <span class="custom-select-val">اختر الآية</span><span class="custom-select-arrow">▾</span>
-                </button>
-                <div class="custom-select-dropdown" id="ayaSelectList"></div>
-            </div>
-            <div class="custom-select" id="pageSelectWrap">
-                <button type="button" class="custom-select-btn" id="pageSelect">
-                    <span class="custom-select-val">اختر الصفحة</span><span class="custom-select-arrow">▾</span>
-                </button>
-                <div class="custom-select-dropdown" id="pageSelectList"></div>
-            </div>
-            <button type="button" class="btn tafsir-font-btn" id="tafsirThemeToggle" aria-label="تبديل الوضع الليلي">🌙</button>
-            <button type="button" class="btn tafsir-font-btn" id="tafsirFontDecrease" aria-label="تصغير حجم النص">−</button>
-            <button type="button" class="btn tafsir-font-btn" id="tafsirFontReset" aria-label="إعادة الحجم الافتراضي">⟲</button>
-            <button type="button" class="btn tafsir-font-btn" id="tafsirFontIncrease" aria-label="تكبير حجم النص">+</button>
-        </div>
-    `;
-  }
-
-  async showTafsir() {
-    this.closeMenu();
-    if (window.quranReader?.getCurrentPage) {
-      this._tafsirSavedPage = window.quranReader.getCurrentPage();
-    }
-    if (!(await window.quranApp?.loadTafsir())) return;
-
-    const overlay = this.lazyLoadOverlay("tafsir");
-    if (!overlay?.content) return;
-
-    // Injecter les contrôles dans leur container fixe (hors scroll)
-    if (!overlay.contentGenerated) {
-      const controlsEl = document.getElementById("tafsirControlsContainer");
-      if (controlsEl) controlsEl.innerHTML = this.renderTafsirUI();
-      overlay.contentGenerated = true;
-      if (window.CustomSelect) {
-        window.CustomSelect.reset();
-        window.CustomSelect.initToggle();
-      }
-    }
-
-    this.showOverlay("tafsir");
-
-    await new Promise(r => setTimeout(r, 50));
-
-    const suraSelect = document.getElementById("suraSelect");
-    const ayaSelect = document.getElementById("ayaSelect");
-    const pageSelect = document.getElementById("pageSelect");
-    const tafsirContent = document.getElementById("tafsirContentContainer");
-
-    if (suraSelect && ayaSelect && pageSelect && tafsirContent && !this.lazyLoaded.has("tafsirUI")) {
-      await window.tafsirManager.initTafsirUI(
-        suraSelect,
-        ayaSelect,
-        pageSelect,
-        tafsirContent,
-        (page) => {
-          this.closeOverlay("tafsir");
-          setTimeout(() => window.quranApp?.goToPage(page), 200);
-        },
-        (sura, aya) => this.goToAya(sura, aya)
-      );
-      this.lazyLoaded.add("tafsirUI");
-      window.tafsirManager.initTafsirFontControls();
-    }
-    else if (this.lazyLoaded.has("tafsirUI")) {
-      const currentPage = window.quranApp?.getCurrentPage() || 1;
-
-      await window.tafsirManager.loadTafsirForPage(currentPage);
-
-      const firstAya = window.tafsirManager.getFirstAyaForPage(currentPage);
-      if (firstAya) {
-        window.tafsirManager.updateTafsirNavigation(firstAya.sura_n, firstAya.aya_n, currentPage);
-        window.tafsirManager.syncDropdowns(firstAya.sura_n, firstAya.aya_n, currentPage, "init");
-
-        // ✅ Utilise la nouvelle fonction de scroll corrigée
-        setTimeout(() => {
-          window.tafsirManager.scrollToFirstAyaOfPage(currentPage);
-        }, 200);
-      }
-    }
-  }
 
   // ============================================
   // 8. TAJWEED OVERLAY

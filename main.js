@@ -4,7 +4,7 @@ class QuranApp {
     this.isInitializing = false;
 
     this.bookmarks = [];
-    this.bookmarkedPagesSet = new Set(); 
+    this.bookmarkedPagesSet = new Set();
     this.pinnedSurahs = [];
     this.lastPage = 1;
     this.theme = "light";
@@ -346,14 +346,21 @@ class QuranApp {
    */
   exportUserData() {
     const pinnedReciters = {};
+    // ✅ NOUVEAU : récitateur actif par riwaya
+    const activeReciters = {};
     Object.keys(window.RIWAYAT_CONFIG || {}).forEach(riwaya => {
       const stored = this.getPreference(`pinnedReciters_${riwaya}`);
       if (stored) pinnedReciters[riwaya] = JSON.parse(stored);
+
+      // ✅ Récupérer le récitateur actif (via getPreference qui préfixe déjà quran_)
+      const active = this.getPreference(`reciter_${riwaya}`);
+      if (active) activeReciters[riwaya] = active;
     });
     const data = {
       bookmarks: this.bookmarks,
       pinnedSurahs: this.pinnedSurahs,
       pinnedReciters,
+      activeReciters,   // ✅ NOUVEAU
       lastPage: this.lastPage,
       theme: this.theme,
     };
@@ -439,7 +446,20 @@ class QuranApp {
             }
           });
         }
+        // ✅ NOUVEAU : récitateur actif par riwaya
+        if (imported.activeReciters && typeof imported.activeReciters === 'object') {
+          Object.entries(imported.activeReciters).forEach(([riwaya, reciterId]) => {
+            // Validation : la riwaya doit exister dans RIWAYAT_CONFIG
+            if (!window.RIWAYAT_CONFIG?.[riwaya]) return;
+            if (typeof reciterId !== 'string' || !reciterId) return;
 
+            // Validation : le récitateur doit exister dans cette riwaya
+            const valid = window.RIWAYAT_CONFIG[riwaya].reciters.some(r => r.id === reciterId);
+            if (!valid) return;
+
+            this.setPreference(`reciter_${riwaya}`, reciterId);
+          });
+        }
         // 📄 Dernière page consultée
         if (
           typeof imported.lastPage === "number" &&
@@ -462,7 +482,7 @@ class QuranApp {
         this.saveToLocalStorage();
         window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
         window.dispatchEvent(new CustomEvent("quran:pinnedSurahsUpdated"));
-
+        window.dispatchEvent(new CustomEvent("quran:preferencesImported"));
         return true;
       }
 

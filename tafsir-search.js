@@ -53,6 +53,17 @@ class TafsirSearchManager {
     this.lastResults = "";
     this.inputElement = null;
     this.resultsElement = null;
+
+    // ✅ NOUVEAU : index inversé
+    this._invertedIndex = {
+      normalizedTexts: [],
+      buckets: new Map(),
+    };
+    // ✅ NOUVEAU : recherche incrémentale
+    this._lastSearchQuery = "";
+    this._lastSearchFullResults = [];
+    this._lastSearchResults = null;
+
   }
 
   // ============================================
@@ -151,7 +162,37 @@ class TafsirSearchManager {
       throw err;
     }
   }
+  buildInvertedIndex() {
+    if (!this.data?.length) return;
 
+    this._invertedIndex.normalizedTexts = new Array(this.data.length);
+    this._invertedIndex.buckets = new Map();
+
+    for (let i = 0; i < this.data.length; i++) {
+      const aya = this.data[i];
+      const text = aya[this.F.text];
+      if (!text) {
+        this._invertedIndex.normalizedTexts[i] = '';
+        continue;
+      }
+
+      // ✅ Normalisation UNE SEULE FOIS
+      const normalized = this.normalizeArabic(text.toLowerCase());
+      this._invertedIndex.normalizedTexts[i] = normalized;
+
+      // ✅ Bucket par premier caractère (après normalisation)
+      //    pour réduire le scan initial
+      const firstChar = normalized[0];
+      if (firstChar) {
+        let bucket = this._invertedIndex.buckets.get(firstChar);
+        if (!bucket) {
+          bucket = [];
+          this._invertedIndex.buckets.set(firstChar, bucket);
+        }
+        bucket.push(i);
+      }
+    }
+  }
   initializeDataStructures() {
     if (!this.data?.length) return;
     this.stats.totalAyat = this.data.length;
@@ -162,6 +203,7 @@ class TafsirSearchManager {
     });
     this.stats.totalSuras = suras.size;
     this.stats.loadedPages = this.loadedPages.size;
+    this.buildInvertedIndex();
   }
 
   async ensureLoaded() {
@@ -282,22 +324,70 @@ class TafsirSearchManager {
 
   searchWithStatsOptimized(query) {
     if (!this.data) return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
-    if (!query || query.trim() === '') return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
+    if (!query || query.trim() === '') {
+      this._lastSearchQuery = '';
+      this._lastSearchFullResults = [];
+      this._lastSearchResults = null;
+      return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
+    }
 
     const normalizedQuery = this.normalizeArabic(query.toLowerCase());
+    if (!normalizedQuery) return { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
 
-    const cacheKey = `alif_exact_${normalizedQuery}`;
-    if (this.searchCache.has(cacheKey)) return this.searchCache.get(cacheKey);
+    // ✅ 1. Cache exact
+    const cacheKey = `inv_${normalizedQuery}`;
+    if (this.searchCache.has(cacheKey)) {
+      const hit = this.searchCache.get(cacheKey);
+      this._lastSearchQuery = normalizedQuery;
+      this._lastSearchResults = hit;
+      // ⚠️ On ne peut pas reconstruire _lastSearchFullResults depuis le cache
+      // (il est tronqué à 500). On l'invalide pour éviter un incrémental faux.
+      this._lastSearchFullResults = [];
+      return hit;
+    }
+
+    // ✅ 2. Incrémental : la nouvelle requête étend la précédente
+    if (
+      this._lastSearchQuery &&
+      this._lastSearchFullResults.length > 0 &&
+      normalizedQuery.length > this._lastSearchQuery.length &&
+      normalizedQuery.startsWith(this._lastSearchQuery)
+    ) {
+      const filtered = this._lastSearchFullResults.filter(r => {
+        const norm = this.normalizeArabic(r.text.toLowerCase());
+        return norm.includes(normalizedQuery);
+      });
+      const surasFound = new Set(filtered.map(r => r.sura_n));
+      const result = {
+        results: filtered.slice(0, 500),
+        stats: { resultsCount: filtered.length, totalSuras: surasFound.size }
+      };
+      this._cacheSearchResult(cacheKey, result);
+      this._lastSearchQuery = normalizedQuery;
+      this._lastSearchFullResults = filtered;
+      this._lastSearchResults = result;
+      return result;
+    }
+
+    // ✅ 3. Fallback : scan via bucket
+    const bucket = this._invertedIndex.buckets.get(normalizedQuery[0]);
+    if (!bucket) {
+      const empty = { results: [], stats: { resultsCount: 0, totalSuras: 0 } };
+      this._cacheSearchResult(cacheKey, empty);
+      this._lastSearchQuery = normalizedQuery;
+      this._lastSearchFullResults = [];
+      this._lastSearchResults = empty;
+      return empty;
+    }
 
     const results = [];
     const surasFound = new Set();
+    const normalizedTexts = this._invertedIndex.normalizedTexts;
 
-    for (const aya of this.data) {
-      const text = aya[this.F.text];
-      if (!text) continue;
-      const normalizedText = this.normalizeArabic(text.toLowerCase());
-      if (!normalizedText.includes(normalizedQuery)) continue;
-
+    for (let k = 0; k < bucket.length; k++) {
+      const i = bucket[k];
+      if (!normalizedTexts[i].includes(normalizedQuery)) continue;
+      const aya = this.data[i];
       surasFound.add(aya[this.F.sura_n]);
       results.push({
         sura_n: aya[this.F.sura_n],
@@ -309,18 +399,23 @@ class TafsirSearchManager {
       });
     }
 
-    const total = results.length;
-    const cached = {
-      results: this._sortByQuranOrder(results).slice(0, 500),
-      stats: { resultsCount: total, totalSuras: surasFound.size }
+    const sorted = this._sortByQuranOrder(results);
+    const result = {
+      results: sorted.slice(0, 500),
+      stats: { resultsCount: sorted.length, totalSuras: surasFound.size }
     };
+    this._cacheSearchResult(cacheKey, result);
+    this._lastSearchQuery = normalizedQuery;
+    this._lastSearchFullResults = sorted;
+    this._lastSearchResults = result;
+    return result;
+  }
 
+  _cacheSearchResult(cacheKey, value) {
     if (this.searchCache.size >= this.config.searchCacheSize) {
       this.searchCache.delete(this.searchCache.keys().next().value);
     }
-    this.searchCache.set(cacheKey, cached);
-
-    return cached;
+    this.searchCache.set(cacheKey, value);
   }
 
   searchWithStats(query) {
@@ -1116,7 +1211,195 @@ class TafsirSearchManager {
 
     waitForElements();
   }
+  // ============================================
+  // OVERLAY SEARCH
+  // ============================================
 
+  async showSearchOverlay() {
+    const om = window.overlayManager;
+    if (!om) return;
+
+    om.closeMenu();
+
+    if (!(await window.quranApp?.loadTafsir())) return;
+
+    const overlay = om.lazyLoadOverlay("search");
+    if (!overlay?.content) return;
+
+    // Injecter le HTML si nécessaire (dans le container dédié)
+    if (!overlay.contentGenerated) {
+      overlay.content.innerHTML = this._renderSearchUI();
+      overlay.contentGenerated = true;
+    }
+
+    // Récupérer les éléments injectés
+    const input = document.getElementById("searchInput");
+    const results = document.getElementById("searchResults");
+    if (!input || !results) return;
+
+    om.showOverlay("search");
+
+    this.setupSearchUI(input, results, (sura, aya) => this._goToAya(sura, aya));
+
+    if (this.lastResults) {
+      results.innerHTML = this.lastResults;
+    } else if (input.value.trim() !== "") {
+      input.dispatchEvent(new Event("input"));
+    }
+
+    this._setupClearButton(input, results);
+    setTimeout(() => input.focus(), 100);
+  }
+
+  _renderSearchUI() {
+    return `
+      <div class="search-container" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+        <div class="search-wrapper">
+          <input type="text" id="searchInput" class="search-input"
+              placeholder="اكتب كلمة للبحث في القرآن الكريم..." autocomplete="off"
+              aria-label="كلمة البحث">
+          <button type="button" id="clearSearchBtn" class="clear-search-btn hidden"
+              aria-label="مسح">✕</button>
+        </div>
+        <div id="searchResults" class="overlay-body"></div>
+      </div>
+    `;
+  }
+  _setupClearButton(input, results) {
+    const clearBtn = document.getElementById("clearSearchBtn");
+    if (!clearBtn) return;
+    clearBtn.classList.remove("hidden");
+
+    if (this._clearSearchHandler) {
+      clearBtn.removeEventListener("click", this._clearSearchHandler);
+    }
+
+    const updateVisibility = () => {
+      clearBtn.style.display = input.value ? "block" : "none";
+    };
+
+    this._clearSearchHandler = () => {
+      input.value = "";
+      updateVisibility();
+      this.clearSearch();
+      input.focus();
+    };
+
+    clearBtn.addEventListener("click", this._clearSearchHandler);
+    input.addEventListener("input", updateVisibility);
+    updateVisibility();
+  }
+
+  // ============================================
+  // OVERLAY TAFSIR
+  // ============================================
+
+  async showTafsirOverlay() {
+    const om = window.overlayManager;
+    if (!om) return;
+
+    om.closeMenu();
+
+    // Sauvegarde de la page courante (restaurée à la fermeture par overlays-manager)
+    if (window.quranReader?.getCurrentPage) {
+      om._tafsirSavedPage = window.quranReader.getCurrentPage();
+    }
+
+    if (!(await window.quranApp?.loadTafsir())) return;
+
+    const overlay = om.lazyLoadOverlay("tafsir");
+    if (!overlay?.content) return;
+
+    // Injecter les contrôles (une seule fois)
+    if (!overlay.contentGenerated) {
+      const controlsEl = document.getElementById("tafsirControlsContainer");
+      if (controlsEl) controlsEl.innerHTML = this._renderTafsirControls();
+      overlay.contentGenerated = true;
+      if (window.CustomSelect) {
+        window.CustomSelect.reset();
+        window.CustomSelect.initToggle();
+      }
+    }
+
+    om.showOverlay("tafsir");
+
+    await new Promise(r => setTimeout(r, 50));
+
+    const suraSelect = document.getElementById("suraSelect");
+    const ayaSelect = document.getElementById("ayaSelect");
+    const pageSelect = document.getElementById("pageSelect");
+    const tafsirContent = document.getElementById("tafsirContentContainer");
+
+    if (suraSelect && ayaSelect && pageSelect && tafsirContent && !om.lazyLoaded.has("tafsirUI")) {
+      await this.initTafsirUI(
+        suraSelect, ayaSelect, pageSelect, tafsirContent,
+        (page) => {
+          om.closeOverlay("tafsir");
+          setTimeout(() => window.quranApp?.goToPage(page), 200);
+        },
+        (sura, aya) => this._goToAya(sura, aya)
+      );
+      om.lazyLoaded.add("tafsirUI");
+      this.initTafsirFontControls();
+    } else if (om.lazyLoaded.has("tafsirUI")) {
+      const currentPage = window.quranApp?.getCurrentPage() || 1;
+      await this.loadTafsirForPage(currentPage);
+
+      const firstAya = this.getFirstAyaForPage(currentPage);
+      if (firstAya) {
+        this.updateTafsirNavigation(firstAya.sura_n, firstAya.aya_n, currentPage);
+        this.syncDropdowns(firstAya.sura_n, firstAya.aya_n, currentPage, "init");
+        setTimeout(() => this.scrollToFirstAyaOfPage(currentPage), 200);
+      }
+    }
+  }
+
+  _renderTafsirControls() {
+    return `
+        <div class="tafsir-controls tafsir-container">
+            <div class="custom-select" id="suraSelectWrap">
+                <button type="button" class="custom-select-btn" id="suraSelect">
+                    <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>
+                </button>
+                <div class="custom-select-dropdown" id="suraSelectList"></div>
+            </div>
+            <div class="custom-select" id="ayaSelectWrap">
+                <button type="button" class="custom-select-btn" id="ayaSelect">
+                    <span class="custom-select-val">اختر الآية</span><span class="custom-select-arrow">▾</span>
+                </button>
+                <div class="custom-select-dropdown" id="ayaSelectList"></div>
+            </div>
+            <div class="custom-select" id="pageSelectWrap">
+                <button type="button" class="custom-select-btn" id="pageSelect">
+                    <span class="custom-select-val">اختر الصفحة</span><span class="custom-select-arrow">▾</span>
+                </button>
+                <div class="custom-select-dropdown" id="pageSelectList"></div>
+            </div>
+            <button type="button" class="btn tafsir-font-btn" id="tafsirThemeToggle" aria-label="تبديل الوضع الليلي">🌙</button>
+            <button type="button" class="btn tafsir-font-btn" id="tafsirFontDecrease" aria-label="تصغير حجم النص">−</button>
+            <button type="button" class="btn tafsir-font-btn" id="tafsirFontReset" aria-label="إعادة الحجم الافتراضي">⟲</button>
+            <button type="button" class="btn tafsir-font-btn" id="tafsirFontIncrease" aria-label="تكبير حجم النص">+</button>
+        </div>
+    `;
+  }
+
+  // ============================================
+  // NAVIGATION DEPUIS UNE AYA
+  // ============================================
+
+  _goToAya(sura, aya) {
+    if (!sura || !aya) return;
+    const ayaInfo = this.getAya(sura, aya);
+    if (!ayaInfo?.page) {
+      window.quranApp?.showToast("❌ لم يتم العثور على الآية");
+      return;
+    }
+    window.overlayManager?.closeOverlay("search");
+    setTimeout(() => {
+      window.quranApp?.goToPage(ayaInfo.page);
+      window.quranApp?.showToast(`📖 ${ayaInfo.sura} - الآية ${ayaInfo.aya_n}`);
+    }, 200);
+  }
 
 }
 

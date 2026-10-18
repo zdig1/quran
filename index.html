@@ -335,17 +335,7 @@
                     <h2>🔍 البحث في القرآن</h2>
                     <button type="button" class="btn close-btn" id="closeSearchBtn">✕</button>
                 </div>
-
-                <div class="search-container">
-                    <div class="search-wrapper">
-                        <input type="text" id="searchInput" class="search-input"
-                            placeholder="اكتب كلمة للبحث في القرآن الكريم..." autocomplete="off"
-                            aria-label="كلمة البحث">
-                        <button type="button" id="clearSearchBtn" class="clear-search-btn hidden"
-                            aria-label="مسح">✕</button>
-                    </div>
-
-                    <div id="searchResults" class="overlay-body"></div>
+                <div id="searchContentContainer" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
                 </div>
             </div>
         </div>
@@ -359,7 +349,8 @@
                 </div>
                 <div id="tafsirControlsContainer"></div>
                 <div id="tafsirContentContainer" class="tafsir-content-container"
-                    style="flex: 1; overflow-y: auto; padding: 0 var(--overlay-padding-x);"></div>
+                    style="flex: 1; overflow-y: auto; padding: 0 var(--overlay-padding-x); display:flex; flex-direction:column;">
+                </div>
             </div>
         </div>
 
