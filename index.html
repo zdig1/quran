@@ -1,3 +1,10 @@
+<!--
+  ============================================================
+   FICHIER : index.html
+   Rôle : page principale de l'application (structure, overlays,
+          menu, lecteur, scripts de chargement)
+  ============================================================
+-->
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 
@@ -11,59 +18,60 @@
     <meta name="keywords"
         content="تطبيق القرآن الكريم, مصحف حفص, رواية حفص, قراءة القرآن بدون إنترنت, تفسير القرآن, دراسة القرآن, تدبر القرآن, قواعد التجويد, بحث في القرآن">
 
+    <!-- ---------- Référencement (SEO) ---------- -->
     <link rel="canonical" href="https://zdig1.github.io/quran/">
     <meta name="robots" content="index, follow, max-image-preview:large">
 
     <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "القرآن الكريم برواية حفص",
-  "url": "https://zdig1.github.io/quran/",
-  "applicationCategory": "EducationApplication",
-  "operatingSystem": "Android, iOS, Windows, Web",
-  "softwareVersion": "1.1.3",
-  "description": "تطبيق مصحف حفص كامل لقراءة واستماع وبداية دراسة وتدبر القرآن الكريم مع التفسير الميسر والبحث المتقدم وبطاقات معلومات السور وقواعد التجويد بدون إنترنت.",
-  "image": "https://zdig1.github.io/quran/media/icon-512.png",
-  "screenshot": "https://zdig1.github.io/quran/media/screenshot.webp",
-  "video": {
-    "@type": "VideoObject",
-    "name": "Présentation de l'application القرآن الكريم",
-    "description": "Vidéo de démonstration des fonctionnalités",
-    "thumbnailUrl": "https://img.youtube.com/vi/quVCFsKA85o/maxresdefault.jpg",
-    "contentUrl": "https://www.youtube.com/watch?v=quVCFsKA85o",
-    "embedUrl": "https://www.youtube.com/embed/quVCFsKA85o",
-    "uploadDate": "2026-09-30"
-  },
-  "audience": {    "@type": "Audience",    "audienceType": "General"  },
-  "offers": {    "@type": "Offer",    "price": "0",    "priceCurrency": "USD"  },
-  "featureList": [
-    "قرآن بدون إنترنت",
-    "تلاوة واستماع",
-    "التفسير الميسر",
-    "البحث المتقدم",
-    "دراسة وتدبر القرآن",
-    "معلومات وبطاقات السور",
-    "قواعد التجويد",
-    "وضع ليلي"
-  ],
-  "author": {    "@type": "Person",    "name": "zdig1",
-      "sameAs": [
-      "https://twitter.com/zdig1",
-      "https://www.youtube.com/@zdig01"
-    ]
-  },
-  "publisher": {    "@type": "Organization",    "name": "GDZ",
-    "url": "https://quran-58c7cd.gitlab.io/",
-    "sameAs": [
-      "https://www.facebook.com/streaming.rakuen",
-      "https://www.linkedin.com/in/zdig1/"
-    ]
-  },
-  "downloadUrl": "https://quran-58c7cd.gitlab.io/"
-}
-</script>
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "القرآن الكريم برواية حفص",
+      "url": "https://zdig1.github.io/quran/",
+      "applicationCategory": "EducationApplication",
+      "operatingSystem": "Android, iOS, Windows, Web",
+      "description": "تطبيق مصحف حفص كامل لقراءة واستماع وبداية دراسة وتدبر القرآن الكريم مع التفسير الميسر والبحث المتقدم وبطاقات معلومات السور وقواعد التجويد بدون إنترنت.",
+      "image": "https://zdig1.github.io/quran/media/icon-512.png",
+      "screenshot": "https://zdig1.github.io/quran/media/screenshot.webp",
+      "video": {
+        "@type": "VideoObject",
+        "name": "Présentation de l'application القرآن الكريم",
+        "description": "Vidéo de démonstration des fonctionnalités",
+        "thumbnailUrl": "https://img.youtube.com/vi/quVCFsKA85o/maxresdefault.jpg",
+        "contentUrl": "https://www.youtube.com/watch?v=quVCFsKA85o",
+        "embedUrl": "https://www.youtube.com/embed/quVCFsKA85o",
+        "uploadDate": "2026-09-30"
+      },
+        "audience": {    "@type": "Audience",    "audienceType": "General"  },
+        "offers": {    "@type": "Offer",    "price": "0",    "priceCurrency": "USD"  },
+      "featureList": [
+        "قرآن بدون إنترنت",
+        "تلاوة واستماع",
+        "التفسير الميسر",
+        "البحث المتقدم",
+        "دراسة وتدبر القرآن",
+        "معلومات وبطاقات السور",
+        "قواعد التجويد",
+        "وضع ليلي"
+      ],
+        "author": {    "@type": "Person",    "name": "zdig1",
+        "sameAs": [
+          "https://twitter.com/zdig1",
+          "https://www.youtube.com/@zdig01"
+        ]
+      },
+        "publisher": {    "@type": "Organization",    "name": "GDZ",
+        "url": "https://quran-58c7cd.gitlab.io/",
+        "sameAs": [
+          "https://www.facebook.com/streaming.rakuen",
+          "https://www.linkedin.com/in/zdig1/"
+        ]
+      },
+      "downloadUrl": "https://quran-58c7cd.gitlab.io/"
+    }
+    </script>
 
+    <!-- ---------- Partage (Open Graph / Twitter) ---------- -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="القرآن الكريم برواية حفص – قراءة ودراسة وتدبر">
     <meta property="og:description"
@@ -84,7 +92,23 @@
     <link rel="me" href="https://www.youtube.com/@zdig01">
     <link rel="me" href="https://www.linkedin.com/in/zdig1/">
 
+    <!-- ---------- Application (manifeste, styles, icônes, thème) ---------- -->
     <link rel="manifest" href="./manifest.webmanifest">
+    <!-- Compatibilité : le CSS utilise @layer (Chrome / Android System WebView 99 ou plus) -->
+    <script>
+        (function () {
+            if (typeof window.CSSLayerBlockRule !== 'undefined') return;
+            window.__layersUnsupported = true;
+            document.addEventListener('DOMContentLoaded', function () {
+                document.body.innerHTML =
+                    '<div style="padding:24px;font:18px/1.8 sans-serif;text-align:center;direction:rtl;color:#222;background:#fff;min-height:100vh;box-sizing:border-box">' +
+                    '<h3>يلزم تحديث مكوّن عرض الويب</h3>' +
+                    '<p>يرجى تحديث «Android System WebView» و«Chrome» من متجر Google Play ثم إعادة تشغيل التطبيق.</p>' +
+                    '<p dir="ltr" style="font-size:15px;color:#555">Please update “Android System WebView” and Chrome from Google Play, then restart the app.</p></div>';
+            });
+        })();
+    </script>
+
     <link rel="stylesheet" href="./style.css">
 
     <meta name="application-name" content="القرآن الكريم">
@@ -99,6 +123,7 @@
     <meta name="apple-mobile-web-app-title" content="القرآن">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+    <!-- ---------- Sécurité (CSP) ---------- -->
     <meta http-equiv="Content-Security-Policy" content="
             default-src 'self';
             script-src 'self' 'unsafe-inline';
@@ -112,13 +137,13 @@
 </head>
 
 <body>
-    <!-- ===== CONTENEUR PRINCIPAL ===== -->
+    <!-- ---------- Conteneur principal ---------- -->
     <div id="app">
 
-        <!-- ===== EN-TÊTE ===== -->
+        <!-- ---------- En-tête ---------- -->
         <header class="header">
             <button type="button" class="btn header-btn" id="menuBtn" aria-label="القائمة الرئيسية">
-                <span id="menuIcon"><strong>≡</strong></span>
+                <span><strong>≡</strong></span>
             </button>
 
             <div class="autoscroll-group" id="autoScrollGroup">
@@ -136,7 +161,7 @@
             </button>
         </header>
 
-        <!-- ===== ZONE DE LECTURE ===== -->
+        <!-- ---------- Zone de lecture ---------- -->
         <main class="page-container">
             <div class="page-scroll" id="pageScroll">
                 <div class="loading-placeholder">
@@ -146,7 +171,7 @@
             </div>
         </main>
 
-        <!-- ===== PIED DE PAGE ===== -->
+        <!-- ---------- Pied de page ---------- -->
         <footer class="footer">
             <div class="footer-item">
                 <span id="surahInfo" class="footer-surah">1.الفاتحة (7)</span>
@@ -161,10 +186,10 @@
             </div>
         </footer>
 
-        <!-- ===== TOAST ===== -->
+        <!-- ---------- Toast ---------- -->
         <div id="toast" class="toast" aria-live="polite"></div>
 
-        <!-- 1. MENU PRINCIPAL -->
+        <!-- ---------- Menu principal ---------- -->
         <div id="menuOverlay" class="menu-overlay">
             <div class="menu-content">
                 <div class="menu-header">
@@ -197,12 +222,12 @@
                             <span class="menu-text">العلامات المرجعية</span>
                         </button>
 
-                        <button type="button" class="btn menu-item" id="khatmBtn">
-                            <svg class="menu-icon-svg" viewBox="0 0 24 24" style="fill: currentColor;">
+                        <button type="button" class="btn menu-item" id="goToBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24">
                                 <path
-                                    d="M22.425 12.375a.79.79 0 0 0-.675-.375c-1.65 0-3.225.75-4.2 2.1l-.675.9c-.825.975-2.1 1.5-3.375 1.5h-2.25c-.45 0-.75-.3-.75-.75s.3-.75.75-.75h1.425c1.2 0 2.325-.975 2.325-2.175v-.075c0-.375-.375-.75-.75-.75H9.675c-2.7 0-4.875 1.2-6.075 3.15L1.575 18.3a.68.68 0 0 0 0 .75l2.25 3.75c.075.15.3.3.45.375h.15c.15 0 .3-.075.45-.15a17.3 17.3 0 0 1 9.525-2.85c2.475 0 4.725-1.35 5.925-3.525l2.025-3.6c.15-.15.15-.45.075-.675" />
+                                    d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" />
                             </svg>
-                            <span class="menu-text">دعاء ختم القرآن</span>
+                            <span class="menu-text">الانتقال إلى آية</span>
                         </button>
 
                         <button type="button" class="btn menu-item" id="audioBtn">
@@ -211,6 +236,14 @@
                                     d="M12 3c-4.97 0-9 4.03-9 9v7c0 1.1.9 2 2 2h4v-8H5v-1c0-3.87 3.13-7 7-7s7 3.13 7 7v1h-4v8h4c1.1 0 2-.9 2-2v-7c0-4.97-4.03-9-9-9z">
                             </svg>
                             <span class="menu-text">الاستماع إلى القرآن</span>
+                        </button>
+
+                        <button type="button" class="btn menu-item" id="memorizeBtn">
+                            <svg class="menu-icon-svg" viewBox="18.2 50 113.5 113.5">
+                                <path
+                                    d="M20.51 114.51a16 16 0 0 0 8.21 11.69c.604.335 1.237.616 1.89.84-.83 11 16.65 15 26.07 12.38l-3.5 12.24 9 .32 15.75-22.55c5.31 1.5 11.58 2.22 15.63-4.28a19 19 0 0 0 1-1.85c1.03.21 2.079.317 3.13.32 3 0 8-.9 10.54-2.66a12.9 12.9 0 0 0 4.61-5.41c5.41.74 10-.53 13-3.67 3.8-3.91 4.88-10.37 2.9-17.3-2.61-9.25-10.55-19.67-26.33-23.58a20 20 0 0 0-4.85-4.34c-9.91-6.35-26-6.9-38.21-.87a25.66 25.66 0 0 0-14.1 1.35c-8.78 3.29-15.16 10.17-16.36 17.16a13.2 13.2 0 0 0-5.58 5.52c-2.63 4.94-3 9.89-1.23 13.89a17.4 17.4 0 0 0-1.57 10.8m6.48-5.2a9.71 9.71 0 0 0 9.07 0l-.73-4.85c-3.08.3-5.59-.66-6.9-2.63-1.47-2.19-1.24-5.44.62-8.93 2.08-3.91 6.57-4.53 9.06-4.56h.16c6.24 0 12.6 3.55 15.17 8.18l3.74-1.79a17.1 17.1 0 0 0-3.66-6.43 10.65 10.65 0 0 0 3.56-10.16l-3.69-.34a7.46 7.46 0 0 1-5.55 6.39 23.1 23.1 0 0 0-9.79-2c-.48 0-.94.05-1.41.08A21 21 0 0 1 47.36 73c11.08-4.3 18.55 2.37 20.26 4.67 4.12 5.52 1.48 10.74-.53 14.13l3.3 3a16.5 16.5 0 0 0 5.46-9.63c4.23 1.27 9.91 1 13.09-4.43l-3-2.06c-3.37 2.52-8.72 2.3-11.26-.81A19 19 0 0 0 72.4 74a22.2 22.2 0 0 0-5.16-4.92c8.29-2.26 20-1.89 27.08 2.65a12.19 12.19 0 0 1 6.06 11c0 3.57-2.8 9.21-6.57 10.09L96 97.07a12.37 12.37 0 0 0 6.27-3.63l3.25 4.14 3.25-1.58-3.18-8.32a16.5 16.5 0 0 0 .79-5 20.4 20.4 0 0 0-.42-4c10 4.13 14.94 11 16.75 17.28 1.39 4.83.85 9.19-1.43 11.53-1.81 1.86-4.58 2.3-7.19 2.13l-7-5.45-2.3 1.94 2.08 6.82c-1.09 3.47-4.66 5.26-11.17 4a15.2 15.2 0 0 0-3.15-7.56 14.2 14.2 0 0 0-4.88-4.37l-3.42-9.21-3.42-.15.37 7.55c-5.75-.59-12.18.58-18.17-.32l-1.1 4c8.78 4.06 17.77-2.56 25.92 6.17 2.93 3.14 1.81 5.87 0 8.62-2.61 3.93-7.51 1.57-12.52 0-7.59-2.32-13.1-4-23.49-3.15 2.48-4.71 2.24-10.4-1.08-16.66l-4.89 1.93c3.43 7.91.22 12.49-2 14.51-3.43 3.12-8.59 4.06-12 2.18a9.74 9.74 0 0 1-4.92-7.06 11.7 11.7 0 0 1 .05-4.1z" />
+                            </svg>
+                            <span class="menu-text">التكرار والحفظ</span>
                         </button>
 
                         <button type="button" class="btn menu-item" id="searchBtn">
@@ -231,12 +264,20 @@
 
                         <button type="button" class="btn menu-item" id="tajweedBtn">
                             <svg class="menu-icon-svg" viewBox="0 0 24 24">
-                                <path d="M12,2L4,10l8,8l8-8L12,2z M12,15.2L6.8,10L12,4.8L17.2,10L12,15.2z">
-                                    <path
-                                        d="M12,8c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,8,12,8z M12,11c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1S12.6,11,12,11z">
-                                        <path d="M12,22l-2-2h4L12,22z">
+                                <path d="M12,2L4,10l8,8l8-8L12,2z M12,15.2L6.8,10L12,4.8L17.2,10L12,15.2z" />
+                                <path
+                                    d="M12,8c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,8,12,8z M12,11c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1S12.6,11,12,11z" />
+                                <path d="M12,22l-2-2h4L12,22z" />
                             </svg>
                             <span class="menu-text">قواعد التجويد</span>
+                        </button>
+
+                        <button type="button" class="btn menu-item" id="khatmBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24" style="fill: currentColor;">
+                                <path
+                                    d="M22.425 12.375a.79.79 0 0 0-.675-.375c-1.65 0-3.225.75-4.2 2.1l-.675.9c-.825.975-2.1 1.5-3.375 1.5h-2.25c-.45 0-.75-.3-.75-.75s.3-.75.75-.75h1.425c1.2 0 2.325-.975 2.325-2.175v-.075c0-.375-.375-.75-.75-.75H9.675c-2.7 0-4.875 1.2-6.075 3.15L1.575 18.3a.68.68 0 0 0 0 .75l2.25 3.75c.075.15.3.3.45.375h.15c.15 0 .3-.075.45-.15a17.3 17.3 0 0 1 9.525-2.85c2.475 0 4.725-1.35 5.925-3.525l2.025-3.6c.15-.15.15-.45.075-.675" />
+                            </svg>
+                            <span class="menu-text">دعاء ختم القرآن</span>
                         </button>
 
                         <button type="button" class="btn menu-item" id="themeBtn">
@@ -259,9 +300,9 @@
             </div>
         </div>
 
-        <!-- ===== SYSTÈME D'OVERLAYS ===== -->
+        <!-- ---------- Overlays (ids déclarés dans overlays-manager.js → _overlayConfig) ---------- -->
 
-        <!-- 1. SOURATES (Standard) -->
+        <!-- Sourates (plein écran) -->
         <div id="surahsOverlay" class="overlay" role="dialog" aria-label="فهرس السور">
             <div class="overlay-content fullscreen">
                 <div class="overlay-header">
@@ -272,30 +313,29 @@
             </div>
         </div>
 
-        <!-- 1.5. SUURAH INFO OVERLAY -->
+        <!-- Informations d'une sourate -->
         <div id="surahInfoOverlay" class="overlay" role="dialog" aria-label="معلومات السورة">
             <div class="overlay-content">
                 <div class="overlay-header">
                     <h2>ℹ️ معلومات عن السورة</h2>
                     <button type="button" class="btn close-btn" id="closeSurahInfoBtn">✕</button>
                 </div>
-                <div id="surahInfoContent" class="overlay-body"
-                    style="white-space: pre-wrap; direction: rtl; text-align: right;"></div>
+                <div id="surahInfoContent" class="overlay-body surah-info-body"></div>
             </div>
         </div>
 
-        <!-- 2. JUZ/HIZB (Standard) -->
+        <!-- Juz et hizbs (plein écran) -->
         <div id="juzHizbOverlay" class="overlay" role="dialog" aria-label="الأجزاء والأحزاب">
             <div class="overlay-content fullscreen">
                 <div class="overlay-header">
-                    <h2>📗 الأجزاء والأحزاب</h2>
+                    <h2>📘 الأجزاء والأحزاب</h2>
                     <button type="button" class="btn close-btn" id="closeJuzHizbBtn">✕</button>
                 </div>
                 <div id="juzHizbList" class="overlay-body"></div>
             </div>
         </div>
 
-        <!-- 3. SIGNETS (Standard) -->
+        <!-- Signets -->
         <div id="bookmarksOverlay" class="overlay" role="dialog" aria-label="العلامات المرجعية">
             <div class="overlay-content">
                 <div class="overlay-header">
@@ -306,18 +346,18 @@
             </div>
         </div>
 
-        <!-- 4. KHATM (Fullscreen) -->
-        <div id="khatmOverlay" class="overlay" role="dialog" aria-label="دعاء ختم القرآن">
-            <div class="overlay-content fullscreen">
+        <!-- Aller à un verset ou une page -->
+        <div id="pageInputOverlay" class="overlay" role="dialog" aria-label="الانتقال إلى آية أو صفحة">
+            <div class="overlay-content">
                 <div class="overlay-header">
-                    <h2>🤲 دعاء ختم القرآن</h2>
-                    <button type="button" class="btn close-btn" id="closeKhatmBtn">✕</button>
+                    <h2>⬅️ الانتقال إلى آية</h2>
+                    <button type="button" class="btn close-btn" id="closePageInputBtn">✕</button>
                 </div>
-                <div id="khatmContent" class="overlay-body khatm-content"></div>
+                <div id="goToContent" class="overlay-body page-input-body"></div>
             </div>
         </div>
 
-        <!-- 4.5 audio Overlay -->
+        <!-- Écoute (audio) -->
         <div id="audioOverlay" class="overlay" role="dialog" aria-label="الاستماع إلى القرآن">
             <div class="overlay-content">
                 <div class="overlay-header">
@@ -328,19 +368,41 @@
             </div>
         </div>
 
-        <!-- 5. RECHERCHE (Fullscreen) -->
+        <!-- Répétition et mémorisation -->
+        <div id="memorizeOverlay" class="overlay" role="dialog" aria-label="تكرار وحفظ">
+            <div class="overlay-content">
+                <div class="overlay-header">
+                    <h2>🧠 تكرار وحفظ</h2>
+                    <button type="button" class="btn close-btn" id="closeMemorizeBtn">✕</button>
+                </div>
+                <div id="memorizeContent" class="overlay-body audio-body"></div>
+            </div>
+        </div>
+
+        <!-- Réglages de la mémorisation (mini-overlay) -->
+        <div id="memSettingsOverlay" class="overlay" role="dialog" aria-label="إعدادات التكرار">
+            <div class="overlay-content">
+                <div class="overlay-header">
+                    <h2>⚙️ إعدادات التكرار</h2>
+                    <button type="button" class="btn close-btn" id="closeMemSettingsBtn">✕</button>
+                </div>
+                <div id="memSettingsContent" class="overlay-body audio-body"></div>
+            </div>
+        </div>
+
+        <!-- Recherche (plein écran) -->
         <div id="searchOverlay" class="overlay" role="dialog" aria-label="البحث في القرآن">
             <div class="overlay-content fullscreen">
                 <div class="overlay-header">
                     <h2>🔍 البحث في القرآن</h2>
                     <button type="button" class="btn close-btn" id="closeSearchBtn">✕</button>
                 </div>
-                <div id="searchContentContainer" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+                <div id="searchContentContainer" class="flex-col-fill">
                 </div>
             </div>
         </div>
 
-        <!-- 6. TAFSIR (Fullscreen) -->
+        <!-- Tafsir (plein écran) -->
         <div id="tafsirOverlay" class="overlay" role="dialog" aria-label="التفسير الميسر">
             <div class="overlay-content fullscreen">
                 <div class="overlay-header">
@@ -348,13 +410,12 @@
                     <button type="button" class="btn close-btn" id="closeTafsirBtn">✕</button>
                 </div>
                 <div id="tafsirControlsContainer"></div>
-                <div id="tafsirContentContainer" class="tafsir-content-container"
-                    style="flex: 1; overflow-y: auto; padding: 0 var(--overlay-padding-x); display:flex; flex-direction:column;">
+                <div id="tafsirContentContainer" class="tafsir-content-container">
                 </div>
             </div>
         </div>
 
-        <!-- 7. TAJWEED (Standard) -->
+        <!-- Tajweed (plein écran) -->
         <div id="tajweedOverlay" class="overlay" role="dialog" aria-label="قواعد التجويد">
             <div class="overlay-content fullscreen">
                 <div class="overlay-header">
@@ -367,7 +428,18 @@
             </div>
         </div>
 
-        <!-- 8. ABOUT (Standard) -->
+        <!-- Khatm (plein écran) -->
+        <div id="khatmOverlay" class="overlay" role="dialog" aria-label="دعاء ختم القرآن">
+            <div class="overlay-content fullscreen">
+                <div class="overlay-header">
+                    <h2>🤲 دعاء ختم القرآن</h2>
+                    <button type="button" class="btn close-btn" id="closeKhatmBtn">✕</button>
+                </div>
+                <div id="khatmContent" class="overlay-body khatm-content"></div>
+            </div>
+        </div>
+
+        <!-- À propos -->
         <div id="aboutOverlay" class="overlay" role="dialog" aria-label="عن التطبيق">
             <div class="overlay-content">
                 <div class="overlay-header">
@@ -380,41 +452,23 @@
             </div>
         </div>
 
-        <!-- 8.5 BACKUP OVERLAY -->
+        <!-- Sauvegarde (export / import) -->
         <div id="backupOverlay" class="overlay" role="dialog" aria-label="النسخ الاحتياطي">
             <div class="overlay-content">
                 <div class="overlay-header">
                     <h2>💾 النسخ الاحتياطي</h2>
                     <button type="button" class="btn close-btn" id="closeBackupBtn">✕</button>
                 </div>
-                <div class="overlay-body" style="padding: 16px; text-align: right;">
-                    <p style="margin-bottom: 12px; line-height: 1.8;">يشمل النسخ الاحتياطي:</p>
-                    <p style="line-height: 2;">
+                <div class="overlay-body backup-body">
+                    <p class="backup-title">يشمل النسخ الاحتياطي:</p>
+                    <p class="backup-list">
                         🔖 العلامات المرجعية
                         <br> ⭐ السور المفضلة
                         <br> 🎙️ القرّاء المفضلون
                     </p>
-                    <div class="confirm-buttons" style="margin-top: 20px;">
-                        <button class="confirm-btn blue" id="backupExportBtn">تصدير</button>
-                        <button class="confirm-btn brown" id="backupImportBtn">استيراد</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 9. PAGE INPUT -->
-        <div id="pageInputOverlay" class="overlay" role="dialog" aria-label="الانتقال إلى صفحة">
-            <div class="overlay-content">
-                <div class="overlay-header">
-                    <h2>⬅️ الانتقال إلى صفحة</h2>
-                    <button type="button" class="btn close-btn" id="closePageInputBtn">✕</button>
-                </div>
-                <div class="overlay-body" style="padding: 16px;">
-                    <p style="text-align:right; margin: 0 0 12px 0;">أدخل رقم الصفحة (1-604)</p>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <input type="tel" id="pageInputField" class="search-input" inputmode="numeric" pattern="[0-9]*"
-                            placeholder="1-604" style="flex:1; direction:ltr; text-align:right; margin:0;">
-                        <button type="button" class="confirm-btn ok" id="pageInputGoBtn">اذهب</button>
+                    <div class="confirm-buttons">
+                        <button type="button" class="confirm-btn" id="backupExportBtn">تصدير</button>
+                        <button type="button" class="confirm-btn" id="backupImportBtn">استيراد</button>
                     </div>
                 </div>
             </div>
@@ -422,87 +476,65 @@
 
     </div>
 
-    <!-- noscript fallback -->
+    <!-- ---------- Fallback noscript ---------- -->
     <noscript>
         <div class="noscript-fallback">
             <h2 class="noscript-title">⚠️ JavaScript requis</h2>
-            <p>This application requires JavaScript to work.</p>
-            <p>Please enable JavaScript in your browser.</p>
+            <p>هذا التطبيق يتطلب تفعيل جافاسكربت.</p>
         </div>
     </noscript>
 
+    <!-- ---------- Cordova (absent sur le web : l'erreur 404 est sans conséquence) ---------- -->
     <script src="cordova.js"></script>
 
-    <!-- ===== SCRIPT OPTIMISÉ ===== -->
+    <!-- ---------- Chargement des modules (dans l'ordre, un par un) ----------
+         main.js en premier : il fournit AppUtils, AppStore, CustomSelect, etc. aux autres fichiers.
+         calculator.js avant les modules qui lisent les données du mushaf. -->
     <script>
         (function () {
-            const modules = [
+            const MODULES = [
+                './version.js',
+                './main.js',
                 './calculator.js',
                 './quran-reader.js',
-                './main.js',
                 './overlays-manager.js',
                 './tafsir-search.js',
                 './quran-audio.js'
             ];
 
-            const loadScript = (src) => {
-                return new Promise((resolve, reject) => {
+            const loadScript = (src) =>
+                new Promise((resolve, reject) => {
                     const script = document.createElement('script');
                     script.src = src;
                     script.async = false;
                     script.onload = resolve;
-                    script.onerror = () => reject(new Error(`Erreur: ${src}`));
+                    script.onerror = () => reject(new Error(`Erreur de chargement : ${src}`));
                     document.head.appendChild(script);
                 });
-            };
-
-            const loadSequential = async (list) => {
-                for (const src of list) {
-                    await loadScript(src);
-                }
-            };
 
             window.addEventListener('DOMContentLoaded', async () => {
+                if (window.__layersUnsupported) return; // message de mise à jour déjà affiché
                 try {
-                    await loadSequential(modules);
-
-                    if (window.quranApp && typeof window.quranApp.init === 'function') {
-                        window.quranApp.init();
-                    }
+                    for (const src of MODULES) await loadScript(src);
+                    window.quranApp?.init?.();
                 } catch (error) {
+                    console.error(error);
                     document.getElementById('pageScroll').innerHTML = `
-                    <div class="loading-placeholder">
-                    <h3 class="error-title">خطأ في تحميل التطبيق</h3>
-                    <p>الرجاء تحديث الصفحة</p>
-                    </div>
-                `;
+                        <div class="loading-placeholder">
+                            <h3 class="error-title">خطأ في تحميل التطبيق</h3>
+                            <p>الرجاء تحديث الصفحة</p>
+                        </div>`;
                 }
             });
         })();
     </script>
 
+    <!-- ---------- Service worker (version web uniquement) ---------- -->
     <script>
-        window.addEventListener('error', function (event) {
-            if (window.quranApp) {
-                window.quranApp.showToast("⚠️ حدث خطأ غير متوقع");
-            }
-        });
-        window.addEventListener('unhandledrejection', function (event) {
-            event.preventDefault();
-            const reason = event.reason?.message || event.reason || 'Erreur inconnue';
-            const silent = ['fetch', 'network', 'Failed to fetch', 'Timeout'];
-            if (silent.some(k => String(reason).toLowerCase().includes(k.toLowerCase()))) return;
-            if (window.quranApp) {
-                window.quranApp.showToast('⚠️ حدث خطأ غير متوقع');
-            }
-        });
-    </script>
-
-    <script src="./version.js" defer></script>
-
-    <script>
-        if ('serviceWorker' in navigator && location.protocol !== 'file:' && !window.cordova) {
-            navigator.serviceWorker.register('./sw.js').catch(function () { });
+        if ("serviceWorker" in navigator && location.protocol !== "file:" && !window.cordova) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("./sw.js?v=" + (window.APP_VERSION || "0")).catch(() => { });
+            });
         }
     </script>
 

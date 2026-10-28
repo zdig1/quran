@@ -1,16 +1,40 @@
+// ============================================================
+//  FICHIER : calculator.js
+//  Rôle : source de vérité du mushaf (sourates, hizbs, juz, sajdas)
+//         et index par page (sourate, hizb, juz de chacune des 604 pages)
+// ============================================================
+
+//  1. QURANCALCULATOR
+
 class QuranCalculator {
+  // ---------- Constructeur ----------
+
   constructor() {
     this.data = null;
     this.isLoaded = false;
-    this.pageMap = new Array(605);
+    this._loading = null;
+    this.pageMap = new Array(APP_CFG.TOTAL_PAGES + 1);
+
+    this._surahs = [];
+    this._surahById = new Map();
+    this._sajdaSet = new Set();
+    this._juzBySurahId = new Map();
   }
 
-  // ============================================
-  // CHARGEMENT
-  // ============================================
+  // ---------- Chargement ----------
 
-  async load() {
-    if (this.isLoaded) return this.data;
+  load() {
+    if (this.isLoaded) return Promise.resolve(this.data);
+    if (!this._loading) {
+      this._loading = this._fetchData().catch((err) => {
+        this._loading = null;
+        throw err;
+      });
+    }
+    return this._loading;
+  }
+
+  async _fetchData() {
     const response = await fetch("./data/quran.json", { cache: "force-cache" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     this.data = await response.json();
@@ -19,35 +43,38 @@ class QuranCalculator {
     return this.data;
   }
 
-  // ============================================
-  // INDEX DES PAGES
-  // ============================================
+  // ---------- Index des pages ----------
 
   _propagateIndex(indexData, valueKey, flagKey, pageMap) {
     let currentValue = 1;
     let idx = 0;
-    for (let p = 1; p <= 604; p++) {
-      if (indexData[idx]?.page === p) {
+    for (let p = 1; p <= APP_CFG.TOTAL_PAGES; p++) {
+      while (indexData[idx] && indexData[idx].page <= p) {
         currentValue = indexData[idx][valueKey];
-        pageMap[p][flagKey] = true;
+        if (indexData[idx].page === p) pageMap[p][flagKey] = true;
         idx++;
       }
       pageMap[p][valueKey] = currentValue;
     }
   }
 
+  _createEmptyPageEntry() {
+    return {
+      surah: null,
+      hizb: 1,
+      juz: 1,
+      sajda: false,
+      isHizbStart: false,
+      isJuzStart: false,
+    };
+  }
+
   buildPageIndex() {
+    const total = APP_CFG.TOTAL_PAGES;
     const map = this.pageMap;
     map[0] = null;
-    for (let p = 1; p <= 604; p++) {
-      map[p] = {
-        surah: null,
-        hizb: 1,
-        juz: 1,
-        sajda: false,
-        isHizbStart: false,
-        isJuzStart: false,
-      };
+    for (let p = 1; p <= total; p++) {
+      map[p] = this._createEmptyPageEntry();
     }
 
     const {
@@ -57,61 +84,65 @@ class QuranCalculator {
       sajda_index: sajdaIndex = [],
     } = this.data || {};
 
-    const surahMap = new Map(surahIndex.map((s) => [s.s_id, s]));
+    this._surahs = surahIndex.map((s) => ({ ...s, verses_count: s.verses }));
+    this._surahById = new Map(this._surahs.map((s) => [s.s_id, s]));
 
-    const startsAtPage = Array.from({ length: 605 }, () => []);
-    surahIndex.forEach((surah) => {
-      const page = surah.page_start;
-      if (page >= 1 && page <= 604) {
-        startsAtPage[page].push(surah.s_id);
-      }
+    const startsAtPage = Array.from({ length: total + 1 }, () => []);
+    this._surahs.forEach((surah) => {
+      if (surah.page_start >= 1 && surah.page_start <= total) startsAtPage[surah.page_start].push(surah.s_id);
     });
 
     let currentSurahId = null;
-    for (let p = 1; p <= 604; p++) {
-      if (startsAtPage[p].length > 0) {
-        currentSurahId = Math.min(...startsAtPage[p]);
-      }
-      if (currentSurahId !== null) {
-        const surah = surahMap.get(currentSurahId);
-        map[p].surah = {
-          s_id: surah.s_id,
-          name: surah.name,
-          verses_count: surah.verses,
-          type: surah.type,
-          order: surah.order,
-        };
-      }
+    for (let p = 1; p <= total; p++) {
+      if (startsAtPage[p].length > 0) currentSurahId = Math.min(...startsAtPage[p]);
+      if (currentSurahId === null) continue;
+      const surah = this._surahById.get(currentSurahId);
+      map[p].surah = {
+        s_id: surah.s_id,
+        name: surah.name,
+        verses_count: surah.verses_count,
+        type: surah.type,
+        order: surah.order,
+      };
     }
 
-    // ✅ NOUVEAU : Propagation factorisée
-    this._propagateIndex(hizbIndex, 'hizb', 'isHizbStart', map);
-    this._propagateIndex(juzIndex, 'juz', 'isJuzStart', map);
+    this._propagateIndex(hizbIndex, "hizb", "isHizbStart", map);
+    this._propagateIndex(juzIndex, "juz", "isJuzStart", map);
 
-    // Traitement des Sajdas
     const sajdaPages = new Set(sajdaIndex.map((s) => s.page));
-    for (let p = 1; p <= 604; p++) map[p].sajda = sajdaPages.has(p);
+    for (let p = 1; p <= total; p++) map[p].sajda = sajdaPages.has(p);
 
-    // Index inversés
     this._sajdaSet = new Set(sajdaIndex.map((s) => s.s_id));
+
     this._juzBySurahId = new Map();
     juzIndex.forEach((entry) => {
-      if (!this._juzBySurahId.has(entry.s_id))
-        this._juzBySurahId.set(entry.s_id, []);
+      if (!this._juzBySurahId.has(entry.s_id)) this._juzBySurahId.set(entry.s_id, []);
       this._juzBySurahId.get(entry.s_id).push(entry.juz);
     });
-    this._surahIdByName = new Map(surahIndex.map((s) => [s.name, s.s_id]));
   }
 
-  // ============================================
-  // ACCÈS AUX DONNÉES
-  // ============================================
+  // ---------- Helpers privés ----------
+
+  _findSurah(id) {
+    return this._surahById.get(Number(id)) || null;
+  }
+
+  _hizbIndex() {
+    return this.data?.hizb_index || [];
+  }
+
+  _safePageData(page) {
+    const p = Number(page);
+    if (!AppUtils.isValidPage(p)) return null;
+    return this.pageMap[p] || null;
+  }
+
+  // ---------- API publique — Pages ----------
 
   getPageData(page) {
-    page = Number(page);
-    if (!Number.isInteger(page) || page < 1 || page > 604) return null;
-    const data = this.pageMap[page];
-    return data ? { page, ...data } : null;
+    const data = this._safePageData(page);
+    if (!data) return null;
+    return { page: Number(page), ...data };
   }
 
   getPageNotifications(page) {
@@ -124,54 +155,57 @@ class QuranCalculator {
     return notifications;
   }
 
-  getAllSurahs() {
-    return (this.data?.surah_index || []).map((s) => ({
-      ...s,
-      verses_count: s.verses,
-    }));
-  }
-
-  getHizbIndex() {
-    return this.data?.hizb_index || [];
-  }
-
-  hasSajdaInSurah(sura_id) {
-    if (this._sajdaSet) return this._sajdaSet.has(sura_id);
-    return this.data?.sajda_index?.some((s) => s.s_id === sura_id) || false;
-  }
-
   getFirstSurahForPage(page) {
     const data = this.getPageData(page);
     if (!data?.surah) return null;
-    return {
-      s_id: data.surah.s_id,
-      name: data.surah.name,
-      verses_count: data.surah.verses_count,
-      type: data.surah.type,
-      order: data.surah.order,
-    };
+    return { ...data.surah };
   }
 
   getHizbForPage(page) {
     return { hizb: this.getPageData(page)?.hizb ?? 1 };
   }
 
+  // ---------- API publique — Sourates ----------
+
+  getAllSurahs() {
+    return this._surahs;
+  }
+
+  getSurah(id) {
+    return this._findSurah(id);
+  }
+
+  getTotalAyahs(id) {
+    return this._findSurah(id)?.verses_count || 0;
+  }
+
+  hasSajdaInSurah(sura_id) {
+    return this._sajdaSet.has(sura_id);
+  }
+
+  getJuzStartsForSurah(surahId) {
+    return (this._juzBySurahId.get(surahId) || []).slice(0, 1);
+  }
+
+  // ---------- API publique — Hizbs ----------
+
+  getHizbIndex() {
+    return this._hizbIndex();
+  }
+
   getHizbWithPageRange() {
-    const hizbs = this.getHizbIndex();
-    if (!hizbs.length) return [];
+    const hizbs = this._hizbIndex();
     return hizbs.map((hizb, i) => {
       const next = hizbs[i + 1];
       return {
         ...hizb,
         page_start: hizb.page,
-        page_end: next ? next.page - 1 : 604,
+        page_end: next ? next.page - 1 : APP_CFG.TOTAL_PAGES,
       };
     });
   }
 }
 
-// ============================================
-// INITIALISATION
-// ============================================
+//  DÉMARRAGE
 
 window.quranCalculator = new QuranCalculator();

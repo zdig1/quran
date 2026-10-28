@@ -1,142 +1,15 @@
-/* ============================================
-   1. VARIABLES CSS (thème clair)
-   ============================================ */
-:root {
-  --space-sm: 0.5rem;
-  --space-md: 0.75rem;
-  --space-lg: 1rem;
-  --text-sm: 0.875rem;
-  --text-md: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --footer-height: 3.5rem;
-  --btn-sm: 2rem;
-  --btn-lg: 3.2rem;
-  --border-radius: 0.5rem;
-  --border-radius-lg: 0.75rem;
-  --color-green: #1a5e25;
-  --color-blue: #1976d2;
-  --color-brown: #6d4c41;
-  --color-gray: #6c757d;
-  --color-violet: #9c27b0;
-  --color-red: #d32f2f;
-  --color-gold: #ffaa00;
-  --color-white: #ffffff;
-  --primary: var(--color-green);
-  --primary-dark: #0d4214;
-  --primary-light: rgba(26, 94, 37, 0.1);
-  --success: var(--color-green);
-  --error: var(--color-red);
-  --bg: white;
-  --surface: #ffffff;
-  --surface-alt: #f9f9f9;
-  --text: #333333;
-  --text-light: #666666;
-  --text-lighter: #999999;
-  --border: #dddddd;
-  --border-dark: #cccccc;
-  --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  --shadow-heavy: 0 5px 20px rgba(0, 0, 0, 0.15);
-  --overlay-bg: rgba(0, 0, 0, 0.7);
-  --menu-bg: #000000;
-  --menu-text: #ffffff;
-  --menu-border: #333333;
-  --badge-search: var(--color-brown);
-  --badge-juzhizb: var(--color-blue);
-  --quran-text-red: var(--color-red);
-  --stat-results: var(--color-red);
-  --stat-suras: var(--color-green);
-  --tag-bg: var(--primary-light);
-  --tag-color: var(--primary);
-  --search-text-color: var(--color-red);
-  --border-width: 2px;
-  --overlay-padding-x: 5px;
-  --transition-default: opacity 0.3s ease, background 0.2s, color 0.2s;
-  --current-item-bg: rgb(146, 178, 152);
-  --mini-bar-bg: #ffffffd7;
-}
+/* ============================================================
+   FICHIER : style.css — Quran Reader
+   Rôle : tous les styles de l'application
 
-.night-mode {
-  --color-green: #4caf50;
-  --color-blue: #64b5f6;
-  --color-brown: #bcaaa4;
-  --color-gray: #a0a0a0;
-  --color-violet: #ce93d8;
-  --color-red: #ff6b6b;
-  --color-gold: #ffcc00;
-  --color-white: #2d2d2d;
-  --primary: var(--color-green);
-  --primary-dark: #388e3c;
-  --primary-light: rgba(76, 175, 80, 0.2);
-  --bg: #000000;
-  --surface: #1e1e1e;
-  --surface-alt: #252525;
-  --text: #ffffff;
-  --text-light: #b0b0b0;
-  --text-lighter: #777777;
-  --border: #333333;
-  --border-dark: #444444;
-  --shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  --shadow-heavy: 0 5px 20px rgba(0, 0, 0, 0.4);
-  --badge-search: var(--color-brown);
-  --badge-juzhizb: var(--color-blue);
-  --quran-text-red: var(--color-red);
-  --stat-results: var(--color-red);
-  --stat-suras: var(--color-green);
-  --search-text-color: var(--color-red);
-  --current-item-bg: #2a4a2a;
-  --mini-bar-bg: #1a1a1ad7;
-}
+   ORGANISATION (cascade par couches, @layer)
+     base   variables (thème clair + nuit) et styles de base
+     ui     composants réutilisables : boutons, overlays, listes, menus déroulants, picker
+     app    écrans : en-tête/pied de page, lecteur, sourates, signets, recherche, tafsir, audio…
+     night  exceptions du mode nuit (le reste passe par les variables du thème)
+     utils  utilitaires (.hidden…), toujours prioritaires
+   ============================================================ */
 
-/* ============================================
-   2. RESET & BASE
-   ============================================ */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-text-size-adjust: none;
-}
-
-html {
-  font-size: 16px;
-}
-
-html,
-body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: "Segoe UI", Tahoma, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
-
-body {
-  direction: rtl;
-}
-
-#app {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-}
-
-.page-container {
-  position: absolute;
-  inset: 0;
-  background: var(--bg);
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  margin-bottom: env(safe-area-inset-bottom);
-}
-
-/* --- Polices --- */
 @font-face {
   font-family: "MyNotoKufi";
   src: url("./media/NotoKufiArabic-Bold.woff2") format("woff2");
@@ -152,2248 +25,2769 @@ body {
   font-display: swap;
 }
 
-/* ============================================
-   3. HEADER & FOOTER
-   ============================================ */
-.header {
-  position: fixed;
-  inset: 10px 5px auto 5px;
-  z-index: 1001;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  height: var(--footer-height);
-  justify-content: space-between;
-  transition: var(--transition-default);
-}
-
-.footer {
-  position: fixed;
-  inset: auto 3px 0 3px;
-  z-index: 1001;
-  background: transparent;
-  display: grid !important;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  height: var(--footer-height);
-  transition:
-    opacity 0.3s ease,
-    visibility 0.3s ease;
-  transform: translateZ(0);
-}
-
-.header.hidden,
-.footer.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.footer-item {
-  display: flex !important;
-  align-items: center;
-  min-height: 30px;
-}
-
-.footer-item:first-child {
-  justify-content: flex-start;
-}
-
-.footer-item:last-child {
-  justify-content: flex-end;
-}
-
-.footer-surah,
-.footer-value {
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 1rem;
-  padding: var(--space-sm) !important;
-  color: var(--text);
-  font-weight: bold;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
-  display: inline-block !important;
-  min-width: auto;
-  min-height: 30px;
-  font-size: var(--text-sm);
-  line-height: 1.5 !important;
-}
-
-.footer-value {
-  color: var(--primary);
-}
-
-.night-mode .footer-surah,
-.night-mode .footer-value {
-  background: rgba(30, 30, 30, 0.7);
-}
-
-.footer-surah {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ============================================
-   4. BOUTONS GÉNÉRIQUES
-   ============================================ */
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border: none;
-  outline: none;
-  font-family: inherit;
-}
-
-.header-btn {
-  width: var(--btn-lg);
-  height: var(--btn-lg);
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 50%;
-  color: var(--primary);
-  font-size: var(--text-xl);
-  box-shadow: var(--shadow);
-}
-
-.night-mode .header-btn {
-  background: rgba(30, 30, 30, 0.7);
-  color: var(--success);
-}
-
-.close-btn {
-  background: none;
-  color: var(--error);
-  font-size: 1.8rem;
-  width: var(--btn-lg);
-  height: var(--btn-lg);
-  border-radius: 50%;
-  font-weight: 900;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: var(--transition-default);
-  border: 2px solid transparent;
-  line-height: 1;
-  padding: 0;
-  margin: 0;
-  flex-shrink: 0;
-}
-
-.close-btn:active {
-  transform: scale(0.94);
-}
-
-.icon-btn {
-  width: var(--btn-sm);
-  height: var(--btn-sm);
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-sm);
-  cursor: pointer;
-  border: 1px solid transparent;
-  background: var(--surface-alt);
-  transition: var(--transition-default);
-  color: var(--primary);
-  border-color: var(--border);
-}
-
-.night-mode .icon-btn {
-  color: var(--success);
-}
-
-.icon-btn:hover {
-  background: var(--primary-light);
-}
-
-/* ============================================
-   5. BOUTONS DE CONFIRMATION
-   ============================================ */
-.confirm-btn {
-  min-width: 80px;
-  padding: var(--space-md) var(--space-lg);
-  border-radius: var(--border-radius);
-  font-weight: bold;
-  cursor: pointer;
-  transition: var(--transition-default);
-  line-height: 1.2;
-  margin: 0 0.25rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: var(--surface-alt);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-
-.confirm-btn:hover {
-  border-color: var(--primary);
-  background: var(--primary-light);
-  color: var(--primary);
-}
-
-.confirm-btn:focus-visible {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
-}
-
-/* Seul le bouton "ok" garde un accent */
-.confirm-btn.ok {
-  color: var(--primary);
-  border-color: var(--primary);
-  background: var(--surface);
-}
-
-.confirm-btn.ok:hover {
-  background: var(--primary-light);
-  color: var(--primary-dark);
-}
-
-.night-mode .confirm-btn {
-  background: var(--surface-alt);
-  color: var(--text);
-  border-color: var(--border);
-}
-
-.night-mode .confirm-btn.ok {
-  color: var(--success);
-  border-color: var(--success);
-  background: var(--surface);
-}
-
-.night-mode .confirm-btn.ok:hover {
-  background: var(--primary-light);
-  color: var(--success);
-}
-
-.night-mode .confirm-btn:not(.ok):hover {
-  border-color: var(--success);
-  background: var(--primary-light);
-  color: var(--success);
-}
-
-/* ============================================
-   6. AUTRES BOUTONS (autoscroll, tafsir font)
-   ============================================ */
-.autoscroll-speed-btn {
-  font-size: 1.3rem;
-  font-weight: 900;
-  background: rgba(255, 255, 255, 0.7);
-  color: var(--primary) !important;
-  border: 1px solid var(--border) !important;
-  opacity: 0;
-  transform: scale(0.7);
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-  pointer-events: none;
-}
-
-.night-mode .autoscroll-speed-btn {
-  background: #2d2d2d !important;
-  color: var(--success) !important;
-  border-color: var(--border-dark) !important;
-}
-
-.autoscroll-speed-btn.visible {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
-
-.autoscroll-speed-btn:disabled {
-  opacity: 0.3 !important;
-  pointer-events: none;
-}
-
-.tafsir-font-btn {
-  flex: 0 0 auto;
-  width: 2.5rem;
-  height: 2.5rem;
-  background: var(--color-white);
-  border: 1px solid var(--border);
-  color: var(--primary);
-  border-radius: 50%;
-  font-size: 1.2rem;
-  font-weight: bold;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: var(--transition-default);
-}
-
-.night-mode .tafsir-font-btn {
-  background: #2d2d2d;
-  color: var(--success);
-  border-color: var(--border-dark);
-}
-
-.tafsir-font-btn:hover {
-  background: var(--primary-light);
-}
-
-/* ============================================
-   7. PAGE SCROLL & IMAGES
-   ============================================ */
-.page-scroll {
-  position: relative;
-  z-index: 999;
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: none;
-  touch-action: pan-y;
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-.page-wrapper {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  background: var(--bg);
-  position: relative;
-}
-
-.page-image {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-  aspect-ratio: 700/1100;
-  margin: 0;
-  padding: 0;
-  background-color: #fff;
-}
-
-.page-image[data-loaded="false"] {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.page-image[data-loaded="true"] {
-  opacity: 1;
-}
-
-.night-mode .page-image {
-  filter: invert(1) hue-rotate(-180deg);
-  content-visibility: auto;
-}
-
-.night-mode .tajweed-image img,
-.night-mode .khatm-page img {
-  filter: invert(0.93) hue-rotate(180deg) brightness(0.9) contrast(1.1);
-  background-color: var(--bg);
-}
-
-/* Mode portrait */
-.mode-portrait .page-scroll {
-  overflow: hidden;
-  display: block;
-  height: 100vh;
-  width: 100vw;
-  position: relative;
-  transition: all 0.3s ease;
-  background: var(--bg);
-  z-index: 1;
-}
-
-.mode-portrait .page-wrapper {
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transition: opacity 0.2s ease;
-  background: var(--bg);
-}
-
-.mode-portrait .page-wrapper.active {
-  display: flex;
-}
-
-.mode-portrait .portrait-image {
-  width: 100%;
-  display: block;
-  object-fit: fill;
-}
-
-/* Mode paysage */
-.mode-landscape .page-scroll {
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-  display: block !important;
-  scroll-behavior: auto;
-  transition: all 0.3s ease;
-}
-
-.mode-landscape .page-wrapper {
-  width: 100vw !important;
-  display: flex !important;
-  transition: none !important;
-}
-
-.mode-landscape .landscape-image {
-  width: 100% !important;
-  height: auto !important;
-  aspect-ratio: 700 / 1100 !important;
-  object-fit: contain !important;
-  display: block;
-  transition: none !important;
-}
-
-/* ============================================
-   8. OVERLAYS GÉNÉRIQUES & MENU
-   ============================================ */
-.overlay,
-.menu-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: none;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 15vh var(--overlay-padding-x) var(--overlay-padding-x) var(--overlay-padding-x);
-}
-
-.overlay {
-  background: var(--overlay-bg);
-}
-
-.menu-overlay {
-  background: rgba(0, 0, 0, 0.5);
-}
-
-.overlay.show,
-.menu-overlay.show {
-  display: flex;
-}
-
-.overlay-content {
-  background: var(--surface);
-  width: 100%;
-  max-width: 31.25rem;
-  max-height: 70vh;
-  border-radius: var(--border-radius-lg);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: var(--shadow-heavy);
-}
-
-.overlay-content.fullscreen {
-  width: 100vw;
-  height: 100vh;
-  max-width: 100vw;
-  max-height: 100vh;
-  border-radius: 0;
-  position: absolute;
-  inset: 0;
-  z-index: 10000;
-}
-
-.overlay-header {
-  height: 3.75rem;
-  padding: 0 var(--space-lg);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.overlay-header h2 {
-  font-family: "MyNotoKufi", sans-serif;
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--text);
-  margin: 0;
-}
-
-.overlay-body {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: auto !important;
-  text-align: justify !important;
-  text-align-last: right !important;
-}
-
-/* Menu latéral */
-.menu-content {
-  width: 17rem;
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--menu-bg);
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.menu-header {
-  padding: var(--space-sm);
-  border-bottom: 1px solid var(--menu-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.menu-header h2 {
-  color: var(--menu-text);
-  font-size: var(--text-lg);
-  margin: 0;
-  font-family: "MyNotoKufi", sans-serif;
-}
-
-.menu-icon-svg {
-  width: 1.375rem;
-  height: 1.375rem;
-  fill: white;
-  stroke: white;
-  flex-shrink: 0;
-}
-
-.menu-text {
-  color: white;
-  flex: 1;
-  text-align: right;
-  font-size: var(--text-md);
-  font-family: "MyNotoKufi", sans-serif;
-  padding-right: var(--space-md);
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--menu-border);
-  padding: var(--space-md) var(--space-lg);
-  width: 100%;
-  cursor: pointer;
-  color: white;
-  transition: background-color 0.2s;
-  white-space: nowrap;
-}
-
-.menu-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* ============================================
-   9. BADGES & ICÔNES
-   ============================================ */
-.badge,
-.surah-number,
-.item-badge,
-.sura-badge {
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-sm);
-  font-weight: bold;
-  flex-shrink: 0;
-  background: var(--primary);
-  color: white;
-}
-
-.surah-number {
-  background: var(--primary);
-}
-
-.item-badge {
-  --badge-bg: var(--primary);
-  background: var(--badge-bg);
-}
-
-.item-search .item-badge {
-  --badge-bg: var(--badge-search);
-}
-
-.item-juzhizb .item-badge {
-  --badge-bg: var(--badge-juzhizb);
-}
-
-.sura-badge {
-  background: var(--primary);
-}
-
-.night-mode .sura-badge {
-  background: var(--success);
-}
-
-.action-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
-  width: var(--btn-sm);
-  height: var(--btn-sm);
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  transition: var(--transition-default);
-  color: var(--text-light);
-  flex-shrink: 0;
-}
-
-.action-icon.bordered {
-  border: 1px solid var(--border);
-  background: var(--surface-alt);
-  color: var(--primary);
-}
-
-.action-icon.pinned {
-  color: var(--color-gold);
-}
-
-.action-icon:active {
-  transform: scale(0.94);
-  background: var(--primary-light);
-}
-
-.action-icon:hover {
-  background: var(--primary-light);
-  color: var(--primary);
-}
-
-.night-mode .action-icon:hover,
-.night-mode .action-icon:active {
-  background: rgba(76, 175, 80, 0.2);
-  color: var(--success);
-}
-
-/* ============================================
-   10. ÉLÉMENTS DE LISTE (génériques)
-   ============================================ */
-.item-container {
-  padding: 0 var(--space-sm) 0 0;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  transition: background 0.2s ease;
-}
-
-.item-container:last-child {
-  border-bottom: none;
-}
-
-.item-container.current-item {
-  background-color: var(--current-item-bg);
-}
-
-.item-container.current-item .item-title,
-.item-container.current-item .page-tag,
-.item-container.current-item .item-sajda-icon {
-  color: var(--quran-text-red) !important;
-}
-
-.item-line-1,
-.item-line-2,
-.item-line-3 {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  gap: var(--space-sm);
-}
-
-.item-right {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  flex: 1;
-  min-width: 0;
-}
-
-.item-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-left: 5px;
-  flex-shrink: 0;
-}
-
-.item-title {
-  font-size: var(--text-lg);
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1.4;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.item-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2rem;
-  font-size: var(--text-md);
-}
-
-.item-sajda-icon {
-  color: var(--primary);
-  font-size: 1.25em;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.page-tag {
-  background: var(--tag-bg);
-  color: var(--tag-color);
-  padding: 3px 6px;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  min-width: auto;
-  justify-content: center;
-}
-
-.note-small {
-  color: var(--text-light);
-  font-size: var(--text-sm);
-  display: block;
-}
-
-.section-title {
-  font-size: var(--text-md);
-  font-weight: 600;
-  color: var(--text-light);
-  padding: var(--space-md) var(--space-lg);
-  background: var(--surface-alt);
-  border-bottom: 1px solid var(--border);
-  margin: 0;
-  backdrop-filter: blur(4px);
-  text-align: right;
-}
-
-/* ============================================
-   11. SOURATES — TABLEAU 2 lignes × 7 colonnes (RTL)
-   ============================================ */
-.item-surah {
-  padding: 0 var(--space-sm) !important;
-  cursor: pointer;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.2s ease;
-}
-
-.item-surah.current-item {
-  background-color: var(--current-item-bg);
-}
-
-.item-surah .surah-grid {
-  display: grid;
-  grid-template-columns: auto auto 1fr auto auto auto minmax(2.6rem, auto);
-  grid-template-rows: auto auto;
-  align-items: center;
-  column-gap: 6px;
-  row-gap: 2px;
-  padding: 5px 0;
-  width: 100%;
-}
-
-/* COL 1 — Pin 📌 */
-.item-surah .g-pin {
-  grid-column: 1;
-  grid-row: 1 / span 2;
-  align-self: center;
-  justify-self: center;
-}
-
-/* COL 2 — Badge */
-.item-surah .g-badge {
-  grid-column: 2;
-  grid-row: 1;
-  align-self: center;
-  justify-self: center;
-}
-
-/* COL 3 — Nom + النزول */
-.item-surah .g-name {
-  grid-column: 3;
-  grid-row: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 6px;
-  min-width: 0;
-  padding-right: 4px;
-}
-
-.item-surah .g-order {
-  grid-column: 3;
-  grid-row: 2;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  min-width: 0;
-  padding-right: 4px;
-}
-
-/* COL 4 — Info + Révélation */
-.item-surah .g-info {
-  grid-column: 4;
-  grid-row: 1;
-  align-self: center;
-  justify-self: center;
-}
-
-.item-surah .g-revel {
-  grid-column: 4;
-  grid-row: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* COL 5 — Bookmark */
-.item-surah .g-bookmark {
-  grid-column: 5;
-  grid-row: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-md);
-  min-width: 1.2rem;
-}
-
-/* COL 6 — Juz + Sajda */
-.item-surah .g-juz {
-  grid-column: 6;
-  grid-row: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--badge-juzhizb, var(--primary));
-  font-weight: bold;
-  font-size: var(--text-sm);
-  white-space: nowrap;
-  min-width: 2rem;
-}
-
-.item-surah .g-sajda {
-  grid-column: 6;
-  grid-row: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2rem;
-}
-
-/* COL 7 — Page + Versets */
-.item-surah .g-page {
-  grid-column: 7;
-  grid-row: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.item-surah .g-verses {
-  grid-column: 7;
-  grid-row: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Éléments internes */
-.item-surah .surah-calligraphy {
-  font-family: "SurahNamesFont", sans-serif !important;
-  font-size: 2.5rem;
-  line-height: 1;
-  color: var(--primary);
-  display: inline-block;
-  direction: rtl;
-  font-feature-settings:
-    "liga" on,
-    "clig" on;
-  -webkit-font-feature-settings:
-    "liga" on,
-    "clig" on;
-}
-
-.item-surah .surah-name {
-  font-size: var(--text-lg);
-  font-weight: 700;
-  font-family: "MyNotoKufi", sans-serif;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.item-surah .info-btn {
-  width: 2rem;
-  height: 2rem;
-  font-size: 1.1rem;
-  padding: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-light);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition-default);
-}
-
-.item-surah .info-btn:hover {
-  color: var(--primary);
-}
-
-.item-surah .note-small {
-  font-size: var(--text-sm);
-  color: var(--text-light);
-  white-space: nowrap;
-}
-
-.item-surah .surah-revel {
-  font-size: 1.1rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-}
-
-.item-surah .page-tag {
-  background: var(--tag-bg);
-  color: var(--tag-color);
-  padding: 3px 6px;
-  border-radius: var(--border-radius);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  white-space: nowrap;
-  display: inline-block;
-  min-width: auto;
-  text-align: center;
-}
-
-.item-surah .item-sajda-icon {
-  color: var(--primary);
-  font-size: 1.2rem;
-}
-
-.item-surah .surah-verses {
-  font-size: var(--text-sm);
-  color: var(--text-light);
-  white-space: nowrap;
-}
-
-.item-surah .juz-badge {
-  font-size: var(--text-sm);
-}
-
-/* Sections (titres ⭐ / 📖) */
-.surah-section {
-  margin-bottom: 1rem;
-}
-
-.surah-section-pinned,
-.surah-section-all {
-  width: 100%;
-}
-
-.surah-section-pinned .section-title,
-.surah-section-all .section-title {
-  background: var(--surface-alt);
-  padding: 0.75rem 1rem;
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-light);
-  border-bottom: 1px solid var(--border);
-}
-
-.surah-section-pinned {
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 0.5rem;
-}
-
-.surah-info-title {
-  font-weight: bold;
-  text-decoration: underline;
-  font-family: "MyNotoKufi", sans-serif;
-  font-size: var(--text-lg);
-  color: var(--color-gold);
-}
-
-/* ============================================
-   12. JUZ / HIZB
-   ============================================ */
-.item-juzhizb .juz-line2,
-.item-juzhizb .juz-line3 {
-  margin-right: calc(2rem + var(--space-md));
-  width: auto;
-  display: block;
-}
-
-.item-juzhizb .item-right {
-  gap: calc(var(--space-md) - 0.2rem);
-}
-
-.aya-text {
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--color-red);
-  font-family: "MyNotoKufi", sans-serif;
-  font-size: var(--text-sm);
-  margin-bottom: 4px;
-}
-
-/* ============================================
-   13. MARQUE-PAGES
-   ============================================ */
-.bookmarks-overlay-content {
-  width: 100%;
-  padding: 5px 10px 10px 10px;
-  margin: 0;
-}
-
-.bookmarks-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.bookmarks-add-form {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  flex-direction: row-reverse;
-  margin-top: 5px;
-  padding: 0;
-}
-
-.bookmarks-add-form .search-input {
-  flex: 1;
-  min-width: 120px;
-  padding: var(--space-md);
-  border: 1px solid #ccc;
-  border-radius: var(--border-radius);
-  width: 100%;
-}
-
-.bookmarks-add-form .btn {
-  flex: 0 0 auto;
-  padding: var(--space-md) var(--space-lg);
-  border: none;
-  border-radius: var(--border-radius);
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.item-bookmark.editing-bookmark {
-  background-color: var(--primary-light);
-  border: 2px solid var(--primary);
-  border-radius: 8px;
-}
-
-.bookmarks-button-container {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-/* ============================================
-   14. KHATM & TAJWEED
-   ============================================ */
-.khatm-content {
-  flex: 1;
-  width: auto;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
-  padding: 0;
-  gap: 0;
-  align-items: stretch;
-}
-
-.khatm-page {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.khatm-page img {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-  border-radius: 0;
-  box-shadow: none;
-  margin: 0;
-  padding: 0;
-}
-
-.tajweed-image img {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-  box-shadow: var(--shadow);
-}
-
-.tajweed-text {
-  line-height: 1.9;
-  font-size: var(--text-md);
-  color: var(--text);
-  padding: 5px 2px;
-  margin-right: 5px;
-  gap: 15px;
-  text-align: justify !important;
-  text-align-last: right !important;
-}
-
-.tajweed-text ul {
-  text-align: justify !important;
-  text-align-last: right !important;
-  padding-right: 10px !important;
-}
-
-/* ============================================
-   15. RECHERCHE
-   ============================================ */
-.search-container {
-  padding: 3px;
-  background: var(--surface);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-}
-
-.search-wrapper {
-  position: relative;
-  flex-shrink: 0;
-  width: 100%;
-}
-
-.search-input {
-  width: 100%;
-  padding: var(--space-md) var(--space-lg);
-  padding-left: 40px;
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  font-size: var(--text-md);
-  background: var(--surface);
-  color: var(--text);
-  text-align: right;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
-}
-
-.clear-search-btn {
-  position: absolute;
-  left: 5px;
-  top: 0;
-  width: 40px;
-  height: 40px;
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: var(--text-light);
-  padding: 0;
-  line-height: 1;
-  z-index: 10;
-  transition: color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.clear-search-btn:hover {
-  color: var(--text);
-}
-
-.search-stats {
-  padding: var(--space-sm) 0;
-  flex-shrink: 0;
-}
-
-.search-stats-content {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  color: var(--text);
-  font-size: var(--text-sm);
-  gap: var(--space-sm);
-}
-
-.stat-results,
-.stat-suras {
-  font-weight: bold;
-}
-
-.stat-results {
-  color: var(--stat-results);
-}
-
-.stat-suras {
-  color: var(--stat-suras);
-}
-
-#searchResults {
-  padding: 0;
-  text-align: center !important;
-}
-
-#searchResults .search-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  color: var(--text-light);
-}
-
-#searchResults .search-empty p {
-  margin: 0.5rem 0;
-  text-align: center;
-}
-
-.item-search-text {
-  font-family: "MyNotoKufi", sans-serif;
-  font-weight: bold;
-  font-size: 14px;
-  color: var(--text) !important;
-  text-align: justify !important;
-  text-align-last: right !important;
-  line-height: 2.2 !important;
-  word-spacing: -1px !important;
-  padding: 0 var(--overlay-padding-x);
-  direction: rtl;
-  display: block;
-}
-
-.item-search-text .search-hit {
-  color: var(--search-text-color) !important;
-  font-weight: 900;
-  background: transparent !important;
-  padding: 0;
-}
-
-.night-mode .item-search-text .search-hit {
-  color: var(--color-red) !important;
-}
-
-mark {
-  background: transparent !important;
-  color: inherit;
-}
-
-.item-search .item-line-2[data-clickable="true"] {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.item-search .item-line-2[data-clickable="true"]:hover {
-  background-color: var(--primary-light);
-}
-
-.night-mode .item-search .item-line-2[data-clickable="true"]:hover {
-  background-color: rgba(76, 175, 80, 0.2);
-}
-
-/* ============================================
-   16. TAFSIR
-   ============================================ */
-.tafsir-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  overflow: visible;
-}
-
-.tafsir-controls .custom-select {
-  flex: 1 1 120px;
-  min-width: 100px;
-}
-
-.tafsir-controls .tafsir-font-btn {
-  flex: 0 0 auto;
-}
-
-.tafsir-container {
-  margin: 0;
-  border-radius: 0;
-  box-shadow: none;
-  border: none;
-  background: var(--surface);
-}
-
-.tafsir-aya-container {
-  margin-bottom: 0;
-  padding: 8px 5px;
-  border-bottom: var(--border-width) solid var(--border);
-  scroll-margin-top: 70px;
-}
-
-.tafsir-aya-container:last-child {
-  border-bottom: 1px solid var(--border);
-}
-
-.tafsir-explanation {
-  color: var(--text);
-  font-family: "Segoe UI", sans-serif;
-  font-weight: normal;
-  text-align: justify !important;
-  text-align-last: right !important;
-  line-height: 1.5 !important;
-  font-size: 16px;
-}
-
-.tafsir-content-container {
-  padding: 0 var(--overlay-padding-x) !important;
-  line-height: 1.8;
-  scroll-behavior: auto !important;
-  overflow-anchor: none !important;
-  text-align: justify !important;
-  text-align-last: right !important;
-  font-size: 16px;
-  transition: font-size 0.1s ease;
-}
-
-.tafsir-content-container .item-search-text,
-.tafsir-content-container .tafsir-explanation,
-.tafsir-content-container .sura-name-kufi {
-  font-size: inherit !important;
-}
-
-.tafsir-content-container * {
-  font-size: inherit;
-}
-
-#tafsirContent {
-  scroll-behavior: auto !important;
-  overflow-anchor: none !important;
-}
-
-.sura-title-container {
-  text-align: center;
-  margin: 1.5rem 0 1rem 0;
-  padding: 0.5rem 0;
-  border-bottom: var(--border-width) solid var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-}
-
-.sura-name-kufi {
-  font-family: "MyNotoKufi", sans-serif;
-  font-weight: bold;
-  font-size: 1.5rem;
-  color: var(--primary);
-  line-height: 1.4;
-}
-
-.night-mode .sura-title-container {
-  border-bottom-color: var(--success);
-}
-
-.night-mode .sura-name-kufi {
-  color: var(--success);
-}
-
-/* ============================================
-   17. À PROPOS
-   ============================================ */
-.about-content {
-  flex: 1;
-  width: auto;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
-  padding: var(--space-md);
-  gap: var(--space-sm);
-  color: var(--text);
-  text-align: justify;
-  text-align-last: right;
-}
-
-.about-content strong {
-  color: var(--text);
-  font-weight: bold;
-}
-
-.night-mode .about-content strong {
-  color: var(--text);
-}
-
-.about-title {
-  text-align: center;
-  font-size: var(--text-lg);
-  color: var(--text);
-  line-height: 1.5;
-}
-
-.night-mode .about-title {
-  color: var(--text);
-}
-
-.about-version {
-  font-size: var(--text-sm);
-  color: var(--text-light);
-}
-
-.about-desc {
-  font-size: var(--text-md);
-  line-height: 1.7;
-  color: var(--text);
-  text-align: justify;
-}
-
-.about-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-md);
-  margin: var(--space-md) 0;
-}
-
-.about-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  padding: var(--space-md);
-  gap: 0.25rem;
-}
-
-.about-stat span {
-  font-size: var(--text-sm);
-  color: var(--text-light);
-}
-
-.about-stat strong {
-  font-size: var(--text-lg);
-  font-weight: bold;
-  color: var(--text);
-}
-
-.night-mode .about-stat strong {
-  color: var(--text);
-}
-
-.about-footer {
-  text-align: center;
-  text-align-last: center;
-  font-size: var(--text-sm);
-  color: var(--text-light);
-  line-height: 1.8;
-  margin-top: auto;
-  padding-top: var(--space-md);
-}
-
-.about-footer a {
-  color: var(--text-light);
-  text-decoration: none;
-}
-
-.night-mode .about-footer a {
-  color: var(--text-light);
-}
-
-.contact-grid-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin: 15px 0;
-}
-
-.contact-box-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 5px;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius-lg);
-  text-decoration: none;
-  transition: var(--transition-default);
-  min-height: 60px;
-  cursor: pointer;
-  font-family: inherit;
-  color: var(--text);
-}
-
-.contact-box-item:hover {
-  border-color: var(--primary) !important;
-  background: var(--primary-light);
-}
-
-.contact-box-item span {
-  font-size: var(--text-sm);
-  font-weight: bold;
-  text-align: center;
-}
-
-.contact-box-item:active {
-  transform: scale(0.96);
-  filter: brightness(0.95);
-}
-
-.night-mode .contact-box-item {
-  background: var(--surface-alt);
-}
-
-.night-mode .contact-box-item:hover {
-  border-color: var(--success) !important;
-}
-
-/* ============================================
-   18. AUDIO – OVERLAY & MINI-BAR
-   ============================================ */
-.audio-body {
-  padding: var(--space-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.audio-riwaya-info {
-  text-align: center;
-  font-size: var(--text-sm);
-  color: var(--text-light);
-  border-radius: var(--border-radius);
-  background: var(--surface-alt);
-}
-
-.audio-current-info {
-  background: var(--surface-alt);
-  border-radius: var(--border-radius);
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 4px 0;
-}
-
-.audio-current-info span {
-  white-space: nowrap;
-  font-size: var(--text-sm);
-  color: var(--text-light);
-}
-
-.audio-current-info .audio-current-display {
-  flex: 1;
-  margin: 0;
-  background: transparent;
-  border: none;
-  color: inherit;
-  padding: 0.2rem 0;
-  font-size: var(--text-sm);
-  text-align: center;
-}
-
-.night-mode .audio-current-display {
-  background: rgba(76, 175, 80, 0.15);
-  color: var(--success);
-  border-color: var(--success);
-}
-
-.audio-select-grid {
-  display: grid !important;
-  grid-template-columns: auto auto auto;
-  gap: 0.5rem;
-  margin-bottom: 0.2rem;
-  align-items: center;
-}
-
-.audio-select-row:first-child {
-  display: block;
-  width: 100%;
-}
-
-#surahSelectAudio,
-#ayaSelectAudio,
-#pageSelectAudio {
-  width: 100%;
-  min-width: 0;
-}
-
-#reciterSelect {
-  text-align: right;
-  text-align-last: right;
-}
-
-#reciterSelectWrap {
-  width: 100%;
-}
-
-#audioOverlay .overlay-content {
-  max-height: none !important;
-  min-height: 50vh;
-}
-
-#audioOverlay .overlay-content,
-#audioOverlay .overlay-body,
-#audioOverlay .audio-body,
-#audioOverlay .audio-select-row,
-#audioOverlay .audio-select-grid,
-#audioOverlay .custom-select {
-  overflow: visible !important;
-}
-
-#audioOverlay .overlay-body {
-  max-height: none !important;
-  overflow-y: visible !important;
-}
-
-.audio-progress-wrap {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  font-size: var(--text-sm);
-  color: var(--text-light);
-  margin: 0.2rem 0;
-}
-
-.audio-progress {
-  flex: 1;
-  height: 4px;
-  accent-color: var(--primary);
-  cursor: pointer;
-}
-
-.audio-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0.2rem 0;
-}
-
-.audio-status {
-  text-align: center;
-  color: var(--text-light);
-  font-size: var(--text-sm);
-  padding: 0.3rem;
-  display: none;
-}
-
-.audio-status:not(:empty) {
-  display: block;
-}
-
-.audio-warning {
-  background: rgba(255, 193, 7, 0.2);
-  color: #b45f06;
-  padding: var(--space-md);
-  border-radius: var(--border-radius);
-  font-size: var(--text-sm);
-  text-align: center;
-  margin-bottom: var(--space-md);
-}
-
-/* ✅ Bouton "مؤقت النوم" dans l'overlay audio */
-.audio-sleep-row {
-  display: flex;
-  justify-content: center;
-  margin: 0.4rem 0;
-}
-
-.audio-sleep-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  font: inherit;
-  font-size: var(--text-sm);
-  color: var(--text);
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: 2rem;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-}
-
-.audio-sleep-pill:hover {
-  background: var(--primary-light);
-  border-color: var(--primary);
-}
-
-.audio-sleep-pill.active {
-  color: #fff;
-  background: var(--primary);
-  border-color: var(--primary);
-}
-
-.audio-sleep-pill svg {
-  flex-shrink: 0;
-}
-
-.night-mode .audio-sleep-pill {
-  background: var(--surface-alt);
-  border-color: var(--border);
-  color: var(--text);
-}
-
-.night-mode .audio-sleep-pill:hover {
-  border-color: var(--success);
-  background: var(--primary-light);
-}
-
-.night-mode .audio-sleep-pill.active {
-  background: var(--success);
-  border-color: var(--success);
-  color: #fff;
-}
-/* ✅ Pour le rond vert des options sélectionnées */
-.choice-check {
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
-
-/* Option active (texte en vert) */
-.choice-current .settings-row-title {
-  color: var(--primary);
-  font-weight: 700;
-}
-.night-mode .audio-warning {
-  background: rgba(255, 193, 7, 0.1);
-  color: #ffb74d;
-}
-
-.audio-btn {
-  font-size: 1.2rem;
-  width: var(--btn-sm);
-  height: var(--btn-sm);
-  border: none;
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    var(--transition-default),
-    transform 0.1s;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.audio-btn:active {
-  transform: scale(0.92);
-  background: var(--primary-light);
-}
-
-.audio-btn:disabled {
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-.audio-btn.speed-btn {
-  font-family: monospace;
-  font-size: 1rem;
-  background: var(--surface-alt);
-  border-radius: 2rem;
-  letter-spacing: -3px;
-  padding: 2px 4px;
-  min-width: 2.2rem;
-}
-
-.audio-controls .audio-btn.speed-btn {
-  width: 2.8rem;
-  min-width: 2.8rem;
-}
-
-.audio-mini-bar {
-  position: fixed;
-  inset: auto 0 0 0;
-  z-index: 1200;
-  background: var(--mini-bar-bg);
-  backdrop-filter: blur(8px);
-  transform: translateY(0);
-  transition:
-    transform 0.3s ease,
-    opacity 0.3s ease;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.audio-mini-bar .mini-bar-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 5px 10px 0 10px;
-  flex-shrink: 0;
-}
-
-.audio-mini-bar.hidden {
-  transform: translateY(100%);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.audio-mini-bar .mini-bar-controls {
-  display: flex;
-  flex: 1;
-  justify-content: space-around;
-}
-
-.audio-mini-bar .audio-btn svg {
-  width: 30px;
-  height: 30px;
-}
-
-.audio-controls .audio-btn svg {
-  width: 32px;
-  height: 32px;
-}
-
-.audio-fab {
-  position: fixed;
-  bottom: calc(1rem + env(safe-area-inset-bottom));
-  left: 1rem;
-  z-index: 1100;
-  width: 3.2rem;
-  height: 3.2rem;
-  border-radius: 50%;
-  background: var(--mini-bar-bg);
-  color: white;
-  font-size: 1.5rem;
-  border: none;
-  cursor: pointer;
-  box-shadow: var(--shadow-heavy);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    transform 0.2s,
-    opacity 0.2s;
-  opacity: 1;
-  transform: scale(1);
-}
-
-.audio-fab.hidden {
-  opacity: 0;
-  transform: scale(0);
-  pointer-events: none;
-}
-
-.audio-fab:active {
-  transform: scale(0.9);
-}
-
-.night-mode .audio-fab {
-  background: var(--mini-bar-bg);
-}
-
-.fab-indicator {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: var(--text-lighter);
-  transition: background-color 0.2s;
-}
-
-.audio-fab.playing .fab-indicator {
-  background-color: var(--success);
-}
-
-/* ============================================
-   19. CUSTOM SELECT — version sobre
-   ============================================ */
-.custom-select {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-}
-
-.custom-select-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.45rem 0.6rem;
-  border-radius: var(--border-radius);
-  font-size: var(--text-md);
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  gap: 4px;
-  min-height: 2.4rem;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.custom-select-btn:hover {
-  border-color: var(--primary);
-  background: var(--primary-light);
-}
-
-.custom-select-btn:focus,
-.custom-select.open .custom-select-btn {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
-  background: var(--surface);
-}
-
-.night-mode .custom-select-btn {
-  background-color: var(--surface);
-  border-color: var(--border);
-  color: var(--text);
-}
-
-.night-mode .custom-select-btn:hover {
-  border-color: var(--success);
-  background: var(--primary-light);
-}
-
-.night-mode .custom-select-btn:focus,
-.night-mode .custom-select.open .custom-select-btn {
-  border-color: var(--success);
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.25);
-}
-
-.custom-select-val {
-  flex: 1;
-  text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.custom-select-arrow {
-  flex-shrink: 0;
-  font-size: 0.7rem;
-  transition: transform 0.2s;
-}
-
-.custom-select.open .custom-select-arrow {
-  transform: rotate(180deg);
-}
-
-.custom-select-dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  left: 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  max-height: 60vh;
-  overflow-y: auto;
-  z-index: 10050;
-  box-shadow: var(--shadow-heavy);
-}
-
-.custom-select.open .custom-select-dropdown {
-  display: block;
-}
-
-.custom-select-group {
-  padding: 0.4rem 0.75rem 0.2rem;
-  font-size: var(--text-sm);
-  color: var(--text-lighter);
-  background: var(--surface-alt);
-  font-weight: 600;
-  text-align: right;
-  border-bottom: 1px solid var(--border);
-}
-
-.custom-select-option {
-  padding: 0.65rem 0.75rem;
-  font-size: var(--text-md);
-  cursor: pointer;
-  text-align: right;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-  background: var(--surface);
-  min-height: 2.6rem;
-  display: flex;
-  align-items: center;
-}
-
-.custom-select-option:last-child {
-  border-bottom: none;
-}
-
-.custom-select-option:active,
-.custom-select-option.selected {
-  background: var(--primary-light);
-  color: var(--primary);
-}
-
-.night-mode .custom-select-option.selected {
-  background: rgba(76, 175, 80, 0.2);
-  color: var(--success);
-}
-
-.night-mode .custom-select-dropdown {
-  background: var(--surface);
-  border-color: var(--border-dark);
-}
-
-.custom-select-option.reciter-option {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.reciter-name {
-  flex: 1;
-  cursor: pointer;
-  text-align: right;
-}
-
-.custom-select-option.reciter-option.selected {
-  background: var(--primary-light);
-}
-
-.night-mode .custom-select-option.reciter-option.selected {
-  background: rgba(76, 175, 80, 0.2);
-}
-
-/* ============================================
-   20. UTILITAIRES & DIVERS
-   ============================================ */
-.loading-placeholder,
-.empty-message {
-  text-align: center;
-  color: var(--text-light);
-  padding: var(--overlay-padding-x);
-}
-
-.loading-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-
-.spinner {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 3px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: var(--space-lg) auto;
-}
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-.spinner.small {
-  width: 1.2rem;
-  height: 1.2rem;
-  border-width: 2px;
-  margin: 0;
+/* Ordre de priorité des couches : la dernière gagne (utils > night > app > ui > base) */
+@layer base, ui, app, night, utils;
+
+/* ============================================================
+   COUCHE base — variables (thème clair et nuit) et styles de base
+   ============================================================ */
+@layer base {
+
+  /*  Variables  */
+  :root {
+    --space-sm: 0.5rem;
+    --space-md: 0.75rem;
+    --space-lg: 1rem;
+    --text-sm: 0.875rem;
+    --text-md: 1rem;
+    --text-lg: 1.125rem;
+    --footer-height: 3.5rem;
+    --btn-sm: 2rem;
+    --btn-lg: 3.2rem;
+    --border-radius: 0.5rem;
+    --border-radius-lg: 0.75rem;
+    --color-blue: #1976d2;
+    --color-brown: #6d4c41;
+    --color-gray: #6c757d;
+    --color-violet: #9c27b0;
+    --color-red: #d32f2f;
+    --color-gold: #ffaa00;
+    --color-white: #ffffff;
+    --primary: #1a5e25;
+    --primary-dark: #0d4214;
+    --primary-light: rgba(26, 94, 37, 0.1);
+    --bg: white;
+    --surface: #ffffff;
+    --surface-alt: #f9f9f9;
+    --text: #333333;
+    --text-light: #666666;
+    --text-lighter: #999999;
+    --border: #dddddd;
+    --border-dark: #cccccc;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --shadow-heavy: 0 5px 20px rgba(0, 0, 0, 0.15);
+    --menu-border: #333333;
+    --border-width: 2px;
+    --overlay-padding-x: 5px;
+    --transition-default: opacity 0.3s ease, background 0.2s, color 0.2s;
+    --current-item-bg: rgb(146, 178, 152);
+    --mini-bar-bg: #ffffffd7;
+    /*  Valeurs partagées avec le JavaScript (lues par getComputedStyle)  */
+    --page-aspect: 700 / 1100;
+    --toast-fade: 0.3s;
+    --speed-btn-fade: 0.2s;
+  }
+
+  .night-mode {
+    --color-blue: #64b5f6;
+    --color-brown: #bcaaa4;
+    --color-gray: #a0a0a0;
+    --color-violet: #ce93d8;
+    --color-red: #ff6b6b;
+    --color-gold: #ffcc00;
+    --color-white: #2d2d2d;
+    --primary: #4caf50;
+    --primary-dark: #388e3c;
+    --primary-light: rgba(76, 175, 80, 0.2);
+    --bg: #000000;
+    --surface: #1e1e1e;
+    --surface-alt: #252525;
+    --text: #ffffff;
+    --text-light: #b0b0b0;
+    --text-lighter: #777777;
+    --border: #333333;
+    --border-dark: #444444;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    --shadow-heavy: 0 5px 20px rgba(0, 0, 0, 0.4);
+    --current-item-bg: #2a4a2a;
+    --mini-bar-bg: #1a1a1ad7;
+  }
+
+  /*  Base  */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: none;
+  }
+
+  html {
+    font-size: 16px;
+  }
+
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  body {
+    direction: rtl;
+  }
+
+  #app {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-container {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: env(safe-area-inset-bottom);
+  }
 }
 
-.toast {
-  position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: var(--space-md) var(--space-lg);
-  border-radius: 10px;
-  z-index: 10000;
-  max-width: 80%;
-  text-align: center;
-  display: none;
-  font-size: var(--text-sm);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  white-space: pre-line;
-  line-height: 1.5;
-  font-weight: 500;
+/* ============================================================
+   COUCHE ui — composants réutilisables : boutons, overlays, listes, menus déroulants, picker
+   ============================================================ */
+@layer ui {
+
+  /*  Boutons  */
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .header-btn {
+    width: var(--btn-lg);
+    height: var(--btn-lg);
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    color: var(--primary);
+    font-size: 1.25rem;
+    box-shadow: var(--shadow);
+  }
+
+  .close-btn {
+    background: none;
+    color: var(--color-red);
+    font-size: 1.8rem;
+    width: var(--btn-lg);
+    height: var(--btn-lg);
+    border-radius: 50%;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-default);
+    border: 2px solid transparent;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .close-btn:active {
+    transform: scale(0.94);
+  }
+
+  /*  Boutons de confirmation  */
+  .confirm-btn {
+    min-width: 80px;
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--border-radius);
+    font-weight: bold;
+    cursor: pointer;
+    transition: var(--transition-default);
+    line-height: 1.2;
+    margin: 0 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: var(--surface-alt);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .confirm-btn:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+
+  .confirm-btn:focus-visible {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+  }
+
+  .confirm-btn.ok {
+    color: var(--primary);
+    border-color: var(--primary);
+    background: var(--surface);
+  }
+
+  .confirm-btn.ok:hover {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+  }
+
+  /*  Dialogue de confirmation  */
+
+  .confirm-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+  }
+
+  .confirm-dialog {
+    background: var(--surface);
+    border-radius: var(--border-radius-lg);
+    padding: var(--space-lg);
+    max-width: 20rem;
+    width: 90%;
+    text-align: center;
+    box-shadow: var(--shadow-heavy);
+  }
+
+  .confirm-dialog p {
+    color: var(--text);
+    margin-bottom: var(--space-lg);
+    font-size: var(--text-md);
+  }
+
+  .confirm-buttons {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+  }
+
+  /*  Toast, chargement et spinner  */
+  .loading-placeholder,
+  .empty-message {
+    text-align: center;
+    color: var(--text-light);
+    padding: var(--overlay-padding-x);
+  }
+
+  .loading-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .spinner {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: var(--space-lg) auto;
+  }
+
+  .spinner.small {
+    width: 1.2rem;
+    height: 1.2rem;
+    border-width: 2px;
+    margin: 0;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: var(--space-md) var(--space-lg);
+    border-radius: 10px;
+    z-index: 10000;
+    max-width: 80%;
+    text-align: center;
+    display: none;
+    font-size: var(--text-sm);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    white-space: pre-line;
+    line-height: 1.5;
+    font-weight: 500;
+    transition: opacity var(--toast-fade);
+  }
+
+  /*  Overlays et menu  */
+  .overlay,
+  .menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 15vh var(--overlay-padding-x) var(--overlay-padding-x) var(--overlay-padding-x);
+  }
+
+  .overlay {
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  .menu-overlay {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .overlay.show,
+  .menu-overlay.show {
+    display: flex;
+  }
+
+  .overlay-content {
+    background: var(--surface);
+    width: 100%;
+    max-width: 31.25rem;
+    max-height: 70vh;
+    border-radius: var(--border-radius-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow-heavy);
+  }
+
+  .overlay-content.fullscreen {
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+    position: absolute;
+    inset: 0;
+    z-index: 10000;
+  }
+
+  .overlay-header {
+    height: 3.75rem;
+    padding: 0 var(--space-lg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .overlay-header h2 {
+    font-family: "MyNotoKufi", sans-serif;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .overlay-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto !important;
+    text-align: justify;
+    text-align-last: right;
+  }
+
+  .menu-content {
+    width: 17rem;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: #000000;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .menu-header {
+    padding: var(--space-sm);
+    border-bottom: 1px solid var(--menu-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .menu-header h2 {
+    color: #ffffff;
+    font-size: var(--text-lg);
+    margin: 0;
+    font-family: "MyNotoKufi", sans-serif;
+  }
+
+  .menu-icon-svg {
+    width: 1.375rem;
+    height: 1.375rem;
+    fill: white;
+    stroke: white;
+    flex-shrink: 0;
+  }
+
+  .menu-text {
+    color: white;
+    flex: 1;
+    text-align: right;
+    font-size: var(--text-md);
+    font-family: "MyNotoKufi", sans-serif;
+    padding-right: var(--space-md);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--menu-border);
+    padding: var(--space-md) var(--space-lg);
+    width: 100%;
+    cursor: pointer;
+    color: white;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+  }
+
+  .menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  /*  Badges et icônes  */
+  .badge,
+  .item-badge,
+  .sura-badge {
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-sm);
+    font-weight: bold;
+    flex-shrink: 0;
+    background: var(--primary);
+    color: white;
+  }
+
+  .item-badge {
+    --badge-bg: var(--primary);
+    background: var(--badge-bg);
+  }
+
+  .item-search .item-badge {
+    --badge-bg: var(--color-brown);
+  }
+
+  .item-juzhizb .item-badge {
+    --badge-bg: var(--color-blue);
+  }
+
+  .sura-badge {
+    background: var(--primary);
+  }
+
+  .action-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: var(--btn-sm);
+    height: var(--btn-sm);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: var(--transition-default);
+    color: var(--text-light);
+    flex-shrink: 0;
+  }
+
+  .action-icon.bordered {
+    border: 1px solid var(--border);
+    background: var(--surface-alt);
+    color: var(--primary);
+  }
+
+  .action-icon.pinned {
+    color: var(--color-gold);
+  }
+
+  .action-icon:active {
+    transform: scale(0.94);
+    background: var(--primary-light);
+  }
+
+  .action-icon:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+
+  /*  Éléments de liste  */
+  .item-container {
+    padding: 0 var(--space-sm) 0 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    transition: background 0.2s ease;
+  }
+
+  .item-container:last-child {
+    border-bottom: none;
+  }
+
+  .item-container.current-item {
+    background-color: var(--current-item-bg);
+  }
+
+  .item-container.current-item .item-title,
+  .item-container.current-item .page-tag,
+  .item-container.current-item .item-sajda-icon {
+    color: var(--color-red) !important;
+  }
+
+  .item-line-1,
+  .item-line-2,
+  .item-line-3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: var(--space-sm);
+  }
+
+  .item-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .item-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-left: 5px;
+    flex-shrink: 0;
+  }
+
+  .item-title {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.4;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    font-size: var(--text-md);
+  }
+
+  .item-sajda-icon {
+    color: var(--primary);
+    font-size: 1.25em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .page-tag {
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 3px 6px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    min-width: auto;
+    justify-content: center;
+  }
+
+  .note-small {
+    color: var(--text-light);
+    font-size: var(--text-sm);
+    display: block;
+  }
+
+  .section-title {
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--text-light);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--border);
+    margin: 0;
+    backdrop-filter: blur(4px);
+    text-align: right;
+  }
+
+  /*  Menus déroulants  */
+  .custom-select {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .custom-select-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 0.6rem;
+    border-radius: var(--border-radius);
+    font-size: var(--text-md);
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    gap: 4px;
+    min-height: 2.4rem;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    transition:
+      border-color 0.2s ease,
+      background 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .custom-select-btn:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+
+  .custom-select-btn:focus,
+  .custom-select.open .custom-select-btn {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+    background: var(--surface);
+  }
+
+  .custom-select-val {
+    flex: 1;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .custom-select-arrow {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+  }
+
+  .custom-select.open .custom-select-arrow {
+    transform: rotate(180deg);
+  }
+
+  .custom-select-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    max-height: 60vh;
+    overflow-y: auto;
+    z-index: 10050;
+    box-shadow: var(--shadow-heavy);
+  }
+
+  .custom-select.open .custom-select-dropdown {
+    display: block;
+  }
+
+  .custom-select-group {
+    padding: 0.4rem 0.75rem 0.2rem;
+    font-size: var(--text-sm);
+    color: var(--text-lighter);
+    background: var(--surface-alt);
+    font-weight: 600;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* --- Ligne générique (Sourates, Pages, etc.) --- */
+  .custom-select-option {
+    padding: 0.65rem 0.75rem;
+    font-size: var(--text-md);
+    cursor: pointer;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    background: var(--surface);
+    min-height: 2.6rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .custom-select-option:last-child {
+    border-bottom: none;
+  }
+
+  .custom-select-option:active,
+  .custom-select-option.selected {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+
+  /* --- Ligne spécifique (Récitateurs) --- */
+  .custom-select-option.reciter-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    background: var(--surface);
+  }
+
+  .custom-select-option.reciter-option:hover {
+    background: var(--primary-light);
+  }
+
+  .custom-select-option.reciter-option.selected {
+    background: var(--primary-light);
+  }
+
+  .custom-select-option.reciter-option .reciter-name {
+    flex: 1;
+    cursor: pointer;
+    text-align: right;
+    font-weight: 600;
+    color: var(--text);
+    font-size: var(--text-md);
+  }
+
+  /* --- Les boutons à droite (Épingle / Étoile) --- */
+  .pin-reciter-btn {
+    width: 24px;
+    height: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: transform 0.1s ease;
+  }
+
+  .pin-reciter-btn:active {
+    transform: scale(0.9);
+  }
+
+  .pin-reciter-btn.pinned {
+    filter: drop-shadow(0 0 2px rgba(255, 170, 0, 0.4));
+  }
+
+  /* --- Le point vert (🟢) --- */
+  .choice-check {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+  }
+
+  /*  Sélecteur plein écran (picker)  */
+  .mini-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10100;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mini-overlay.show {
+    display: flex;
+  }
+
+  .mini-overlay-content {
+    background: var(--surface);
+    border-radius: 12px;
+    width: min(90vw, 400px);
+    max-height: 70vh;
+    max-height: 70dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .mini-overlay-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-weight: bold;
+    color: var(--text);
+  }
+
+  .mini-overlay .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .mini-overlay-body {
+    overflow-y: auto;
+    padding: 8px 16px;
+    position: relative;
+  }
+
+  .pick-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--text);
+  }
+
+  .pick-row:last-child {
+    border-bottom: none;
+  }
+
+  .pick-label {
+    flex: 1;
+  }
+
+  .choice-current .pick-label {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .pick-check {
+    flex-shrink: 0;
+    font-size: 1.1rem;
+  }
+
+  .pick-pin {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 6px;
+  }
+
+  .pick-group {
+    padding: 10px 4px 4px;
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    font-weight: 700;
+  }
 }
 
-.autoscroll-group {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
+/* ============================================================
+   COUCHE app — écrans de l'application : lecteur, sourates, signets, recherche, tafsir, audio…
+   ============================================================ */
+@layer app {
+
+  /*  En-tête et pied de page  */
+  .header {
+    position: fixed;
+    inset: 10px 5px auto 5px;
+    z-index: 1001;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    height: var(--footer-height);
+    justify-content: space-between;
+    transition: var(--transition-default);
+  }
+
+  .footer {
+    position: fixed;
+    inset: auto 3px 0 3px;
+    z-index: 1001;
+    background: transparent;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    height: var(--footer-height);
+    transition:
+      opacity 0.3s ease,
+      visibility 0.3s ease;
+    transform: translateZ(0);
+  }
+
+  .header.hidden,
+  .footer.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .footer-item {
+    display: flex;
+    align-items: center;
+    min-height: 30px;
+  }
+
+  .footer-item:first-child {
+    justify-content: flex-start;
+  }
+
+  .footer-item:last-child {
+    justify-content: flex-end;
+  }
+
+  .footer-surah,
+  .footer-value {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 1rem;
+    padding: var(--space-sm) !important;
+    color: var(--text);
+    font-weight: bold;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    min-width: auto;
+    min-height: 30px;
+    font-size: var(--text-sm);
+    line-height: 1.5;
+  }
+
+  .footer-value {
+    color: var(--primary);
+  }
+
+  .footer-surah {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #pageNumber {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* Bouton signets : appui long possible (ni sélection de texte ni menu contextuel) */
+  #bookmarkBtn {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /*  Boutons spécifiques  */
+  .autoscroll-speed-btn {
+    font-size: 1.3rem;
+    font-weight: 900;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--primary) !important;
+    border: 1px solid var(--border);
+    opacity: 0;
+    transform: scale(0.7);
+    transition:
+      opacity var(--speed-btn-fade) ease,
+      transform var(--speed-btn-fade) ease;
+    pointer-events: none;
+  }
+
+  .autoscroll-speed-btn.visible {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+
+  .autoscroll-speed-btn:disabled {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .tafsir-font-btn {
+    flex: 0 0 auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--color-white);
+    border: 1px solid var(--border);
+    color: var(--primary);
+    border-radius: 50%;
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-default);
+  }
+
+  .tafsir-font-btn:hover {
+    background: var(--primary-light);
+  }
+
+  .autoscroll-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  /*  Page et images  */
+  .page-scroll {
+    position: relative;
+    z-index: 999;
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+    touch-action: pan-y;
+    padding: 0;
+    margin: 0;
+  }
+
+  .page-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background: var(--bg);
+    position: relative;
+  }
+
+  .page-image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    aspect-ratio: var(--page-aspect);
+    margin: 0;
+    padding: 0;
+    background-color: #fff;
+  }
+
+  .page-image[data-loaded="false"] {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .page-image[data-loaded="true"] {
+    opacity: 1;
+  }
+
+  .mode-portrait .page-scroll {
+    overflow: hidden;
+    display: block;
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+    transition: all 0.3s ease;
+    background: var(--bg);
+    z-index: 1;
+  }
+
+  .mode-portrait .page-wrapper {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: opacity 0.2s ease;
+    background: var(--bg);
+  }
+
+  .mode-portrait .page-wrapper.active {
+    display: flex;
+  }
+
+  .mode-portrait .portrait-image {
+    width: 100%;
+    display: block;
+    object-fit: fill;
+  }
+
+  .mode-landscape .page-scroll {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    display: block !important;
+    scroll-behavior: auto;
+    transition: all 0.3s ease;
+  }
+
+  .mode-landscape .page-wrapper {
+    width: 100vw !important;
+    display: flex !important;
+    transition: none !important;
+  }
+
+  .mode-landscape .landscape-image {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: var(--page-aspect) !important;
+    object-fit: contain !important;
+    display: block;
+    transition: none !important;
+  }
+
+  /*  Surlignage du verset  */
+
+  .aya-highlight {
+    position: absolute;
+    background: rgba(0, 200, 100, 0.25);
+    border-radius: 4px;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    z-index: 10;
+  }
+
+  /*  Sourates  */
+  .item-surah {
+    padding: 0 var(--space-sm);
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .item-surah.current-item {
+    background-color: var(--current-item-bg);
+  }
+
+  .item-surah .surah-grid {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto auto auto minmax(2.6rem, auto);
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 6px;
+    row-gap: 2px;
+    padding: 5px 0;
+    width: 100%;
+  }
+
+  .item-surah .g-pin {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: center;
+    justify-self: center;
+  }
+
+  .item-surah .g-badge {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    justify-self: center;
+  }
+
+  .item-surah .g-name {
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    min-width: 0;
+    padding-right: 4px;
+  }
+
+  .item-surah .g-order {
+    grid-column: 3;
+    grid-row: 2;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 0;
+    padding-right: 4px;
+  }
+
+  .item-surah .g-info {
+    grid-column: 4;
+    grid-row: 1;
+    align-self: center;
+    justify-self: center;
+  }
+
+  .item-surah .g-revel {
+    grid-column: 4;
+    grid-row: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .item-surah .g-bookmark {
+    grid-column: 5;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-md);
+    min-width: 1.2rem;
+  }
+
+  .item-surah .g-juz {
+    grid-column: 6;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-blue, var(--primary));
+    font-weight: bold;
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    min-width: 2rem;
+  }
+
+  .item-surah .g-sajda {
+    grid-column: 6;
+    grid-row: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+  }
+
+  .item-surah .g-page {
+    grid-column: 7;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .item-surah .g-verses {
+    grid-column: 7;
+    grid-row: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .item-surah .surah-calligraphy {
+    font-family: "SurahNamesFont", sans-serif;
+    font-size: 2.5rem;
+    line-height: 1;
+    color: var(--primary);
+    display: inline-block;
+    direction: rtl;
+    font-feature-settings:
+      "liga" on,
+      "clig" on;
+    -webkit-font-feature-settings:
+      "liga" on,
+      "clig" on;
+  }
+
+  .item-surah .surah-name {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    font-family: "MyNotoKufi", sans-serif;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-surah .info-btn {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.1rem;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-light);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-default);
+  }
+
+  .item-surah .info-btn:hover {
+    color: var(--primary);
+  }
+
+  .item-surah .note-small {
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    white-space: nowrap;
+  }
+
+  .item-surah .surah-revel {
+    font-size: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .item-surah .page-tag {
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 3px 6px;
+    border-radius: var(--border-radius);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    white-space: nowrap;
+    display: inline-block;
+    min-width: auto;
+    text-align: center;
+  }
+
+  .item-surah .item-sajda-icon {
+    color: var(--primary);
+    font-size: 1.2rem;
+  }
+
+  .item-surah .surah-verses {
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    white-space: nowrap;
+  }
+
+  .item-surah .juz-badge {
+    font-size: var(--text-sm);
+  }
+
+  .surah-section {
+    margin-bottom: 1rem;
+  }
+
+  .surah-section-pinned,
+  .surah-section-all {
+    width: 100%;
+  }
+
+  .surah-section-pinned .section-title,
+  .surah-section-all .section-title {
+    background: var(--surface-alt);
+    padding: 0.75rem 1rem;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-light);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .surah-section-pinned {
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.5rem;
+  }
+
+  .surah-info-title {
+    font-weight: bold;
+    text-decoration: underline;
+    font-family: "MyNotoKufi", sans-serif;
+    font-size: var(--text-lg);
+    color: var(--color-gold);
+  }
+
+  .surah-info-body {
+    white-space: pre-wrap;
+    direction: rtl;
+  }
+
+  /*  Fiche d'information d'une sourate : mise en forme (remplace le style en ligne du JS)  */
+  .surah-info-center {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .surah-section-title {
+    font-weight: bold;
+    margin-top: 0.75rem;
+  }
+
+  .surah-section-text {
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+  }
+
+  .surah-section-title.sec-0 {
+    color: var(--primary);
+  }
+
+  .surah-section-title.sec-1 {
+    color: var(--color-blue);
+  }
+
+  .surah-section-title.sec-2 {
+    color: var(--color-brown);
+  }
+
+  .surah-section-title.sec-3 {
+    color: var(--color-violet);
+  }
+
+  .surah-section-title.sec-4 {
+    color: var(--color-gray);
+  }
+
+  .surah-section-title.sec-5 {
+    color: #ff9800;
+  }
+
+  .surah-section-title.sec-6 {
+    color: var(--color-red);
+  }
+
+  .surah-section-title.sec-7 {
+    color: #009688;
+  }
+
+  .surah-info-content {
+    padding: 1rem;
+  }
+
+  .surah-info-loading {
+    padding: 20px;
+  }
+
+  .surah-info-loading .spinner {
+    margin-bottom: 10px;
+  }
+
+  /*  Juz et hizbs  */
+  .item-juzhizb .juz-line2,
+  .item-juzhizb .juz-line3 {
+    margin-right: calc(2rem + var(--space-md));
+    width: auto;
+    display: block;
+  }
+
+  .item-juzhizb .item-right {
+    gap: calc(var(--space-md) - 0.2rem);
+  }
+
+  .aya-text {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--color-red);
+    font-family: "MyNotoKufi", sans-serif;
+    font-size: var(--text-sm);
+    margin-bottom: 4px;
+  }
+
+  /*  Marque-pages  */
+  .bookmarks-overlay-content {
+    width: 100%;
+    padding: 5px 10px 10px 10px;
+    margin: 0;
+  }
+
+  .bookmarks-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .bookmarks-add-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    flex-direction: row-reverse;
+    margin-top: 5px;
+    padding: 0;
+  }
+
+  .bookmarks-add-form .search-input {
+    flex: 1;
+    min-width: 120px;
+    padding: var(--space-md);
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    width: 100%;
+  }
+
+  .bookmarks-add-form .btn {
+    flex: 0 0 auto;
+    padding: var(--space-md) var(--space-lg);
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .item-bookmark.editing-bookmark {
+    background-color: var(--primary-light);
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+  }
+
+  .bookmarks-button-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .bookmark-line2 {
+    margin-top: 4px;
+    padding-right: 45px;
+  }
+
+  /*  Sauvegarde  */
+
+  .backup-body {
+    padding: 16px;
+  }
+
+  .backup-title {
+    margin-bottom: 12px;
+    line-height: 1.8;
+  }
+
+  .backup-list {
+    line-height: 2;
+  }
+
+  .backup-body .confirm-buttons {
+    margin-top: 20px;
+  }
+
+  /*  Aller à une page  */
+
+  .page-input-body {
+    padding: 16px;
+  }
+
+  .page-input-body p {
+    text-align: right;
+    margin: 0 0 12px 0;
+  }
+
+  .page-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #pageInputField {
+    flex: 1;
+    direction: ltr;
+    text-align: right;
+    margin: 0;
+  }
+
+  /*  Khatm et tajweed  */
+  .khatm-content {
+    flex: 1;
+    width: auto;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    padding: 0;
+    gap: 0;
+    align-items: stretch;
+  }
+
+  .khatm-page {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .khatm-page img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    border-radius: 0;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tajweed-image img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    box-shadow: var(--shadow);
+  }
+
+  .tajweed-text {
+    line-height: 1.9;
+    font-size: var(--text-md);
+    color: var(--text);
+    padding: 5px 2px;
+    margin-right: 5px;
+    gap: 15px;
+    text-align: justify;
+    text-align-last: right;
+  }
+
+  .tajweed-text ul {
+    text-align: justify;
+    text-align-last: right;
+    padding-right: 10px;
+    margin-bottom: 15px;
+  }
+
+  /*  Tajweed : couleurs de la légende et mise en forme (remplace le style en ligne du JS)  */
+
+  .tajweed-text li {
+    margin-bottom: 10px;
+  }
+
+  .tajweed-text .tj-title {
+    margin-right: 5px;
+  }
+
+  .tajweed-text .tj-bold {
+    font-weight: bold;
+  }
+
+  .tajweed-text .tj-red-dark {
+    color: #993300;
+  }
+
+  .tajweed-text .tj-red {
+    color: #ff0000;
+  }
+
+  .tajweed-text .tj-orange {
+    color: #ff6600;
+  }
+
+  .tajweed-text .tj-yellow {
+    color: #ffcc00;
+  }
+
+  .tajweed-text .tj-green {
+    color: #008000;
+  }
+
+  .tajweed-text .tj-blue {
+    color: #3366ff;
+  }
+
+  .tajweed-text .tj-navy {
+    color: #000080;
+  }
+
+  .tajweed-text .tj-sky {
+    color: #3399ff;
+  }
+
+  .tajweed-text .tj-gray {
+    color: #808080;
+  }
+
+  /*  Recherche  */
+  .search-container {
+    padding: 3px;
+    background: var(--surface);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .search-wrapper {
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: var(--space-md) var(--space-lg);
+    padding-left: 40px;
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    font-size: var(--text-md);
+    background: var(--surface);
+    color: var(--text);
+    text-align: right;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+  }
+
+  .clear-search-btn {
+    position: absolute;
+    left: 5px;
+    top: 0;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text-light);
+    padding: 0;
+    line-height: 1;
+    z-index: 10;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .clear-search-btn:hover {
+    color: var(--text);
+  }
+
+  .search-stats {
+    padding: var(--space-sm) 0;
+    flex-shrink: 0;
+  }
+
+  .search-stats-content {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    color: var(--text);
+    font-size: var(--text-sm);
+    gap: var(--space-sm);
+  }
+
+  .stat-results,
+  .stat-suras {
+    font-weight: bold;
+  }
+
+  .stat-results {
+    color: var(--color-red);
+  }
+
+  .stat-suras {
+    color: var(--primary);
+  }
+
+  #searchResults {
+    padding: 0;
+    text-align: center;
+  }
+
+  #searchResults .search-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    color: var(--text-light);
+  }
+
+  #searchResults .search-empty p {
+    margin: 0.5rem 0;
+    text-align: center;
+  }
+
+  .item-search-text {
+    font-family: "MyNotoKufi", sans-serif;
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--text);
+    text-align: justify;
+    text-align-last: right;
+    line-height: 2.2;
+    word-spacing: -1px;
+    padding: 0 var(--overlay-padding-x);
+    direction: rtl;
+    display: block;
+  }
+
+  .item-search-text .search-hit {
+    color: var(--color-red);
+    font-weight: 900;
+    background: transparent;
+    padding: 0;
+  }
+
+  mark {
+    background: transparent;
+    color: inherit;
+  }
+
+  .item-search .item-line-2[data-clickable="true"] {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .item-search .item-line-2[data-clickable="true"]:hover {
+    background-color: var(--primary-light);
+  }
+
+  /*  Tafsir  */
+  .tafsir-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow: visible;
+  }
+
+  .tafsir-controls .custom-select {
+    flex: 1 1 120px;
+    min-width: 100px;
+  }
+
+  .tafsir-controls .tafsir-font-btn {
+    flex: 0 0 auto;
+  }
+
+  .tafsir-container {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    background: var(--surface);
+  }
+
+  .tafsir-aya-container {
+    margin-bottom: 0;
+    padding: 8px 5px;
+    border-bottom: var(--border-width) solid var(--border);
+    scroll-margin-top: 70px;
+  }
+
+  .tafsir-aya-container:last-child {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tafsir-explanation {
+    color: var(--text);
+    font-family: "Segoe UI", sans-serif;
+    font-weight: normal;
+    text-align: justify;
+    text-align-last: right;
+    line-height: 1.5;
+    font-size: 16px;
+  }
+
+  .tafsir-content-container {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 0 var(--overlay-padding-x);
+    line-height: 1.8;
+    scroll-behavior: auto;
+    overflow-anchor: none;
+    text-align: justify;
+    text-align-last: right;
+    font-size: 16px;
+    transition: font-size 0.1s ease;
+  }
+
+  .tafsir-content-container .item-search-text,
+  .tafsir-content-container .tafsir-explanation,
+  .tafsir-content-container .sura-name-kufi {
+    font-size: inherit;
+  }
+
+  .tafsir-content-container * {
+    font-size: inherit;
+  }
+
+  #tafsirContent {
+    scroll-behavior: auto;
+    overflow-anchor: none;
+  }
+
+  .sura-title-container {
+    text-align: center;
+    margin: 1.5rem 0 1rem 0;
+    padding: 0.5rem 0;
+    border-bottom: var(--border-width) solid var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .sura-name-kufi {
+    font-family: "MyNotoKufi", sans-serif;
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: var(--primary);
+    line-height: 1.4;
+  }
+
+  /*  À propos  */
+  .about-content {
+    flex: 1;
+    width: auto;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    padding: var(--space-md);
+    gap: var(--space-sm);
+    color: var(--text);
+    text-align: justify;
+    text-align-last: right;
+  }
+
+  .about-content strong {
+    color: var(--text);
+    font-weight: bold;
+  }
+
+  .about-title {
+    text-align: center;
+    font-size: var(--text-lg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .about-version {
+    font-size: var(--text-sm);
+    color: var(--text-light);
+  }
+
+  .about-desc {
+    font-size: var(--text-md);
+    line-height: 1.7;
+    color: var(--text);
+    text-align: justify;
+  }
+
+  .about-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+    margin: var(--space-md) 0;
+  }
+
+  .about-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    padding: var(--space-md);
+    gap: 0.25rem;
+  }
+
+  .about-stat span {
+    font-size: var(--text-sm);
+    color: var(--text-light);
+  }
+
+  .about-stat strong {
+    font-size: var(--text-lg);
+    font-weight: bold;
+    color: var(--text);
+  }
+
+  .about-footer {
+    text-align: center;
+    text-align-last: center;
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    line-height: 1.8;
+    margin-top: auto;
+    padding-top: var(--space-md);
+  }
+
+  .about-footer a {
+    color: var(--text-light);
+    text-decoration: none;
+  }
+
+  .contact-grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 15px 0;
+  }
+
+  .contact-box-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 5px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius-lg);
+    text-decoration: none;
+    transition: var(--transition-default);
+    min-height: 60px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text);
+  }
+
+  .contact-box-item:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+
+  .contact-box-item span {
+    font-size: var(--text-sm);
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .contact-box-item:active {
+    transform: scale(0.96);
+    filter: brightness(0.95);
+  }
+
+  .about-credits-line {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.9rem;
+    line-height: 1.8;
+    text-align: center;
+    text-align-last: center;
+    color: var(--text-light);
+  }
+
+  .about-credits-line span {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .about-credits-line a {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+
+  .about-credits-line a:hover,
+  .about-credits-line a:focus-visible {
+    opacity: 0.75;
+  }
+
+  /*  Audio  */
+  .audio-body {
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .audio-riwaya-info {
+    text-align: center;
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    border-radius: var(--border-radius);
+    background: var(--surface-alt);
+  }
+
+  .audio-current-info {
+    background: var(--surface-alt);
+    border-radius: var(--border-radius);
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+  }
+
+  .audio-current-info span {
+    white-space: nowrap;
+    font-size: var(--text-sm);
+    color: var(--text-light);
+  }
+
+  .audio-current-info .audio-current-display {
+    flex: 1;
+    margin: 0;
+    background: transparent;
+    border: none;
+    color: inherit;
+    padding: 0.2rem 0;
+    font-size: var(--text-sm);
+    text-align: center;
+  }
+
+  .audio-select-grid {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    gap: 0.5rem;
+    margin-bottom: 0.2rem;
+    align-items: center;
+  }
+
+  .audio-select-row:first-child {
+    display: block;
+    width: 100%;
+  }
+
+  #surahSelectAudio,
+  #ayaSelectAudio,
+  #pageSelectAudio {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #reciterSelect {
+    text-align: right;
+    text-align-last: right;
+  }
+
+  #reciterSelectWrap {
+    width: 100%;
+  }
+
+  #audioOverlay .overlay-content {
+    max-height: none;
+    min-height: 50vh;
+  }
+
+  #audioOverlay .overlay-content,
+  #audioOverlay .overlay-body,
+  #audioOverlay .audio-body,
+  #audioOverlay .audio-select-row,
+  #audioOverlay .audio-select-grid,
+  #audioOverlay .custom-select {
+    overflow: visible;
+  }
+
+  #audioOverlay .overlay-body {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .audio-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    margin: 0.2rem 0;
+  }
+
+  .audio-progress {
+    flex: 1;
+    height: 4px;
+    accent-color: var(--primary);
+    cursor: pointer;
+  }
+
+  .audio-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0.2rem 0;
+  }
+
+  .audio-status {
+    text-align: center;
+    color: var(--text-light);
+    font-size: var(--text-sm);
+    padding: 0.3rem;
+    display: none;
+  }
+
+  .audio-status:not(:empty) {
+    display: block;
+  }
+
+  .audio-warning {
+    background: rgba(255, 193, 7, 0.2);
+    color: #b45f06;
+    padding: var(--space-md);
+    border-radius: var(--border-radius);
+    font-size: var(--text-sm);
+    text-align: center;
+    margin-bottom: var(--space-md);
+  }
+
+  .audio-sleep-row {
+    display: flex;
+    justify-content: center;
+    margin: 0.4rem 0;
+  }
+
+  .audio-sleep-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font: inherit;
+    font-size: var(--text-sm);
+    color: var(--text);
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 2rem;
+    cursor: pointer;
+    transition:
+      background 0.2s ease,
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .audio-sleep-pill:hover {
+    background: var(--primary-light);
+    border-color: var(--primary);
+  }
+
+  .audio-sleep-pill.active {
+    color: #fff;
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .audio-sleep-pill svg {
+    flex-shrink: 0;
+    margin-left: 6px;
+  }
+
+  .audio-btn {
+    font-size: 1.2rem;
+    width: var(--btn-sm);
+    height: var(--btn-sm);
+    border: none;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      var(--transition-default),
+      transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .audio-btn:active {
+    transform: scale(0.92);
+    background: var(--primary-light);
+  }
+
+  .audio-btn:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .audio-btn.speed-btn {
+    font-family: monospace;
+    font-size: 1rem;
+    background: var(--surface-alt);
+    border-radius: 2rem;
+    letter-spacing: -3px;
+    padding: 2px 4px;
+    min-width: 2.2rem;
+  }
+
+  .audio-controls .audio-btn.speed-btn {
+    width: 2.8rem;
+    min-width: 2.8rem;
+  }
+
+  .audio-mini-bar {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 1200;
+    background: var(--mini-bar-bg);
+    backdrop-filter: blur(8px);
+    transform: translateY(0);
+    transition:
+      transform 0.3s ease,
+      opacity 0.3s ease;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .audio-mini-bar .mini-bar-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 10px 0 10px;
+    flex-shrink: 0;
+  }
+
+  .audio-mini-bar.hidden {
+    transform: translateY(100%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .audio-mini-bar .mini-bar-controls {
+    display: flex;
+    flex: 1;
+    justify-content: space-around;
+  }
+
+  .audio-mini-bar .audio-btn svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .audio-controls .audio-btn svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .audio-fab {
+    position: fixed;
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+    left: 1rem;
+    z-index: 1100;
+    width: 3.2rem;
+    height: 3.2rem;
+    border-radius: 50%;
+    background: var(--mini-bar-bg);
+    color: white;
+    font-size: 1.5rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: var(--shadow-heavy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      transform 0.2s,
+      opacity 0.2s;
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .audio-fab.hidden {
+    opacity: 0;
+    transform: scale(0);
+    pointer-events: none;
+  }
+
+  .audio-fab:active {
+    transform: scale(0.9);
+  }
+
+  .fab-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--text-lighter);
+    transition: background-color 0.2s;
+  }
+
+  .audio-fab.playing .fab-indicator {
+    background-color: var(--primary);
+  }
+
+  .audio-status.error {
+    color: var(--color-red);
+  }
+
+  .sleep-options {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sleep-option {
+    padding: 15px 20px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    font: inherit;
+    text-align: right;
+    cursor: pointer;
+  }
+
+  .sleep-option:hover {
+    background: var(--surface-alt);
+  }
+
+  .sleep-option.active {
+    color: var(--primary);
+    font-weight: bold;
+  }
+
+  #audioOverlay .custom-select-dropdown {
+    display: none;
+  }
+
+  /* --- Écran principal de mémorisation --- */
+  .mem-overlay-body {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-md);
+  }
+
+  .mem-label {
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    margin: var(--space-sm) 0 6px;
+    text-align: right;
+  }
+
+  /* La grille pour mettre Sourate et Ayah côte à côte */
+  .aya-pair {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    /* 2/3 pour la sourate, 1/3 pour l'ayah */
+    gap: 8px;
+    margin-bottom: var(--space-md);
+    width: 100%;
+  }
+
+  .mem-overlay-body .mem-summary {
+    width: 100%;
+    text-align: center;
+    color: var(--text-light);
+    font-size: var(--text-sm);
+    margin: var(--space-md) 0 0;
+    line-height: 1.6;
+    display: flex;
+    justify-content: center;
+  }
+
+  .mem-edit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 4px 8px;
+    background: none;
+    border: none;
+    color: var(--primary);
+    font: inherit;
+    font-size: var(--text-md);
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .mem-go {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 180px;
+    /* <-- On réduit la largeur (était 220px) */
+    margin: 0.5rem auto 0 auto;
+    /* <-- Centré et espace au-dessus */
+    padding: 12px 16px;
+    border-radius: 0.5rem;
+    font: inherit;
+    font-size: var(--text-md);
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    background: var(--surface);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    /* <-- L'ombre douce */
+    transition: all 0.15s ease;
+  }
+
+  .mem-go:hover {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .mem-go:active {
+    transform: scale(0.98);
+    box-shadow: none;
+  }
+
+  /* --- Mini-overlay (pastilles) --- */
+  .mem-chips {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: var(--space-lg);
+    width: 100%;
+    direction: rtl;
+  }
+
+  .mem-chip {
+    flex: 1;
+    padding: 10px 4px;
+    font: inherit;
+    font-size: var(--text-sm);
+    color: var(--text);
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 2rem;
+    /* La clé : 2rem pour faire l'ovale/pilule */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+    line-height: 1.2;
+  }
+
+  .mem-chip.active {
+    color: #fff;
+    background: var(--primary);
+    border-color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* « Aller à » : sélecteurs et bouton sur la même ligne, titres de même style */
+  .goto-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .goto-row .aya-pair {
+    flex: 1;
+    margin-bottom: 0;
+  }
+
+  .goto-row+.aya-label {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
 }
 
-::-webkit-scrollbar {
-  width: 0;
-  background: transparent;
+/* ============================================================
+   COUCHE night — exceptions du mode nuit (le reste passe par les variables)
+   ============================================================ */
+@layer night {
+  /*  Mode nuit — En-tête et pied de page  */
+
+  .night-mode .footer-surah,
+  .night-mode .footer-value {
+    background: rgba(30, 30, 30, 0.7);
+  }
+
+  /*  Mode nuit — Boutons  */
+
+  .night-mode .header-btn {
+    background: rgba(30, 30, 30, 0.7);
+  }
+
+  /*  Mode nuit — Boutons de confirmation  */
+
+  .night-mode .confirm-btn {
+    border-color: var(--border);
+  }
+
+  .night-mode .confirm-btn.ok {
+    border-color: var(--primary);
+  }
+
+  .night-mode .confirm-btn.ok:hover {
+    color: var(--primary);
+  }
+
+  .night-mode .confirm-btn:not(.ok):hover {
+    border-color: var(--primary);
+  }
+
+  /*  Mode nuit — Boutons spécifiques  */
+
+  .night-mode .autoscroll-speed-btn {
+    background: #2d2d2d;
+    border-color: var(--border-dark);
+  }
+
+  .night-mode .tafsir-font-btn {
+    border-color: var(--border-dark);
+  }
+
+  /*  Mode nuit — Page et images  */
+
+  .night-mode .page-image {
+    filter: invert(1) hue-rotate(-180deg);
+    content-visibility: auto;
+  }
+
+  .night-mode .tajweed-image img,
+  .night-mode .khatm-page img {
+    filter: invert(0.93) hue-rotate(180deg) brightness(0.9) contrast(1.1);
+    background-color: var(--bg);
+  }
+
+  /*  Mode nuit — Badges et icônes  */
+
+  .night-mode .action-icon:hover,
+  .night-mode .action-icon:active {
+    background: rgba(76, 175, 80, 0.2);
+    color: var(--primary);
+  }
+
+  /*  Mode nuit — Recherche  */
+
+  /*  Mode nuit — Tafsir  */
+
+  .night-mode .sura-title-container {
+    border-bottom-color: var(--primary);
+  }
+
+  /*  Mode nuit — À propos  */
+
+  .night-mode .contact-box-item {
+    background: var(--surface-alt);
+  }
+
+  /*  Mode nuit — Audio  */
+
+  .night-mode .audio-current-display {
+    background: rgba(76, 175, 80, 0.15);
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .night-mode .audio-sleep-pill {
+    border-color: var(--border);
+  }
+
+  .night-mode .audio-sleep-pill:hover {
+    border-color: var(--primary);
+  }
+
+  .night-mode .audio-sleep-pill.active {
+    border-color: var(--primary);
+  }
+
+  .night-mode .audio-warning {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffb74d;
+  }
+
+  /*  Mode nuit — Menus déroulants  */
+
+  .night-mode .custom-select-btn {
+    background-color: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  .night-mode .custom-select-btn:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+
+  .night-mode .custom-select-btn:focus,
+  .night-mode .custom-select.open .custom-select-btn {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.25);
+  }
+
+  .night-mode .custom-select-dropdown {
+    border-color: var(--border-dark);
+  }
+
+  /*  Mode nuit — Surlignage du verset  */
+
+  .night-mode .aya-highlight {
+    background: rgba(255, 213, 0, 0.2);
+  }
 }
 
-.confirm-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-}
+/* ============================================================
+   COUCHE utils — utilitaires, toujours prioritaires
+   ============================================================ */
+@layer utils {
+  /*  Utilitaires  */
 
-.confirm-dialog {
-  background: var(--surface);
-  border-radius: var(--border-radius-lg);
-  padding: var(--space-lg);
-  max-width: 20rem;
-  width: 90%;
-  text-align: center;
-  box-shadow: var(--shadow-heavy);
-}
+  ::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+  }
 
-.confirm-dialog p {
-  color: var(--text);
-  margin-bottom: var(--space-lg);
-  font-size: var(--text-md);
-}
+  .error-title {
+    color: var(--color-red);
+  }
 
-.confirm-buttons {
-  display: flex;
-  gap: var(--space-md);
-  justify-content: center;
-}
+  .noscript-fallback {
+    text-align: center;
+    padding: 2rem;
+    font-family: Arial, sans-serif;
+    background: #fff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+  }
 
-.aya-highlight {
-  position: absolute;
-  background: rgba(0, 200, 100, 0.25);
-  border-radius: 4px;
-  pointer-events: none;
-  transition: all 0.2s ease;
-  z-index: 10;
-}
+  .noscript-title {
+    color: #004494;
+  }
 
-.night-mode .aya-highlight {
-  background: rgba(255, 213, 0, 0.2);
-}
+  .hidden {
+    display: none !important;
+  }
 
-.error-title {
-  color: var(--error);
-}
-
-.noscript-fallback {
-  text-align: center;
-  padding: 2rem;
-  font-family: Arial, sans-serif;
-  background: #fff;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 9999;
-}
-
-.noscript-title {
-  color: #004494;
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* ✅ Crédits — une seule ligne centrée */
-.about-credits-line {
-  margin-top: 1.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-  font-size: 0.9rem;
-  line-height: 1.8;
-  text-align: center;
-  text-align-last: center;
-  color: var(--text-light);
-}
-
-.about-credits-line span {
-  font-weight: 600;
-  color: var(--text);
-}
-
-.about-credits-line a {
-  color: var(--primary);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  white-space: nowrap;
-  transition: opacity 0.15s;
-}
-
-.about-credits-line a:hover,
-.about-credits-line a:focus-visible {
-  opacity: 0.75;
-}
-
-.night-mode .about-credits-line a {
-  color: var(--success);
+  .flex-col-fill {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
 }

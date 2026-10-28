@@ -1,41 +1,269 @@
+// ============================================================
+//  FICHIER : main.js
+//  Rôle : moteur de l'application (état, stockage, signets, thème,
+//         toast, événements) + outils partagés par tous les scripts
+//         (utilitaires, listes, menus déroulants, pickers)
+//
+//  SOMMAIRE
+//   1. Configuration et constantes
+//   2. AppUtils  — petits outils partagés
+//   3. AppStore  — accès sûr à localStorage
+//   4. QuranApp  — moteur de l'application
+//   5. ListItemRenderer — éléments de liste
+//   6. CustomSelect — menus déroulants
+//   7. Picker    — sélecteur plein écran
+//   8. AyaPicker — couple sourate / verset
+//   9. Démarrage et gestion d'erreurs
+// ============================================================
+
+// ============================================================
+//  1. CONFIGURATION ET CONSTANTES
+// ============================================================
+
+// Riwaya active = identifiant de l'application (APP_ID dans version.js) : "hafs" | "warsh" | "qaloon"
+window.ACTIVE_RIWAYA = ["hafs", "warsh", "qaloon"].includes(window.APP_ID) ? window.APP_ID : "hafs";
+
+const APP_CFG = Object.freeze({
+  TOTAL_PAGES: 604,
+  TOTAL_SURAHS: 114,
+});
+
+const STORAGE_KEYS = Object.freeze({
+  prefix: "quran_",
+  bookmarks: "quran_bookmarks",
+  lastPage: "quran_lastPage",
+  theme: "quran_theme",
+  pinned: "quran_pinnedSurahs",
+});
+
+const APP_EVENTS = Object.freeze({
+  pageChanged: "quran:pageChanged",
+  bookmarkChanged: "quran:bookmarkChanged",
+  readingModeChanged: "quran:readingModeChanged",
+  pinnedUpdated: "quran:pinnedSurahsUpdated",
+  prefsImported: "quran:preferencesImported",
+  buttonsVisibility: "quran:buttonsVisibilityChanged",
+  menuToggle: "quran:menuToggle",
+  overlayOpened: "quran:overlayOpened",
+  overlayClosed: "quran:overlayClosed",
+});
+
+const APP_TEXTS = Object.freeze({
+  pickSurah: "اختر السورة",
+  pickAyah: "اختر الآية",
+  pickPage: "اختر الصفحة",
+  ayahWord: "الآية",
+  pageShort: "ص",
+});
+
+// ============================================================
+//  2. APPUTILS — PETITS OUTILS PARTAGÉS
+// ============================================================
+
+const AppUtils = {
+  /** Échappe le HTML (null / undefined → chaîne vide). */
+  esc(text) {
+    if (text === null || text === undefined) return "";
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  },
+
+  /** Crée un élément : el("div", "classe", "texte"). */
+  el(tag, className = "", text = null) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== null) node.textContent = text;
+    return node;
+  },
+
+  clamp: (value, min, max) => Math.min(Math.max(value, min), max),
+
+  /** 7 → "007" (fichiers audio, images de pages). */
+  pad3: (n) => String(n).padStart(3, "0"),
+
+  isValidPage: (p) => Number.isInteger(p) && p >= 1 && p <= APP_CFG.TOTAL_PAGES,
+
+  isValidSurahId: (id) => Number.isInteger(id) && id >= 1 && id <= APP_CFG.TOTAL_SURAHS,
+
+  debounce(fn, delay) {
+    let timer = null;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn(...args), delay);
+    };
+  },
+
+  /** Rejette la promesse si elle dépasse `ms` millisecondes. */
+  withTimeout(promise, ms) {
+    let timer;
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error("Timeout")), ms);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+  },
+
+  /** Lit une variable CSS ("--x") ; `fallback` si elle est absente ou si la feuille de style n'est pas chargée. */
+  cssVar(name, fallback = "") {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+  },
+
+  /** Variable CSS de durée ("0.3s" ou "300ms") → millisecondes. */
+  cssMs(name, fallbackMs) {
+    const v = AppUtils.cssVar(name);
+    const n = parseFloat(v);
+    if (isNaN(n)) return fallbackMs;
+    return /ms$/.test(v) ? n : n * 1000;
+  },
+
+  /** Variable CSS de longueur ("56px" ou "3.5rem") → pixels. */
+  cssPx(name, fallbackPx) {
+    const v = AppUtils.cssVar(name);
+    const n = parseFloat(v);
+    if (isNaN(n)) return fallbackPx;
+    return /rem$/.test(v) ? n * parseFloat(getComputedStyle(document.documentElement).fontSize) : n;
+  },
+
+  /** Fait défiler `container` pour placer `el` à `ratio` de sa hauteur. */
+  centerIn(container, el, ratio = 1 / 3) {
+    const relativeTop =
+      el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+    const top = relativeTop - container.clientHeight * ratio + el.clientHeight / 2;
+    container.scrollTop = Math.max(0, top);
+  },
+
+  /** Promesse résolue à la prochaine image affichée. */
+  nextFrame: () => new Promise((resolve) => requestAnimationFrame(resolve)),
+
+  /** Exécute `fn` après `frames` images (2 par défaut : après le rendu). */
+  afterFrames(fn, frames = 2) {
+    const step = (n) => requestAnimationFrame(() => (n <= 1 ? fn() : step(n - 1)));
+    step(frames);
+  },
+
+  /** Envoie un événement personnalisé sur window. */
+  emit(name, detail = undefined) {
+    window.dispatchEvent(new CustomEvent(name, detail === undefined ? undefined : { detail }));
+  },
+};
+
+// ============================================================
+//  3. APPSTORE — ACCÈS SÛR À LOCALSTORAGE
+// ============================================================
+
+const AppStore = {
+  get(key, defaultValue = null) {
+    try {
+      const value = localStorage.getItem(key);
+      return value !== null ? value : defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  },
+
+  set(key, value) {
+    try {
+      localStorage.setItem(key, String(value));
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  remove(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      /* ignoré */
+    }
+  },
+
+  /** Lit un JSON ; renvoie `defaultValue` si absent ou corrompu. */
+  getJSON(key, defaultValue = null) {
+    const raw = AppStore.get(key);
+    if (raw === null) return defaultValue;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return defaultValue;
+    }
+  },
+
+  setJSON(key, value) {
+    return AppStore.set(key, JSON.stringify(value));
+  },
+};
+
+// ============================================================
+//  4. QURANAPP — MOTEUR DE L'APPLICATION
+// ============================================================
+
 class QuranApp {
+  // ---------- Constructeur ----------
+
   constructor() {
     this.isInitialized = false;
     this.isInitializing = false;
 
+    // État persistant
     this.bookmarks = [];
     this.bookmarkedPagesSet = new Set();
     this.pinnedSurahs = [];
     this.lastPage = 1;
     this.theme = "light";
 
-    this.NOTIFICATION_DURATION = 2000;
-
+    // Tafsir
     this.tafsirLoaded = false;
     this.tafsirLoading = false;
     this.tafsirLoadQueue = [];
 
+    // Écouteurs et minuteurs
+    this._listeners = [];
     this._toastTimeout = null;
+    this._toastHideTimeout = null;
     this._savePageTimeout = null;
-    this._pageHideHandler = null;
-    this._visibilityChangeHandler = null;
-    this._onlineHandler = null;
-    this._offlineHandler = null;
-    this._pageChangedHandler = null;
-    this._bookmarkChangedHandler = null;
-    this._readingModeChangedHandler = null;
-    this._keyDownHandler = null;
+    this._lastBack = 0;
   }
 
-  // ============================================
-  // INITIALISATION
-  // ============================================
+  // ---------- Helpers privés ----------
+
+  /** Retrouve un signet par identifiant (ou null). */
+  _findBookmark(id) {
+    return this.bookmarks.find((b) => b.id === id) || null;
+  }
+
+  /** Vrai si le menu principal est ouvert. */
+  _isMenuOpen() {
+    return !!document.querySelector(".menu-overlay.show");
+  }
+
+
+  /** Annule les deux minuteurs du toast (affichage + masquage). */
+  _clearToastTimers() {
+    clearTimeout(this._toastTimeout);
+    clearTimeout(this._toastHideTimeout);
+    this._toastTimeout = null;
+    this._toastHideTimeout = null;
+  }
+
+  /** Normalise une liste d'identifiants de sourates épinglées. */
+  _normalizePinnedSurahs(list) {
+    return Array.isArray(list) ? list.filter(AppUtils.isValidSurahId) : [];
+  }
+
+  /** Vrai si le mode nuit est actif. */
+  _isNightMode() {
+    return document.body.classList.contains("night-mode");
+  }
+
+  // ---------- Initialisation ----------
 
   async init() {
     if (this.isInitializing) return;
-    if (this.isInitialized) {
-      this.destroy();
-    }
+    if (this.isInitialized) this.destroy();
     this.isInitializing = true;
     try {
       this.restoreFromLocalStorage();
@@ -47,512 +275,60 @@ class QuranApp {
       this.updateBookmarkIcon(this.lastPage);
       this.setupCleanupHandlers();
       this.isInitialized = true;
-      window.dispatchEvent(new CustomEvent("quran:appReady"));
+      AppUtils.emit((window.APP_ID || "quranreader") + ":appReady");
     } catch (err) {
       this.showToast("❌ خطأ في تحميل التطبيق");
-      window.dispatchEvent(
-        new CustomEvent("quran:appError", { detail: { error: err.message } }),
-      );
+      AppUtils.emit("quran:appError", { error: err.message });
     } finally {
       this.isInitializing = false;
     }
   }
 
+  _requireModule(name, label) {
+    const mod = window[name];
+    if (!mod) throw new Error(`Module ${label} non trouvé`);
+    return mod;
+  }
+
   async initCalculator() {
-    if (!window.quranCalculator)
-      throw new Error("Module Calculator non trouvé");
-    await window.quranCalculator.load();
-    // Migration surahId : maintenant que le calculator est chargé
-    let needsSave = false;
-    this.bookmarks = this.bookmarks.map((b) => {
-      if (!b.surahId && b.page) {
-        const surah = window.quranCalculator.getFirstSurahForPage(b.page);
-        if (surah) { needsSave = true; return { ...b, surahId: surah.s_id }; }
-      }
-      return b;
-    });
-    if (needsSave) {
-      this._updateBookmarkedPagesSet();
-      this.saveToLocalStorage();
-    }
+    await this._requireModule("quranCalculator", "Calculator").load();
+    this._migrateBookmarks();
   }
 
   async initReader() {
-    if (!window.quranReader) throw new Error("Module Reader non trouvé");
-    await window.quranReader.init({}, this.lastPage);
+    await this._requireModule("quranReader", "Reader").init({}, this.lastPage);
   }
 
   initOverlays() {
-    if (!window.overlayManager)
-      throw new Error("Module OverlayManager non trouvé");
-    window.overlayManager.init({ app: this });
+    this._requireModule("overlayManager", "OverlayManager").init({ app: this });
   }
 
-  // ============================================
-  // PERSISTANCE
-  // ============================================
+  // ---------- Persistance ----------
 
   restoreFromLocalStorage() {
-    try {
-      const rawBookmarks = localStorage.getItem("quran_bookmarks");
-      this.bookmarks = rawBookmarks ? JSON.parse(rawBookmarks) : [];
-      if (!Array.isArray(this.bookmarks)) this.bookmarks = [];
+    const bookmarks = AppStore.getJSON(STORAGE_KEYS.bookmarks, []);
+    this.bookmarks = (Array.isArray(bookmarks) ? bookmarks : [])
+      .filter((b) => b && typeof b === "object")
+      .map((b, i) => this._normalizeBookmark(b, i));
+    this._updateBookmarkedPagesSet();
 
-      // Normalisation des ids et dates (sans migration surahId — fait après chargement du calculator)
-      this.bookmarks = this.bookmarks.map((b, i) => ({
-        ...b,
-        id: b.id || `bookmark_${b.page}_${Date.now()}_${i}`,
-        lastModified: b.lastModified || b.date || new Date().toISOString(),
-      }));
+    const page = parseInt(AppStore.get(STORAGE_KEYS.lastPage), 10);
+    this.lastPage = AppUtils.isValidPage(page) ? page : 1;
 
-      this._updateBookmarkedPagesSet();
+    this.theme = AppStore.get(STORAGE_KEYS.theme) === "night" ? "night" : "light";
 
-      const rawPage = localStorage.getItem("quran_lastPage");
-      this.lastPage = rawPage ? parseInt(rawPage) : 1;
-      if (isNaN(this.lastPage) || this.lastPage < 1 || this.lastPage > 604)
-        this.lastPage = 1;
-
-      this.theme = localStorage.getItem("quran_theme") || "light";
-
-      const rawPinned = localStorage.getItem("quran_pinnedSurahs");
-      this.pinnedSurahs = rawPinned ? JSON.parse(rawPinned) : [];
-    } catch {
-      this.bookmarks = [];
-      this.lastPage = 1;
-      this.theme = "light";
-      this.pinnedSurahs = [];
-      this.bookmarkedPagesSet.clear();
-      [
-        "quran_bookmarks",
-        "quran_lastPage",
-        "quran_theme",
-        "quran_pinnedSurahs",
-        "quran_readingMode",
-        "quran_lastMode",
-      ].forEach((key) => localStorage.removeItem(key));
-      localStorage.setItem("quran_lastPage", "1");
-      localStorage.setItem("quran_theme", "light");
-      localStorage.setItem("quran_bookmarks", "[]");
-      localStorage.setItem("quran_pinnedSurahs", "[]");
-    }
+    const pinned = AppStore.getJSON(STORAGE_KEYS.pinned, []);
+    this.pinnedSurahs = this._normalizePinnedSurahs(pinned);
   }
 
   saveToLocalStorage() {
-    try {
-      // Annuler le debounce en cours et écrire immédiatement
-      clearTimeout(this._savePageTimeout);
-      localStorage.setItem("quran_bookmarks", JSON.stringify(this.bookmarks));
-      localStorage.setItem("quran_lastPage", this.lastPage.toString());
-      localStorage.setItem("quran_theme", this.theme);
-      localStorage.setItem(
-        "quran_pinnedSurahs",
-        JSON.stringify(this.pinnedSurahs),
-      );
-      if (window.quranReader)
-        localStorage.setItem(
-          "quran_readingMode",
-          window.quranReader.readingMode,
-        );
-    } catch {
-      try {
-        localStorage.setItem("quran_lastPage", this.lastPage.toString());
-      } catch {
-        // Ignorer
-      }
-    }
-  }
-
-  // ============================================
-  // UTILITAIRES GLOBAUX
-  // ============================================
-
-  escapeHtml(text) {
-    if (!text) return "";
-    return String(text)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-  setPreference(key, value) {
-    try {
-      localStorage.setItem(`quran_${key}`, value);
-    } catch {
-      // ignore
-    }
-  }
-
-  getPreference(key, defaultValue = null) {
-    try {
-      const val = localStorage.getItem(`quran_${key}`);
-      return val !== null ? val : defaultValue;
-    } catch {
-      return defaultValue;
-    }
-  }
-
-  enableSwipe(element, onSwipeLeft, onSwipeRight, threshold = 50, cooldown = 300) {
-    if (!element) return;
-    let startX = 0;
-    let lastSwipeTime = 0;
-
-    const onTouchStart = (e) => {
-      startX = e.touches[0].clientX;
-    };
-
-    const onTouchEnd = (e) => {
-      const now = Date.now();
-      if (now - lastSwipeTime < cooldown) return;
-
-      const endX = e.changedTouches[0].clientX;
-      const delta = startX - endX;
-      if (Math.abs(delta) > threshold) {
-        lastSwipeTime = now;
-        if (delta < 0) onSwipeLeft?.();
-        else onSwipeRight?.();
-      }
-    };
-
-    element.addEventListener('touchstart', onTouchStart, { passive: true });
-    element.addEventListener('touchend', onTouchEnd);
-    return () => {
-      element.removeEventListener('touchstart', onTouchStart);
-      element.removeEventListener('touchend', onTouchEnd);
-    };
-  }
-
-  // ============================================
-  // NAVIGATION
-  // ============================================
-
-  getCurrentPage() {
-    return window.quranReader?.getCurrentPage?.() || this.lastPage;
-  }
-
-  updateCurrentPage(page) {
-    const pageNum = parseInt(page, 10);
-    if (isNaN(pageNum) || pageNum < 1 || pageNum > 604) return;
-    this.lastPage = pageNum;
-    if (typeof window !== "undefined") window.currentQuranPage = pageNum;
-    // Debounce : évite d'écrire localStorage à chaque page scrollée
-    clearTimeout(this._savePageTimeout);
-    this._savePageTimeout = setTimeout(() => {
-      localStorage.setItem("quran_lastPage", pageNum.toString());
-    }, 500);
-  }
-
-  goToPage(page) {
-    window.quranReader?.goToPage(page);
-  }
-
-  // ============================================
-  // SOURATES ÉPINGLÉES
-  // ============================================
-
-  togglePinSurah(sura_id) {
-    const idx = this.pinnedSurahs.indexOf(sura_id);
-    const added = idx === -1;
-    if (added) this.pinnedSurahs.push(sura_id);
-    else this.pinnedSurahs.splice(idx, 1);
-    this.saveToLocalStorage();
-    window.dispatchEvent(new CustomEvent("quran:pinnedSurahsUpdated"));
-    return added;
-  }
-
-  isSurahPinned(sura_id) {
-    return this.pinnedSurahs.includes(sura_id);
-  }
-  getPinnedSurahs() {
-    return [...this.pinnedSurahs];
-  }
-
-  // ============================================
-  // MARQUE-PAGES
-  // ============================================
-
-  getBookmarks() {
-    return [...this.bookmarks];
-  }
-
-  _updateBookmarkedPagesSet() {
-    this.bookmarkedPagesSet = new Set(this.bookmarks.map(b => b.page));
-  }
-
-  addBookmark(bookmark) {
-    if (!bookmark.lastModified) {
-      bookmark.lastModified = new Date().toISOString();
-    }
-    if (!bookmark.surahId && bookmark.page) {
-      const surah = window.quranCalculator?.getFirstSurahForPage(bookmark.page);
-      if (surah) bookmark.surahId = surah.s_id;
-    }
-    this.bookmarks.push(bookmark);
-    this.bookmarks.sort((a, b) => a.page - b.page);
-    this._updateBookmarkedPagesSet();
-    this.saveToLocalStorage();
-    this.updateBookmarkIcon(bookmark.page);
-    window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
-  }
-
-  replaceBookmarkPage(bookmarkId, newPage) {
-    const bookmark = this.bookmarks.find((b) => b.id === bookmarkId);
-    if (!bookmark || newPage < 1 || newPage > 604) return false;
-    const oldPage = bookmark.page;
-    bookmark.page = newPage;
-    bookmark.lastModified = new Date().toISOString();
-    const surah = window.quranCalculator?.getFirstSurahForPage(newPage);
-    bookmark.surahId = surah ? surah.s_id : null;
-    this.bookmarks.sort((a, b) => a.page - b.page);
-    this._updateBookmarkedPagesSet();
-    this.saveToLocalStorage();
-    this.updateBookmarkIcon(oldPage);
-    this.updateBookmarkIcon(newPage);
-    window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
-    return true;
-  }
-
-  removeBookmarkById(bookmarkId) {
-    const idx = this.bookmarks.findIndex((b) => b.id === bookmarkId);
-    if (idx === -1) return false;
-    const removed = this.bookmarks.splice(idx, 1)[0];
-    this._updateBookmarkedPagesSet();
-    this.saveToLocalStorage();
-    this.updateBookmarkIcon(removed.page);
-    window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
-    return true;
-  }
-
-  updateBookmark(bookmarkId, newName) {
-    const bookmark = this.bookmarks.find((b) => b.id === bookmarkId);
-    if (!bookmark) return false;
-    bookmark.name = newName.trim() || `صفحة ${bookmark.page}`;
-    bookmark.lastModified = new Date().toISOString();
-    this.saveToLocalStorage();
-    window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
-    return true;
-  }
-
-  updateBookmarkIcon(page) {
-    const icon = document.getElementById("bookmarkIcon");
-    if (!icon) return;
-    const hasBookmark = this.bookmarkedPagesSet.has(page);
-    icon.textContent = hasBookmark ? "⭐" : "🔖";
-    icon.title = hasBookmark ? "علامة مرجعية موجودة" : "إضافة علامة مرجعية";
-  }
-  /**
-   * Exporte toutes les données utilisateur (signets + épingles + préférences)
-   */
-  exportUserData() {
-    const pinnedReciters = {};
-    // ✅ NOUVEAU : récitateur actif par riwaya
-    const activeReciters = {};
-    Object.keys(window.RIWAYAT_CONFIG || {}).forEach(riwaya => {
-      const stored = this.getPreference(`pinnedReciters_${riwaya}`);
-      if (stored) pinnedReciters[riwaya] = JSON.parse(stored);
-
-      // ✅ Récupérer le récitateur actif (via getPreference qui préfixe déjà quran_)
-      const active = this.getPreference(`reciter_${riwaya}`);
-      if (active) activeReciters[riwaya] = active;
-    });
-    const data = {
-      bookmarks: this.bookmarks,
-      pinnedSurahs: this.pinnedSurahs,
-      pinnedReciters,
-      activeReciters,   // ✅ NOUVEAU
-      lastPage: this.lastPage,
-      theme: this.theme,
-    };
-    return JSON.stringify(data, null, 2);
-  }
-
-  /**
-   * Importe des données utilisateur depuis une chaîne JSON
-   */
-  importUserData(jsonString, merge = false) {
-    try {
-      const imported = JSON.parse(jsonString);
-
-      if (imported.bookmarks && Array.isArray(imported.bookmarks)) {
-        const validBookmarks = imported.bookmarks.every(
-          (b) =>
-            b &&
-            typeof b === "object" &&
-            typeof b.page === "number" &&
-            b.page >= 1 &&
-            b.page <= 604,
-        );
-        if (!validBookmarks) throw new Error("Signets invalides");
-
-        const validPinned =
-          Array.isArray(imported.pinnedSurahs) &&
-          imported.pinnedSurahs.every(
-            (id) => typeof id === "number" && id >= 1 && id <= 114,
-          );
-
-        let newBookmarks = [...this.bookmarks];
-        let newPinned = [...this.pinnedSurahs];
-
-        if (merge) {
-          const existingIds = new Set(this.bookmarks.map((b) => b.id));
-          const toAddBookmarks = imported.bookmarks.filter(
-            (b) => !existingIds.has(b.id),
-          ).map((b) => ({
-            ...b,
-            lastModified: b.lastModified || b.date || new Date().toISOString(),
-          }));
-          newBookmarks = [...this.bookmarks, ...toAddBookmarks];
-
-          // 🔒 Validation des pinnedSurahs AVANT merge
-          const validPinned = Array.isArray(imported.pinnedSurahs)
-            ? imported.pinnedSurahs.filter(
-              (id) => typeof id === "number" && Number.isInteger(id) && id >= 1 && id <= 114,
-            )
-            : [];
-
-          const existingPinned = new Set(this.pinnedSurahs);
-          const toAddPinned = validPinned.filter((id) => !existingPinned.has(id));
-          newPinned = [...this.pinnedSurahs, ...toAddPinned];
-        }
-        else {
-          newBookmarks = imported.bookmarks.map((b) => ({
-            ...b,
-            id: b.id || `bookmark_${b.page}_${Date.now()}_${Math.random()}`,
-            lastModified: b.lastModified || b.date || new Date().toISOString(),
-          }));
-          newPinned = validPinned
-            ? [...imported.pinnedSurahs]
-            : this.pinnedSurahs;
-        }
-
-        newBookmarks.sort((a, b) => a.page - b.page);
-
-        this.bookmarks = newBookmarks;
-        this.pinnedSurahs = newPinned;
-        this._updateBookmarkedPagesSet();
-
-        // 🎙️ Récitateurs épinglés
-        if (imported.pinnedReciters && typeof imported.pinnedReciters === 'object') {
-          Object.entries(imported.pinnedReciters).forEach(([riwaya, ids]) => {
-            if (Array.isArray(ids)) {
-              if (merge) {
-                const existing = JSON.parse(this.getPreference(`pinnedReciters_${riwaya}`) || '[]');
-                const merged = [...new Set([...existing, ...ids])];
-                this.setPreference(`pinnedReciters_${riwaya}`, JSON.stringify(merged));
-              } else {
-                this.setPreference(`pinnedReciters_${riwaya}`, JSON.stringify(ids));
-              }
-            }
-          });
-        }
-        // ✅ NOUVEAU : récitateur actif par riwaya
-        if (imported.activeReciters && typeof imported.activeReciters === 'object') {
-          Object.entries(imported.activeReciters).forEach(([riwaya, reciterId]) => {
-            // Validation : la riwaya doit exister dans RIWAYAT_CONFIG
-            if (!window.RIWAYAT_CONFIG?.[riwaya]) return;
-            if (typeof reciterId !== 'string' || !reciterId) return;
-
-            // Validation : le récitateur doit exister dans cette riwaya
-            const valid = window.RIWAYAT_CONFIG[riwaya].reciters.some(r => r.id === reciterId);
-            if (!valid) return;
-
-            this.setPreference(`reciter_${riwaya}`, reciterId);
-          });
-        }
-        // 📄 Dernière page consultée
-        if (
-          typeof imported.lastPage === "number" &&
-          imported.lastPage >= 1 &&
-          imported.lastPage <= 604
-        ) {
-          this.lastPage = imported.lastPage;
-          if (window.quranReader?.goToPage) {
-            window.quranReader.goToPage(imported.lastPage);
-          }
-        }
-
-        // 🌙 Thème clair/sombre
-        if (imported.theme === "light" || imported.theme === "night") {
-          this.theme = imported.theme;
-          this.applyTheme();
-          this.updateAllThemeIcons();
-        }
-
-        this.saveToLocalStorage();
-        window.dispatchEvent(new CustomEvent("quran:bookmarkChanged"));
-        window.dispatchEvent(new CustomEvent("quran:pinnedSurahsUpdated"));
-        window.dispatchEvent(new CustomEvent("quran:preferencesImported"));
-        return true;
-      }
-
-      throw new Error("Format inconnu");
-    } catch (err) {
-      return false;
-    }
-  }
-
-  // ============================================
-  // TAFSIR
-  // ============================================
-
-  async loadTafsir() {
-    if (this.tafsirLoaded) return true;
-    if (this.tafsirLoading)
-      return new Promise((resolve) => {
-        this.tafsirLoadQueue.push(resolve);
-      });
-
-    this.tafsirLoading = true;
-    try {
-      if (!window.tafsirManager)
-        throw new Error("Module TafsirManager non trouvé");
-      const load = window.tafsirManager.preload();
-      const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout")), 20000),
-      );
-      await Promise.race([load, timeout]);
-
-      this.tafsirLoaded = true;
-      this.tafsirLoading = false;
-      this.tafsirLoadQueue.forEach((resolve) => resolve(true));
-      this.tafsirLoadQueue = [];
-      window.dispatchEvent(new CustomEvent("tafsir:ready"));
-      return true;
-    } catch {
-      this.tafsirLoaded = false;
-      this.tafsirLoading = false;
-      this.tafsirLoadQueue.forEach((resolve) => resolve(false));
-      this.tafsirLoadQueue = [];
-      this.showToast("❌ خطأ في تحميل التفسير");
-      return false;
-    }
-  }
-
-  // ============================================
-  // THÈME
-  // ============================================
-
-  toggleTheme() {
-    const isNight = document.body.classList.toggle("night-mode");
-    this.theme = isNight ? "night" : "light";
-    this.saveToLocalStorage();
-    this.updateAllThemeIcons();
-    window.dispatchEvent(
-      new CustomEvent("quran:themeChanged", { detail: { theme: this.theme } }),
-    );
-    this.showToast(
-      isNight ? "🌙 تفعيل الوضع الليلي" : "☀️ تفعيل الوضع النهاري",
-    );
-  }
-
-  updateAllThemeIcons() {
-    const btn = document.getElementById("tafsirThemeToggle");
-    if (btn)
-      btn.textContent = document.body.classList.contains("night-mode")
-        ? "☀️"
-        : "🌙";
-    window.overlayManager?.updateThemeButtonText();
+    clearTimeout(this._savePageTimeout); // écriture immédiate : on annule le debounce
+    AppStore.setJSON(STORAGE_KEYS.bookmarks, this.bookmarks);
+    AppStore.set(STORAGE_KEYS.lastPage, this.lastPage);
+    AppStore.set(STORAGE_KEYS.theme, this.theme);
+    AppStore.setJSON(STORAGE_KEYS.pinned, this.pinnedSurahs);
+    const mode = window.quranReader?.readingMode;
+    if (mode) AppStore.set("quran_readingMode", mode);
   }
 
   _saveCurrentState() {
@@ -562,409 +338,637 @@ class QuranApp {
     this.saveToLocalStorage();
   }
 
+  // ---------- Préférences (clés préfixées « quran_ ») ----------
+
+  setPreference(key, value) {
+    AppStore.set(STORAGE_KEYS.prefix + key, value);
+  }
+
+  getPreference(key, defaultValue = null) {
+    return AppStore.get(STORAGE_KEYS.prefix + key, defaultValue);
+  }
+
+  setPreferenceJSON(key, value) {
+    AppStore.setJSON(STORAGE_KEYS.prefix + key, value);
+  }
+
+  getPreferenceJSON(key, defaultValue = null) {
+    return AppStore.getJSON(STORAGE_KEYS.prefix + key, defaultValue);
+  }
+
+  // ---------- Utilitaires exposés aux autres scripts ----------
+
+  escapeHtml(text) {
+    return AppUtils.esc(text);
+  }
+
+  /** Détecte un balayage horizontal. Retourne une fonction de nettoyage. */
+  enableSwipe(element, onSwipeLeft, onSwipeRight, threshold = 50, cooldown = 300) {
+    if (!element) return;
+    let startX = 0;
+    let startY = 0;
+    let lastSwipeTime = 0;
+
+    const onTouchStart = (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    };
+
+    const onTouchEnd = (e) => {
+      const now = Date.now();
+      if (now - lastSwipeTime < cooldown) return;
+      const dx = startX - e.changedTouches[0].clientX;
+      const dy = startY - e.changedTouches[0].clientY;
+      if (Math.abs(dx) > threshold && Math.abs(dx) > Math.abs(dy)) {
+        lastSwipeTime = now;
+        if (dx < 0) onSwipeLeft?.();
+        else onSwipeRight?.();
+      }
+    };
+
+    element.addEventListener("touchstart", onTouchStart, { passive: true });
+    element.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      element.removeEventListener("touchstart", onTouchStart);
+      element.removeEventListener("touchend", onTouchEnd);
+    };
+  }
+
+  // ---------- Navigation ----------
+
+  getCurrentPage() {
+    return window.quranReader?.getCurrentPage?.() || this.lastPage;
+  }
+
+  updateCurrentPage(page) {
+    const pageNum = parseInt(page, 10);
+    if (!AppUtils.isValidPage(pageNum)) return;
+    this.lastPage = pageNum;
+    // Debounce : évite d'écrire localStorage à chaque page défilée
+    clearTimeout(this._savePageTimeout);
+    this._savePageTimeout = setTimeout(
+      () => AppStore.set(STORAGE_KEYS.lastPage, pageNum),
+      500,
+    );
+  }
+
+  goToPage(page) {
+    window.quranReader?.goToPage(page);
+  }
+
+  // ---------- Sourates épinglées ----------
+
+  togglePinSurah(surahId) {
+    const idx = this.pinnedSurahs.indexOf(surahId);
+    const added = idx === -1;
+    if (added) this.pinnedSurahs.push(surahId);
+    else this.pinnedSurahs.splice(idx, 1);
+    this.saveToLocalStorage();
+    AppUtils.emit(APP_EVENTS.pinnedUpdated);
+    return added;
+  }
+
+  getPinnedSurahs() {
+    return [...this.pinnedSurahs];
+  }
+
+  // ---------- Signets ----------
+
+  getBookmarks() {
+    return [...this.bookmarks];
+  }
+
+  _makeBookmarkId(page, index = 0) {
+    return `bookmark_${page}_${Date.now()}_${index}`;
+  }
+
+  /** Complète un signet : id et date de modification. */
+  _normalizeBookmark(bookmark, index = 0) {
+    return {
+      ...bookmark,
+      id: bookmark.id || this._makeBookmarkId(bookmark.page, index),
+      lastModified: bookmark.lastModified || bookmark.date || new Date().toISOString(),
+    };
+  }
+
+  _surahIdForPage(page) {
+    return window.quranCalculator?.getFirstSurahForPage?.(page)?.s_id ?? null;
+  }
+
+  /** Ajoute la sourate aux anciens signets qui n'en ont pas. */
+  _migrateBookmarks() {
+    if (!window.quranCalculator?.isLoaded) return;
+    let changed = false;
+    this.bookmarks = this.bookmarks.map((b) => {
+      if (b.surahId || !b.page) return b;
+      const surahId = this._surahIdForPage(b.page);
+      if (!surahId) return b;
+      changed = true;
+      return { ...b, surahId };
+    });
+    if (changed) this.saveToLocalStorage();
+  }
+
+  _updateBookmarkedPagesSet() {
+    this.bookmarkedPagesSet = new Set(this.bookmarks.map((b) => b.page));
+  }
+
+  /** Étape finale commune : tri, index, sauvegarde, icônes, événement. */
+  _commitBookmarks(pagesToRefresh = []) {
+    this.bookmarks.sort((a, b) => a.page - b.page);
+    this._updateBookmarkedPagesSet();
+    this.saveToLocalStorage();
+    pagesToRefresh.forEach((p) => this.updateBookmarkIcon(p));
+    AppUtils.emit(APP_EVENTS.bookmarkChanged);
+  }
+
+  addBookmark(bookmark) {
+    if (!bookmark.lastModified) bookmark.lastModified = new Date().toISOString();
+    if (!bookmark.surahId && bookmark.page) {
+      const surahId = this._surahIdForPage(bookmark.page);
+      if (surahId) bookmark.surahId = surahId;
+    }
+    this.bookmarks.push(bookmark);
+    this._commitBookmarks([bookmark.page]);
+  }
+
+  replaceBookmarkPage(bookmarkId, newPage) {
+    const page = Number(newPage);
+    const bookmark = this._findBookmark(bookmarkId);
+    if (!bookmark || !AppUtils.isValidPage(page)) return false;
+    const oldPage = bookmark.page;
+    bookmark.page = page;
+    bookmark.lastModified = new Date().toISOString();
+    bookmark.surahId = this._surahIdForPage(page);
+    this._commitBookmarks([oldPage, page]);
+    return true;
+  }
+
+  removeBookmarkById(bookmarkId) {
+    const idx = this.bookmarks.findIndex((b) => b.id === bookmarkId);
+    if (idx === -1) return false;
+    const [removed] = this.bookmarks.splice(idx, 1);
+    this._commitBookmarks([removed.page]);
+    return true;
+  }
+
+  updateBookmark(bookmarkId, newName) {
+    const bookmark = this._findBookmark(bookmarkId);
+    if (!bookmark) return false;
+    bookmark.name = newName.trim() || `صفحة ${bookmark.page}`;
+    bookmark.lastModified = new Date().toISOString();
+    this._commitBookmarks();
+    return true;
+  }
+
+  updateBookmarkIcon(page) {
+    const icon = document.getElementById("bookmarkIcon");
+    if (!icon) return;
+    const has = this.bookmarkedPagesSet.has(page);
+    icon.textContent = has ? "⭐" : "🔖";
+    icon.title = has ? "علامة مرجعية موجودة" : "إضافة علامة مرجعية";
+  }
+
+  // ---------- Export / import des données utilisateur ----------
+
+  _riwayas() {
+    return Object.keys(window.RIWAYAT_CONFIG || {});
+  }
+
+  /** Exporte signets, épingles, récitateurs, dernière page et thème. */
+  exportUserData() {
+    const pinnedReciters = {};
+    const activeReciters = {};
+    this._riwayas().forEach((riwaya) => {
+      const pinned = this.getPreferenceJSON(`pinnedReciters_${riwaya}`, null);
+      if (pinned) pinnedReciters[riwaya] = pinned;
+      const active = this.getPreference(`reciter_${riwaya}`);
+      if (active) activeReciters[riwaya] = active;
+    });
+    return JSON.stringify(
+      {
+        bookmarks: this.bookmarks,
+        pinnedSurahs: this.pinnedSurahs,
+        pinnedReciters,
+        activeReciters,
+        lastPage: this.lastPage,
+        theme: this.theme,
+      },
+      null,
+      2,
+    );
+  }
+
+  /** Importe un JSON exporté. `merge` = fusionner au lieu de remplacer. */
+  importUserData(jsonString, merge = false) {
+    try {
+      const imported = JSON.parse(jsonString);
+      if (!imported || !Array.isArray(imported.bookmarks)) throw new Error("Format inconnu");
+      const allValid = imported.bookmarks.every(
+        (b) => b && typeof b === "object" && AppUtils.isValidPage(b.page),
+      );
+      if (!allValid) throw new Error("Signets invalides");
+
+      this._importBookmarksAndPins(imported, merge);
+      this._importReciters(imported, merge);
+      this._importPageAndTheme(imported);
+
+      this.saveToLocalStorage();
+      AppUtils.emit(APP_EVENTS.bookmarkChanged);
+      AppUtils.emit(APP_EVENTS.pinnedUpdated);
+      AppUtils.emit(APP_EVENTS.prefsImported);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  _importBookmarksAndPins(imported, merge) {
+    const incoming = imported.bookmarks.map((b, i) => this._normalizeBookmark(b, i));
+    const pins = Array.isArray(imported.pinnedSurahs) ? imported.pinnedSurahs : null;
+
+    if (merge) {
+      const known = new Set(this.bookmarks.map((b) => b.id));
+      this.bookmarks = [...this.bookmarks, ...incoming.filter((b) => !known.has(b.id))];
+      const validPins = this._normalizePinnedSurahs(pins || []);
+      this.pinnedSurahs = [...new Set([...this.pinnedSurahs, ...validPins])];
+    } else {
+      this.bookmarks = incoming;
+      if (pins && pins.every(AppUtils.isValidSurahId)) this.pinnedSurahs = [...pins];
+    }
+
+    this.bookmarks.sort((a, b) => a.page - b.page);
+    this._updateBookmarkedPagesSet();
+    this._migrateBookmarks();
+  }
+
+  _importReciters(imported, merge) {
+    const { pinnedReciters, activeReciters } = imported;
+
+    if (pinnedReciters && typeof pinnedReciters === "object") {
+      Object.entries(pinnedReciters).forEach(([riwaya, ids]) => {
+        if (!Array.isArray(ids)) return;
+        const key = `pinnedReciters_${riwaya}`;
+        const existing = merge ? this.getPreferenceJSON(key, []) : [];
+        const base = Array.isArray(existing) ? existing : [];
+        this.setPreferenceJSON(key, [...new Set([...base, ...ids])]);
+      });
+    }
+
+    if (activeReciters && typeof activeReciters === "object") {
+      Object.entries(activeReciters).forEach(([riwaya, reciterId]) => {
+        const reciters = window.RIWAYAT_CONFIG?.[riwaya]?.reciters;
+        if (!reciters || typeof reciterId !== "string" || !reciterId) return;
+        if (reciters.some((r) => r.id === reciterId)) {
+          this.setPreference(`reciter_${riwaya}`, reciterId);
+        }
+      });
+    }
+  }
+
+  _importPageAndTheme(imported) {
+    if (AppUtils.isValidPage(imported.lastPage)) {
+      this.lastPage = imported.lastPage;
+      window.quranReader?.goToPage?.(imported.lastPage);
+    }
+    if (imported.theme === "light" || imported.theme === "night") {
+      this.theme = imported.theme;
+      this.applyTheme();
+      this.updateAllThemeIcons();
+    }
+  }
+
+  // ---------- Tafsir ----------
+
+  async loadTafsir() {
+    if (this.tafsirLoaded) return true;
+    if (this.tafsirLoading) {
+      return new Promise((resolve) => this.tafsirLoadQueue.push(resolve));
+    }
+
+    this.tafsirLoading = true;
+    let ok = false;
+    try {
+      const manager = this._requireModule("tafsirManager", "TafsirManager");
+      await AppUtils.withTimeout(manager.preload(), 20000);
+      ok = true;
+    } catch {
+      this.showToast("❌ خطأ في تحميل التفسير");
+    }
+
+    this.tafsirLoaded = ok;
+    this.tafsirLoading = false;
+    this.tafsirLoadQueue.splice(0).forEach((resolve) => resolve(ok));
+    if (ok) AppUtils.emit("tafsir:ready");
+    return ok;
+  }
+
+  // ---------- Thème ----------
+
   applyTheme() {
     document.body.classList.toggle("night-mode", this.theme === "night");
   }
 
-  // ============================================
-  // TOAST
-  // ============================================
+  toggleTheme() {
+    const isNight = document.body.classList.toggle("night-mode");
+    this.theme = isNight ? "night" : "light";
+    this.saveToLocalStorage();
+    this.updateAllThemeIcons();
+    AppUtils.emit("quran:themeChanged", { theme: this.theme });
+    this.showToast(isNight ? "🌙 تفعيل الوضع الليلي" : "☀️ تفعيل الوضع النهاري");
+  }
+
+  updateAllThemeIcons() {
+    const btn = document.getElementById("tafsirThemeToggle");
+    if (btn) btn.textContent = this._isNightMode() ? "☀️" : "🌙";
+    window.overlayManager?.updateThemeButtonText();
+  }
+
+  // ---------- Toast ----------
 
   showToast(message) {
     const toast = document.getElementById("toast");
     if (!toast) return;
-    if (this._toastTimeout) clearTimeout(this._toastTimeout);
+    this._clearToastTimers();
     toast.textContent = message;
     toast.style.display = "block";
     toast.style.opacity = "1";
-    toast.classList.add("show");
     this._toastTimeout = setTimeout(() => {
       toast.style.opacity = "0";
-      toast.classList.remove("show");
-      setTimeout(() => {
+      this._toastHideTimeout = setTimeout(() => {
         toast.style.display = "none";
-      }, 300);
-    }, this.NOTIFICATION_DURATION);
+      }, AppUtils.cssMs("--toast-fade", 300));
+    }, 2000);
   }
 
-  // ============================================
-  // ÉCOUTEURS D'ÉVÉNEMENTS
-  // ============================================
+  // ---------- Écouteurs d'événements ----------
+
+  /** Ajoute un écouteur et le mémorise pour le retirer dans destroy(). */
+  _on(target, type, handler, options) {
+    target.addEventListener(type, handler, options);
+    this._listeners.push({ target, type, handler, options });
+  }
+
+  _off() {
+    this._listeners.forEach(({ target, type, handler, options }) =>
+      target.removeEventListener(type, handler, options),
+    );
+    this._listeners = [];
+  }
 
   setupEventListeners() {
-    const onPageChanged = (e) => {
-      if (!e.detail?.page) return;
-      const page = e.detail.page;
+    this._on(window, APP_EVENTS.pageChanged, (e) => {
+      const page = e.detail?.page;
+      if (!page) return;
       this.updateCurrentPage(page);
       this.updateBookmarkIcon(page);
-      if (typeof window !== "undefined") window.currentQuranPage = page;
-    };
-    window.addEventListener("quran:pageChanged", onPageChanged);
-    this._pageChangedHandler = onPageChanged;
+    });
 
-    const onBookmarkChanged = () => this.updateBookmarkIcon(this.lastPage);
-    window.addEventListener("quran:bookmarkChanged", onBookmarkChanged);
-    this._bookmarkChangedHandler = onBookmarkChanged;
+    this._on(window, APP_EVENTS.bookmarkChanged, () => this.updateBookmarkIcon(this.lastPage));
 
-    const onReadingModeChanged = (e) => {
-      if (e.detail?.savedPage) {
-        this.lastPage = e.detail.savedPage;
-        this.updateCurrentPage(e.detail.savedPage);
-      }
-    };
-    window.addEventListener("quran:readingModeChanged", onReadingModeChanged);
-    this._readingModeChangedHandler = onReadingModeChanged;
+    this._on(window, APP_EVENTS.readingModeChanged, (e) => {
+      const page = e.detail?.savedPage;
+      if (!page) return;
+      this.lastPage = page;
+      this.updateCurrentPage(page);
+    });
 
-    const onKeyDown = (e) => {
-      const overlayEl = document.querySelector(".overlay.show");
-      const menuEl = document.querySelector(".menu-overlay.show");
-
-      if (overlayEl) {
-        const body = overlayEl.querySelector(".overlay-body");
-        switch (e.key) {
-          case "ArrowDown":
-            e.preventDefault();
-            body?.scrollBy({ top: 120, behavior: "auto" });
-            break;
-          case "ArrowUp":
-            e.preventDefault();
-            body?.scrollBy({ top: -120, behavior: "auto" });
-            break;
-          case "Home":
-            e.preventDefault();
-            if (body) body.scrollTop = 0;
-            break;
-          case "End":
-            e.preventDefault();
-            if (body) body.scrollTop = body.scrollHeight;
-            break;
-        }
-        return;
-      }
-
-      if (menuEl) return;
-
-      const reader = window.quranReader;
-      if (!reader) return;
-
-      switch (e.key) {
-        case "ArrowLeft":
-        case "PageDown":
-          e.preventDefault();
-          reader.goToNextPage();
-          break;
-        case "ArrowRight":
-        case "PageUp":
-          e.preventDefault();
-          reader.goToPreviousPage();
-          break;
-        case "ArrowUp":
-          e.preventDefault();
-          if (reader.readingMode === "scroll")
-            reader.elements.pageScroll?.scrollBy({
-              top: -120,
-              behavior: "auto",
-            });
-          break;
-        case "ArrowDown":
-          e.preventDefault();
-          if (reader.readingMode === "scroll")
-            reader.elements.pageScroll?.scrollBy({
-              top: 120,
-              behavior: "auto",
-            });
-          break;
-        case "Home":
-          e.preventDefault();
-          reader.goToFirstPage();
-          break;
-        case "End":
-          e.preventDefault();
-          reader.goToLastPage();
-          break;
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    this._keyDownHandler = onKeyDown;
+    this._on(document, "keydown", (e) => this._onKeyDown(e));
   }
 
-  // ============================================
-  // NETTOYAGE
-  // ============================================
+  // ---------- Clavier ----------
+
+  _onKeyDown(e) {
+    const overlayEl = document.querySelector(".overlay.show");
+    if (overlayEl) return this._scrollOverlayByKey(e, overlayEl.querySelector(".overlay-body"));
+    if (this._isMenuOpen()) return;
+    this._navigateByKey(e);
+  }
+
+  _runKeyAction(e, actions) {
+    const action = actions[e.key];
+    if (!action) return;
+    e.preventDefault();
+    action();
+  }
+
+  _scrollOverlayByKey(e, body) {
+    const step = 120;
+    this._runKeyAction(e, {
+      ArrowDown: () => body?.scrollBy({ top: step, behavior: "auto" }),
+      ArrowUp: () => body?.scrollBy({ top: -step, behavior: "auto" }),
+      Home: () => body && (body.scrollTop = 0),
+      End: () => body && (body.scrollTop = body.scrollHeight),
+    });
+  }
+
+  _navigateByKey(e) {
+    const reader = window.quranReader;
+    if (!reader) return;
+    const step = 120;
+    const next = () => reader.goToNextPage();
+    const prev = () => reader.goToPreviousPage();
+    const scrollPage = (top) => {
+      if (reader.readingMode !== "scroll") return;
+      reader.elements.pageScroll?.scrollBy({ top, behavior: "auto" });
+    };
+    this._runKeyAction(e, {
+      ArrowLeft: next,
+      PageDown: next,
+      ArrowRight: prev,
+      PageUp: prev,
+      ArrowUp: () => scrollPage(-step),
+      ArrowDown: () => scrollPage(step),
+      Home: () => reader.goToFirstPage(),
+      End: () => reader.goToLastPage(),
+    });
+  }
+
+  // ---------- Cycle de vie (sauvegarde, réseau, Cordova) ----------
 
   setupCleanupHandlers() {
-    this._pageHideHandler = () => this._saveCurrentState();
-    window.addEventListener("pagehide", this._pageHideHandler);
+    this._on(window, "pagehide", () => this._saveCurrentState());
 
     // Cordova
-    document.addEventListener("pause", () => this._saveCurrentState(), false);
-    document.addEventListener("deviceready", () => {
-      document.addEventListener("backbutton", () => this.handleBack(), false);
-    }, false);
-    this._visibilityChangeHandler = () => {
-      if (document.visibilityState === "hidden") {
-        this._saveCurrentState();
-        window.quranReader?.imageCache.clear();
-      } else if (document.visibilityState === "visible") {
-        if (typeof window.quranReader?.onAppResume === "function") {
-          window.quranReader.onAppResume();
-        }
-      }
-    };
-    document.addEventListener(
-      "visibilitychange",
-      this._visibilityChangeHandler,
+    this._on(document, "pause", () => this._saveCurrentState(), false);
+    this._on(
+      document,
+      "deviceready",
+      () => this._on(document, "backbutton", () => this.handleBack(), false),
+      false,
     );
 
-    this._onlineHandler = () =>
-      window.quranApp?.showToast("✅ الاتصال بالإنترنت متوفر");
-    this._offlineHandler = () =>
-      window.quranApp?.showToast("⚠️ تم فقدان الاتصال بالإنترنت");
-    window.addEventListener("online", this._onlineHandler);
-    window.addEventListener("offline", this._offlineHandler);
+    this._on(document, "visibilitychange", () => this._onVisibilityChange());
+
+    this._on(window, "online", () => this.showToast("✅ الاتصال بالإنترنت متوفر"));
+    this._on(window, "offline", () => this.showToast("⚠️ تم فقدان الاتصال بالإنترنت"));
   }
 
-  // ============================================
-  // DESTROY (NETTOYAGE COMPLET)
-  // ============================================
+  _onVisibilityChange() {
+    if (document.visibilityState === "hidden") {
+      this._saveCurrentState();
+      window.quranReader?.imageCache.clear();
+    } else if (document.visibilityState === "visible") {
+      window.quranReader?.onAppResume?.();
+    }
+  }
+
+  // ---------- Bouton retour ----------
+
   handleBack() {
-    // 1) Fermer l'overlay ouvert (via le manager)
     const om = window.overlayManager;
-    if (om?.currentOverlay) { om.closeCurrentOverlay(); return; }
-
-    // 2) Fermer le menu principal
-    const menuEl = document.querySelector(".menu-overlay.show");
-    if (menuEl) { om?.closeMenu(); return; }
-
-    // 3) Double tap pour quitter
+    // 0) sélecteur plein écran
+    if (window.Picker?.close()) return;
+    // 1) overlay ouvert
+    if (om?.currentOverlay) {
+      om.closeCurrentOverlay();
+      return;
+    }
+    // 2) menu principal
+    if (this._isMenuOpen()) {
+      om?.closeMenu();
+      return;
+    }
+    // 3) double appui pour quitter
     const now = Date.now();
-    if (now - (this._lastBack || 0) < 2000) {
+    if (now - this._lastBack < 2000) {
       navigator.app?.exitApp?.();
       return;
     }
     this._lastBack = now;
     this.showToast("↩️ اضغط مرة أخرى للخروج");
   }
+
+  // ---------- Destruction ----------
+
   destroy() {
-    if (this._toastTimeout) {
-      clearTimeout(this._toastTimeout);
-      this._toastTimeout = null;
-    }
-    if (this._savePageTimeout) {
-      clearTimeout(this._savePageTimeout);
-      this._savePageTimeout = null;
-    }
-
-    const events = [
-      {
-        target: window,
-        type: "quran:pageChanged",
-        handler: this._pageChangedHandler,
-      },
-      {
-        target: window,
-        type: "quran:bookmarkChanged",
-        handler: this._bookmarkChangedHandler,
-      },
-      {
-        target: window,
-        type: "quran:readingModeChanged",
-        handler: this._readingModeChangedHandler,
-      },
-      { target: document, type: "keydown", handler: this._keyDownHandler },
-
-      { target: window, type: "pagehide", handler: this._pageHideHandler },
-      {
-        target: document,
-        type: "visibilitychange",
-        handler: this._visibilityChangeHandler,
-      },
-      { target: window, type: "online", handler: this._onlineHandler },
-      { target: window, type: "offline", handler: this._offlineHandler },
-    ];
-
-    events.forEach(({ target, type, handler }) => {
-      if (handler) {
-        target.removeEventListener(type, handler);
-      }
-    });
-
-    this._pageChangedHandler = null;
-    this._bookmarkChangedHandler = null;
-    this._readingModeChangedHandler = null;
-    this._keyDownHandler = null;
-    this._pageHideHandler = null;
-    this._visibilityChangeHandler = null;
-    this._onlineHandler = null;
-    this._offlineHandler = null;
-
+    this._clearToastTimers();
+    clearTimeout(this._savePageTimeout);
+    this._savePageTimeout = null;
+    this._off();
+    window.quranReader?.destroy?.();
     this.isInitialized = false;
   }
 }
 
-// ============================================
-// UTILITAIRES DE RENDU DE LISTES
-// ============================================
+// ============================================================
+//  5. LISTITEMRENDERER — ÉLÉMENTS DE LISTE
+// ============================================================
 
 class ListItemRenderer {
   static createContainer(type, id = null) {
-    const div = document.createElement('div');
-    div.className = `item-container item-${type}`;
+    const div = AppUtils.el("div", `item-container item-${type}`);
     if (id) div.setAttribute(`data-${type}-id`, id);
     return div;
   }
 
   static buildLine1({ rightElements = [], leftElements = [] }) {
-    const line1 = document.createElement('div');
-    line1.className = 'item-line-1';
-
-    const rightPart = document.createElement('div');
-    rightPart.className = 'item-right';
-    rightElements.forEach(el => rightPart.appendChild(el));
-
-    const leftPart = document.createElement('div');
-    leftPart.className = 'item-left';
-    leftElements.forEach(el => leftPart.appendChild(el));
-
-    line1.appendChild(rightPart);
-    line1.appendChild(leftPart);
-    return line1;
-  }
-
-  static buildLine(className, content) {
-    const line = document.createElement('div');
-    line.className = className;
-    if (typeof content === 'string') {
-      line.innerHTML = content;
-    } else if (content instanceof HTMLElement) {
-      line.appendChild(content);
-    }
+    const line = AppUtils.el("div", "item-line-1");
+    const right = AppUtils.el("div", "item-right");
+    const left = AppUtils.el("div", "item-left");
+    right.append(...rightElements);
+    left.append(...leftElements);
+    line.append(right, left);
     return line;
   }
 
-  static createBadge(text, extraClass = '') {
-    const span = document.createElement('span');
-    span.className = `item-badge badge ${extraClass}`;
-    span.textContent = text;
-    return span;
+  static createBadge(text, extraClass = "") {
+    return AppUtils.el("span", `item-badge badge ${extraClass}`, text);
   }
 
   static createTitle(text) {
-    const span = document.createElement('span');
-    span.className = 'item-title';
-    span.textContent = text;
-    return span;
+    return AppUtils.el("span", "item-title", text);
   }
 
   static createPageTag(page) {
-    const span = document.createElement('span');
-    span.className = 'page-tag';
-    span.textContent = `ص ${page}`;
-    return span;
+    return AppUtils.el("span", "page-tag", `${APP_TEXTS.pageShort} ${page}`);
   }
 
-  static createIcon(icon, extraClass = '') {
-    const span = document.createElement('span');
-    span.className = `item-icon ${extraClass}`;
-    span.textContent = icon;
-    return span;
+  static createIcon(icon, extraClass = "") {
+    return AppUtils.el("span", `item-icon ${extraClass}`, icon);
   }
 }
 
-// ============================================
-// GESTION DES SELECTEURS PERSONNALISÉS
-// ============================================
+// ============================================================
+//  6. CUSTOMSELECT — MENUS DÉROULANTS
+//  Convention d'ids : bouton « xxx », liste « xxxList », bloc « xxxWrap »
+// ============================================================
 
 class CustomSelect {
-  static _initialized = false;  // Flag pour éviter les doubles initialisations
-  static _toggleReady = false;
-  static _clickOutsideAttached = false;
+  static _initialized = false;
+
+  // ---------- Ouverture / fermeture (une seule fois) ----------
 
   static initToggle() {
-    // ✅ Éviter les appels multiples
     if (CustomSelect._initialized) return;
     CustomSelect._initialized = true;
-
-    if (CustomSelect._toggleReady) return;
-    CustomSelect._toggleReady = true;
-
-    document.querySelectorAll('.custom-select-btn').forEach(btn => {
-      const newBtn = btn.cloneNode(true);
-      btn.parentNode.replaceChild(newBtn, btn);
-
-      newBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const wrap = newBtn.closest('.custom-select');
-        const isOpen = wrap?.classList.contains('open');
-        document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
-        if (!isOpen && wrap) {
-          wrap.classList.add('open');
-          // ✅ NOUVEAU : Quand le dropdown s'ouvre, scroll vers l'option sélectionnée
-          CustomSelect.scrollToSelectedOption(wrap);
-        }
-      });
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest(".custom-select-btn");
+      const wrap = btn?.closest(".custom-select");
+      const wasOpen = wrap?.classList.contains("open");
+      document.querySelectorAll(".custom-select.open").forEach((w) => w.classList.remove("open"));
+      if (wrap && !wasOpen) {
+        wrap.classList.add("open");
+        CustomSelect.scrollToSelectedOption(wrap);
+      }
     });
-
-    if (!CustomSelect._clickOutsideAttached) {
-      CustomSelect._clickOutsideAttached = true;
-      document.addEventListener('click', (e) => {
-        if (e.target.closest('.custom-select-btn')) return;
-        document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
-      });
-    }
   }
 
   static scrollToSelectedOption(wrap) {
-    if (!wrap) return;
-    const dropdown = wrap.querySelector('.custom-select-dropdown');
-    if (!dropdown) return;
-
-    const selected = dropdown.querySelector('.custom-select-option.selected');
+    const dropdown = wrap?.querySelector(".custom-select-dropdown");
+    const selected = dropdown?.querySelector(".custom-select-option.selected");
     if (!selected) return;
-
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const scrollTop = selected.offsetTop - (dropdown.clientHeight / 4) + (selected.clientHeight / 2);
-        dropdown.scrollTo({
-          top: Math.max(0, scrollTop),
-          behavior: 'auto'
-        });
+        const top = selected.offsetTop - dropdown.clientHeight / 4 + selected.clientHeight / 2;
+        dropdown.scrollTo({ top: Math.max(0, top), behavior: "auto" });
       });
     });
   }
+
+  // ---------- HTML ----------
+
+  /** Génère le bloc HTML d'un menu : markup("suraSelect", "اختر السورة"). */
+  static markup(id, placeholder) {
+    return `<div class="custom-select" id="${id}Wrap">
+      <button type="button" class="custom-select-btn" id="${id}">
+        <span class="custom-select-val">${AppUtils.esc(placeholder)}</span><span class="custom-select-arrow">▾</span>
+      </button>
+      <div class="custom-select-dropdown" id="${id}List"></div>
+    </div>`;
+  }
+
+  // ---------- Remplissage et valeur (ids complets) ----------
 
   static render(listId, options) {
     const list = document.getElementById(listId);
     if (!list) return;
-    list.innerHTML = '';
-    let curGroup = null;
+    const nodes = [];
+    let currentGroup = null;
 
-    options.forEach(opt => {
-      if (opt.group && opt.group !== curGroup) {
-        curGroup = opt.group;
-        const groupDiv = document.createElement('div');
-        groupDiv.className = 'custom-select-group';
-        groupDiv.textContent = opt.group;
-        list.appendChild(groupDiv);
+    options.forEach((opt) => {
+      if (opt.group && opt.group !== currentGroup) {
+        currentGroup = opt.group;
+        nodes.push(AppUtils.el("div", "custom-select-group", opt.group));
       }
 
-      const el = document.createElement('div');
-      el.className = 'custom-select-option';
-      el.dataset.value = opt.value;
-      el.textContent = opt.label;
+      const optEl = AppUtils.el("div", "custom-select-option", opt.label);
+      optEl.dataset.value = opt.value;
 
-      el.addEventListener('click', (e) => {
+      optEl.addEventListener("click", (e) => {
         e.stopPropagation();
-        list.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
-        el.classList.add('selected');
-        const btn = list.previousElementSibling;
-        if (btn) btn.querySelector('.custom-select-val').textContent = opt.label;
-        list.closest('.custom-select')?.classList.remove('open');
-        if (opt.value !== '' && opt.onSelect) opt.onSelect(opt.value);
+        list.querySelectorAll(".custom-select-option").forEach((o) => o.classList.remove("selected"));
+        optEl.classList.add("selected");
+        const wrap = list.closest(".custom-select");
+        const val = wrap?.querySelector(".custom-select-val");
+        if (val) val.textContent = opt.label;
+        wrap?.classList.remove("open");
+        if (opt.value !== "" && opt.onSelect) opt.onSelect(opt.value);
       });
-
-      list.appendChild(el);
+      nodes.push(optEl);
     });
+
+    list.replaceChildren(...nodes);
   }
 
   static setValue(btnId, listId, value) {
@@ -975,64 +979,305 @@ class CustomSelect {
     const opt = list.querySelector(`[data-value="${String(value)}"]`);
     if (!opt) return;
 
-    list.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
-    opt.classList.add('selected');
+    list.querySelectorAll(".custom-select-option").forEach((o) => o.classList.remove("selected"));
+    opt.classList.add("selected");
 
-    const valEl = btn.querySelector('.custom-select-val');
+    const valEl = btn.querySelector(".custom-select-val");
     if (valEl) {
-      const nameSpan = opt.querySelector('.reciter-name') || opt;
-      valEl.textContent = nameSpan.textContent.trim();
+      const nm = (opt.querySelector(".reciter-name") || opt).textContent.trim();
+      valEl.textContent = opt.querySelector(".pin-reciter-btn.pinned") ? `💫 ${nm}` : nm;
     }
-
-    const parentSelect = list.closest('.custom-select');
-    if (parentSelect && parentSelect.classList.contains('open')) {
-      const scrollContainer = list;
-      const optTop = opt.offsetTop;
-      const optBottom = optTop + opt.offsetHeight;
-      const containerTop = scrollContainer.scrollTop;
-      const containerBottom = containerTop + scrollContainer.clientHeight;
-
-      if (optTop < containerTop) {
-        scrollContainer.scrollTop = optTop - 10;
-      } else if (optBottom > containerBottom) {
-        scrollContainer.scrollTop = optBottom - scrollContainer.clientHeight + (scrollContainer.clientHeight / 3);
-      }
+    if (list.closest(".custom-select")?.classList.contains("open")) {
+      CustomSelect._keepVisible(list, opt);
     }
   }
 
   static getValue(listId) {
-    const list = document.getElementById(listId);
-    return list?.querySelector('.selected')?.dataset.value || '';
+    return document.getElementById(listId)?.querySelector(".selected")?.dataset.value || "";
   }
 
-  static reset() {
-    CustomSelect._initialized = false;
-    CustomSelect._toggleReady = false;
+  /** Garde l'option visible dans la liste ouverte. */
+  static _keepVisible(list, opt) {
+    const optTop = opt.offsetTop;
+    const optBottom = optTop + opt.offsetHeight;
+    const viewTop = list.scrollTop;
+    const viewBottom = viewTop + list.clientHeight;
+    if (optTop < viewTop) {
+      list.scrollTop = optTop - 10;
+    } else if (optBottom > viewBottom) {
+      list.scrollTop = optBottom - list.clientHeight + list.clientHeight / 3;
+    }
+  }
+
+  // ---------- Raccourcis : un seul id ----------
+
+  static fill(id, options) {
+    CustomSelect.render(`${id}List`, options);
+  }
+
+  static set(id, value) {
+    CustomSelect.setValue(id, `${id}List`, value);
+  }
+
+  static get(id) {
+    return CustomSelect.getValue(`${id}List`);
+  }
+
+  // ---------- Listes standard (sourates, versets, pages) ----------
+
+  static surahOptions(onSelect) {
+    const surahs = window.quranCalculator?.getAllSurahs?.() || [];
+    return surahs.map((s) => ({
+      value: String(s.s_id),
+      label: `${s.s_id}. ${s.name}`,
+      onSelect,
+    }));
+  }
+
+  static ayahOptions(surahId, onSelect) {
+    const total = window.AyaPicker?.totalOf(Number(surahId)) || 0;
+    return Array.from({ length: total }, (_, i) => ({
+      value: String(i + 1),
+      label: `${APP_TEXTS.ayahWord} ${i + 1}`,
+      onSelect,
+    }));
+  }
+
+  static pageOptions(onSelect) {
+    return Array.from({ length: APP_CFG.TOTAL_PAGES }, (_, i) => ({
+      value: String(i + 1),
+      label: `الصفحة ${i + 1}`,
+      onSelect,
+    }));
   }
 }
 
-// ============================================
-// EXPOSITION GLOBALE
-// ============================================
+// ============================================================
+//  7. PICKER — SÉLECTEUR PLEIN ÉCRAN
+//  (mini-overlay, 🟢 sur l'élément actif, centré au 1/3)
+// ============================================================
+
+window.Picker = (() => {
+  let box = null;
+
+  const ensure = () => {
+    if (box) return box;
+    box = AppUtils.el("div", "mini-overlay");
+    box.id = "pickerOverlay";
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-modal", "true");
+    box.innerHTML = `<div class="mini-overlay-content">
+      <div class="mini-overlay-header">
+        <span class="mini-overlay-title"></span>
+        <button type="button" class="close-btn" aria-label="إغلاق">✕</button>
+      </div>
+      <div class="mini-overlay-body"></div>
+    </div>`;
+    document.body.appendChild(box);
+    box.addEventListener("click", (e) => {
+      if (e.target === box) close();
+    });
+    box.querySelector(".close-btn").addEventListener("click", close);
+    return box;
+  };
+
+  /** Retourne true si le sélecteur était ouvert (utilisé par le bouton retour). */
+  function close() {
+    if (!box?.classList.contains("show")) return false;
+    box.classList.remove("show");
+    return true;
+  }
+
+  const centerCurrent = (body) => {
+    const current = body.querySelector(".choice-current");
+    if (current) AppUtils.centerIn(body, current, 1 / 3);
+  };
+
+  const row = (label, { current = false, onClick, pin = null }) => {
+    const r = AppUtils.el("div", "pick-row" + (current ? " choice-current" : ""));
+    if (pin) {
+      const b = AppUtils.el("button", "pick-pin" + (pin.active ? " pinned" : ""), pin.active ? "💫" : "📌");
+      b.type = "button";
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        pin.onToggle();
+      });
+      r.appendChild(b);
+    }
+    r.appendChild(AppUtils.el("span", "pick-label", label));
+
+    if (current) r.appendChild(AppUtils.el("span", "pick-check", "🟢"));
+    r.addEventListener("click", onClick);
+    return r;
+  };
+
+  /** build(rerender) retourne la liste des nœuds à afficher. */
+  const show = (title, build) => {
+    const b = ensure();
+    b.querySelector(".mini-overlay-title").textContent = title;
+    const body = b.querySelector(".mini-overlay-body");
+    const render = (keepScroll) => {
+      const scrollTop = body.scrollTop;
+      body.replaceChildren(...build(render));
+      if (keepScroll) body.scrollTop = scrollTop;
+      else centerCurrent(body);
+    };
+    b.classList.add("show");
+    render(false);
+  };
+
+  /** items : [{ value, label }] */
+  const open = (title, items, current, onSelect) =>
+    show(title, () =>
+      items.map((it) =>
+        row(it.label, {
+          current: String(it.value) === String(current),
+          onClick: () => {
+            close();
+            onSelect(it.value);
+          },
+        }),
+      ),
+    );
+
+  /** Construit la liste à partir d'un menu CustomSelect (groupes, .selected, bouton 📌). */
+  const fromList = (listId, title) =>
+    show(title, (rerender) => {
+      const list = document.getElementById(listId);
+      if (!list) return [];
+      return [...list.children].map((el) => {
+        if (el.classList.contains("custom-select-group")) {
+          return AppUtils.el("div", "pick-group", el.textContent);
+        }
+        const label = (el.querySelector(".reciter-name") || el).textContent.trim();
+        const pinBtn = el.querySelector(".pin-reciter-btn");
+        return row(label, {
+          current: el.classList.contains("selected"),
+          onClick: () => {
+            close();
+            el.click();
+          },
+          pin: pinBtn
+            ? {
+              active: pinBtn.classList.contains("pinned"),
+              onToggle: () => {
+                pinBtn.click();
+                rerender(true);
+              },
+            }
+            : null,
+        });
+      });
+    });
+
+  const bindButton = (btn, listId, title) =>
+    btn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      fromList(listId, title);
+    });
+
+  return { open, close, fromList, bindButton };
+})();
+
+// ============================================================
+//  8. AYAPICKER — COUPLE SOURATE / VERSET
+//  (saut vers un verset, mémorisation)
+// ============================================================
+
+window.AyaPicker = (() => {
+  const surahs = () => window.quranCalculator?.getAllSurahs?.() || [];
+  const surahOf = (id) => surahs().find((s) => s.s_id === id);
+
+  const totalOf = (id) => surahOf(id)?.verses_count || 0;
+  const surahStartPage = (id) => surahOf(id)?.page_start || null;
+  const surahLabel = (id) => `${id}. ${surahOf(id)?.name || ""}`;
+  const ayaLabel = (a) => `${APP_TEXTS.ayahWord} ${a}`;
+
+  const pickBtn = (id, label) =>
+    `<button type="button" class="custom-select-btn" id="${id}"><span class="custom-select-val">${AppUtils.esc(label)}</span><span class="custom-select-arrow">▾</span></button>`;
+
+  const pairHtml = (id, p) =>
+    `<div class="aya-pair">${pickBtn(id + "S", surahLabel(p.s))}${pickBtn(id + "A", ayaLabel(p.a))}</div>`;
+
+  const bindPair = (root, id, p, onChange) => {
+    const sBtn = root.querySelector(`#${id}S`);
+    const aBtn = root.querySelector(`#${id}A`);
+    const setText = (btn, text) => {
+      btn.querySelector(".custom-select-val").textContent = text;
+    };
+    const refresh = () => {
+      setText(sBtn, surahLabel(p.s));
+      setText(aBtn, ayaLabel(p.a));
+    };
+
+    sBtn.addEventListener("click", () =>
+      window.Picker.open(
+        APP_TEXTS.pickSurah,
+        surahs().map((s) => ({ value: s.s_id, label: surahLabel(s.s_id) })),
+        p.s,
+        (v) => {
+          p.s = +v;
+          p.a = 1;
+          refresh();
+          onChange?.(id);
+        },
+      ),
+    );
+
+    aBtn.addEventListener("click", () =>
+      window.Picker.open(
+        APP_TEXTS.pickAyah,
+        Array.from({ length: totalOf(p.s) || 1 }, (_, i) => ({ value: i + 1, label: ayaLabel(i + 1) })),
+        p.a,
+        (v) => {
+          p.a = +v;
+          refresh();
+          onChange?.(id);
+        },
+      ),
+    );
+
+    return { refresh };
+  };
+
+  /** Position de départ : lecture en cours, sinon début de la page affichée. */
+  const currentPos = () => {
+    const player = window.quranAudioPlayer;
+    if (player?.currentSurah && player?.currentAyah) {
+      return { s: player.currentSurah, a: player.currentAyah };
+    }
+    const page = window.quranApp?.getCurrentPage?.() || 1;
+    const first = player?._getFirstAyahOfPage?.(page);
+    if (first) return { s: first.surah, a: first.ayah };
+    const surah = window.quranCalculator?.getFirstSurahForPage?.(page);
+    return { s: surah?.s_id || 1, a: 1 };
+  };
+
+  return { surahs, totalOf, surahStartPage, pairHtml, bindPair, currentPos };
+})();
+
+// ============================================================
+//  9. DÉMARRAGE ET GESTION D'ERREURS
+// ============================================================
+
+window.AppUtils = AppUtils;
+window.AppStore = AppStore;
 window.ListItemRenderer = ListItemRenderer;
 window.CustomSelect = CustomSelect;
 
-// ============================================
-// INITIALISATION DE L'APPLICATION
-// ============================================
-
 if (!window.quranApp) window.quranApp = new QuranApp();
-if (typeof window !== "undefined" && !window.currentQuranPage)
-  window.currentQuranPage = 1;
 
-// ============================================
-// INITIALISATION UNIQUE DES CUSTOM SELECTS
-// ============================================
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    CustomSelect.initToggle();
-  });
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => CustomSelect.initToggle());
 } else {
   CustomSelect.initToggle();
 }
+
+window.addEventListener("error", () => window.quranApp?.showToast("⚠️ حدث خطأ غير متوقع"));
+
+window.addEventListener("unhandledrejection", (e) => {
+  e.preventDefault();
+  const reason = String(e.reason?.message || e.reason || "").toLowerCase();
+  if (["fetch", "network", "timeout"].some((k) => reason.includes(k))) return;
+  window.quranApp?.showToast("⚠️ حدث خطأ غير متوقع");
+});

@@ -1,35 +1,42 @@
-const APP_VERSION = "1.1.3";
-const CACHE_NAME = `quran-${APP_VERSION}`;
+// ============================================================
+//  FICHIER : sw.js
+//  Rôle : service worker (version web uniquement) — pré-cache des
+// ============================================================
+
+// ---------- Configuration ----------
+
+const CACHE_PREFIX = "quran-";
+const APP_VERSION = new URL(self.location.href).searchParams.get("v") || "0";
+const CACHE_NAME = `${CACHE_PREFIX}${APP_VERSION}`;
 
 const CORE_ASSETS = [
+  "./",
   "./index.html",
   "./style.css",
   "./manifest.webmanifest",
+  // Scripts
   "./main.js",
-  "./quran-reader.js",
   "./calculator.js",
-  "./tafsir-search.js",
+  "./quran-reader.js",
   "./overlays-manager.js",
+  "./tafsir-search.js",
   "./quran-audio.js",
   "./version.js",
+  // Données
   "./data/quran.json",
   "./data/tafsir.json",
   "./data/surainfo.json",
+  "./data/ayapage.json",
+  // Médias
   "./media/icon-192.png",
   "./media/icon-512.png",
   "./media/000.webp",
   "./media/605.webp",
   "./media/606.webp",
   "./media/NotoKufiArabic-Bold.woff2",
+  "./media/surah-name-v4.woff2",
   "./media/bismillah.mp3",
 ];
-
-const FIRST_PAGES = [];
-for (let p = 1; p <= 10; p++) {
-  FIRST_PAGES.push(`./quran_pages/${p.toString().padStart(3, "0")}.webp`);
-}
-
-const PRE_CACHE = [...CORE_ASSETS, ...FIRST_PAGES];
 
 const OFFLINE_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="700" height="1100" viewBox="0 0 700 1100">
@@ -39,30 +46,28 @@ const OFFLINE_SVG = `
 </svg>
 `;
 
-const isLocalhost = ["localhost", "127.0.0.1", "::1"].includes(
-  self.location.hostname,
-);
+const isLocalhost = ["localhost", "127.0.0.1", "::1"].includes(self.location.hostname);
 
-// ============================================
-// INSTALL — pré-cache des assets essentiels
-// ============================================
+// ---------- Helpers ----------
+
+const offlineImage = () => new Response(OFFLINE_SVG, { headers: { "Content-Type": "image/svg+xml" } });
+
+const firstPageUrls = (count) =>
+  Array.from({ length: count }, (_, i) => `./quran_pages/${String(i + 1).padStart(3, "0")}.webp`);
+
+// ---------- Installation — pré-cache des fichiers essentiels ----------
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
+  // Les 10 premières pages du mushaf sont aussi disponibles hors ligne dès l'installation
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) =>
-        Promise.allSettled(
-          PRE_CACHE.map((url) => cache.add(url).catch(() => { })),
-        ),
-      ),
+      .then((cache) => Promise.allSettled([...CORE_ASSETS, ...firstPageUrls(10)].map((url) => cache.add(url)))),
   );
 });
 
-// ============================================
-// ACTIVATE — suppression des anciens caches
-// ============================================
+// ---------- Activation — suppression des anciens caches ----------
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
@@ -70,28 +75,21 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((keys) =>
         Promise.all(
-          keys
-            .filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key)),
+          keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME).map((key) => caches.delete(key)),
         ),
       )
       .then(() => self.clients.claim()),
   );
 });
 
-// ============================================
-// FETCH — stratégie Cache First
-// ============================================
+// ---------- Interception des requêtes ----------
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   if (!event.request.url.startsWith(self.location.origin)) return;
 
-  // En développement local : réseau d'abord
   if (isLocalhost) {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request)),
-    );
+    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
     return;
   }
 
@@ -99,52 +97,22 @@ self.addEventListener("fetch", (event) => {
 });
 
 async function handleFetch(request) {
+  const isImage = request.destination === "image";
   try {
-    // Cache first
-    const cached = await caches.match(request);
+    const cached = await caches.match(request, { ignoreSearch: true });
     if (cached) return cached;
 
-    // Sinon réseau
     const response = await fetch(request);
 
-    // Si la requête est pour une image et que la réponse n'est pas OK (404, 500...)
-    if (request.destination === "image" && !response.ok) {
-      return new Response(OFFLINE_SVG, {
-        headers: { "Content-Type": "image/svg+xml" },
-      });
-    }
+    if (isImage && !response.ok) return offlineImage();
 
-    // Mise en cache des réponses valides
     if (response && response.status === 200) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }
     return response;
   } catch {
-    // Erreur réseau : fallback pour images
-    if (request.destination === "image") {
-      return new Response(OFFLINE_SVG, {
-        headers: { "Content-Type": "image/svg+xml" },
-      });
-    }
-
-    // JSON critiques → retourner une structure minimale
-    const criticalJson = ["quran.json", "tafsir.json", "ayapage.json"];
-    if (request.url.includes(".json")) {
-      if (criticalJson.some(f => request.url.includes(f))) {
-        // Retourne un objet avec une propriété error pour éviter de casser l'app
-        return new Response(JSON.stringify({ error: "offline" }), {
-          status: 503,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-      // Pour les autres JSON, retourner un tableau vide
-      return new Response(JSON.stringify([]), {
-        status: 503,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response("غير متصل", { status: 503 });
+    // Erreur réseau
+    return isImage ? offlineImage() : new Response("غير متصل", { status: 503 });
   }
 }

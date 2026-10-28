@@ -1,9 +1,34 @@
-// ============================================
-// CONFIGURATION RIWAYA
-// ============================================
+// ============================================================
+//  FICHIER : quran-audio.js
+//  Rôle : lecteur audio des versets (EveryAyah), surlignage,
+//         mini-barre, notification Cordova, minuterie, mémorisation
+//
+//  SOMMAIRE
+//   1. Configuration et constantes (riwayas, textes, icônes)
+//   2. Mémorisation — constantes et réglages
+//   3. QuranAudioPlayer
+//      Constructeur · Helpers privés · Surlignage · Initialisation
+//      Notification (MusicControls) · Mémorisation
+//      Coordonnées des versets · Minuterie
+//      Overlay audio · Récitateurs · Sourates
+//      URL audio · Lecture · Mini-barre et bouton flottant
+//      Événements · Affichage
+// ============================================================
+
+// ============================================================
+//  1. CONFIGURATION ET CONSTANTES
+// ============================================================
 
 const EVERYAYAH_BASE = "https://everyayah.com/data/";
-const AYA_COORDS_PATH = "./data/ayapage.json";
+const SPINNER_HTML = '<span class="spinner small"></span>';
+
+const LOAD_FAIL_TEXT = "❌ فشل تحميل الملف";
+
+const SVG = Object.freeze({
+  play: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>`,
+  repeat: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg>`,
+  pause: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7" y="6" width="3" height="12"/><rect x="14" y="6" width="3" height="12"/></svg>`,
+});
 
 const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
   hafs: {
@@ -70,11 +95,26 @@ const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
   },
 });
 
-// ============================================
-// CLASSE PRINCIPALE
-// ============================================
+// ============================================================
+//  2. MÉMORISATION — CONSTANTES ET RÉGLAGES
+// ============================================================
+
+const MEM_OPTIONS = { perVerse: [1, 3, 5, 10], passes: [1, 3, 5, 10], pause: [0, "half", "same", "one_and_half"] };
+const normalizeMemCfg = (saved = {}) => ({
+  perVerse: MEM_OPTIONS.perVerse.includes(saved.perVerse) ? saved.perVerse : 3,
+  passes: MEM_OPTIONS.passes.includes(saved.passes) ? saved.passes : 1,
+  pause: MEM_OPTIONS.pause.includes(saved.pause) ? saved.pause : 0,
+});
+const loadMemCfg = () => normalizeMemCfg(window.quranApp.getPreferenceJSON("memorize", {}) || {});
+const saveMemCfg = (cfg) => window.quranApp.setPreferenceJSON("memorize", cfg);
+
+// ============================================================
+//  3. QURANAUDIOPLAYER
+// ============================================================
 
 class QuranAudioPlayer {
+  // ---------- Constructeur ----------
+
   constructor() {
     this.currentRiwaya = window.ACTIVE_RIWAYA;
     this.currentReciter = null;
@@ -89,7 +129,7 @@ class QuranAudioPlayer {
     this.playbackRate = 1;
 
     this.speedOptions = [0.75, 1.0, 1.25, 1.5];
-    this.currentSpeedIndex = 1.0;
+    this.currentSpeedIndex = 1;
 
     this.audioA = new Audio();
     this.audioB = new Audio();
@@ -111,7 +151,6 @@ class QuranAudioPlayer {
     this._crossfading = false;
     this._isTransitioning = false;
     this._retrying = false;
-    this._pendingHighlight = null;
 
     this._musicControlsReady = false;
     this._musicControlsInitDone = false;
@@ -120,9 +159,11 @@ class QuranAudioPlayer {
     this._musicControlsRetryCount = 0;
     this._musicControlsRetryTimer = null;
 
-    this._boundListeners = {
-      audio: {}, overlay: {}, miniBar: {}, window: {},
-    };
+    this._boundListeners = { audio: {} };
+    this.hasError = false;
+    this._autoNavigate = false;
+    this._notifKey = null;
+    this._ayaIndex = null;
     this._overlayEventsAttached = false;
     // Minuterie (إيقاف تلقائي)
     this._sleepEndsAt = 0;
@@ -132,18 +173,48 @@ class QuranAudioPlayer {
     this._sleepChoice = 0;
     this._sleepTimeout = null;
     this._sleepTick = null;
+    // Notification
+    this._notifPermAsked = false;
+    this._killTimer1 = null;
+    this._killTimer2 = null;
   }
 
-  // ============================================
-  // CONSTANTES SVG
-  // ============================================
+  // ---------- Helpers privés ----------
 
-  _SVG_PLAY = `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>`;
-  _SVG_PAUSE = `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7" y="6" width="3" height="12"/><rect x="14" y="6" width="3" height="12"/></svg>`;
+  /** Efface et annule le minuteur de mémorisation. */
+  _clearMemTimer() {
+    clearTimeout(this._memTimer);
+    this._memTimer = null;
+  }
 
-  // ============================================
-  // HIGHLIGHT
-  // ============================================
+  /** Synchronise les deux menus déroulants du lecteur (sourate + verset). */
+  _syncSurahAyaSelects() {
+    CustomSelect.set("surahSelectAudio", this.currentSurah);
+    CustomSelect.set("ayaSelectAudio", this.currentAyah);
+  }
+
+  /** Rafraîchit l'affichage courant + les boutons (pattern répété 8×). */
+  _refreshDisplay() {
+    this._updateCurrentDisplay();
+    this._updateUI();
+  }
+
+  /** Applique le taux de lecture à un élément audio donné. */
+  _setRateOnElement(el) {
+    if (el) el.playbackRate = this.playbackRate;
+  }
+
+  /** Lit le mode de répétition depuis les préférences. */
+  _loadRepeatPreference() {
+    return parseInt(window.quranApp.getPreference("repeat", "0"), 10) || 0;
+  }
+
+  /** Lit le taux de lecture depuis les préférences. */
+  _loadRatePreference() {
+    return parseFloat(window.quranApp.getPreference("rate")) || 1.0;
+  }
+
+  // ---------- Surlignage ----------
 
   _applyHighlight() {
     if (!this.ayaCoordsLoaded) {
@@ -159,7 +230,6 @@ class QuranAudioPlayer {
     const reader = window.quranReader;
     if (ayaPage && ayaPage !== reader?.currentPage) {
       if (this._autoNavigate) {
-        this._pendingHighlight = { surah: this.currentSurah, ayah: this.currentAyah, rects };
         window.quranApp?.goToPage(ayaPage);
       } else {
         reader?.clearHighlight();
@@ -167,15 +237,6 @@ class QuranAudioPlayer {
       return;
     }
     this._performHighlight(rects, ayaPage);
-  }
-
-  _applyPendingHighlight() {
-    if (!this._pendingHighlight) return;
-    const { surah, ayah, rects } = this._pendingHighlight;
-    if (surah === this.currentSurah && ayah === this.currentAyah) {
-      this._performHighlight(rects, rects[0]?.p);
-    }
-    this._pendingHighlight = null;
   }
 
   _performHighlight(rects, ayaPage) {
@@ -202,10 +263,9 @@ class QuranAudioPlayer {
 
   _afterNavigate() {
     this.isStopped = false;
-    this._updateCurrentDisplay();
+    this._refreshDisplay();
     this._ensureHighlight();
     this._showMiniBar();
-    this._updateUI();
     if (this.audioElement?.dataset?.basmala !== "true") {
       this._updateMediaNotification();
     }
@@ -220,9 +280,7 @@ class QuranAudioPlayer {
     this._showStatus("❌ لا يوجد اتصال بالإنترنت", true);
   }
 
-  // ============================================
-  // INIT
-  // ============================================
+  // ---------- Initialisation ----------
 
   async init() {
     if (this._inited) return;
@@ -232,57 +290,49 @@ class QuranAudioPlayer {
     this._buildFab();
     await this._loadAyaCoords();
     this.surahs = window.quranCalculator?.getAllSurahs() || [];
-    this._nextAudioBuffer = null;
-    // ❌ RETIRER : this._cacheElements();
-    // ❌ RETIRER : this._setupOverlayEvents();
-    this._setupAudioEvents();       // ← garder (car audioA/audioB existent dès le constructor)
-    this._setupMiniBarEvents();     // ← garder (car miniBar existe)
+    this._setupAudioEvents();
+    this._setupMiniBarEvents();
 
-    const savedRate = parseFloat(localStorage.getItem("quran_rate")) || 1.0;
-    this._applyRate(savedRate);
-    const index = this.speedOptions.indexOf(parseFloat(savedRate));
-    this.currentSpeedIndex = index !== -1 ? index : 1;
-    this.repeatMode = parseInt(localStorage.getItem("quran_repeat") || "0");
+    this._applyRate(this._loadRatePreference());
+    this.repeatMode = this._loadRepeatPreference();
 
     this._setupOnlineOffline();
     this._initMusicControls();
     document.addEventListener("deviceready", () => { this._initMusicControls(); });
-    window.addEventListener("quran:appReady", () => { this._initMusicControls(); }, { once: true });
-    window.addEventListener("quran:preferencesImported", () => {
-      this._reloadPreferences();
-    });
+    window.addEventListener(APP_EVENTS.prefsImported, () => this._reloadPreferences());
   }
 
   _cacheElements() {
-    const g = (id) => document.getElementById(id);
-    this.elements = {
-      overlay: g("audioOverlay"),
-      closeBtn: g("closeAudioBtn"),
-      reciterSelect: g("reciterSelect"),
-      surahSelect: g("surahSelectAudio"),
-      ayaSelect: g("ayaSelectAudio"),
-      pageSelect: g("pageSelectAudio"),
-      overlaySpeedBtn: g("overlaySpeedBtn"),
-      playPauseBtn: g("playPauseBtn"),
-      stopBtn: g("stopBtn"),
-      prevSurahBtn: g("prevSurahBtn"),
-      nextSurahBtn: g("nextSurahBtn"),
-      prevAyahBtn: g("prevAyahBtn"),
-      nextAyahBtn: g("nextAyahBtn"),
-      progressBar: g("audioProgress"),
-      currentTime: g("audioCurrentTime"),
-      duration: g("audioDuration"),
-      repeatBtn: g("repeatBtn"),
-      rateSelect: g("rateSelect"),
-      status: g("audioStatus"),
-      currentDisplay: g("currentSurahDisplay"),
-      sleepBtn: g("sleepBtn"),  // ✅ AJOUTER
+    const ids = {
+      overlay: "audioOverlay",
+      closeBtn: "closeAudioBtn",
+      reciterSelect: "reciterSelect",
+      surahSelect: "surahSelectAudio",
+      ayaSelect: "ayaSelectAudio",
+      pageSelect: "pageSelectAudio",
+      overlaySpeedBtn: "overlaySpeedBtn",
+      playPauseBtn: "playPauseBtn",
+      stopBtn: "stopBtn",
+      prevSurahBtn: "prevSurahBtn",
+      nextSurahBtn: "nextSurahBtn",
+      prevAyahBtn: "prevAyahBtn",
+      nextAyahBtn: "nextAyahBtn",
+      progressBar: "audioProgress",
+      currentTime: "audioCurrentTime",
+      duration: "audioDuration",
+      repeatBtn: "repeatBtn",
+      rateSelect: "rateSelect",
+      status: "audioStatus",
+      currentDisplay: "currentSurahDisplay",
+      sleepBtn: "sleepBtn",
     };
+    this.elements = Object.fromEntries(
+      Object.entries(ids).map(([key, id]) => [key, document.getElementById(id)]),
+    );
     this.overlay = this.elements.overlay;
   }
-  // ============================================
-  // MUSIC CONTROLS
-  // ============================================
+
+  // ---------- Notification (MusicControls) ----------
 
   _initMusicControls() {
     if (this._musicControlsInitDone && this._musicControlsReady) return;
@@ -317,7 +367,7 @@ class QuranAudioPlayer {
       this._musicControlsReady = true;
       this._musicControlsInitDone = true;
       this._musicControlsRetryCount = 0;
-    } catch (err) {
+    } catch {
       this._scheduleMusicControlsRetry();
     }
   }
@@ -334,6 +384,29 @@ class QuranAudioPlayer {
     }, delay);
   }
 
+  _killNotification() {
+    try {
+      window.MusicControls?.destroy(
+        () => { },
+        () => { },
+      );
+    } catch {
+      /* déjà détruite */
+    }
+  }
+
+  _destroyMediaNotification() {
+    if (!window.MusicControls) return;
+    this._notificationCreated = false;
+    this._notifKey = null;
+    this._killNotification();
+    // Destructions différées, uniquement si la lecture est toujours à l'arrêt
+    clearTimeout(this._killTimer1);
+    clearTimeout(this._killTimer2);
+    this._killTimer1 = setTimeout(() => this.isStopped && this._killNotification(), 400);
+    this._killTimer2 = setTimeout(() => this.isStopped && this._killNotification(), 1500);
+  }
+
   _updateMediaNotification() {
     if (this.isStopped) return;
     if (!this._musicControlsReady) this._initMusicControls();
@@ -341,55 +414,351 @@ class QuranAudioPlayer {
     if (this.audioElement?.dataset?.basmala === "true") return;
     if (!this.currentSurah || !this.currentAyah) return;
 
-    const surah = this.surahs?.find((s) => s.s_id === this.currentSurah);
+    if (!this._notifPermAsked) {
+      this._notifPermAsked = true;
+      window.cordova?.plugins?.permissions?.requestPermission?.(
+        "android.permission.POST_NOTIFICATIONS",
+        () => { },
+        () => { },
+      );
+    }
+
+    const surah = this._surah(this.currentSurah);
     const surahName = surah?.name || "القرآن الكريم";
-    const surahNumber = surah?.s_id ? `${surah.s_id}` : "";
     const reciterName = this.currentReciter?.name || "قارئ";
-    const track = this.currentSurah ? `${surahNumber}.${surahName} - آية ${this.currentAyah}` : "القرآن الكريم";
+    const track = `${this.currentSurah}.${surahName} - آية ${this.currentAyah}`;
+    const key = `${track}|${reciterName}`;
+
+    if (this._notificationCreated && this._notifKey === key) {
+      try {
+        window.MusicControls.updateIsPlaying?.(this.isPlaying);
+      } catch {
+        /* plugin indisponible */
+      }
+      return;
+    }
+    this._notifKey = key;
+    this._notificationCreated = true;
 
     try {
-      const notifKey = `${track}|${reciterName}`;
-      if (this._notificationCreated && this._notifKey === notifKey) {
-        if (typeof window.MusicControls.updateIsPlaying === "function") {
-          window.MusicControls.updateIsPlaying(this.isPlaying);
-        }
+      window.MusicControls.create(
+        {
+          track,
+          artist: reciterName,
+          album: "Holy Quran",
+          cover: "media/icon-192.png",
+          isPlaying: this.isPlaying,
+          dismissable: true,
+          hasPrev: true,
+          hasNext: true,
+          hasClose: true,
+          ticker: `🎧 ${track}`,
+        },
+        () => {
+          // Arrêt demandé pendant la création native : on supprime la notification fantôme
+          if (this.isStopped) this._killNotification();
+        },
+        () => { },
+      );
+    } catch {
+      this._notificationCreated = false;
+    }
+  }
+
+  // ---------- Mémorisation / répétition ----------
+
+  _mem = null;
+  _memTimer = null;
+  _memInternal = false;
+
+  _memExit() {
+    this._clearMemTimer();
+    this._mem = null;
+    this._memInternal = false;
+  }
+
+  _memStepForward(s, a) {
+    return a < window.AyaPicker.totalOf(s) ? { s, a: a + 1 } : { s: s + 1, a: 1 };
+  }
+
+  _memStepBack(s, a) {
+    return a > 1 ? { s, a: a - 1 } : { s: s - 1, a: window.AyaPicker.totalOf(s - 1) || 1 };
+  }
+
+  _memSpan(from, to) {
+    if (!from || !to) return 0;
+    if (from.s > to.s || (from.s === to.s && from.a > to.a)) return 0;
+    if (from.s === to.s) return to.a - from.a + 1;
+    let n = window.AyaPicker.totalOf(from.s) - from.a + 1;
+    for (let s = from.s + 1; s < to.s; s++) n += window.AyaPicker.totalOf(s);
+    return n + to.a;
+  }
+
+  // Positionne le lecteur sans quitter le mode mémorisation
+  _memSetPos(s, a) {
+    this._memInternal = true;
+    try {
+      this._setSurah(s, a);
+    } finally {
+      this._memInternal = false;
+    }
+  }
+
+  _memNext() {
+    const m = this._mem;
+    if (!m) return null;
+    const s = this.currentSurah;
+    const a = this.currentAyah;
+    if (m.vDone + 1 < m.perVerse) return { s, a, kind: "verse" };
+    if (s === m.to.s && a === m.to.a) {
+      return m.pDone + 1 < m.passes ? { s: m.from.s, a: m.from.a, kind: "pass" } : null;
+    }
+    return { ...this._memStepForward(s, a), kind: "next" };
+  }
+
+  _memPauseMs() {
+    const m = this._mem;
+    if (!m?.pause) return 0;
+    const factor = { half: 0.5, same: 1, one_and_half: 1.5 }[m.pause];
+    if (factor) {
+      const dur = (this.audioElement.duration || 3) / this.playbackRate;
+      return Math.round(dur * factor * 1000);
+    }
+    return m.pause * 1000;
+  }
+
+  _memCommit(n) {
+    const m = this._mem;
+    if (!m || !n) return;
+    if (n.kind === "verse") m.vDone++;
+    else {
+      m.vDone = 0;
+      if (n.kind === "pass") m.pDone++;
+    }
+    this._memSetPos(n.s, n.a);
+  }
+
+  _memOnEnded() {
+    const m = this._mem;
+    if (!m) return;
+    const n = this._memNext();
+    if (!n) {
+      this._memFinish();
+      return;
+    }
+    const wait = this._memPauseMs();
+    this._memCommit(n);
+    if (wait > 0) {
+      m.waiting = true;
+      this._updateUI();
+      this._memTimer = setTimeout(() => this._memPlayTarget(), wait);
+    } else {
+      this._memPlayTarget();
+    }
+  }
+
+  _memPlayTarget() {
+    this._clearMemTimer();
+    if (!this._mem) return;
+    this._mem.waiting = false;
+    try {
+      this.audioElement.currentTime = 0;
+    } catch {
+      /* média non chargé */
+    }
+    this.play();
+  }
+
+  _memSkip(dir) {
+    const m = this._mem;
+    if (!m) return;
+    this._clearMemTimer();
+    m.waiting = false;
+    if (dir > 0) {
+      m.vDone = m.perVerse - 1;
+      const n = this._memNext();
+      if (!n) {
+        this._memFinish();
         return;
       }
-      this._notifKey = notifKey;
-      window.MusicControls.create({
-        track, artist: reciterName, album: "Holy Quran",
-        cover: "media/icon-192.png", isPlaying: this.isPlaying,
-        dismissable: true, hasPrev: true, hasNext: true, hasClose: true,
-        ticker: `🎧 ${track}`,
-      }, () => { }, () => { });
-      this._notificationCreated = true;
-    } catch (err) { }
+      this._memCommit(n);
+    } else {
+      m.vDone = 0;
+      if (!(this.currentSurah === m.from.s && this.currentAyah === m.from.a)) {
+        const p = this._memStepBack(this.currentSurah, this.currentAyah);
+        this._memSetPos(p.s, p.a);
+      }
+    }
+    this._memPlayTarget();
   }
 
-  _destroyMediaNotification() {
-    if (!window.MusicControls) return;
-    this._notificationCreated = false;
-    const kill = () => { try { window.MusicControls.destroy(() => { }, () => { }); } catch { } };
-    kill();
-    setTimeout(kill, 400);
+  _memFinish() {
+    window.quranApp?.showToast?.("✅ تم إكمال المقطع");
+    this.stop();
   }
 
-  // ============================================
-  // AYA COORDS
-  // ============================================
+  _memShort() {
+    const m = this._mem;
+    if (!m) return "";
+    return ` 🧠 ${(m.vDone || 0) + 1}/${m.perVerse || 1} · ${(m.pDone || 0) + 1}/${m.passes || 1}`;
+  }
+
+  async startMem(cfg) {
+    if (!cfg?.from || !cfg?.to) return;
+    await this.init();
+    if (!this.currentReciter) this._selectReciter(window.quranApp.getPreference(`reciter_${this.currentRiwaya}`), false);
+    this._clearMemTimer();
+    this._mem = { ...cfg, vDone: 0, pDone: 0, waiting: false };
+    this._memSetPos(cfg.from.s, cfg.from.a);
+    this.play();
+    this._showMiniBar();
+  }
+
+  openMemorize() {
+    if (this._mem) {
+      window.overlayManager.showConfirm("إيقاف التكرار والحفظ؟").then((ok) => ok && this.stop());
+      return;
+    }
+    this.showMemDialog();
+  }
+
+  _memOverlayShow(html, bind) {
+    const om = window.overlayManager;
+    const overlay = om.lazyLoadOverlay("memorize");
+    if (!overlay?.content) return;
+    overlay.content.innerHTML = html;
+    bind(overlay.content, () => om.closeOverlay("memorize"));
+    om.showOverlay("memorize");
+  }
+
+  showMemDialog() {
+    const cfg = loadMemCfg();
+    const pos = window.AyaPicker.currentPos();
+    const from = { s: pos.s, a: pos.a };
+    const to = { s: pos.s, a: Math.min(window.AyaPicker.totalOf(pos.s) || 1, pos.a + 2) };
+    const cmp = (x, y) => x.s - y.s || x.a - y.a;
+
+    this._memOverlayShow(
+      `<div class="mem-overlay-body">
+         <div class="mem-label">تحديد البداية</div>
+         ${window.AyaPicker.pairHtml("memFrom", from)}
+         
+         <div class="mem-label">تحديد النهاية</div>
+         ${window.AyaPicker.pairHtml("memTo", to)}
+         
+         <div class="mem-summary" id="memSummary"></div>
+         
+         <button type="button" class="mem-edit-btn" id="memEditBtn">⚙️ تعديل الإعدادات</button>
+         <button type="button" class="mem-go" id="memGo">بدء</button>
+       </div>`,
+      (dialog, cleanup) => {
+        const summary = dialog.querySelector("#memSummary");
+        const updateSummary = () => {
+          const n = this._memSpan(from, to);
+          summary.textContent = `${n} آيات × ${cfg.perVerse} × ${cfg.passes} = ${n * cfg.perVerse * cfg.passes} قراءات`;
+        };
+
+        let fromPair, toPair;
+        const onChange = (changed) => {
+          if (cmp(from, to) > 0) {
+            if (changed === "memFrom") Object.assign(to, from);
+            else Object.assign(from, to);
+            fromPair.refresh();
+            toPair.refresh();
+          }
+          updateSummary();
+        };
+        fromPair = window.AyaPicker.bindPair(dialog, "memFrom", from, onChange);
+        toPair = window.AyaPicker.bindPair(dialog, "memTo", to, onChange);
+
+        dialog.querySelector("#memEditBtn").addEventListener("click", () => {
+          this._showMemSettings((newCfg) => {
+            Object.assign(cfg, newCfg);
+            updateSummary();
+          });
+        });
+
+        dialog.querySelector("#memGo").addEventListener("click", () => {
+          if (this._memSpan(from, to) <= 0) {
+            window.quranApp?.showToast?.("نطاق غير صالح");
+            return;
+          }
+          saveMemCfg(cfg);
+          cleanup(null);
+          this.startMem({ from: { ...from }, to: { ...to }, ...cfg });
+        });
+
+        updateSummary();
+      },
+    );
+  }
+
+  _showMemSettings(onChange) {
+    const om = window.overlayManager;
+    const overlay = om.lazyLoadOverlay("memSettings");
+    if (!overlay?.content) return;
+
+    const cfg = loadMemCfg();
+    const PAUSE_LABELS = { 0: "بدون", half: "0.5×", same: "1×", one_and_half: "1.5×" };
+
+    const chips = (key, values, fmt) =>
+      `<div class="mem-chips" data-key="${key}">${values
+        .map((v) => `<button type="button" class="mem-chip${String(v) === String(cfg[key]) ? " active" : ""}" data-v="${v}">${fmt(v)}</button>`)
+        .join("")}</div>`;
+
+    overlay.content.innerHTML = `
+      <div class="aya-label">تكرار الآية</div>
+      ${chips("perVerse", MEM_OPTIONS.perVerse, (v) => `× ${v}`)}
+      <div class="aya-label">تكرار المقطع</div>
+      ${chips("passes", MEM_OPTIONS.passes, (v) => `× ${v}`)}
+      <div class="aya-label">الانتظار بين التلاوات</div>
+      ${chips("pause", MEM_OPTIONS.pause, (v) => PAUSE_LABELS[v])}
+    `;
+
+    overlay.content.querySelectorAll(".mem-chips").forEach((wrapEl) => {
+      wrapEl.addEventListener("click", (e) => {
+        const b = e.target.closest(".mem-chip");
+        if (!b) return;
+        const key = wrapEl.dataset.key;
+        cfg[key] = MEM_OPTIONS[key].find((x) => String(x) === b.dataset.v);
+        wrapEl.querySelectorAll(".mem-chip").forEach((x) => x.classList.toggle("active", x === b));
+        saveMemCfg(cfg);
+        onChange?.(cfg);
+      });
+    });
+
+    const backToMem = (e) => {
+      if (e.detail?.overlay !== "memSettings") return;
+      window.removeEventListener("quran:overlayClosed", backToMem);
+      om.showOverlay("memorize");
+    };
+    window.addEventListener("quran:overlayClosed", backToMem);
+    om.showOverlay("memSettings");
+  }
+
+  // ---------- Coordonnées des versets ----------
 
   async _loadAyaCoords() {
     if (this.ayaCoords) return;
     try {
-      const r = await fetch(AYA_COORDS_PATH, { cache: "force-cache" });
-      if (r.ok) { this.ayaCoords = await r.json(); this.ayaCoordsLoaded = true; }
-      else this.ayaCoordsLoaded = false;
-    } catch (e) { this.ayaCoordsLoaded = false; }
+      const r = await fetch("./data/ayapage.json", { cache: "force-cache" });
+      if (r.ok) {
+        this.ayaCoords = await r.json();
+        this._ayaIndex = new Map();
+        for (const rect of this.ayaCoords) {
+          const k = `${rect.s}:${rect.a}`;
+          if (!this._ayaIndex.has(k)) this._ayaIndex.set(k, []);
+          this._ayaIndex.get(k).push(rect);
+        }
+        this.ayaCoordsLoaded = true;
+      } else this.ayaCoordsLoaded = false;
+    } catch {
+      this.ayaCoordsLoaded = false;
+    }
   }
 
   _getAyaRects(surah, ayah) {
-    if (!this.ayaCoords) return null;
-    return this.ayaCoords.filter((r) => r.s === surah && r.a === ayah);
+    return this._ayaIndex?.get(`${surah}:${ayah}`) ?? null;
   }
 
   _getFirstAyahOfPage(page) {
@@ -398,9 +767,7 @@ class QuranAudioPlayer {
     return found ? { surah: found.s, ayah: found.a } : null;
   }
 
-  // ============================================
-  // MINUTERIE (إيقاف تلقائي)
-  // ============================================
+  // ---------- Minuterie (إيقاف تلقائي) ----------
 
   setSleepTimer(value) {
     this.cancelSleepTimer();
@@ -480,12 +847,10 @@ class QuranAudioPlayer {
     }, 400);
   }
 
-  // ============================================
-  // OVERLAY AUDIO (UI + Ouverture)
-  // ============================================
+  // ---------- Overlay audio (UI + ouverture) ----------
 
   renderAudioUI() {
-    const riwayaLabel = window.RIWAYAT_CONFIG?.[this.currentRiwaya]?.label || "حفص";
+    const riwayaLabel = RIWAYAT_CONFIG[this.currentRiwaya]?.label || "حفص";
     const coordsStatus = this.ayaCoordsLoaded === false
       ? '<div class="audio-warning">⚠️ بيانات تحديد الآيات غير متوفرة، لن يظهر التظليل</div>'
       : "";
@@ -493,32 +858,12 @@ class QuranAudioPlayer {
     return `
         ${coordsStatus}
         <div class="audio-select-row">
-            <div class="custom-select" id="reciterSelectWrap">
-                <button type="button" class="custom-select-btn" id="reciterSelect">
-                    <span class="custom-select-val">اختر القارئ</span><span class="custom-select-arrow">▾</span>
-                </button>
-                <div class="custom-select-dropdown" id="reciterSelectList"></div>
-            </div>
+            ${CustomSelect.markup("reciterSelect", "اختر القارئ")}
         </div>
         <div class="audio-select-row audio-select-grid">
-            <div class="custom-select" id="surahSelectAudioWrap">
-                <button type="button" class="custom-select-btn" id="surahSelectAudio">
-                    <span class="custom-select-val">اختر السورة</span><span class="custom-select-arrow">▾</span>
-                </button>
-                <div class="custom-select-dropdown" id="surahSelectAudioList"></div>
-            </div>
-            <div class="custom-select" id="ayaSelectAudioWrap">
-                <button type="button" class="custom-select-btn" id="ayaSelectAudio">
-                    <span class="custom-select-val">اختر الآية</span><span class="custom-select-arrow">▾</span>
-                </button>
-                <div class="custom-select-dropdown" id="ayaSelectAudioList"></div>
-            </div>
-            <div class="custom-select" id="pageSelectAudioWrap">
-                <button type="button" class="custom-select-btn" id="pageSelectAudio">
-                    <span class="custom-select-val">اختر الصفحة</span><span class="custom-select-arrow">▾</span>
-                </button>
-                <div class="custom-select-dropdown" id="pageSelectAudioList"></div>
-            </div>
+            ${CustomSelect.markup("surahSelectAudio", APP_TEXTS.pickSurah)}
+            ${CustomSelect.markup("ayaSelectAudio", APP_TEXTS.pickAyah)}
+            ${CustomSelect.markup("pageSelectAudio", APP_TEXTS.pickPage)}
         </div>
         <div id="audioStatus" class="audio-status"></div>
         <div class="audio-progress-wrap">
@@ -529,7 +874,7 @@ class QuranAudioPlayer {
         <div class="audio-controls">
             <button class="btn audio-btn speed-btn" id="overlaySpeedBtn" title="السرعة">1.0×</button>
             <button class="btn audio-btn" id="repeatBtn" title="تكرار">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg>
+                ${SVG.repeat}
             </button>
             <button class="btn audio-btn" id="nextSurahBtn" title="السورة التالية">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="12 6 20 12 12 18"/><line x1="21" y1="6" x2="21" y2="18" stroke="currentColor" stroke-width="2"/></svg>
@@ -538,7 +883,7 @@ class QuranAudioPlayer {
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
             </button>
             <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="8 6 18 12 8 18"/></svg>
+                ${SVG.play}
             </button>
             <button class="btn audio-btn" id="prevAyahBtn" title="الآية السابقة">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="11 6 3 12 11 18"/><polygon points="21 6 13 12 21 18"/></svg>
@@ -550,137 +895,73 @@ class QuranAudioPlayer {
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="7.5" y="7.5" width="9" height="9"/></svg>
             </button>
         </div>
-        <div class="audio-current-info" style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
+        <div class="audio-current-info">
             <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} (عبر النت)</div>
-            <div id="currentSurahDisplay" class="audio-current-display" style="flex: 1; margin: 0; background: transparent; border: none; color: inherit;"></div>
+            <div id="currentSurahDisplay" class="audio-current-display"></div>
         </div>
         <div class="audio-sleep-row">
             <button type="button" class="audio-sleep-pill" id="sleepBtn">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="margin-left: 6px;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
                     <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
                 </svg>
                 <span id="sleepBtnLabel">إيقاف تلقائي</span>
             </button>
         </div>
-        <audio id="quranAudioPlayer" preload="none" style="display:none;"></audio>
     `;
   }
 
   async showOverlay() {
     const om = window.overlayManager;
     if (!om) return;
+    om.closeMenu();
     const overlay = om.lazyLoadOverlay("audio");
     if (!overlay?.element || !overlay?.content) return;
 
-    // ✅ 1. INITIALISATION (chargé une seule fois grâce à _inited)
     await this.init();
 
-    // 2. Générer le HTML si nécessaire
     if (!overlay.contentGenerated) {
       overlay.content.innerHTML = this.renderAudioUI();
       overlay.contentGenerated = true;
-      if (window.CustomSelect) {
-        window.CustomSelect.reset();
-        window.CustomSelect.initToggle();
-      }
     }
 
-    // 3. Cacher les éléments du HTML
     this._cacheElements();
-
-    // 4. Peupler les sélecteurs
     this._populatePageSelect();
     this._populateSurahSelect();
     this._populateReciterSelect(this.currentRiwaya);
 
-    // 5. Sélectionner le réciteur sauvegardé (une seule fois)
     if (!this.currentReciter) {
-      const saved = localStorage.getItem(`quran_reciter_${window.ACTIVE_RIWAYA}`);
+      const saved = window.quranApp.getPreference(`reciter_${this.currentRiwaya}`);
       this._selectReciter(saved, false);
     } else {
-      window.CustomSelect.setValue('reciterSelect', 'reciterSelectList', this.currentReciter.id);
+      CustomSelect.set('reciterSelect', this.currentReciter.id);
     }
 
-    // 6. Brancher les événements (une seule fois)
     this._setupOverlayEvents();
-
-    // 7. Afficher l'overlay
     om.showOverlay("audio");
     this._hideMiniBar(false);
     this._syncOverlay();
 
-    // 8. Synchroniser la sourate sur la page courante
     if (!this.isPlaying && !this.currentSurah) {
       this.setCurrentSurahFromPage();
     }
   }
+
   _showSleepPicker() {
-    const box = document.createElement("div");
-    box.className = "confirm-backdrop";
-    box.style.alignItems = "center";
-
-    const dialog = document.createElement("div");
-    dialog.className = "confirm-dialog";
-    dialog.style.textAlign = "right";
-    dialog.style.padding = "0";
-    dialog.style.overflow = "hidden";
-
-    const header = document.createElement("div");
-    header.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-bottom:1px solid var(--border);";
-    header.innerHTML = `
-        <h3 style="margin:0; font-size:1.1rem; color:var(--text);">⏱️ إيقاف تلقائي</h3>
-        <button type="button" class="close-btn" style="font-size:1.5rem; width:30px; height:30px; color:var(--error);">✕</button>
-    `;
-    dialog.appendChild(header);
-
-    const list = document.createElement("div");
-    list.style.cssText = "display:flex; flex-direction:column;";
-
-    const options = [
-      { value: 0, label: "معطّل" },
-      { value: 5, label: "5 دقائق" },
-      { value: 15, label: "15 دقيقة" },
-      { value: 30, label: "30 دقيقة" },
-      { value: "surah", label: "نهاية السورة" },
-    ];
-
-    options.forEach((opt) => {
-      const row = document.createElement("button");
-      row.type = "button";
-      row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:none; border:none; border-bottom:1px solid var(--border); cursor:pointer; font-family:inherit; font-size:1rem; width:100%; text-align:right; transition: background 0.2s;";
-      const text = document.createElement("span");
-      text.textContent = opt.label;
-      row.appendChild(text);
-
-      if (this._sleepChoice === opt.value) {
-        text.style.color = "var(--primary)";
-        text.style.fontWeight = "bold";
-        const check = document.createElement("span");
-        check.textContent = "🟢";
-        check.style.fontSize = "1.2rem";
-        row.appendChild(check);
-      }
-
-      row.addEventListener("mouseenter", () => row.style.background = "var(--surface-alt)");
-      row.addEventListener("mouseleave", () => row.style.background = "none");
-      row.addEventListener("click", () => {
-        this.setSleepTimer(opt.value);
-        box.remove();
-      });
-      list.appendChild(row);
-    });
-
-    dialog.appendChild(list);
-    header.querySelector(".close-btn").addEventListener("click", () => box.remove());
-    box.addEventListener("click", (e) => { if (e.target === box) box.remove(); });
-
-    box.appendChild(dialog);
-    document.body.appendChild(box);
+    const opts = [[0, "معطّل"], [5, "5 دقائق"], [15, "15 دقيقة"], [30, "30 دقيقة"], ["surah", "نهاية السورة"]];
+    const rows = opts.map(([v, l]) =>
+      `<button type="button" class="sleep-option${this._sleepChoice === v ? " active" : ""}" data-v="${v}">${l}</button>`
+    ).join("");
+    window.overlayManager._showBackdropDialog(
+      `<h3>⏱️ إيقاف تلقائي</h3><div class="sleep-options">${rows}</div>`,
+      (dialog, cleanup) => dialog.querySelectorAll(".sleep-option").forEach((b) =>
+        b.addEventListener("click", () => {
+          this.setSleepTimer(b.dataset.v === "surah" ? "surah" : Number(b.dataset.v));
+          cleanup(null);
+        }))
+    );
   }
 
-  // ============================================
-  // RÉCITANTS
-  // ============================================
+  // ---------- Récitants ----------
 
   _closeReciterDropdown() {
     const wrap = document.getElementById('reciterSelectWrap');
@@ -695,6 +976,7 @@ class QuranAudioPlayer {
     const pinnedIds = this.getPinnedReciters();
     const pinned = reciters.filter(r => pinnedIds.includes(r.id));
     const normal = reciters.filter(r => !pinnedIds.includes(r.id));
+    const currentId = this.currentReciter?.id;
 
     listContainer.innerHTML = '';
 
@@ -705,21 +987,29 @@ class QuranAudioPlayer {
         groupDiv.textContent = groupName;
         listContainer.appendChild(groupDiv);
       }
+
       reciterArray.forEach(reciter => {
         const isPinned = pinnedIds.includes(reciter.id);
+        const isCurrent = reciter.id === currentId;
+
         const option = document.createElement('div');
         option.className = 'custom-select-option reciter-option';
         option.dataset.value = reciter.id;
+        if (isCurrent) option.classList.add('selected', 'choice-current');
 
+        // 1. Le point vert (🟢) à gauche si c'est le récitateur actif
+        const check = document.createElement('span');
+        check.className = 'choice-check';
+        check.textContent = isCurrent ? '🟢' : '';
+        option.appendChild(check);
+
+        // 2. Le nom du récitateur
         const nameSpan = document.createElement('span');
         nameSpan.className = 'reciter-name';
         nameSpan.textContent = reciter.name;
-        nameSpan.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this._selectReciter(reciter.id);
-          this._closeReciterDropdown();
-        });
+        option.appendChild(nameSpan);
 
+        // 3. L'épingle (📌) ou l'étoile (💫) à droite
         const pinBtn = document.createElement('button');
         pinBtn.className = `pin-reciter-btn action-icon ${isPinned ? 'pinned' : ''}`;
         pinBtn.textContent = isPinned ? '💫' : '📌';
@@ -728,13 +1018,16 @@ class QuranAudioPlayer {
           e.stopPropagation();
           this.togglePinReciter(reciter.id);
           this._populateReciterSelect(this.currentRiwaya);
-          if (this.currentReciter && this.currentReciter.id === reciter.id) {
-            this._updateReciterSelectButton();
-          }
+        });
+        option.appendChild(pinBtn);
+
+        // Clic sur la ligne pour sélectionner
+        option.addEventListener('click', (e) => {
+          if (e.target.closest('.pin-reciter-btn')) return;
+          this._selectReciter(reciter.id);
+          this._closeReciterDropdown();
         });
 
-        option.appendChild(nameSpan);
-        option.appendChild(pinBtn);
         listContainer.appendChild(option);
       });
     };
@@ -743,7 +1036,7 @@ class QuranAudioPlayer {
     addOptions(normal, '📖 جميع القراء');
 
     if (this.currentReciter) {
-      window.CustomSelect.setValue('reciterSelect', 'reciterSelectList', this.currentReciter.id);
+      CustomSelect.setValue('reciterSelect', 'reciterSelectList', this.currentReciter.id);
     }
     this._updateReciterSelectButton();
   }
@@ -757,22 +1050,20 @@ class QuranAudioPlayer {
     if (!found) found = reciters[0];
 
     this.currentReciter = found;
-    if (window.CustomSelect) {
-      window.CustomSelect.setValue('reciterSelect', 'reciterSelectList', found.id);
-    }
-    if (save) localStorage.setItem(`quran_reciter_${this.currentRiwaya}`, found.id);
-    this._updateCurrentReciterName();
+    CustomSelect.set("reciterSelect", found.id);
+    if (save) window.quranApp.setPreference(`reciter_${this.currentRiwaya}`, found.id);
     this._updateReciterSelectButton();
-    this._updateUI();
+    this._refreshDisplay();
     if (this.isPlaying) this._updateMediaNotification();
     if (this.isPlaying && !this.hasError) {
       this.audioElement.pause();
       this.play();
     }
   }
+
   _reloadPreferences() {
-    // 🎙️ Récitateur actif
-    const saved = localStorage.getItem(`quran_reciter_${this.currentRiwaya}`);
+    // Récitateur actif
+    const saved = window.quranApp.getPreference(`reciter_${this.currentRiwaya}`);
     if (saved) {
       const reciters = RIWAYAT_CONFIG[this.currentRiwaya]?.reciters || [];
       const found = reciters.find(r => r.id === saved);
@@ -781,27 +1072,28 @@ class QuranAudioPlayer {
       }
     }
 
-    // ⭐ Récitateurs épinglés
+    // Récitateurs épinglés
     this._populateReciterSelect(this.currentRiwaya);
 
-    // ⚡ Vitesse de lecture
-    const savedRate = parseFloat(localStorage.getItem("quran_rate")) || 1.0;
+    // Vitesse de lecture
+    const savedRate = this._loadRatePreference();
     if (this.playbackRate !== savedRate) {
       this._applyRate(savedRate);
     }
 
-    // 🔁 Mode répétition
-    const savedRepeat = parseInt(localStorage.getItem("quran_repeat") || "0");
+    // Mode répétition
+    const savedRepeat = this._loadRepeatPreference();
     if (this.repeatMode !== savedRepeat) {
       this.repeatMode = savedRepeat;
       this._updateRepeatBtn();
     }
 
-    // 🔄 Rafraîchir l'UI si l'overlay est ouvert
+    // Rafraîchir l'UI si l'overlay est ouvert
     if (this.elements.overlay?.classList.contains("show")) {
       this._syncOverlay();
     }
   }
+
   _updateReciterSelectButton() {
     const btn = document.getElementById('reciterSelect');
     if (!btn || !this.currentReciter) return;
@@ -811,30 +1103,21 @@ class QuranAudioPlayer {
   }
 
   getPinnedReciters() {
-    const key = `pinnedReciters_${this.currentRiwaya}`;
-    const stored = window.quranApp.getPreference(key);
-    if (stored) {
-      try { return JSON.parse(stored); }
-      catch { return []; }
-    }
-    return [];
+    const list = window.quranApp.getPreferenceJSON(`pinnedReciters_${this.currentRiwaya}`, []);
+    return Array.isArray(list) ? list : [];
   }
 
   savePinnedReciters(pinnedList) {
-    const key = `pinnedReciters_${this.currentRiwaya}`;
-    window.quranApp.setPreference(key, JSON.stringify(pinnedList));
+    window.quranApp.setPreferenceJSON(`pinnedReciters_${this.currentRiwaya}`, pinnedList);
   }
 
   togglePinReciter(reciterId) {
-    let pinned = this.getPinnedReciters();
+    const pinned = this.getPinnedReciters();
     const index = pinned.indexOf(reciterId);
     if (index === -1) pinned.push(reciterId);
     else pinned.splice(index, 1);
     this.savePinnedReciters(pinned);
     this._populateReciterSelect(this.currentRiwaya);
-    if (this.currentReciter) {
-      window.CustomSelect.setValue('reciterSelect', 'reciterSelectList', this.currentReciter.id);
-    }
     return index === -1;
   }
 
@@ -842,119 +1125,98 @@ class QuranAudioPlayer {
     return this.getPinnedReciters().includes(reciterId);
   }
 
-  _updateCurrentReciterName() { }
-
-  // ============================================
-  // SOURATES
-  // ============================================
+  // ---------- Sourates ----------
 
   _populateSurahSelect() {
-    if (!window.CustomSelect) return;
-    const options = [];
-    this.surahs.forEach(s => {
-      options.push({
-        value: String(s.s_id),
-        label: `${s.s_id}.${s.name}`,
-        onSelect: (val) => this._setSurah(val, 1)
-      });
-    });
-    window.CustomSelect.render('surahSelectAudioList', options);
+    CustomSelect.fill("surahSelectAudio", CustomSelect.surahOptions((val) => this._setSurah(val, 1)));
   }
 
   _setSurah(surahId, ayah = 1) {
-    const s = this.surahs.find((x) => x.s_id == surahId);
+    if (this._mem && !this._memInternal) this._memExit();
+    const s = this._surah(surahId);
     if (!s) return;
-    this.currentSurah = parseInt(surahId);
-    this.currentAyah = parseInt(ayah);
-    const page = this._getPageForAya(this.currentSurah, this.currentAyah);
-    if (page && window.CustomSelect) {
-      window.CustomSelect.setValue('pageSelectAudio', 'pageSelectAudioList', page);
-    }
+    this.currentSurah = s.s_id;
+    this.currentAyah = parseInt(ayah, 10);
     this.totalAyahs = s.verses_count;
-    if (window.CustomSelect) {
-      window.CustomSelect.setValue('surahSelectAudio', 'surahSelectAudioList', surahId);
-      this._populateAyaSelect(surahId);
-      window.CustomSelect.setValue('ayaSelectAudio', 'ayaSelectAudioList', ayah);
-    }
-    this._updateCurrentDisplay();
-    this._updateUI();
+
+    const page = this._getPageForAya(this.currentSurah, this.currentAyah);
+    if (page) CustomSelect.set("pageSelectAudio", page);
+    this._syncSurahAyaSelects();
+    this._populateAyaSelect(surahId);
+    CustomSelect.set("ayaSelectAudio", ayah);
+
+    this._refreshDisplay();
     this._preloadTriggered = false;
     if (this.isPlaying) this._updateMediaNotification();
   }
 
   _populateAyaSelect(surahId) {
-    if (!window.CustomSelect) return;
-    if (!surahId) {
-      window.CustomSelect.render('ayaSelectAudioList', [{ value: '', label: 'اختر الآية', onSelect: () => { } }]);
+    if (!surahId || !this._surah(surahId)) {
+      CustomSelect.fill("ayaSelectAudio", [{ value: "", label: APP_TEXTS.pickAyah, onSelect: () => { } }]);
       return;
     }
-    const surah = this.surahs.find((s) => s.s_id == surahId);
-    if (!surah) {
-      window.CustomSelect.render('ayaSelectAudioList', [{ value: '', label: 'اختر الآية', onSelect: () => { } }]);
-      return;
-    }
-    const options = [];
-    for (let i = 1; i <= surah.verses_count; i++) {
-      options.push({
-        value: String(i),
-        label: `الآية ${i}`,
-        onSelect: (val) => { this.currentAyah = parseInt(val); this._updateCurrentDisplay(); }
-      });
-    }
-    window.CustomSelect.render('ayaSelectAudioList', options);
+    CustomSelect.fill(
+      "ayaSelectAudio",
+      CustomSelect.ayahOptions(surahId, (val) => {
+        this.currentAyah = parseInt(val, 10);
+        this._updateCurrentDisplay();
+      }),
+    );
   }
 
   _populatePageSelect() {
-    if (!window.CustomSelect) return;
-    const options = [];
-    for (let i = 1; i <= 604; i++) {
-      options.push({
-        value: String(i),
-        label: `ص ${i}`,
-        onSelect: (val) => this._handlePageChange({ target: { value: val } })
-      });
-    }
-    window.CustomSelect.render('pageSelectAudioList', options);
+    const options = CustomSelect.pageOptions((val) => this._handlePageChange({ target: { value: val } }));
+    CustomSelect.fill("pageSelectAudio", options.map((o) => ({ ...o, label: `${APP_TEXTS.pageShort} ${o.value}` })));
+  }
+
+  _surah(id) {
+    const n = Number(id);
+    return this.surahs.find((s) => s.s_id === n) || null;
   }
 
   _getPageForAya(surah, ayah) {
-    if (!this.ayaCoords) return null;
-    const found = this.ayaCoords.find((r) => r.s === surah && r.a === ayah);
-    return found ? found.p : null;
+    return this._getAyaRects(surah, ayah)?.[0]?.p ?? null;
   }
 
-  // ============================================
-  // URL AUDIO
-  // ============================================
+  // ---------- URL audio ----------
 
   _buildAyahUrl(surah, ayah) {
     if (!this.currentReciter) return null;
-    const s = String(surah).padStart(3, "0");
-    const a = String(ayah).padStart(3, "0");
-    return `${EVERYAYAH_BASE}${this.currentReciter.id}/${s}${a}.mp3`;
+    return `${EVERYAYAH_BASE}${this.currentReciter.id}/${AppUtils.pad3(surah)}${AppUtils.pad3(ayah)}.mp3`;
   }
 
-  // ============================================
-  // LECTURE
-  // ============================================
+  // ---------- Lecture ----------
 
   play() {
-    if (!this.currentReciter || !this.currentSurah || !this.currentAyah) return;
+    // ⚠️ ANTI-DOUBLE LECTURE
+    if (this._isStarting) return;
+    this._isStarting = true;
+
+    if (this._mem) {
+      this._clearMemTimer();
+      this._mem.waiting = false;
+    }
+    if (!this.currentReciter || !this.currentSurah || !this.currentAyah) {
+      this._isStarting = false;
+      return;
+    }
     this.audioElement = this.currentAudio;
 
     const url = this._buildAyahUrl(this.currentSurah, this.currentAyah);
-    if (!url) return;
+    if (!url) {
+      this._isStarting = false;
+      return;
+    }
     this.hasError = false;
     this._showStatus("", false);
     const needsBasmala = this.currentAyah === 1 && this.currentSurah !== 1 && this.currentSurah !== 9;
-    const skipBasmala = this.repeatMode === 1 && this.currentAyah === 1;
+    const skipBasmala = (this.repeatMode === 1 || this._mem?.vDone > 0) && this.currentAyah === 1;
 
     if (needsBasmala && !skipBasmala) {
-      const basmalaUrl = `./media/bismillah.mp3`;
-      this.audioElement.src = basmalaUrl;
+      this.audioElement.src = "./media/bismillah.mp3";
       this.audioElement.dataset.basmala = "true";
       this.audioElement.load();
-      this.audioElement.playbackRate = this.playbackRate;
+      this._setRateOnElement(this.audioElement);
       this._ensureHighlight();
 
       if (this._boundListeners.audio.basmalaEnded) {
@@ -965,22 +1227,21 @@ class QuranAudioPlayer {
         this.audioElement.removeEventListener("ended", this._boundListeners.audio.ended);
         this.audioElement.src = url;
         this.audioElement.load();
-        this.audioElement.playbackRate = this.playbackRate;
+        this._setRateOnElement(this.audioElement);
         this.audioElement.play().catch(() => this._showStatus("❌ تعذر التشغيل", true));
         this.audioElement.addEventListener("ended", this._boundListeners.audio.ended);
         this._ensureHighlight();
-        this._updateMediaNotification();
       };
       this.audioElement.addEventListener("ended", this._boundListeners.audio.basmalaEnded, { once: true });
       this.audioElement.play().catch(() => this._showStatus("❌ تعذر التشغيل", true));
     } else {
       this.audioElement.dataset.basmala = "false";
-      if (!navigator.onLine) { this._showOfflineError(); return; }
+      if (!navigator.onLine) { this._showOfflineError(); this._isStarting = false; return; }
       if (this.audioElement.src !== url) {
         this.audioElement.src = url;
         this.audioElement.load();
       }
-      this.audioElement.playbackRate = this.playbackRate;
+      this._setRateOnElement(this.audioElement);
       this.audioElement.play().catch(() => this._handlePlayError());
       this._ensureHighlight();
     }
@@ -992,6 +1253,9 @@ class QuranAudioPlayer {
     this._crossfading = false;
     this._preloadTriggered = false;
     this._preloadNextAyah();
+
+    // ⚠️ LIBÉRATION DU VERROU APRÈS 500ms
+    setTimeout(() => { this._isStarting = false; }, 500);
   }
 
   _handlePlayError() {
@@ -1001,7 +1265,7 @@ class QuranAudioPlayer {
     const currentIndex = reciters.findIndex((r) => r.id === this.currentReciter?.id);
     if (currentIndex !== -1 && currentIndex < reciters.length - 1) {
       const nextReciter = reciters[currentIndex + 1];
-      this._selectReciter(nextReciter.id);
+      this._selectReciter(nextReciter.id, false);
       this._showStatus(`⚠️ جاري التبديل إلى ${nextReciter.name}...`, true);
       const testUrl = `${EVERYAYAH_BASE}${nextReciter.id}/001001.mp3`;
       const controller = new AbortController();
@@ -1020,45 +1284,38 @@ class QuranAudioPlayer {
     } else {
       this.stop();
       this._showStatus("❌ تعذر تشغيل الملف، جرب قارئاً آخر", true);
-      if (!this.elements.overlay?.classList.contains('show')) {
-        this.showOverlay();
-      }
     }
   }
 
   pause() {
+    this._clearMemTimer();
     this.audioElement.pause();
   }
 
   stop() {
-    this.audioElement.pause();
-    this.audioElement.volume = 1;
-    this.audioElement.currentTime = 0;
-    this.audioA.pause();
-    this.audioA.currentTime = 0;
-    this.audioB.pause();
-    this.audioB.currentTime = 0;
-
-    this._mp3qEndTime = null;
+    this._memExit();
     this.cancelSleepTimer();
     this.isPlaying = false;
     this.isStopped = true;
     this._crossfading = false;
-    if (this._nextAudioBuffer) {
-      this._nextAudioBuffer.pause();
-      this._nextAudioBuffer.currentTime = 0;
-    }
+    this._nextAudioBuffer = null;
     window.quranReader?.clearHighlight();
-    this._pendingHighlight = null;
     this._updateUI();
     this._retrying = false;
+    this._isStarting = false;
     this._showStatus("", false);
     this._preloadTriggered = false;
     this._hideMiniBar(false);
     this.setCurrentSurahFromPage();
     this._destroyMediaNotification();
     [this.audioA, this.audioB].forEach((a) => {
-      try { a.pause(); a.removeAttribute("src"); a.load(); } catch { }
+      try {
+        a.pause();
+        a.removeAttribute("src");
+        a.load();
+      } catch {
+        /* élément déjà libéré */
+      }
     });
     if (navigator.mediaSession) {
       navigator.mediaSession.playbackState = "none";
@@ -1078,8 +1335,8 @@ class QuranAudioPlayer {
     if (nextAyah > this.totalAyahs) {
       if (this.repeatMode === 2) nextAyah = 1;
       else if (this.currentSurah < 114) {
-        nextSurah = this.currentSurah < 114 ? this.currentSurah + 1 : 1;
-        const nextSurahData = this.surahs.find((s) => s.s_id === nextSurah);
+        nextSurah = this.currentSurah + 1;
+        const nextSurahData = this._surah(nextSurah);
         if (!nextSurahData) return;
         nextAyah = 1;
       } else return;
@@ -1095,9 +1352,10 @@ class QuranAudioPlayer {
   }
 
   nextAyah() {
+    if (this._mem) return this._memSkip(1);
     if (!this.currentSurah) return;
     this._isTransitioning = true;
-    const surah = this.surahs.find((s) => s.s_id === this.currentSurah);
+    const surah = this._surah(this.currentSurah);
     if (surah) this.totalAyahs = surah.verses_count;
     if (this.currentAyah < this.totalAyahs) {
       this.currentAyah++;
@@ -1110,19 +1368,18 @@ class QuranAudioPlayer {
   }
 
   prevAyah() {
+    if (this._mem) return this._memSkip(-1);
     if (!this.currentSurah) return;
     this._isTransitioning = true;
     if (this.currentAyah > 1) {
       this.currentAyah--;
-      if (window.CustomSelect) {
-        window.CustomSelect.setValue('ayaSelectAudio', 'ayaSelectAudioList', this.currentAyah);
-      }
+      CustomSelect.set("ayaSelectAudio", this.currentAyah);
       if (this.isPlaying) this.play();
       else this._afterNavigate();
     } else {
       if (this.currentSurah > 1) {
         const prevSurah = this.currentSurah - 1;
-        const prevSurahData = this.surahs.find((s) => s.s_id === prevSurah);
+        const prevSurahData = this._surah(prevSurah);
         if (prevSurahData) {
           this._setSurah(prevSurah, prevSurahData.verses_count);
           if (this.isPlaying) this.play();
@@ -1133,6 +1390,7 @@ class QuranAudioPlayer {
   }
 
   nextSurah() {
+    this._memExit();
     if (!this.currentSurah || this.currentSurah >= 114) return;
     this._setSurah(this.currentSurah + 1, 1);
     if (this.isPlaying) this.play();
@@ -1140,6 +1398,7 @@ class QuranAudioPlayer {
   }
 
   prevSurah() {
+    this._memExit();
     if (!this.currentSurah || this.currentSurah <= 1) return;
     this._setSurah(this.currentSurah - 1, 1);
     if (this.isPlaying) this.play();
@@ -1160,15 +1419,19 @@ class QuranAudioPlayer {
   }
 
   cycleRepeat() {
+    if (this._mem) {
+      window.quranApp?.showToast?.("غير متاح أثناء الحفظ");
+      return;
+    }
     this.repeatMode = (this.repeatMode + 1) % 3;
     this._updateRepeatBtn();
-    localStorage.setItem("quran_repeat", this.repeatMode);
+    window.quranApp.setPreference("repeat", this.repeatMode);
     const titles = ["بدون تكرار", "تكرار الآية", "تكرار السورة"];
     if (window.quranApp?.showToast) window.quranApp.showToast(titles[this.repeatMode]);
   }
 
   _updateRepeatBtn() {
-    const svgRepeat = `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg>`;
+    const svgRepeat = SVG.repeat;
     const labels = [svgRepeat, `¹${svgRepeat}`, `²${svgRepeat}`];
     const titles = ["بدون تكرار", "تكرار الآية", "تكرار السورة"];
     [this.elements.repeatBtn, document.getElementById("miniBarRepeat")].forEach((btn) => {
@@ -1188,16 +1451,18 @@ class QuranAudioPlayer {
     const numRate = parseFloat(rate);
     if (isNaN(numRate)) return;
     this.playbackRate = numRate;
-    if (this.audioElement) this.audioElement.playbackRate = this.playbackRate;
-    if (this.audioA) this.audioA.playbackRate = this.playbackRate;
-    if (this.audioB) this.audioB.playbackRate = this.playbackRate;
+    this._setRateOnElement(this.audioElement);
+    this._setRateOnElement(this.audioA);
+    this._setRateOnElement(this.audioB);
     const speedBtn = document.getElementById("miniBarSpeed");
     if (speedBtn) speedBtn.textContent = numRate.toFixed(2) + "×";
     if (this.elements.overlaySpeedBtn) this.elements.overlaySpeedBtn.textContent = numRate.toFixed(2) + "×";
     const index = this.speedOptions.indexOf(numRate);
     if (index !== -1) this.currentSpeedIndex = index;
-    localStorage.setItem("quran_rate", numRate);
+    window.quranApp.setPreference("rate", numRate);
   }
+
+  // ---------- Mini-barre et bouton flottant ----------
 
   _buildMiniBar() {
     if (document.getElementById("audioMiniBar")) return;
@@ -1212,7 +1477,7 @@ class QuranAudioPlayer {
       <div class="mini-bar-controls">
         <button class="audio-btn speed-btn" id="miniBarSpeed" title="السرعة">1.0×</button>
         <button class="audio-btn" id="miniBarRepeat" title="تكرار">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m3.512 6.19 1.492-1.492-1.297-1.297L0 7.107l3.707 3.707 1.297-1.297-1.492-1.492h17.356V12h1.835V6.19Zm16.781 6.996-1.297 1.297 1.492 1.492H3.132V12H1.297v5.81h19.191l-1.492 1.492 1.297 1.297L24 16.893Z"/></svg>
+          ${SVG.repeat}
         </button>
         <button class="audio-btn" id="miniBarNextAyah" title="الآية التالية">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
@@ -1238,8 +1503,7 @@ class QuranAudioPlayer {
 
   _updateFabIndicator() {
     if (!this.fabBtn) return;
-    if (this.isPlaying) this.fabBtn.classList.add("playing");
-    else this.fabBtn.classList.remove("playing");
+    this.fabBtn.classList.toggle("playing", this.isPlaying);
   }
 
   _syncMiniBar() {
@@ -1271,11 +1535,7 @@ class QuranAudioPlayer {
     this.miniBar?.classList.add("hidden");
     if (showFab) this.fabBtn?.classList.remove("hidden");
     else this.fabBtn?.classList.add("hidden");
-    requestAnimationFrame(() => {
-      if (window.quranReader && typeof window.quranReader._adjustFooterHeight === 'function') {
-        window.quranReader._adjustFooterHeight();
-      }
-    });
+    requestAnimationFrame(() => window.quranReader?._adjustFooterHeight?.());
   }
 
   _updateMiniPlayBtn() {
@@ -1284,14 +1544,12 @@ class QuranAudioPlayer {
   }
 
   _syncOverlay() {
-    if (!document.getElementById('reciterSelectList')) return;
-    if (this.currentReciter && window.CustomSelect) {
-      window.CustomSelect.setValue('reciterSelect', 'reciterSelectList', this.currentReciter.id);
-    }
-    if (this.currentSurah && window.CustomSelect) {
-      window.CustomSelect.setValue('surahSelectAudio', 'surahSelectAudioList', this.currentSurah);
+    if (!document.getElementById("reciterSelectList")) return;
+    if (this.currentReciter) CustomSelect.set("reciterSelect", this.currentReciter.id);
+    if (this.currentSurah) {
+      CustomSelect.set("surahSelectAudio", this.currentSurah);
       this._populateAyaSelect(this.currentSurah);
-      if (this.currentAyah) window.CustomSelect.setValue('ayaSelectAudio', 'ayaSelectAudioList', this.currentAyah);
+      if (this.currentAyah) CustomSelect.set("ayaSelectAudio", this.currentAyah);
     }
     const dur = this.audioElement?.duration || 0;
     const cur = this.audioElement?.currentTime || 0;
@@ -1303,11 +1561,14 @@ class QuranAudioPlayer {
     this._updateSleepPill();
   }
 
+  // ---------- Événements ----------
+
   _setupAudioEvents() {
     const audioA = this.audioA;
     const audioB = this.audioB;
 
     const onPlay = () => {
+      if (this.isStopped && !this.audioElement.getAttribute("src")) return;
       this.isPlaying = true;
       this.isStopped = false;
       this._isTransitioning = false;
@@ -1335,6 +1596,9 @@ class QuranAudioPlayer {
 
     const onEnded = () => {
       if (this.audioElement.dataset.basmala === "true") return;
+      if (this._isStarting) return; // <-- AJOUTE CETTE LIGNE
+      if (this._mem && !(this._sleepEndsAt && Date.now() >= this._sleepEndsAt)) { this._memOnEnded(); return; }
+      if (this._sleepEndsAt && Date.now() >= this._sleepEndsAt) { this.stop(); return; }
       this.isPlaying = false;
       this.audioElement.volume = 1;
       this._crossfading = false;
@@ -1347,10 +1611,14 @@ class QuranAudioPlayer {
       }
       if (this.currentAyah >= this.totalAyahs) { this._onEndOfSurah(); return; }
 
-      if (this._nextAudioBuffer && this._nextAudioBuffer.readyState >= 2) {
+      if (
+        this._nextAudioBuffer &&
+        this._nextAudioBuffer.readyState >= 2 &&
+        this._nextAudioBuffer.src === this._buildAyahUrl(this.currentSurah, this.currentAyah + 1)
+      ) {
         const next = this._nextAudioBuffer;
         next.volume = this.audioElement.volume;
-        next.playbackRate = this.playbackRate;
+        this._setRateOnElement(next);
         next.play().catch(() => this.nextAyah());
         this.audioElement = next;
         this.currentAudio = next;
@@ -1360,7 +1628,6 @@ class QuranAudioPlayer {
         this._updateCurrentDisplay();
         this._ensureHighlight();
         this._preloadNextAyah();
-        this._updateMediaNotification();
       } else {
         this.nextAyah();
       }
@@ -1376,6 +1643,9 @@ class QuranAudioPlayer {
     };
 
     const onError = (e) => {
+      if (e.target !== this.audioElement) return;
+      if (this._isStarting) return;
+      if (this.isStopped) return;
       const code = e.target?.error?.code;
       if (!navigator.onLine || code === 2) {
         this._showOfflineError();
@@ -1384,7 +1654,7 @@ class QuranAudioPlayer {
         return;
       }
       if (code === 3) {
-        this._showStatus("❌ فشل تحميل الملف", true);
+        this._showStatus(LOAD_FAIL_TEXT, true);
         this._handlePlayError();
         return;
       }
@@ -1392,19 +1662,20 @@ class QuranAudioPlayer {
         this._retrying = true;
         this._showStatus("⏳", false);
         const miniPlay = document.getElementById("miniBarPlayPause");
-        if (miniPlay) miniPlay.innerHTML = '<span class="spinner small"></span>';
+        if (miniPlay) miniPlay.innerHTML = SPINNER_HTML;
         this.fabBtn?.classList.remove('playing');
         setTimeout(() => {
+          if (this.isStopped) return;
           this._retrying = false;
           this.audioElement.load();
           this.audioElement.play().catch(() => {
-            this._showStatus("❌ فشل تحميل الملف", true);
+            this._showStatus(LOAD_FAIL_TEXT, true);
             this._handlePlayError();
           });
         }, 2000);
       } else {
         this._retrying = false;
-        this._showStatus("❌ فشل تحميل الملف", true);
+        this._showStatus(LOAD_FAIL_TEXT, true);
         this._handlePlayError();
       }
     };
@@ -1417,62 +1688,40 @@ class QuranAudioPlayer {
       audio.addEventListener("error", onError);
     });
 
-    this._boundListeners.audio.play = onPlay;
-    this._boundListeners.audio.pause = onPause;
     this._boundListeners.audio.ended = onEnded;
-    this._boundListeners.audio.timeupdate = onTimeUpdate;
-    this._boundListeners.audio.error = onError;
   }
 
   _setupOverlayEvents() {
-    // ✅ Éviter les doublons
     if (this._overlayEventsAttached) return;
     this._overlayEventsAttached = true;
-
-    this._boundListeners.overlay.playPauseClick = () => this.togglePlay();
-    this._boundListeners.overlay.stopClick = () => this.stop();
-    this._boundListeners.overlay.prevSurahClick = () => this.prevSurah();
-    this._boundListeners.overlay.nextSurahClick = () => this.nextSurah();
-    this._boundListeners.overlay.prevAyahClick = () => this.prevAyah();
-    this._boundListeners.overlay.nextAyahClick = () => this.nextAyah();
-    this._boundListeners.overlay.progressInput = (e) => this._onProgressInput(e);
-    this._boundListeners.overlay.repeatClick = () => this.cycleRepeat();
-    this._boundListeners.overlay.speedClick = () => this.cycleSpeed();
-    this._boundListeners.overlay.sleepClick = () => this.openSleepPicker();
-
-    this.elements.overlaySpeedBtn?.addEventListener("click", this._boundListeners.overlay.speedClick);
-    this.elements.playPauseBtn?.addEventListener("click", this._boundListeners.overlay.playPauseClick);
-    this.elements.stopBtn?.addEventListener("click", this._boundListeners.overlay.stopClick);
-    this.elements.prevSurahBtn?.addEventListener("click", this._boundListeners.overlay.prevSurahClick);
-    this.elements.nextSurahBtn?.addEventListener("click", this._boundListeners.overlay.nextSurahClick);
-    this.elements.prevAyahBtn?.addEventListener("click", this._boundListeners.overlay.prevAyahClick);
-    this.elements.nextAyahBtn?.addEventListener("click", this._boundListeners.overlay.nextAyahClick);
-    this.elements.progressBar?.addEventListener("input", this._boundListeners.overlay.progressInput);
-    this.elements.repeatBtn?.addEventListener("click", this._boundListeners.overlay.repeatClick);
-    document.getElementById("sleepBtn")?.addEventListener("click", this._boundListeners.overlay.sleepClick);
+    const e = this.elements;
+    e.overlaySpeedBtn?.addEventListener("click", () => this.cycleSpeed());
+    const P = window.Picker;
+    P?.bindButton(e.reciterSelect, "reciterSelectList", "اختر القارئ");
+    P?.bindButton(e.surahSelect, "surahSelectAudioList", APP_TEXTS.pickSurah);
+    P?.bindButton(e.ayaSelect, "ayaSelectAudioList", APP_TEXTS.pickAyah);
+    P?.bindButton(e.pageSelect, "pageSelectAudioList", APP_TEXTS.pickPage);
+    e.playPauseBtn?.addEventListener("click", () => this.togglePlay());
+    e.stopBtn?.addEventListener("click", () => this.stop());
+    e.prevSurahBtn?.addEventListener("click", () => this.prevSurah());
+    e.nextSurahBtn?.addEventListener("click", () => this.nextSurah());
+    e.prevAyahBtn?.addEventListener("click", () => this.prevAyah());
+    e.nextAyahBtn?.addEventListener("click", () => this.nextAyah());
+    e.progressBar?.addEventListener("input", (ev) => this._onProgressInput(ev));
+    e.repeatBtn?.addEventListener("click", () => this.cycleRepeat());
+    e.sleepBtn?.addEventListener("click", () => this.openSleepPicker());
   }
+
   _setupMiniBarEvents() {
-    const g = (id) => document.getElementById(id);
-
-    this._boundListeners.miniBar.playPauseClick = () => this.togglePlay();
-    this._boundListeners.miniBar.stopClick = () => { this.stop(); this._hideMiniBar(false); };
-    this._boundListeners.miniBar.prevAyahClick = () => this.prevAyah();
-    this._boundListeners.miniBar.nextAyahClick = () => this.nextAyah();
-    this._boundListeners.miniBar.optionsClick = () => this.showOverlay();
-    this._boundListeners.miniBar.hideClick = () => this._hideMiniBar(true);
-    this._boundListeners.miniBar.progressInput = (e) => this._onProgressInput(e);
-    this._boundListeners.miniBar.speedClick = () => this.cycleSpeed();
-    this._boundListeners.miniBar.repeatClick = () => this.cycleRepeat();
-
-    g("miniBarPlayPause")?.addEventListener("click", this._boundListeners.miniBar.playPauseClick);
-    g("miniBarStop")?.addEventListener("click", this._boundListeners.miniBar.stopClick);
-    g("miniBarPrevAyah")?.addEventListener("click", this._boundListeners.miniBar.prevAyahClick);
-    g("miniBarNextAyah")?.addEventListener("click", this._boundListeners.miniBar.nextAyahClick);
-    g("miniBarOptions")?.addEventListener("click", this._boundListeners.miniBar.optionsClick);
-    g("miniBarHide")?.addEventListener("click", this._boundListeners.miniBar.hideClick);
-    g("miniBarProgress")?.addEventListener("input", this._boundListeners.miniBar.progressInput);
-    g("miniBarSpeed")?.addEventListener("click", this._boundListeners.miniBar.speedClick);
-    g("miniBarRepeat")?.addEventListener("click", this._boundListeners.miniBar.repeatClick);
+    const on = (id, fn) => document.getElementById(id)?.addEventListener("click", fn);
+    on("miniBarPlayPause", () => this.togglePlay());
+    on("miniBarStop", () => this.stop());
+    on("miniBarPrevAyah", () => this.prevAyah());
+    on("miniBarNextAyah", () => this.nextAyah());
+    on("miniBarOptions", () => this.showOverlay());
+    on("miniBarHide", () => this._hideMiniBar(true));
+    on("miniBarSpeed", () => this.cycleSpeed());
+    on("miniBarRepeat", () => this.cycleRepeat());
   }
 
   _handlePageChange(e) {
@@ -1483,15 +1732,12 @@ class QuranAudioPlayer {
   }
 
   _setupOnlineOffline() {
-    this._boundListeners.window.online = () => this._updateOnlineStatus();
-    this._boundListeners.window.offline = () => this._updateOnlineStatus();
-    window.addEventListener("online", this._boundListeners.window.online);
-    window.addEventListener("offline", this._boundListeners.window.offline);
-    this._updateOnlineStatus();
-    this._boundListeners.window.pageChanged = (e) => {
+    window.addEventListener("online", () => this._updateOnlineStatus());
+    window.addEventListener("offline", () => this._updateOnlineStatus());
+    window.addEventListener(APP_EVENTS.pageChanged, (e) => {
       if (this.isStopped && e.detail?.page) this.setCurrentSurahFromPage();
-    };
-    window.addEventListener("quran:pageChanged", this._boundListeners.window.pageChanged);
+    });
+    this._updateOnlineStatus();
   }
 
   _updateOnlineStatus() {
@@ -1520,14 +1766,15 @@ class QuranAudioPlayer {
     const miniStop = document.getElementById("miniBarStop");
     if (miniPlay) {
       miniPlay.disabled = !isOnline;
-      if (!isOnline) miniPlay.innerHTML = '<span class="spinner small"></span>';
-      else miniPlay.innerHTML = this.isPlaying ? this._SVG_PAUSE : this._SVG_PLAY;
+      if (!isOnline) miniPlay.innerHTML = SPINNER_HTML;
+      else miniPlay.innerHTML = this.isPlaying ? SVG.pause : SVG.play;
     }
     if (miniStop) miniStop.disabled = !isOnline;
     this._updateFabIndicator();
   }
 
   setCurrentSurahFromPage() {
+    if (this._mem) return;
     const page = window.quranApp?.getCurrentPage() || window.quranReader?.currentPage || 1;
     const first = this._getFirstAyahOfPage(page);
     if (first) { this._setSurah(first.surah, first.ayah); return; }
@@ -1539,16 +1786,17 @@ class QuranAudioPlayer {
   _updatePlayButton(btn) {
     if (!btn) return;
     if (!navigator.onLine) {
-      btn.innerHTML = '<span class="spinner small"></span>';
+      btn.innerHTML = SPINNER_HTML;
       btn.disabled = true;
       btn.classList.remove('playing');
     } else {
-      btn.innerHTML = this.isPlaying ? this._SVG_PAUSE : this._SVG_PLAY;
+      btn.innerHTML = this.isPlaying ? SVG.pause : SVG.play;
       btn.disabled = !(this.currentReciter && this.currentSurah);
-      if (this.isPlaying || this._isTransitioning) btn.classList.add('playing');
-      else btn.classList.remove('playing');
+      btn.classList.toggle("playing", this.isPlaying || this._isTransitioning);
     }
   }
+
+  // ---------- Affichage ----------
 
   _updateUI() {
     const ready = !!(this.currentReciter && this.currentSurah);
@@ -1563,25 +1811,25 @@ class QuranAudioPlayer {
   }
 
   _updateCurrentDisplay() {
-    const surah = this.surahs.find((s) => s.s_id === this.currentSurah);
+    const surah = this._surah(this.currentSurah);
     if (this.elements.currentDisplay && surah) {
       this.elements.currentDisplay.textContent = `${surah.name} : آية ${this.currentAyah} / ${this.totalAyahs}`;
     }
-    if (window.CustomSelect && this.currentSurah) {
+    if (this.currentSurah) {
       const page = this._getPageForAya(this.currentSurah, this.currentAyah);
       requestAnimationFrame(() => {
-        window.CustomSelect.setValue('surahSelectAudio', 'surahSelectAudioList', String(this.currentSurah));
-        window.CustomSelect.setValue('ayaSelectAudio', 'ayaSelectAudioList', String(this.currentAyah));
-        if (page) window.CustomSelect.setValue('pageSelectAudio', 'pageSelectAudioList', String(page));
+        this._syncSurahAyaSelects();
+        if (page) CustomSelect.set("pageSelectAudio", page);
       });
     }
+    if (this._mem && this.elements.currentDisplay) this.elements.currentDisplay.textContent += this._memShort();
     this._syncMiniBar();
   }
 
   _showStatus(msg, isError) {
     if (this.elements.status) {
       this.elements.status.textContent = msg;
-      this.elements.status.style.color = isError ? "var(--error)" : "var(--text-light)";
+      this.elements.status.classList.toggle("error", !!isError);
     }
     const overlayVisible = this.elements.overlay?.classList.contains("show");
     if (isError && msg && !overlayVisible && window.quranApp?.showToast) {
@@ -1592,48 +1840,11 @@ class QuranAudioPlayer {
   _fmt(s) {
     return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
   }
-
-  destroy() {
-    this.stop();
-    const audioA = this.audioA;
-    const audioB = this.audioB;
-    if (audioA) {
-      audioA.removeEventListener("play", this._boundListeners.audio.play);
-      audioA.removeEventListener("pause", this._boundListeners.audio.pause);
-      audioA.removeEventListener("ended", this._boundListeners.audio.ended);
-      audioA.removeEventListener("timeupdate", this._boundListeners.audio.timeupdate);
-      audioA.removeEventListener("error", this._boundListeners.audio.error);
-    }
-    if (audioB) {
-      audioB.removeEventListener("play", this._boundListeners.audio.play);
-      audioB.removeEventListener("pause", this._boundListeners.audio.pause);
-      audioB.removeEventListener("ended", this._boundListeners.audio.ended);
-      audioB.removeEventListener("timeupdate", this._boundListeners.audio.timeupdate);
-      audioB.removeEventListener("error", this._boundListeners.audio.error);
-    }
-    const g = (id) => document.getElementById(id);
-    const mb = this._boundListeners.miniBar;
-    g("miniBarPlayPause")?.removeEventListener("click", mb.playPauseClick);
-    g("miniBarStop")?.removeEventListener("click", mb.stopClick);
-    g("miniBarPrevAyah")?.removeEventListener("click", mb.prevAyahClick);
-    g("miniBarNextAyah")?.removeEventListener("click", mb.nextAyahClick);
-    g("miniBarOptions")?.removeEventListener("click", mb.optionsClick);
-    g("miniBarHide")?.removeEventListener("click", mb.hideClick);
-    g("miniBarProgress")?.removeEventListener("input", mb.progressInput);
-    g("miniBarSpeed")?.removeEventListener("click", mb.speedClick);
-    g("miniBarRepeat")?.removeEventListener("click", mb.repeatClick);
-    window.removeEventListener("online", this._boundListeners.window.online);
-    window.removeEventListener("offline", this._boundListeners.window.offline);
-    window.removeEventListener("quran:pageChanged", this._boundListeners.window.pageChanged);
-    if (this.miniBar) this.miniBar.remove();
-    if (this.fabBtn) this.fabBtn.remove();
-    if (this._musicControlsRetryTimer) {
-      clearTimeout(this._musicControlsRetryTimer);
-      this._musicControlsRetryTimer = null;
-    }
-    this._destroyMediaNotification();
-  }
 }
+
+// ============================================================
+//  DÉMARRAGE
+// ============================================================
 
 window.quranAudioPlayer = new QuranAudioPlayer();
 window.quranAudioPlayer._loadAyaCoords();
