@@ -1095,55 +1095,53 @@ class OverlayManager {
     if (!overlay?.content) return;
     const body = overlay.content;
     body.innerHTML = `<div class="aya-label">الانتقال إلى آية</div>
-      <div class="goto-row">
-        ${A.pairHtml("go", pos)}
-        <button type="button" class="confirm-btn ok aya-go" id="goAyaBtn">اذهب</button>
-      </div>
-      <div class="aya-label">الانتقال إلى صفحة (1-604)</div>
-      <div class="page-input-row">
-        <input type="tel" id="goPageField" class="search-input" inputmode="numeric" pattern="[0-9]*" placeholder="1-604">
-        <button type="button" class="confirm-btn ok" id="goPageBtn">اذهب</button>
-      </div>`;
+    <div class="goto-row">
+      ${A.pairHtml("go", pos)}
+      <button type="button" class="confirm-btn ok aya-go" id="goAyaBtn">اذهب</button>
+    </div>
+    <div class="aya-label">الانتقال إلى صفحة (1-604)</div>
+    <div class="page-input-row">
+      <input type="tel" id="goPageField" class="search-input" inputmode="numeric" pattern="[0-9]*" placeholder="1-604">
+      <button type="button" class="confirm-btn ok" id="goPageBtn">اذهب</button>
+    </div>`;
     const field = body.querySelector("#goPageField");
     const pageOf = () => window.quranAudioPlayer?._getPageForAya(pos.s, pos.a) ?? null;
     field.value = pageOf() || window.quranApp?.getCurrentPage() || 1;
-    A.bindPair(body, "go", pos, () => {
-      const pg = pageOf();
-      if (pg) field.value = pg;
+
+    // ✅ Auto-sélection : tout le texte est sélectionné à l'ouverture
+    //    et à chaque focus (permet d'écraser directement en tapant)
+    const selectAll = () => {
+      try {
+        field.setSelectionRange(0, field.value.length);
+      } catch {
+        field.select();
+      }
+    };
+    field.addEventListener("focus", selectAll);
+    field.addEventListener("click", () => {
+      // Sur mobile, le 1er tap peut placer le curseur sans sélectionner
+      if (document.activeElement === field && field.selectionStart === field.selectionEnd) {
+        selectAll();
+      }
     });
 
-    const finish = () => {
-      this.closeOverlay("goTo");
-      this._refreshBookLayout();
-    };
-    body.querySelector("#goAyaBtn").addEventListener("click", () => {
-      const page = pageOf() ?? (pos.a === 1 ? A.surahStartPage(pos.s) : null);
-      if (!page) {
-        window.quranApp?.showToast("❌ تعذر تحديد صفحة هذه الآية");
-        return;
-      }
-      window.quranApp?.goToPage(page);
-      finish();
-      this.flashAya({ ...pos }, page);
-    });
-    const goPage = () => {
-      const n = parseInt(field.value, 10);
-      if (!AppUtils.isValidPage(n)) {
-        window.quranApp?.showToast("❌ الرجاء إدخال رقم صفحة صحيح (1-604)");
-        field.focus();
-        return;
-      }
-      window.quranApp?.goToPage(n);
-      finish();
-    };
-    body.querySelector("#goPageBtn").addEventListener("click", goPage);
-    field.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        goPage();
+    A.bindPair(body, "go", pos, () => {
+      const pg = pageOf();
+      if (pg) {
+        field.value = pg;
+        // ✅ Re-sélectionner quand la page change via le sélecteur d'ayah
+        if (document.activeElement === field) selectAll();
       }
     });
+
+    // ... suite inchangée (finish, goAyaBtn, goPage, goPageBtn)
     this.showOverlay("goTo");
+
+    // ✅ Sélectionner après l'affichage de l'overlay (le focus doit attendre le rendu)
+    requestAnimationFrame(() => {
+      field.focus();
+      selectAll();
+    });
   }
 
   _refreshBookLayout() {

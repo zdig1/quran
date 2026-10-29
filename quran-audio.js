@@ -600,7 +600,7 @@ class QuranAudioPlayer {
   _memShort() {
     const m = this._mem;
     if (!m) return "";
-    return ` 🧠 ${(m.vDone || 0) + 1}/${m.perVerse || 1} · ${(m.pDone || 0) + 1}/${m.passes || 1}`;
+    return `<span>🧠</span><span>${m.passes || 1}/${(m.pDone || 0) + 1} · ${m.perVerse || 1}/${(m.vDone || 0) + 1}</span>`;
   }
 
   async startMem(cfg) {
@@ -896,8 +896,11 @@ class QuranAudioPlayer {
             </button>
         </div>
         <div class="audio-current-info">
-            <div class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} (عبر النت)</div>
-            <div id="currentSurahDisplay" class="audio-current-display"></div>
+            <div class="audio-main-info">
+                <span class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} (عبر النت)</span>
+                <span id="currentSurahDisplay" class="audio-current-display"></span>
+            </div>
+            <div id="memDisplay" class="audio-mem-display" style="display: none;"></div>
         </div>
         <div class="audio-sleep-row">
             <button type="button" class="audio-sleep-pill" id="sleepBtn">
@@ -1812,9 +1815,21 @@ class QuranAudioPlayer {
 
   _updateCurrentDisplay() {
     const surah = this._surah(this.currentSurah);
+    const memDisplay = document.getElementById("memDisplay");
+
     if (this.elements.currentDisplay && surah) {
       this.elements.currentDisplay.textContent = `${surah.name} : آية ${this.currentAyah} / ${this.totalAyahs}`;
     }
+
+    if (memDisplay) {
+      if (this._mem) {
+        memDisplay.innerHTML = this._memShort().trim();
+        memDisplay.style.display = "flex";
+      } else {
+        memDisplay.style.display = "none";
+      }
+    }
+
     if (this.currentSurah) {
       const page = this._getPageForAya(this.currentSurah, this.currentAyah);
       requestAnimationFrame(() => {
@@ -1822,7 +1837,6 @@ class QuranAudioPlayer {
         if (page) CustomSelect.set("pageSelectAudio", page);
       });
     }
-    if (this._mem && this.elements.currentDisplay) this.elements.currentDisplay.textContent += this._memShort();
     this._syncMiniBar();
   }
 

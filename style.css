@@ -1198,8 +1198,7 @@
 
   .item-surah .surah-grid {
     display: grid;
-    grid-template-columns: auto auto 1fr auto auto auto minmax(2.6rem, auto);
-    grid-template-rows: auto auto;
+grid-template-columns: auto auto minmax(0, 1fr) 2rem 1.2rem 2.6rem 4.6rem;    grid-template-rows: auto auto;
     align-items: center;
     column-gap: 6px;
     row-gap: 2px;
@@ -2132,31 +2131,61 @@
     background: var(--surface-alt);
   }
 
-  .audio-current-info {
-    background: var(--surface-alt);
-    border-radius: var(--border-radius);
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 4px 0;
-  }
-
   .audio-current-info span {
     white-space: nowrap;
     font-size: var(--text-sm);
     color: var(--text-light);
   }
 
+  .audio-current-info {
+    background: var(--surface-alt);
+    border-radius: var(--border-radius);
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0;
+  }
+
+  .audio-main-info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .audio-riwaya-info {
+    text-align: center;
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    font-weight: normal;
+    white-space: nowrap;
+  }
+
   .audio-current-info .audio-current-display {
-    flex: 1;
     margin: 0;
     background: transparent;
     border: none;
-    color: inherit;
-    padding: 0.2rem 0;
+    color: var(--text);
+    font-weight: bold;
     font-size: var(--text-sm);
-    text-align: center;
+    white-space: nowrap;
+  }
+
+  .audio-mem-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    font-weight: bold;
+    color: var(--primary);
+    font-size: var(--text-sm);
+    direction: rtl;
+    gap: 6px;
   }
 
   .audio-select-grid {
