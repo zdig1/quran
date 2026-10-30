@@ -2116,26 +2116,12 @@
     opacity: 0.75;
   }
 
-  /*  Audio  */
+  /* --- Audio --- */
   .audio-body {
     padding: var(--space-md);
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
-  }
-
-  .audio-riwaya-info {
-    text-align: center;
-    font-size: var(--text-sm);
-    color: var(--text-light);
-    border-radius: var(--border-radius);
-    background: var(--surface-alt);
-  }
-
-  .audio-current-info span {
-    white-space: nowrap;
-    font-size: var(--text-sm);
-    color: var(--text-light);
   }
 
   .audio-current-info {
@@ -2165,6 +2151,8 @@
     color: var(--text-light);
     font-weight: normal;
     white-space: nowrap;
+    border-radius: var(--border-radius);
+    background: var(--surface-alt);
   }
 
   .audio-current-info .audio-current-display {
@@ -2177,38 +2165,40 @@
     white-space: nowrap;
   }
 
-.audio-mem-display {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  direction: rtl;
-  gap: 4px;
-}
+  /* Mémorisation (progression) */
+  .audio-mem-display {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    direction: rtl;
+    gap: 4px;
+  }
 
-.audio-mem-display .mem-summary-line {
-  font-weight: bold;
-  color: var(--primary);
-  font-size: var(--text-sm);
-}
+  .audio-mem-display .mem-summary-line {
+    font-weight: bold;
+    color: var(--primary);
+    font-size: var(--text-sm);
+  }
 
-.audio-mem-display .mem-progress {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  color: var(--text-light);
-  font-size: 0.85em;
-  font-weight: 600;
-}
+  .audio-mem-display .mem-progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-light);
+    font-size: 0.85em;
+    font-weight: 600;
+    list-style: none !important;
+  }
 
-.audio-mem-display .mem-sep {
-  width: 1px;
-  height: 12px;
-  background-color: var(--border-dark);
-  display: inline-block;
-}
+  .audio-mem-display .mem-sep {
+    width: 1px;
+    height: 12px;
+    background-color: var(--border-dark);
+    display: inline-block;
+  }
 
   .audio-select-grid {
     display: grid;
