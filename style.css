@@ -1198,7 +1198,8 @@
 
   .item-surah .surah-grid {
     display: grid;
-grid-template-columns: auto auto minmax(0, 1fr) 2rem 1.2rem 2.6rem 4.6rem;    grid-template-rows: auto auto;
+    grid-template-columns: auto auto minmax(0, 1fr) 2rem 1.2rem 2.6rem 4.6rem;
+    grid-template-rows: auto auto;
     align-items: center;
     column-gap: 6px;
     row-gap: 2px;
@@ -2176,17 +2177,38 @@ grid-template-columns: auto auto minmax(0, 1fr) 2rem 1.2rem 2.6rem 4.6rem;    gr
     white-space: nowrap;
   }
 
-  .audio-mem-display {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    font-weight: bold;
-    color: var(--primary);
-    font-size: var(--text-sm);
-    direction: rtl;
-    gap: 6px;
-  }
+.audio-mem-display {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  direction: rtl;
+  gap: 4px;
+}
+
+.audio-mem-display .mem-summary-line {
+  font-weight: bold;
+  color: var(--primary);
+  font-size: var(--text-sm);
+}
+
+.audio-mem-display .mem-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-light);
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.audio-mem-display .mem-sep {
+  width: 1px;
+  height: 12px;
+  background-color: var(--border-dark);
+  display: inline-block;
+}
 
   .audio-select-grid {
     display: grid;

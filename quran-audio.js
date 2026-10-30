@@ -165,7 +165,7 @@ class QuranAudioPlayer {
     this._notifKey = null;
     this._ayaIndex = null;
     this._overlayEventsAttached = false;
-    // Minuterie (إيقاف تلقائي)
+
     this._sleepEndsAt = 0;
     this._fadeTimer = null;
     this._sleepSurahEnd = false;
@@ -173,7 +173,7 @@ class QuranAudioPlayer {
     this._sleepChoice = 0;
     this._sleepTimeout = null;
     this._sleepTick = null;
-    // Notification
+
     this._notifPermAsked = false;
     this._killTimer1 = null;
     this._killTimer2 = null;
@@ -181,35 +181,29 @@ class QuranAudioPlayer {
 
   // ---------- Helpers privés ----------
 
-  /** Efface et annule le minuteur de mémorisation. */
   _clearMemTimer() {
     clearTimeout(this._memTimer);
     this._memTimer = null;
   }
 
-  /** Synchronise les deux menus déroulants du lecteur (sourate + verset). */
   _syncSurahAyaSelects() {
     CustomSelect.set("surahSelectAudio", this.currentSurah);
     CustomSelect.set("ayaSelectAudio", this.currentAyah);
   }
 
-  /** Rafraîchit l'affichage courant + les boutons (pattern répété 8×). */
   _refreshDisplay() {
     this._updateCurrentDisplay();
     this._updateUI();
   }
 
-  /** Applique le taux de lecture à un élément audio donné. */
   _setRateOnElement(el) {
     if (el) el.playbackRate = this.playbackRate;
   }
 
-  /** Lit le mode de répétition depuis les préférences. */
   _loadRepeatPreference() {
     return parseInt(window.quranApp.getPreference("repeat", "0"), 10) || 0;
   }
 
-  /** Lit le taux de lecture depuis les préférences. */
   _loadRatePreference() {
     return parseFloat(window.quranApp.getPreference("rate")) || 1.0;
   }
@@ -400,7 +394,7 @@ class QuranAudioPlayer {
     this._notificationCreated = false;
     this._notifKey = null;
     this._killNotification();
-    // Destructions différées, uniquement si la lecture est toujours à l'arrêt
+
     clearTimeout(this._killTimer1);
     clearTimeout(this._killTimer2);
     this._killTimer1 = setTimeout(() => this.isStopped && this._killNotification(), 400);
@@ -455,7 +449,7 @@ class QuranAudioPlayer {
           ticker: `🎧 ${track}`,
         },
         () => {
-          // Arrêt demandé pendant la création native : on supprime la notification fantôme
+
           if (this.isStopped) this._killNotification();
         },
         () => { },
@@ -494,7 +488,6 @@ class QuranAudioPlayer {
     return n + to.a;
   }
 
-  // Positionne le lecteur sans quitter le mode mémorisation
   _memSetPos(s, a) {
     this._memInternal = true;
     try {
@@ -594,13 +587,31 @@ class QuranAudioPlayer {
 
   _memFinish() {
     window.quranApp?.showToast?.("✅ تم إكمال المقطع");
+    this._memExit();
     this.stop();
   }
 
   _memShort() {
     const m = this._mem;
     if (!m) return "";
-    return `<span>🧠</span><span>${m.passes || 1}/${(m.pDone || 0) + 1} · ${m.perVerse || 1}/${(m.vDone || 0) + 1}</span>`;
+
+    const n = this._memSpan(m.from, m.to);
+    const perVerse = m.perVerse || 1;
+    const passes = m.passes || 1;
+    const total = n * perVerse * passes;
+
+    const verseNow = (m.vDone || 0) + 1;
+    const passNow = (m.pDone || 0) + 1;
+
+    return `
+    <div class="mem-summary-line" dir="rtl">
+      🧠 (${n} آيات × ${perVerse}) × ${passes} = ${total} قراءات
+    </div>
+    <div class="mem-progress" dir="rtl">
+      <span>تكرار الآية <bdi dir="rtl">${verseNow} من ${perVerse}</bdi></span>
+      <span class="mem-sep"></span>
+      <span>المقطع <bdi dir="rtl">${passNow} من ${passes}</bdi></span>
+    </div>`;
   }
 
   async startMem(cfg) {
@@ -616,7 +627,12 @@ class QuranAudioPlayer {
 
   openMemorize() {
     if (this._mem) {
-      window.overlayManager.showConfirm("إيقاف التكرار والحفظ؟").then((ok) => ok && this.stop());
+      window.overlayManager.showConfirm("إيقاف التكرار والحفظ؟").then((ok) => {
+        if (ok) {
+          this.stop();
+          this.showMemDialog();
+        }
+      });
       return;
     }
     this.showMemDialog();
@@ -655,7 +671,7 @@ class QuranAudioPlayer {
         const summary = dialog.querySelector("#memSummary");
         const updateSummary = () => {
           const n = this._memSpan(from, to);
-          summary.textContent = `${n} آيات × ${cfg.perVerse} × ${cfg.passes} = ${n * cfg.perVerse * cfg.passes} قراءات`;
+          summary.textContent = `(${n} آيات × ${cfg.perVerse}) × ${cfg.passes} = ${n * cfg.perVerse * cfg.passes} قراءات`;
         };
 
         let fromPair, toPair;
@@ -1071,7 +1087,7 @@ class QuranAudioPlayer {
       const reciters = RIWAYAT_CONFIG[this.currentRiwaya]?.reciters || [];
       const found = reciters.find(r => r.id === saved);
       if (found && this.currentReciter?.id !== saved) {
-        this._selectReciter(saved, false); // save=false : déjà en localStorage
+        this._selectReciter(saved, false);
       }
     }
 
@@ -1599,7 +1615,7 @@ class QuranAudioPlayer {
 
     const onEnded = () => {
       if (this.audioElement.dataset.basmala === "true") return;
-      if (this._isStarting) return; // <-- AJOUTE CETTE LIGNE
+      if (this._isStarting) return;
       if (this._mem && !(this._sleepEndsAt && Date.now() >= this._sleepEndsAt)) { this._memOnEnded(); return; }
       if (this._sleepEndsAt && Date.now() >= this._sleepEndsAt) { this.stop(); return; }
       this.isPlaying = false;
