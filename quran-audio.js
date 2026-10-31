@@ -177,6 +177,7 @@ class QuranAudioPlayer {
     this._notifPermAsked = false;
     this._killTimer1 = null;
     this._killTimer2 = null;
+    this._killTimer3 = null;
   }
 
   // ---------- Helpers privés ----------
@@ -257,6 +258,7 @@ class QuranAudioPlayer {
 
   _afterNavigate() {
     this.isStopped = false;
+    this._isTransitioning = false;
     this._refreshDisplay();
     this._ensureHighlight();
     this._showMiniBar();
@@ -397,8 +399,10 @@ class QuranAudioPlayer {
 
     clearTimeout(this._killTimer1);
     clearTimeout(this._killTimer2);
+    clearTimeout(this._killTimer3);
     this._killTimer1 = setTimeout(() => this.isStopped && this._killNotification(), 400);
     this._killTimer2 = setTimeout(() => this.isStopped && this._killNotification(), 1500);
+    this._killTimer3 = setTimeout(() => this.isStopped && this._killNotification(), 5000);
   }
 
   _updateMediaNotification() {
@@ -1799,9 +1803,25 @@ class QuranAudioPlayer {
 
   setCurrentSurahFromPage() {
     if (this._mem) return;
+
     const page = window.quranApp?.getCurrentPage() || window.quranReader?.currentPage || 1;
+
+    // Cas 1 : coordonnées prêtes → première aya exacte de la page
     const first = this._getFirstAyahOfPage(page);
     if (first) { this._setSurah(first.surah, first.ayah); return; }
+
+    // Cas 2 : coordonnées pas encore chargées → on ne touche PAS à la position actuelle
+    // (sinon on risquerait d'écraser une position utilisateur avec aya 1 d'une sourate)
+    if (!this.ayaCoordsLoaded) {
+      if (!this.currentSurah) {
+        // Aucun état du tout : on initialise au moins proprement sur la 1ère sourate
+        const sura = window.quranCalculator?.getFirstSurahForPage(page);
+        this._setSurah(sura?.s_id || 1, 1);
+      }
+      return;
+    }
+
+    // Cas 3 : coordonnées chargées mais page introuvable (ne devrait pas arriver)
     const sura = window.quranCalculator?.getFirstSurahForPage(page);
     if (sura) { this._setSurah(sura.s_id, 1); return; }
     if (!this.currentSurah) this._setSurah(1, 1);

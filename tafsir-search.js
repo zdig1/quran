@@ -117,16 +117,13 @@ class TafsirSearchManager {
       return escaped;
     }
 
-    // On enveloppe TOUT (même les chiffres) dans le span
     return escaped.replace(regex, '<span class="search-hit">$1</span>');
   }
 
-  /** Lit un CustomSelect et retourne son entier (ou null si vide/invalide). */
   _readIntSelect(id) {
     return parseInt(CustomSelect.get(id), 10) || null;
   }
 
-  /** Décalage vertical d'un élément par rapport au haut scrollable de son conteneur. */
   _getOffsetTop(el, container) {
     return el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
   }
@@ -1108,6 +1105,6 @@ setTimeout(() => {
     !window.tafsirManager.isLoading &&
     document.visibilityState === "visible"
   ) {
-    window.tafsirManager.preload().catch(() => {});
+    window.tafsirManager.preload().catch(() => { });
   }
 }, 10000);

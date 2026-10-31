@@ -740,7 +740,14 @@ class QuranApp {
 
   _onKeyDown(e) {
     const overlayEl = document.querySelector(".overlay.show");
-    if (overlayEl) return this._scrollOverlayByKey(e, overlayEl.querySelector(".overlay-body"));
+    if (overlayEl) {
+      // Priorité : .overlay-body, sinon conteneur défilable spécifique (tafsir)
+      const scroller =
+        overlayEl.querySelector(".overlay-body") ||
+        overlayEl.querySelector(".tafsir-content-container") ||
+        overlayEl.querySelector(".audio-body");
+      return this._scrollOverlayByKey(e, scroller);
+    }
     if (this._isMenuOpen()) return;
     this._navigateByKey(e);
   }

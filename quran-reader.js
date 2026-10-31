@@ -1184,7 +1184,12 @@ class QuranReader {
   }
 
   _finishOrientationChange(savedPage, isIOS) {
+    // ⚠️ Avant : goToPage() était appelé alors que isTransitioning === true
+    // → retour immédiat, code mort. On remet le flag à false AVANT l'appel.
+    this.isTransitioning = false;
+
     this.goToPage(savedPage);
+
     if (isIOS && this.readingMode === "book") this._reloadImageIOS(savedPage);
     if (this.readingMode === "book") this._adjustFooterHeight();
 
@@ -1192,7 +1197,6 @@ class QuranReader {
     if (!player?.isStopped && (player?.isPlaying || player?.currentAyah)) {
       setTimeout(() => this._reapplyHighlightIfNeeded(), 100);
     }
-    this.isTransitioning = false;
   }
 
   /** iOS : force le rafraîchissement de l'image après rotation. */
@@ -1331,11 +1335,13 @@ class QuranReader {
   }
 
   _scrollToFirstHighlight(scrollOffset) {
-    const first = this.spacer.querySelector(".aya-highlight");
+    const first = this.spacer?.querySelector(".aya-highlight");
     if (!first) return;
     const container = this.elements.pageScroll;
-    const offset = container.getBoundingClientRect().top + scrollOffset;
-    container.scrollTo({ top: parseFloat(first.style.top) - offset, behavior: "auto" });
+    if (!container) return;
+    const top = parseFloat(first.style.top);
+    if (isNaN(top)) return;
+    container.scrollTo({ top: Math.max(0, top - scrollOffset), behavior: "auto" });
   }
 
   clearHighlight() {
