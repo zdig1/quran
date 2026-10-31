@@ -1268,7 +1268,6 @@ class QuranAudioPlayer {
     this._preloadTriggered = false;
     this._preloadNextAyah();
 
-    // ⚠️ LIBÉRATION DU VERROU APRÈS 500ms
     setTimeout(() => { this._isStarting = false; }, 500);
   }
 
@@ -1376,6 +1375,15 @@ class QuranAudioPlayer {
       if (this.isPlaying) this.play();
       else this._afterNavigate();
     } else {
+      if (this.currentSurah < 114) {
+        const nextSurahData = this._surah(this.currentSurah + 1);
+        if (nextSurahData) {
+          this._setSurah(this.currentSurah + 1, 1);
+          if (this.isPlaying) this.play();
+          else this._afterNavigate();
+          return;
+        }
+      }
       if (this.isPlaying) this._onEndOfSurah();
       else this._afterNavigate();
     }
