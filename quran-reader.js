@@ -115,7 +115,7 @@ class QuranReader {
     // Auto scroll
     this.autoScrollActive = false;
     this.autoScrollRAF = null;
-    this.autoScrollSpeed = 0.2; // la vitesse enregistrée est lue dans init()
+    this.autoScrollSpeed = 0.2;
     this.minSpeed = 0.1;
     this.maxSpeed = 0.8;
     this.speedStep = 0.1;
@@ -451,7 +451,7 @@ class QuranReader {
         try {
           this._applyResize();
         } finally {
-          this.resizePending = false; // même si une erreur survient
+          this.resizePending = false;
         }
       });
     }, 150);
@@ -589,11 +589,9 @@ class QuranReader {
     try {
       await tempImg.decode();
     } catch {
-      /* image absente ou illisible : le navigateur gérera l'erreur */
     }
 
     this.imageCache.set(page, url);
-    // Le conteneur a pu être recyclé pour une autre page pendant le décodage
     if (this._wrapperPage(imgEl) !== page) return;
     imgEl.src = url;
     imgEl.dataset.loaded = "true";
@@ -912,7 +910,6 @@ class QuranReader {
     footer.style.height = `${footerHeight}px`;
     footer.style.minHeight = `${footerHeight}px`;
 
-    // La mini-barre audio prend la même hauteur que le footer quand elle est visible
     const miniBar = document.getElementById("audioMiniBar");
     if (miniBar) {
       const visible = !miniBar.classList.contains("hidden");
@@ -1111,7 +1108,6 @@ class QuranReader {
 
   // ---------- Bouton signets : appui court / appui long ----------
 
-  /** Appui court : ouvre la fenêtre des signets. Appui long : ajoute la page directement (ruban 🔖) ou ouvre la fenêtre (étoile ⭐). */
   _setupBookmarkButton() {
     const btn = this.elements.bookmarkBtn;
     if (!btn) return;
@@ -1133,7 +1129,7 @@ class QuranReader {
     this._on(btn, "contextmenu", (e) => e.preventDefault());
     this._on(btn, "click", () => {
       if (longPressed) {
-        longPressed = false; // le relâchement après un appui long ne doit pas rouvrir la fenêtre
+        longPressed = false;
         return;
       }
       window.overlayManager?.showBookmarks();
@@ -1146,7 +1142,7 @@ class QuranReader {
     const page = this.currentPage;
     navigator.vibrate?.(30);
     if (!app || app.bookmarkedPagesSet.has(page)) {
-      om?.showBookmarks(); // page déjà en favori (étoile) : on ouvre la fenêtre
+      om?.showBookmarks();
       return;
     }
     const name = om?.getDefaultBookmarkName?.(page) || `صفحة ${page}`;

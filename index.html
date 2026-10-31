@@ -513,7 +513,7 @@
                 });
 
             window.addEventListener('DOMContentLoaded', async () => {
-                if (window.__layersUnsupported) return; // message de mise à jour déjà affiché
+                if (window.__layersUnsupported) return;
                 try {
                     for (const src of MODULES) await loadScript(src);
                     window.quranApp?.init?.();

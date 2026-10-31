@@ -1081,7 +1081,6 @@ class QuranAudioPlayer {
   }
 
   _reloadPreferences() {
-    // Récitateur actif
     const saved = window.quranApp.getPreference(`reciter_${this.currentRiwaya}`);
     if (saved) {
       const reciters = RIWAYAT_CONFIG[this.currentRiwaya]?.reciters || [];
@@ -1091,23 +1090,19 @@ class QuranAudioPlayer {
       }
     }
 
-    // Récitateurs épinglés
     this._populateReciterSelect(this.currentRiwaya);
 
-    // Vitesse de lecture
     const savedRate = this._loadRatePreference();
     if (this.playbackRate !== savedRate) {
       this._applyRate(savedRate);
     }
 
-    // Mode répétition
     const savedRepeat = this._loadRepeatPreference();
     if (this.repeatMode !== savedRepeat) {
       this.repeatMode = savedRepeat;
       this._updateRepeatBtn();
     }
 
-    // Rafraîchir l'UI si l'overlay est ouvert
     if (this.elements.overlay?.classList.contains("show")) {
       this._syncOverlay();
     }

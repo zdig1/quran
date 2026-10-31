@@ -365,7 +365,6 @@ class OverlayManager {
     const inAllSection = (id) =>
       container.querySelector(`.surah-section-all .item-surah[data-surah-id="${id}"]`);
 
-    // Mémoriser la position de la sourate cliquée pour la retrouver après le rendu
     let initialClickOffset = 0;
     if (preserveSurahId) {
       const clickedEl =
@@ -392,7 +391,6 @@ class OverlayManager {
     if (pinned.length > 0) container.appendChild(section("surah-section-pinned", "⭐ السور المفضلة", pinned));
     container.appendChild(section("surah-section-all", "📖 جميع السور", surahs));
 
-    // Mettre en évidence la sourate courante
     const currentId = calc.getFirstSurahForPage(this.getCurrentPage())?.s_id;
     if (currentId) inAllSection(currentId)?.classList.add("current-item");
 
@@ -523,7 +521,7 @@ class OverlayManager {
       if (match) {
         const prefix = match[1];
         const rest = match[2];
-        const colorClass = `sec-${sectionIndex++ % 8}`; // couleurs définies dans style.css (.sec-0 à .sec-7)
+        const colorClass = `sec-${sectionIndex++ % 8}`;
         html += `<div class="surah-section-title ${colorClass}">${prefix} ${AppUtils.esc(rest)}</div>`;
       } else {
         html += `<div class="surah-section-text">${AppUtils.esc(line)}</div>`;
@@ -635,7 +633,6 @@ class OverlayManager {
     const bookmarks = window.quranApp?.getBookmarks() || [];
     const currentPage = this.getCurrentPage();
 
-    // Liste des signets
     const list = AppUtils.el("div", "bookmarks-list");
     if (bookmarks.length === 0) {
       list.appendChild(AppUtils.el("div", "empty-message", "لا توجد علامات مرجعية"));
@@ -643,7 +640,6 @@ class OverlayManager {
       bookmarks.forEach((bookmark) => list.appendChild(this.createBookmarkElement(bookmark)));
     }
 
-    // Formulaire d'ajout / modification
     const input = AppUtils.el("input", "search-input");
     input.type = "text";
     input.placeholder = "اسم العلامة";
@@ -760,7 +756,6 @@ class OverlayManager {
       }),
     );
 
-    // Ligne 2 : date de dernière modification
     const dateSpan = AppUtils.el("span", "note-small", this._formatShortDate(bookmark.lastModified) || "غير معروف");
     const right = AppUtils.el("div", "item-right");
     right.appendChild(dateSpan);
@@ -779,11 +774,9 @@ class OverlayManager {
 
     item.querySelector(".icon-btn--replace")?.addEventListener("click", async (e) => {
       e.stopPropagation();
-      // Récupérer la page courante DIRECTEMENT depuis le lecteur (pas via `getCurrentPage()` qui peut être obsolète)
       const currentPage = window.quranReader?.getCurrentPage() || this.getCurrentPage();
       const oldPage = bookmark.page;
 
-      // Éviter le remplacement si la page n'a pas changé
       if (oldPage === currentPage) {
         window.quranApp?.showToast("⚠️ العلامة موجودة بالفعل على هذه الصفحة");
         return;
@@ -1090,58 +1083,96 @@ class OverlayManager {
   showPageInputDialog() {
     this.closeMenu();
     const A = window.AyaPicker;
+    if (!A) return;
+
     const pos = A.currentPos();
     const overlay = this.lazyLoadOverlay("goTo");
     if (!overlay?.content) return;
+
     const body = overlay.content;
-    body.innerHTML = `<div class="aya-label">الانتقال إلى آية</div>
+    body.innerHTML = `
+    <div class="aya-label">الانتقال إلى آية</div>
     <div class="goto-row">
       ${A.pairHtml("go", pos)}
       <button type="button" class="confirm-btn ok aya-go" id="goAyaBtn">اذهب</button>
     </div>
     <div class="aya-label">الانتقال إلى صفحة (1-604)</div>
     <div class="page-input-row">
-      <input type="tel" id="goPageField" class="search-input" inputmode="numeric" pattern="[0-9]*" placeholder="1-604">
+      <input type="tel" id="goPageField" class="search-input"
+             inputmode="numeric" pattern="[0-9]*" placeholder="1-604">
       <button type="button" class="confirm-btn ok" id="goPageBtn">اذهب</button>
     </div>`;
-    const field = body.querySelector("#goPageField");
-    const pageOf = () => window.quranAudioPlayer?._getPageForAya(pos.s, pos.a) ?? null;
-    field.value = pageOf() || window.quranApp?.getCurrentPage() || 1;
 
-    // ✅ Auto-sélection : tout le texte est sélectionné à l'ouverture
-    //    et à chaque focus (permet d'écraser directement en tapant)
+    const field = body.querySelector("#goPageField");
+    const goAyaBtn = body.querySelector("#goAyaBtn");
+    const goPageBtn = body.querySelector("#goPageBtn");
+
+    const safePage = (n) => {
+      const p = parseInt(n, 10);
+      return AppUtils.isValidPage(p) ? p : 1;
+    };
+
+    const pageOf = () => {
+      const p = window.quranAudioPlayer?._getPageForAya?.(pos.s, pos.a);
+      return AppUtils.isValidPage(p) ? p : null;
+    };
+
+    field.value = String(pageOf() || safePage(window.quranApp?.getCurrentPage?.()));
+
     const selectAll = () => {
-      try {
-        field.setSelectionRange(0, field.value.length);
-      } catch {
-        field.select();
-      }
+      try { field.setSelectionRange(0, field.value.length); }
+      catch { field.select?.(); }
     };
     field.addEventListener("focus", selectAll);
     field.addEventListener("click", () => {
-      // Sur mobile, le 1er tap peut placer le curseur sans sélectionner
-      if (document.activeElement === field && field.selectionStart === field.selectionEnd) {
-        selectAll();
-      }
+      if (document.activeElement === field &&
+        field.selectionStart === field.selectionEnd) selectAll();
     });
 
     A.bindPair(body, "go", pos, () => {
       const pg = pageOf();
       if (pg) {
-        field.value = pg;
-        // ✅ Re-sélectionner quand la page change via le sélecteur d'ayah
+        field.value = String(pg);
         if (document.activeElement === field) selectAll();
       }
     });
 
-    // ... suite inchangée (finish, goAyaBtn, goPage, goPageBtn)
+    goAyaBtn.addEventListener("click", () => {
+      const page = pageOf();
+      if (!page) {
+        window.quranApp?.showToast("⚠️ لم يتم العثور على الآية");
+        return;
+      }
+      this.closeOverlay("goTo");
+      setTimeout(() => {
+        window.quranApp?.goToPage(page);
+        window.overlayManager?.flashAya({ s: Number(pos.s), a: Number(pos.a) }, page);
+      }, 150);
+    });
+
+    const goPage = () => {
+      const page = parseInt(field.value, 10);
+      if (!AppUtils.isValidPage(page)) {
+        window.quranApp?.showToast("⚠️ رقم صفحة غير صالح (1-604)");
+        field.focus();
+        selectAll();
+        return;
+      }
+      this.closeOverlay("goTo");
+      this._refreshBookLayout();
+      setTimeout(() => window.quranApp?.goToPage(page), 100);
+    };
+    goPageBtn.addEventListener("click", goPage);
+    field.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); goPage(); }
+    });
+
     this.showOverlay("goTo");
 
-    // ✅ Sélectionner après l'affichage de l'overlay (le focus doit attendre le rendu)
-    requestAnimationFrame(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       field.focus();
       selectAll();
-    });
+    }));
   }
 
   _refreshBookLayout() {
@@ -1153,7 +1184,6 @@ class OverlayManager {
     }, 350);
   }
 
-  // Surlignage de 3 s sur l'aya atteinte (« aller à » et résultats de recherche) — seulement si l'audio est à l'arrêt
   flashAya(p, page) {
     const player = window.quranAudioPlayer;
     if (!player?.ayaCoordsLoaded || !player.isStopped) return;
@@ -1211,7 +1241,6 @@ class OverlayManager {
     if (this.currentOverlay === name) this.currentOverlay = null;
     if (!this.currentOverlay) document.body.style.overflow = "";
 
-    // Après le tafsir : revenir à la page qui était affichée avant l'ouverture
     if (name === "tafsir" && this._tafsirSavedPage && window.quranReader?.goToPage) {
       setTimeout(() => {
         window.quranReader.goToPage(this._tafsirSavedPage);
