@@ -34,7 +34,7 @@ const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
   hafs: {
     label: "حفص",
     reciters: [
-      { id: "Ibrahim_Akhdar_64kbps", name: "إبراهيم الأخضر" },
+      { id: "Ibrahim_Akhdar_32kbps", name: "إبراهيم الأخضر" },
       { id: "Abu_Bakr_Ash-Shaatree_64kbps", name: "أبو بكر الشاطري" },
       { id: "Ahmed_ibn_Ali_al-Ajamy_64kbps_QuranExplorer.Com", name: "أحمد العجمي" },
       { id: "Ahmed_Neana_128kbps", name: "أحمد نعينة" },
@@ -837,7 +837,9 @@ class QuranAudioPlayer {
   sleepLabel() {
     if (this._sleepSurahEnd) return "نهاية السورة";
     if (this._sleepEndsAt) {
-      const m = Math.max(1, Math.ceil((this._sleepEndsAt - Date.now()) / 60000));
+      const remaining = this._sleepEndsAt - Date.now();
+      if (remaining <= 0) return "إيقاف تلقائي";
+      const m = Math.ceil(remaining / 60000);
       return `متبقي ${m} دقيقة`;
     }
     if (this._sleepPending) return `عند التشغيل: ${this._sleepPending} دقيقة`;
@@ -847,20 +849,16 @@ class QuranAudioPlayer {
   _checkSleep() {
     if (!this._sleepEndsAt || Date.now() < this._sleepEndsAt) return;
     this._sleepEndsAt = 0;
+    this._sleepPending = 0;
+    this._sleepSurahEnd = false;
+    this._sleepChoice = 0;
     clearTimeout(this._sleepTimeout);
     this._sleepTimeout = null;
-    if (!this.isPlaying) { this.stop(); return; }
-    let v = 1;
-    clearInterval(this._fadeTimer);
-    this._fadeTimer = setInterval(() => {
-      v = Math.max(0, v - 0.05);
-      for (const a of [this.audioA, this.audioB]) a.volume = v;
-      if (v <= 0.001) {
-        clearInterval(this._fadeTimer);
-        this._fadeTimer = null;
-        this.stop();
-      }
-    }, 400);
+    clearInterval(this._sleepTick);
+    this._sleepTick = null;
+    this.stop();
+    this._updateSleepPill();
+    window.quranApp?.showToast("⏱️ تم إيقاف التشغيل تلقائياً");
   }
 
   // ---------- Overlay audio (UI + ouverture) ----------
@@ -1334,6 +1332,7 @@ class QuranAudioPlayer {
       navigator.mediaSession.playbackState = "none";
       navigator.mediaSession.metadata = null;
     }
+    this._updateSleepPill();
   }
 
   togglePlay() {
@@ -1492,6 +1491,9 @@ class QuranAudioPlayer {
     bar.id = "audioMiniBar";
     bar.className = "audio-mini-bar hidden";
     bar.innerHTML = `
+    <!-- ✅ LIGNE AJOUTÉE AU-DESSUS -->
+    <div id="miniBarMemLine" class="mini-bar-mem-line" style="display:none;"></div>
+
     <div class="mini-bar-bottom">
       <button class="audio-btn" id="miniBarOptions" title="خيارات">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -1836,6 +1838,7 @@ class QuranAudioPlayer {
     const surah = this._surah(this.currentSurah);
     const memDisplay = document.getElementById("memDisplay");
 
+    // Overlay principal
     if (this.elements.currentDisplay && surah) {
       this.elements.currentDisplay.textContent = `${surah.name} : آية ${this.currentAyah} / ${this.totalAyahs}`;
     }
@@ -1849,6 +1852,23 @@ class QuranAudioPlayer {
       }
     }
 
+    // ✅ Mise à jour de la nouvelle ligne au-dessus de la mini-barre
+    const barMemLine = document.getElementById("miniBarMemLine");
+    if (barMemLine) {
+      if (this._mem) {
+        const m = this._mem;
+        const verseNow = (m.vDone || 0) + 1;
+        const passNow = (m.pDone || 0) + 1;
+
+        // On utilise le même format que ta photo
+        barMemLine.innerHTML = `🧠 تكرار الآية ${verseNow} من ${m.perVerse} &nbsp;|&nbsp; المقطع ${passNow} من ${m.passes}`;
+        barMemLine.style.display = "block";
+      } else {
+        barMemLine.style.display = "none";
+      }
+    }
+
+    // Reste du code inchangé
     if (this.currentSurah) {
       const page = this._getPageForAya(this.currentSurah, this.currentAyah);
       requestAnimationFrame(() => {
