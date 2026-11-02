@@ -4,7 +4,6 @@
 //         toast, événements) + outils partagés par tous les scripts
 //         (utilitaires, listes, menus déroulants, pickers)
 //
-//  SOMMAIRE
 //   1. Configuration et constantes
 //   2. AppUtils  — petits outils partagés
 //   3. AppStore  — accès sûr à localStorage
@@ -61,7 +60,6 @@ const APP_TEXTS = Object.freeze({
 // ============================================================
 
 const AppUtils = {
-  /** Échappe le HTML (null / undefined → chaîne vide). */
   esc(text) {
     if (text === null || text === undefined) return "";
     return String(text)
@@ -72,7 +70,6 @@ const AppUtils = {
       .replace(/'/g, "&#039;");
   },
 
-  /** Crée un élément : el("div", "classe", "texte"). */
   el(tag, className = "", text = null) {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -82,7 +79,6 @@ const AppUtils = {
 
   clamp: (value, min, max) => Math.min(Math.max(value, min), max),
 
-  /** 7 → "007" (fichiers audio, images de pages). */
   pad3: (n) => String(n).padStart(3, "0"),
 
   isValidPage: (p) => Number.isInteger(p) && p >= 1 && p <= APP_CFG.TOTAL_PAGES,
@@ -97,7 +93,6 @@ const AppUtils = {
     };
   },
 
-  /** Rejette la promesse si elle dépasse `ms` millisecondes. */
   withTimeout(promise, ms) {
     let timer;
     const timeout = new Promise((_, reject) => {
@@ -106,12 +101,10 @@ const AppUtils = {
     return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
   },
 
-  /** Lit une variable CSS ("--x") ; `fallback` si elle est absente ou si la feuille de style n'est pas chargée. */
   cssVar(name, fallback = "") {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
   },
 
-  /** Variable CSS de durée ("0.3s" ou "300ms") → millisecondes. */
   cssMs(name, fallbackMs) {
     const v = AppUtils.cssVar(name);
     const n = parseFloat(v);
@@ -119,7 +112,6 @@ const AppUtils = {
     return /ms$/.test(v) ? n : n * 1000;
   },
 
-  /** Variable CSS de longueur ("56px" ou "3.5rem") → pixels. */
   cssPx(name, fallbackPx) {
     const v = AppUtils.cssVar(name);
     const n = parseFloat(v);
@@ -127,7 +119,6 @@ const AppUtils = {
     return /rem$/.test(v) ? n * parseFloat(getComputedStyle(document.documentElement).fontSize) : n;
   },
 
-  /** Fait défiler `container` pour placer `el` à `ratio` de sa hauteur. */
   centerIn(container, el, ratio = 1 / 3) {
     const relativeTop =
       el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
@@ -135,16 +126,13 @@ const AppUtils = {
     container.scrollTop = Math.max(0, top);
   },
 
-  /** Promesse résolue à la prochaine image affichée. */
   nextFrame: () => new Promise((resolve) => requestAnimationFrame(resolve)),
 
-  /** Exécute `fn` après `frames` images (2 par défaut : après le rendu). */
   afterFrames(fn, frames = 2) {
     const step = (n) => requestAnimationFrame(() => (n <= 1 ? fn() : step(n - 1)));
     step(frames);
   },
 
-  /** Envoie un événement personnalisé sur window. */
   emit(name, detail = undefined) {
     window.dispatchEvent(new CustomEvent(name, detail === undefined ? undefined : { detail }));
   },
@@ -181,7 +169,6 @@ const AppStore = {
     }
   },
 
-  /** Lit un JSON ; renvoie `defaultValue` si absent ou corrompu. */
   getJSON(key, defaultValue = null) {
     const raw = AppStore.get(key);
     if (raw === null) return defaultValue;
@@ -230,18 +217,15 @@ class QuranApp {
 
   // ---------- Helpers privés ----------
 
-  /** Retrouve un signet par identifiant (ou null). */
   _findBookmark(id) {
     return this.bookmarks.find((b) => b.id === id) || null;
   }
 
-  /** Vrai si le menu principal est ouvert. */
   _isMenuOpen() {
     return !!document.querySelector(".menu-overlay.show");
   }
 
 
-  /** Annule les deux minuteurs du toast (affichage + masquage). */
   _clearToastTimers() {
     clearTimeout(this._toastTimeout);
     clearTimeout(this._toastHideTimeout);
@@ -249,12 +233,10 @@ class QuranApp {
     this._toastHideTimeout = null;
   }
 
-  /** Normalise une liste d'identifiants de sourates épinglées. */
   _normalizePinnedSurahs(list) {
     return Array.isArray(list) ? list.filter(AppUtils.isValidSurahId) : [];
   }
 
-  /** Vrai si le mode nuit est actif. */
   _isNightMode() {
     return document.body.classList.contains("night-mode");
   }
@@ -362,7 +344,6 @@ class QuranApp {
     return AppUtils.esc(text);
   }
 
-  /** Détecte un balayage horizontal. Retourne une fonction de nettoyage. */
   enableSwipe(element, onSwipeLeft, onSwipeRight, threshold = 50, cooldown = 300) {
     if (!element) return;
     let startX = 0;
@@ -442,7 +423,6 @@ class QuranApp {
     return `bookmark_${page}_${Date.now()}_${index}`;
   }
 
-  /** Complète un signet : id et date de modification. */
   _normalizeBookmark(bookmark, index = 0) {
     return {
       ...bookmark,
@@ -455,7 +435,6 @@ class QuranApp {
     return window.quranCalculator?.getFirstSurahForPage?.(page)?.s_id ?? null;
   }
 
-  /** Ajoute la sourate aux anciens signets qui n'en ont pas. */
   _migrateBookmarks() {
     if (!window.quranCalculator?.isLoaded) return;
     let changed = false;
@@ -473,7 +452,6 @@ class QuranApp {
     this.bookmarkedPagesSet = new Set(this.bookmarks.map((b) => b.page));
   }
 
-  /** Étape finale commune : tri, index, sauvegarde, icônes, événement. */
   _commitBookmarks(pagesToRefresh = []) {
     this.bookmarks.sort((a, b) => a.page - b.page);
     this._updateBookmarkedPagesSet();
@@ -535,7 +513,6 @@ class QuranApp {
     return Object.keys(window.RIWAYAT_CONFIG || {});
   }
 
-  /** Exporte signets, épingles, récitateurs, dernière page et thème. */
   exportUserData() {
     const pinnedReciters = {};
     const activeReciters = {};
@@ -559,7 +536,6 @@ class QuranApp {
     );
   }
 
-  /** Importe un JSON exporté. `merge` = fusionner au lieu de remplacer. */
   importUserData(jsonString, merge = false) {
     try {
       const imported = JSON.parse(jsonString);
@@ -703,7 +679,6 @@ class QuranApp {
 
   // ---------- Écouteurs d'événements ----------
 
-  /** Ajoute un écouteur et le mémorise pour le retirer dans destroy(). */
   _on(target, type, handler, options) {
     target.addEventListener(type, handler, options);
     this._listeners.push({ target, type, handler, options });
@@ -935,7 +910,6 @@ class CustomSelect {
 
   // ---------- HTML ----------
 
-  /** Génère le bloc HTML d'un menu : markup("suraSelect", "اختر السورة"). */
   static markup(id, placeholder) {
     return `<div class="custom-select" id="${id}Wrap">
       <button type="button" class="custom-select-btn" id="${id}">
@@ -1003,7 +977,6 @@ class CustomSelect {
     return document.getElementById(listId)?.querySelector(".selected")?.dataset.value || "";
   }
 
-  /** Garde l'option visible dans la liste ouverte. */
   static _keepVisible(list, opt) {
     const optTop = opt.offsetTop;
     const optBottom = optTop + opt.offsetHeight;
@@ -1088,7 +1061,6 @@ window.Picker = (() => {
     return box;
   };
 
-  /** Retourne true si le sélecteur était ouvert (utilisé par le bouton retour). */
   function close() {
     if (!box?.classList.contains("show")) return false;
     box.classList.remove("show");
@@ -1118,7 +1090,6 @@ window.Picker = (() => {
     return r;
   };
 
-  /** build(rerender) retourne la liste des nœuds à afficher. */
   const show = (title, build) => {
     const b = ensure();
     b.querySelector(".mini-overlay-title").textContent = title;
@@ -1133,7 +1104,6 @@ window.Picker = (() => {
     render(false);
   };
 
-  /** items : [{ value, label }] */
   const open = (title, items, current, onSelect) =>
     show(title, () =>
       items.map((it) =>
@@ -1147,7 +1117,6 @@ window.Picker = (() => {
       ),
     );
 
-  /** Construit la liste à partir d'un menu CustomSelect (groupes, .selected, bouton 📌). */
   const fromList = (listId, title) =>
     show(title, (rerender) => {
       const list = document.getElementById(listId);
@@ -1247,7 +1216,6 @@ window.AyaPicker = (() => {
     return { refresh };
   };
 
-  /** Position de départ : lecture en cours, sinon début de la page affichée. */
   const currentPos = () => {
     const player = window.quranAudioPlayer;
     if (player?.currentSurah && player?.currentAyah) {

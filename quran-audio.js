@@ -900,7 +900,7 @@ class QuranAudioPlayer {
             <button class="btn audio-btn" id="nextAyahBtn" title="الآية التالية">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
             </button>
-            <button class="btn audio-btn" id="playPauseBtn" title="تشغيل">
+            <button class="btn audio-btn play-main-btn" id="playPauseBtn" title="تشغيل">
                 ${SVG.play}
             </button>
             <button class="btn audio-btn" id="prevAyahBtn" title="الآية السابقة">
@@ -1204,7 +1204,6 @@ class QuranAudioPlayer {
   // ---------- Lecture ----------
 
   play() {
-    // ⚠️ ANTI-DOUBLE LECTURE
     if (this._isStarting) return;
     this._isStarting = true;
 
@@ -1510,8 +1509,8 @@ class QuranAudioPlayer {
         <button class="audio-btn" id="miniBarNextAyah" title="الآية التالية">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
         </button>
-        <button class="audio-btn" id="miniBarPlayPause" title="تشغيل">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="10 8 16 12 10 16"/></svg>
+       <button class="audio-btn play-main-btn" id="miniBarPlayPause" title="تشغيل">
+          ${SVG.play}
         </button>
         <button class="audio-btn" id="miniBarPrevAyah" title="الآية السابقة">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="11 6 3 12 11 18"/><polygon points="21 6 13 12 21 18"/></svg>
@@ -1811,10 +1810,8 @@ class QuranAudioPlayer {
     if (first) { this._setSurah(first.surah, first.ayah); return; }
 
     // Cas 2 : coordonnées pas encore chargées → on ne touche PAS à la position actuelle
-    // (sinon on risquerait d'écraser une position utilisateur avec aya 1 d'une sourate)
     if (!this.ayaCoordsLoaded) {
       if (!this.currentSurah) {
-        // Aucun état du tout : on initialise au moins proprement sur la 1ère sourate
         const sura = window.quranCalculator?.getFirstSurahForPage(page);
         this._setSurah(sura?.s_id || 1, 1);
       }
@@ -1872,15 +1869,12 @@ class QuranAudioPlayer {
       }
     }
 
-    // ✅ Mise à jour de la nouvelle ligne au-dessus de la mini-barre
     const barMemLine = document.getElementById("miniBarMemLine");
     if (barMemLine) {
       if (this._mem) {
         const m = this._mem;
         const verseNow = (m.vDone || 0) + 1;
         const passNow = (m.pDone || 0) + 1;
-
-        // On utilise le même format que ta photo
         barMemLine.innerHTML = `🧠 تكرار الآية ${verseNow} من ${m.perVerse} &nbsp;|&nbsp; المقطع ${passNow} من ${m.passes}`;
         barMemLine.style.display = "block";
       } else {
@@ -1888,7 +1882,6 @@ class QuranAudioPlayer {
       }
     }
 
-    // Reste du code inchangé
     if (this.currentSurah) {
       const page = this._getPageForAya(this.currentSurah, this.currentAyah);
       requestAnimationFrame(() => {

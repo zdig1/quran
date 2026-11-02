@@ -1,10 +1,3 @@
-<!--
-  ============================================================
-   FICHIER : index.html
-   Rôle : page principale de l'application (structure, overlays,
-          menu, lecteur, scripts de chargement)
-  ============================================================
--->
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 
@@ -361,7 +354,7 @@
         <div id="audioOverlay" class="overlay" role="dialog" aria-label="الاستماع إلى القرآن">
             <div class="overlay-content">
                 <div class="overlay-header">
-                    <h2>🎧 الاستماع إلى القرآن</h2>
+                    <h2>🎧 الاستماع للقرآن</h2>
                     <button type="button" class="btn close-btn" id="closeAudioBtn">✕</button>
                 </div>
                 <div id="audioContentContainer" class="overlay-body audio-body"></div>
@@ -487,9 +480,7 @@
     <!-- ---------- Cordova (absent sur le web : l'erreur 404 est sans conséquence) ---------- -->
     <script src="cordova.js"></script>
 
-    <!-- ---------- Chargement des modules (dans l'ordre, un par un) ----------
-         main.js en premier : il fournit AppUtils, AppStore, CustomSelect, etc. aux autres fichiers.
-         calculator.js avant les modules qui lisent les données du mushaf. -->
+    <!-- ---------- Chargement des modules (dans l'ordre, un par un) --------->
     <script>
         (function () {
             const MODULES = [

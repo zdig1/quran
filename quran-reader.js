@@ -169,27 +169,22 @@ class QuranReader {
 
   // ---------- Helpers privés ----------
 
-  /** Position verticale (px) du haut de la page dans le mode défilement. */
   _pageTopOffset(page) {
     return (page - 1) * this.pageHeight;
   }
 
-  /** Numéro de page stocké sur un wrapper du pool (NaN si non défini). */
   _wrapperPage(wrapper) {
     return parseInt(wrapper.dataset.page, 10);
   }
 
-  /** Wrapper de la page en mode livre (ou null). */
   _findBookWrapper(page) {
     return this.elements.pageScroll?.querySelector(`.page-wrapper[data-page="${page}"]`) || null;
   }
 
-  /** Image de la page en mode livre (ou null). */
   _findBookImage(page) {
     return this._findBookWrapper(page)?.querySelector("img") || null;
   }
 
-  /** Exécute `callback` dès que l'image est prête (immédiat si déjà chargée). */
   _whenImageReady(img, callback) {
     if (!img) return;
     if (img.complete && img.naturalWidth > 0) {
@@ -199,7 +194,6 @@ class QuranReader {
     }
   }
 
-  /** Réinitialise un wrapper du pool pour une nouvelle page (mode défilement). */
   _resetPoolWrapper(wrapper, page) {
     wrapper.dataset.page = page;
     wrapper.style.top = `${this._pageTopOffset(page)}px`;
@@ -211,7 +205,6 @@ class QuranReader {
     img.src = "";
   }
 
-  /** Charge les images d'une plage de pages (skipPage optionnel). */
   _loadPageRange(from, to, priority, skipPage = null) {
     for (let p = from; p <= to; p++) {
       if (p !== skipPage) this.loadPageImage(p, priority);
@@ -308,7 +301,6 @@ class QuranReader {
     this._adjustFooterHeight();
   }
 
-  /** Hauteur / largeur d'une page : lue dans le CSS (--page-aspect: largeur / hauteur). */
   _pageRatio() {
     if (!this._ratioCache) {
       const [w, h] = AppUtils.cssVar("--page-aspect", "700 / 1100").split("/").map(Number);
@@ -385,7 +377,6 @@ class QuranReader {
     return wrapper;
   }
 
-  /** Un seul écouteur de scroll, même après plusieurs changements de mode. */
   _bindScroll(container) {
     if (this._scrollHandler) this._scrollTarget?.removeEventListener("scroll", this._scrollHandler);
     let rafPending = false;
@@ -909,13 +900,6 @@ class QuranReader {
 
     footer.style.height = `${footerHeight}px`;
     footer.style.minHeight = `${footerHeight}px`;
-
-    const miniBar = document.getElementById("audioMiniBar");
-    if (miniBar) {
-      const visible = !miniBar.classList.contains("hidden");
-      miniBar.style.height = visible ? `${footerHeight}px` : "";
-      miniBar.style.minHeight = visible ? `${footerHeight}px` : "";
-    }
   }
 
   enableTapDetection(enabled) {
@@ -954,7 +938,6 @@ class QuranReader {
     this.autoScrollRAF = requestAnimationFrame(tick);
   }
 
-  /** Avance d'un pas ; retourne true si le défilement s'est arrêté (fin de page). */
   _autoScrollStep(delta) {
     const el = this.elements.pageScroll;
     if (!el) return false;
@@ -1184,15 +1167,10 @@ class QuranReader {
   }
 
   _finishOrientationChange(savedPage, isIOS) {
-    // ⚠️ Avant : goToPage() était appelé alors que isTransitioning === true
-    // → retour immédiat, code mort. On remet le flag à false AVANT l'appel.
     this.isTransitioning = false;
-
     this.goToPage(savedPage);
-
     if (isIOS && this.readingMode === "book") this._reloadImageIOS(savedPage);
     if (this.readingMode === "book") this._adjustFooterHeight();
-
     const player = window.quranAudioPlayer;
     if (!player?.isStopped && (player?.isPlaying || player?.currentAyah)) {
       setTimeout(() => this._reapplyHighlightIfNeeded(), 100);
@@ -1318,7 +1296,6 @@ class QuranReader {
     if (this.readingMode === "scroll") this._scrollToFirstHighlight(rc.SCROLL_OFFSET);
   }
 
-  /** Une ligne peut contenir plusieurs versets : on prend ses limites verticales réelles. */
   _buildLineMap(page) {
     const lineMap = {};
     (window.quranAudioPlayer?.ayaCoords || []).forEach((r) => {

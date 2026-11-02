@@ -140,10 +140,6 @@ class OverlayManager {
 
   // ---------- Helpers privés ----------
 
-  /**
-   * Ouvre un overlay depuis le menu : ferme le menu, charge l'overlay à la
-   * demande, exécute le préparateur éventuel, puis affiche l'overlay.
-   */
   _openMenuOverlay(name, prepareFn) {
     this.closeMenu();
     const overlay = this.lazyLoadOverlay(name);
@@ -153,7 +149,6 @@ class OverlayManager {
     return overlay;
   }
 
-  /** Bouton d'action (✏️ / ♻️ / 🗑️) pour un signet, avec data-id. */
   _makeBookmarkIconBtn(cls, title, text, id) {
     const btn = AppUtils.el("button", `action-icon bordered ${cls}`, text);
     btn.dataset.id = id;
@@ -161,7 +156,6 @@ class OverlayManager {
     return btn;
   }
 
-  /** Affiche une confirmation, exécute l'action si validée, puis toast + refresh. */
   async _confirmAndRefresh(message, actionFn, successMsg) {
     const confirmed = await this.showConfirm(message);
     if (confirmed && actionFn()) {
@@ -726,7 +720,6 @@ class OverlayManager {
     return item;
   }
 
-  /** 2026-10-25T… → 26-10-25 (chaîne vide si la date est absente ou invalide). */
   _formatShortDate(iso) {
     const date = iso ? new Date(iso) : null;
     if (!date || isNaN(date)) return "";

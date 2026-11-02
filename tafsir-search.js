@@ -531,7 +531,6 @@ class TafsirSearchManager {
     this._bindPickers();
   }
 
-  /** Les 3 menus s'ouvrent en sélecteur plein écran (comme dans le module audio). */
   _bindPickers() {
     if (this._pickersBound || !window.Picker) return;
     this._pickersBound = true;
@@ -549,13 +548,11 @@ class TafsirSearchManager {
     finally { this.updatingDropdowns = false; }
   }
 
-  /** Met à jour le menu des versets pour la sourate, puis sélectionne `aya_n`. */
   _setAyaForSura(sura_n, aya_n) {
     this.updateAyaDropdown(this.getAyatBySura(sura_n));
     CustomSelect.set("ayaSelect", aya_n);
   }
 
-  /** Synchronise navigation + menus à partir du premier verset d'une page. */
   _syncFromFirstAya(page, ayaInfo) {
     this.updateTafsirNavigation(ayaInfo[this.F.sura_n], ayaInfo[this.F.aya_n], page);
     this.syncDropdowns(ayaInfo[this.F.sura_n], ayaInfo[this.F.aya_n], page, "init");
@@ -729,7 +726,6 @@ class TafsirSearchManager {
     this.cleanupDistantPages();
   }
 
-  /** Premier verset visible dans le conteneur (ou null). */
   _firstVisibleAya(container, ayaEls) {
     const rect = container.getBoundingClientRect();
     return (
