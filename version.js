@@ -11,7 +11,7 @@
   // SECTION À MODIFIER
   const APP_ID = "hafs";
   const APP_VERSION = "1.1.3";
-
+  const APP_NAME = "مصحف التجويد - حفص";
   // Textes de secours
   const TEXTS = {
     message: "New version available",
@@ -34,6 +34,7 @@
 
   window.APP_VERSION = APP_VERSION;
   window.APP_ID = APP_ID; // lu par main.js (riwaya active, nom de l'événement « prêt »)
+  window.APP_NAME = APP_NAME;
 
   // ---------- Sanitisation ----------
 
