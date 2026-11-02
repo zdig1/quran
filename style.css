@@ -1834,7 +1834,7 @@
   .item-search-text {
     font-family: "MyNotoKufi", sans-serif;
     font-weight: bold;
-    font-size: 14px;
+    font-size: var(--text-sm);
     color: var(--text);
     text-align: justify;
     text-align-last: right;
@@ -1916,6 +1916,18 @@
     font-size: 16px;
   }
 
+  .tafsir-aya-text {
+    color: var(--color-red);
+    font-family: "MyNotoKufi", sans-serif;
+    font-weight: bold;
+    font-size: var(--text-sm);
+    line-height: 2.0;
+    text-align: justify;
+    text-align-last: right;
+    margin-bottom: 6px;
+    word-spacing: -0.5px;
+  }
+
   .tafsir-content-container {
     flex: 1;
     overflow-y: auto;
@@ -1931,13 +1943,10 @@
     transition: font-size 0.1s ease;
   }
 
-  .tafsir-content-container .item-search-text,
   .tafsir-content-container .tafsir-explanation,
-  .tafsir-content-container .sura-name-kufi {
-    font-size: inherit;
-  }
-
-  .tafsir-content-container * {
+  .tafsir-content-container .item-search-text,
+  .tafsir-content-container .sura-name-kufi,
+  .tafsir-content-container .sura-title-container {
     font-size: inherit;
   }
 

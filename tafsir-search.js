@@ -434,7 +434,7 @@ class TafsirSearchManager {
     el.dataset.aya = aya[this.F.aya_n];
     el.dataset.page = aya[this.F.page];
     el.dataset.id = aya[this.F.id];
-    el.innerHTML = `<div class="item-search-text"><div class="item-line-2 item-search-text">${AppUtils.esc(aya[this.F.text])}</div><div class="tafsir-explanation">${AppUtils.esc(tafsirText)}</div></div>`;
+    el.innerHTML = `<div class="tafsir-aya-text">${AppUtils.esc(aya[this.F.text])}</div><div class="tafsir-explanation">${AppUtils.esc(tafsirText)}</div>`;
     return el;
   }
 
@@ -1068,10 +1068,10 @@ class TafsirSearchManager {
             ${CustomSelect.markup("ayaSelect", APP_TEXTS.pickAyah)}
             ${CustomSelect.markup("pageSelect", APP_TEXTS.pickPage)}
             <button type="button" class="btn tafsir-font-btn" id="tafsirThemeToggle" aria-label="تبديل الوضع الليلي">🌙</button>
-            <button type="button" class="btn tafsir-font-btn" id="tafsirFontDecrease" aria-label="تصغير حجم النص">−</button>
-            <button type="button" class="btn tafsir-font-btn" id="tafsirFontReset" aria-label="إعادة الحجم الافتراضي">⟲</button>
             <button type="button" class="btn tafsir-font-btn" id="tafsirFontIncrease" aria-label="تكبير حجم النص">+</button>
-        </div>
+            <button type="button" class="btn tafsir-font-btn" id="tafsirFontReset" aria-label="إعادة الحجم الافتراضي">⟲</button>
+            <button type="button" class="btn tafsir-font-btn" id="tafsirFontDecrease" aria-label="تصغير حجم النص">−</button>
+ </div>
     `;
   }
 
