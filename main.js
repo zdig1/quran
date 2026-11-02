@@ -225,7 +225,6 @@ class QuranApp {
     return !!document.querySelector(".menu-overlay.show");
   }
 
-
   _clearToastTimers() {
     clearTimeout(this._toastTimeout);
     clearTimeout(this._toastHideTimeout);

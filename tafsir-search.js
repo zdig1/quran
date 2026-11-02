@@ -4,7 +4,6 @@
 //         interface tafsir (défilement infini, menus sourate / verset /page, police et thème)
 // ============================================================
 
-
 class TafsirSearchManager {
   // ---------- Constructeur ----------
 

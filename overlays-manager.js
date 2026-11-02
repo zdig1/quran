@@ -25,20 +25,29 @@ class OverlayManager {
   // ---------- Constructeur ----------
 
   constructor() {
+    // --- Gestion globale de la classe ---
     this.config = {};
-    this.currentOverlay = null;
     this.elements = {};
     this.overlays = {};
+    this.currentOverlay = null;
+
+    // --- Overlay des Sourates / Juz ---
     this.surahsInfo = null;
+    this.currentSurahInfoId = null;
     this._surahInfoKeyHandler = null;
-    this._backupBound = false;
-    this._tafsirSavedPage = null;
+    this._surahInfoSwipeInitialized = false;
+
+    // --- Overlay des Signets ---
     this.editingBookmarkId = null;
     this.bookmarkFormInput = null;
     this.bookmarkFormButton = null;
     this.bookmarkFormCancel = null;
-    this.currentSurahInfoId = null;
-    this._surahInfoSwipeInitialized = false;
+
+    // --- Overlay Tafsir ---
+    this._tafsirSavedPage = null;
+
+    // --- Overlay Sauvegarde ---
+    this._backupBound = false;
   }
 
   _overlayConfig = {
@@ -46,6 +55,11 @@ class OverlayManager {
       element: "surahsOverlay",
       closeBtn: "closeSurahsBtn",
       content: "surahsList",
+    },
+    surahInfo: {
+      element: "surahInfoOverlay",
+      closeBtn: "closeSurahInfoBtn",
+      content: "surahInfoContent",
     },
     juzHizb: {
       element: "juzHizbOverlay",
@@ -56,6 +70,11 @@ class OverlayManager {
       element: "bookmarksOverlay",
       closeBtn: "closeBookmarksBtn",
       content: "bookmarksList",
+    },
+    goTo: {
+      element: "pageInputOverlay",
+      closeBtn: "closePageInputBtn",
+      content: "goToContent",
     },
     audio: {
       element: "audioOverlay",
@@ -72,16 +91,6 @@ class OverlayManager {
       closeBtn: "closeMemSettingsBtn",
       content: "memSettingsContent",
     },
-    goTo: {
-      element: "pageInputOverlay",
-      closeBtn: "closePageInputBtn",
-      content: "goToContent",
-    },
-    khatm: {
-      element: "khatmOverlay",
-      closeBtn: "closeKhatmBtn",
-      content: "khatmContent",
-    },
     search: {
       element: "searchOverlay",
       closeBtn: "closeSearchBtn",
@@ -97,19 +106,19 @@ class OverlayManager {
       closeBtn: "closeTajweedBtn",
       content: "tajweedRulesContent",
     },
-    surahInfo: {
-      element: "surahInfoOverlay",
-      closeBtn: "closeSurahInfoBtn",
-      content: "surahInfoContent",
-    },
-    backup: {
-      element: "backupOverlay",
-      closeBtn: "closeBackupBtn",
+    khatm: {
+      element: "khatmOverlay",
+      closeBtn: "closeKhatmBtn",
+      content: "khatmContent",
     },
     about: {
       element: "aboutOverlay",
       closeBtn: "closeAboutBtn",
       content: "aboutContent",
+    },
+    backup: {
+      element: "backupOverlay",
+      closeBtn: "closeBackupBtn",
     },
   };
 
@@ -829,7 +838,7 @@ class OverlayManager {
       return;
     }
 
-    const fileName = `hafs_backup_${new Date().toISOString().slice(2, 10)}`;
+    const fileName = `${window.APP_ID}_backup_${new Date().toISOString().slice(2, 10)}`;
     const dataUrl = "data:application/json;base64," + this._toBase64(app.exportUserData());
 
     if (hasNativeShare()) {
@@ -902,176 +911,7 @@ class OverlayManager {
     input.click();
   }
 
-  // ---------- 9. Overlay du khatm ----------
-
-  showKhatm() {
-    this._openMenuOverlay("khatm", () => this.prepareKhatmContent());
-  }
-
-  prepareKhatmContent() {
-    const overlay = this.overlays.khatm;
-    if (!overlay?.content || overlay.content.children.length > 0) return;
-    overlay.content.innerHTML = `<div class="khatm-page">
-      <img src="./media/605.webp" alt="دعاء ختم القرآن - الصفحة 605" loading="lazy">
-      <img src="./media/606.webp" alt="دعاء ختم القرآن - الصفحة 606" loading="lazy">
-    </div>`;
-  }
-
-  // ---------- 10. Overlay du tajweed ----------
-
-  showTajweed() {
-    this._openMenuOverlay("tajweed", () => this.prepareTajweedContent());
-  }
-
-  prepareTajweedContent() {
-    const overlay = this.overlays.tajweed;
-    if (overlay?.content) overlay.content.innerHTML = `<div class="tajweed-text">
-      <div class="tajweed-image">
-        <img src="./media/000.webp" alt="قواعد التجويد الملونة" loading="lazy">
-      </div>
-      <p><span class="tj-red tj-bold tj-title">أولاً – اللون الأحمر (بتدرّجاته):</span></p>
-      <p>يرمز للمدود بأزمنتها المختلفة حسب تدرّج اللون.</p>
-      <ul>
-        <li><span class="tj-red-dark tj-bold">اللون الأحمر الغامق</span>، يرمز للمد اللازم ويمد ست حركات، ويشمل المد الكَلمي (بنوعيه المثقّل والمخفّف) والمد الحرفي (بنوعيه المثقّل والمخفّف).</li>
-        <li><span class="tj-red tj-bold">اللون الأحمر القاني:</span> يرمز للمد الواجب ويُمدّ خمس حركات ويشمل المد المتّصل والمد المنفصل والصلة الكبرى.</li>
-        <li><span class="tj-orange tj-bold">اللون البرتقالي:</span> يرمز للمد الجائز، ويمد حركتين أو أربع أو ست حركات في حال الوقف على رؤوس الآي كما رسمت في المصاحف، ويشمل هذا المد الجائز كلاً من المد العارض للسكون، ومد اللين.</li>
-        <li><span class="tj-yellow tj-bold">اللون الكمّوني:</span> يرمز للمد الطبيعي وهو حركتان فقط سواء للألف المحذوفة من الرسم العثماني أو للصلة الصغرى.</li>
-      </ul>
-      <p><strong><span class="tj-green tj-title">ثانياً – اللون الأخضر:</span></strong></p>
-      <p>يرمز لموقع الغنّة وزمنها حركتان، أما تمييزها (مرقّقة أو مفخّمة والنطق بها بشكل عام، فهذا لا بدّ من الرجوع به إلى التلقّي والمشافهة)، وقد تكون لغنّة الإخفاء، أو الإخفاء الشفوي، أو للنون المشدّدة أو الميم المشدّدة، وهي تشكّل مع اللون الرمادي حكم الإدغام بغنّة وحكم الإقلاب.</p>
-      <p><strong><span class="tj-blue tj-title">ثالثاً – اللون الأزرق:</span></strong></p>
-      <ul>
-        <li><span class="tj-navy tj-bold">الأزرق الغامق:</span> لوّنت به الراء المفخّمة فقط دون التعرّض لحروف الاستعلاء ذات المراتب المختلفة للتفخيم دفعاً للتشويش عن القارئ.</li>
-        <li><span class="tj-sky tj-bold">الأزرق السماوي:</span> بالنسبة لحروف القلقلة الصغرى فقد لوّنت مع إشارة السكون التي عليها، أما بالنسبة للقلقلة الكبرى فقد لونت عند الوقف عليها في رؤوس الآي (دون تلوين الحركة).</li>
-      </ul>
-      <p><span class="tj-gray tj-bold tj-title">رابعاً - اللون الرمادي:</span></p>
-      <p>لما يُكتب ولا يُلفظ من الحروف، كحالة اللام الشمسية لتمييزها عن اللام القمرية، وألف التفريق، والمرسوم خلاف اللفظ، وهمزة الوصل داخل الكلمة، وكرسي الألف المحذوفة (الخنجرية)، والإدغام المتجانس، والإدغام المتقارب، وكذلك النون والتنوين الخاضعتان لحكم الإقلاب (بمساعدة اللون الأخضر لحرف الميم الصغيرة الموجودة فوق حرف النون أو في مكان التنوين)، وكذلك النون والتنوين الخاضعتان لحكم الإدغام بغُنّة (بمساعدة اللون الأخضر للحرف المدغم فيه ـ لأنّ الغنّة عليه).</p>
-    </div>`;
-  }
-
-  // ---------- 11. À propos, partage et sauvegarde ----------
-
-  shareApp() {
-    const appName = "مصحف التجويد - حفص";
-    const appUrl = "https://zdig1.gitlab.io/quran";
-    const shortMessage = `📖${appName}\n تطبيق متكامل لقراءة القرآن الكريم والاستماع إليه ودراسته.      \n يضم التفسير الميسّر، والبحث المتقدم، بالإضافة إلى قواعد التجويد.\n`;
-
-    if (hasNativeShare()) {
-      window.plugins.socialsharing.shareWithOptions(
-        {
-          message: shortMessage,
-          subject: appName,
-          url: appUrl,
-          chooserTitle: "مشاركة التطبيق",
-        },
-        () => window.quranApp?.showToast("✅ تم فتح المشاركة"),
-        () => window.quranApp?.showToast("❌ تعذر فتح المشاركة")
-      );
-    } else if (navigator.share) {
-      navigator.share({
-        title: appName,
-        text: shortMessage,
-        url: appUrl,
-      })
-        .then(() => window.quranApp?.showToast("✅ تمت المشاركة"))
-        .catch((err) => {
-          if (err.name !== "AbortError") {
-            window.quranApp?.showToast("❌ تعذرت المشاركة");
-          }
-        });
-    } else {
-      (navigator.clipboard?.writeText(appUrl) ?? Promise.reject())
-        .then(() => {
-          window.quranApp?.showToast("📋 تم نسخ رابط التطبيق");
-        })
-        .catch(() => {
-          prompt("انسخ رابط التطبيق:", appUrl);
-        });
-    }
-  }
-
-  showAbout() {
-    this._openMenuOverlay("about", () => this.renderAboutContent());
-  }
-
-  renderAboutContent() {
-    const overlay = this.overlays.about;
-    if (!overlay?.content) return;
-    const version = encodeURIComponent(window.APP_VERSION || "?");
-    overlay.content.innerHTML = `
-  <div class="about-content">
-    <p class="about-title">
-      <strong>مصحف التجويد - حفص</strong>
-      <span class="about-version">v${version}</span>
-    </p>
-    <p class="about-desc">
-      تطبيق شامل لقراءة القرآن الكريم. مطابق للمصحف الورقي المعتمد:
-      <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية.
-    </p>
-    <div class="contact-grid-container">
-      <button id="aboutBackupBtn" class="contact-box-item">
-        <span>💾 نسخ احتياطي</span>
-      </button>
-      <button id="shareAppBtn" class="contact-box-item">
-        <span>🔗 شارك التطبيق</span>
-      </button>
-      <a href="https://zdig1.gitlab.io/quran/" target="_blank" rel="noopener" class="contact-box-item">
-        <span>🌐 زيارة الموقع</span>
-      </a>
-      <a href="mailto:zdig1.0@gmail.com?subject=quran%20hafs&body=App%20Version:%20${version}%0A---%0A%0A" class="contact-box-item">
-        <span>📧 تواصل معنا</span>
-      </a>
-    </div>
-    <div class="about-stats">
-      <div class="about-stat"><span>السور</span><strong>114</strong></div>
-      <div class="about-stat"><span>الآيات</span><strong>6236</strong></div>
-      <div class="about-stat"><span>الصفحات</span><strong>604</strong></div>
-      <div class="about-stat"><span>الأجزاء</span><strong>30</strong></div>
-      <div class="about-stat"><span>الأحزاب</span><strong>60</strong></div>
-      <div class="about-stat"><span>السجدات</span><strong>15</strong></div>
-    </div>
-
-    <p class="about-credits-line">
-      <span>صفحات المصحف:</span>
-      <a href="https://easyquran.com/" target="_blank" rel="noopener">دار المعرفة</a>
-      · <span>النص والتفسير:</span>
-      <a href="https://quran.ksu.edu.sa/" target="_blank" rel="noopener">Quran.ksu.edu.sa</a>
-      · <span>التلاوات:</span>
-      <a href="https://everyayah.com" target="_blank" rel="noopener">EveryAyah.com</a>
-    </p>
-
-    <p class="about-footer">
-      جميع الحقوق محفوظة © 2026<br>
-      GDZ 🍉
-    </p>
-  </div>`;
-
-    document.getElementById("shareAppBtn")?.addEventListener("click", () => this.shareApp());
-    document.getElementById("aboutBackupBtn")?.addEventListener("click", () => {
-      this.closeOverlay("about");
-      this.showBackupDialog();
-    });
-  }
-
-  showBackupDialog() {
-    this.closeMenu();
-    const overlay = this.lazyLoadOverlay("backup");
-    if (!overlay?.element) return;
-    this.showOverlay("backup");
-
-    if (this._backupBound) return;
-    this._backupBound = true;
-    document.getElementById("backupExportBtn").addEventListener("click", () => {
-      this.closeOverlay("backup");
-      this.exportBookmarks();
-    });
-    document.getElementById("backupImportBtn").addEventListener("click", () => {
-      this.closeOverlay("backup");
-      this.importBookmarks();
-    });
-  }
-
-  // ---------- 12. Overlay « aller à » (verset ou page) ----------
+  // ----------  Overlay « aller à » (verset ou page) ----------
 
   showPageInputDialog() {
     this.closeMenu();
@@ -1196,6 +1036,177 @@ class OverlayManager {
       if (img && !(img.complete && img.naturalWidth > 0)) img.addEventListener("load", go, { once: true });
       else go();
     }, 400);
+  }
+
+  // ----------  Overlay du tajweed ----------
+
+  showTajweed() {
+    this._openMenuOverlay("tajweed", () => this.prepareTajweedContent());
+  }
+
+  prepareTajweedContent() {
+    const overlay = this.overlays.tajweed;
+    if (overlay?.content) overlay.content.innerHTML = `<div class="tajweed-text">
+      <div class="tajweed-image">
+        <img src="./media/000.webp" alt="قواعد التجويد الملونة" loading="lazy">
+      </div>
+      <p><span class="tj-red tj-bold tj-title">أولاً – اللون الأحمر (بتدرّجاته):</span></p>
+      <p>يرمز للمدود بأزمنتها المختلفة حسب تدرّج اللون.</p>
+      <ul>
+        <li><span class="tj-red-dark tj-bold">اللون الأحمر الغامق</span>، يرمز للمد اللازم ويمد ست حركات، ويشمل المد الكَلمي (بنوعيه المثقّل والمخفّف) والمد الحرفي (بنوعيه المثقّل والمخفّف).</li>
+        <li><span class="tj-red tj-bold">اللون الأحمر القاني:</span> يرمز للمد الواجب ويُمدّ خمس حركات ويشمل المد المتّصل والمد المنفصل والصلة الكبرى.</li>
+        <li><span class="tj-orange tj-bold">اللون البرتقالي:</span> يرمز للمد الجائز، ويمد حركتين أو أربع أو ست حركات في حال الوقف على رؤوس الآي كما رسمت في المصاحف، ويشمل هذا المد الجائز كلاً من المد العارض للسكون، ومد اللين.</li>
+        <li><span class="tj-yellow tj-bold">اللون الكمّوني:</span> يرمز للمد الطبيعي وهو حركتان فقط سواء للألف المحذوفة من الرسم العثماني أو للصلة الصغرى.</li>
+      </ul>
+      <p><strong><span class="tj-green tj-title">ثانياً – اللون الأخضر:</span></strong></p>
+      <p>يرمز لموقع الغنّة وزمنها حركتان، أما تمييزها (مرقّقة أو مفخّمة والنطق بها بشكل عام، فهذا لا بدّ من الرجوع به إلى التلقّي والمشافهة)، وقد تكون لغنّة الإخفاء، أو الإخفاء الشفوي، أو للنون المشدّدة أو الميم المشدّدة، وهي تشكّل مع اللون الرمادي حكم الإدغام بغنّة وحكم الإقلاب.</p>
+      <p><strong><span class="tj-blue tj-title">ثالثاً – اللون الأزرق:</span></strong></p>
+      <ul>
+        <li><span class="tj-navy tj-bold">الأزرق الغامق:</span> لوّنت به الراء المفخّمة فقط دون التعرّض لحروف الاستعلاء ذات المراتب المختلفة للتفخيم دفعاً للتشويش عن القارئ.</li>
+        <li><span class="tj-sky tj-bold">الأزرق السماوي:</span> بالنسبة لحروف القلقلة الصغرى فقد لوّنت مع إشارة السكون التي عليها، أما بالنسبة للقلقلة الكبرى فقد لونت عند الوقف عليها في رؤوس الآي (دون تلوين الحركة).</li>
+      </ul>
+      <p><span class="tj-gray tj-bold tj-title">رابعاً - اللون الرمادي:</span></p>
+      <p>لما يُكتب ولا يُلفظ من الحروف، كحالة اللام الشمسية لتمييزها عن اللام القمرية، وألف التفريق، والمرسوم خلاف اللفظ، وهمزة الوصل داخل الكلمة، وكرسي الألف المحذوفة (الخنجرية)، والإدغام المتجانس، والإدغام المتقارب، وكذلك النون والتنوين الخاضعتان لحكم الإقلاب (بمساعدة اللون الأخضر لحرف الميم الصغيرة الموجودة فوق حرف النون أو في مكان التنوين)، وكذلك النون والتنوين الخاضعتان لحكم الإدغام بغُنّة (بمساعدة اللون الأخضر للحرف المدغم فيه ـ لأنّ الغنّة عليه).</p>
+    </div>`;
+  }
+
+  // ----------  Overlay du khatm ----------
+
+  showKhatm() {
+    this._openMenuOverlay("khatm", () => this.prepareKhatmContent());
+  }
+
+  prepareKhatmContent() {
+    const overlay = this.overlays.khatm;
+    if (!overlay?.content || overlay.content.children.length > 0) return;
+    overlay.content.innerHTML = `<div class="khatm-page">
+      <img src="./media/605.webp" alt="دعاء ختم القرآن - الصفحة 605" loading="lazy">
+      <img src="./media/606.webp" alt="دعاء ختم القرآن - الصفحة 606" loading="lazy">
+    </div>`;
+  }
+
+  // ---------- 11. À propos, partage et sauvegarde ----------
+
+  showAbout() {
+    this._openMenuOverlay("about", () => this.renderAboutContent());
+  }
+
+  renderAboutContent() {
+    const overlay = this.overlays.about;
+    if (!overlay?.content) return;
+    const version = encodeURIComponent(window.APP_VERSION || "?");
+    const appName = window.APP_NAME;
+
+    overlay.content.innerHTML = `
+  <div class="about-content">
+    <p class="about-title">
+      <strong>${appName}</strong>
+      <span class="about-version">v${version}</span>
+    </p>
+    <p class="about-desc">
+      تطبيق شامل لقراءة القرآن الكريم. مطابق للمصحف الورقي المعتمد:
+      <strong>مصحف التجويد الملون برواية حفص عن الإمام عاصم الكوفي</strong> من طريق الشاطبية.
+    </p>
+    <div class="contact-grid-container">
+      <button id="aboutBackupBtn" class="contact-box-item">
+        <span>💾 نسخ احتياطي</span>
+      </button>
+      <button id="shareAppBtn" class="contact-box-item">
+        <span>🔗 شارك التطبيق</span>
+      </button>
+      <a href="https://zdig1.gitlab.io/quran/" target="_blank" rel="noopener" class="contact-box-item">
+        <span>🌐 زيارة الموقع</span>
+      </a>
+      <a href="mailto:zdig1.0@gmail.com?subject=quran%20${window.APP_ID}&body=App%20Version:%20${version}%0A---%0A%0A" class="contact-box-item">
+        <span>📧 تواصل معنا</span>
+      </a>
+    </div>
+    <div class="about-stats">
+      <div class="about-stat"><span>السور</span><strong>114</strong></div>
+      <div class="about-stat"><span>الآيات</span><strong>6236</strong></div>
+      <div class="about-stat"><span>الصفحات</span><strong>604</strong></div>
+      <div class="about-stat"><span>الأجزاء</span><strong>30</strong></div>
+      <div class="about-stat"><span>الأحزاب</span><strong>60</strong></div>
+      <div class="about-stat"><span>السجدات</span><strong>15</strong></div>
+    </div>
+
+    <p class="about-credits-line">
+      <span>صفحات المصحف:</span>
+      <a href="https://easyquran.com/" target="_blank" rel="noopener">دار المعرفة</a>
+      · <span>النص والتفسير:</span>
+      <a href="https://quran.ksu.edu.sa/" target="_blank" rel="noopener">Quran.ksu.edu.sa</a>
+      · <span>التلاوات:</span>
+      <a href="https://everyayah.com" target="_blank" rel="noopener">EveryAyah.com</a>
+    </p>
+
+    <p class="about-footer">
+      جميع الحقوق محفوظة © 2026<br>
+      GDZ 🍉
+    </p>
+  </div>`;
+
+    document.getElementById("shareAppBtn")?.addEventListener("click", () => this.shareApp());
+    document.getElementById("aboutBackupBtn")?.addEventListener("click", () => {
+      this.closeOverlay("about");
+      this.showBackupDialog();
+    });
+  }
+
+  showBackupDialog() {
+    this.closeMenu();
+    const overlay = this.lazyLoadOverlay("backup");
+    if (!overlay?.element) return;
+    this.showOverlay("backup");
+
+    if (this._backupBound) return;
+    this._backupBound = true;
+    document.getElementById("backupExportBtn").addEventListener("click", () => {
+      this.closeOverlay("backup");
+      this.exportBookmarks();
+    });
+    document.getElementById("backupImportBtn").addEventListener("click", () => {
+      this.closeOverlay("backup");
+      this.importBookmarks();
+    });
+  }
+
+  shareApp() {
+    const appName = window.APP_NAME;
+    const appUrl = "https://zdig1.gitlab.io/quran";
+    const shortMessage = `📖${appName}\n تطبيق متكامل لقراءة القرآن الكريم والاستماع إليه ودراسته.      \n يضم التفسير الميسّر، والبحث المتقدم، بالإضافة إلى قواعد التجويد.\n`;
+
+    if (hasNativeShare()) {
+      window.plugins.socialsharing.shareWithOptions(
+        {
+          message: shortMessage,
+          subject: appName,
+          url: appUrl,
+          chooserTitle: "مشاركة التطبيق",
+        },
+        () => window.quranApp?.showToast("✅ تم فتح المشاركة"),
+        () => window.quranApp?.showToast("❌ تعذر فتح المشاركة")
+      );
+    } else if (navigator.share) {
+      navigator.share({
+        title: appName,
+        text: shortMessage,
+        url: appUrl,
+      })
+        .then(() => window.quranApp?.showToast("✅ تمت المشاركة"))
+        .catch((err) => {
+          if (err.name !== "AbortError") {
+            window.quranApp?.showToast("❌ تعذرت المشاركة");
+          }
+        });
+    } else {
+      (navigator.clipboard?.writeText(appUrl) ?? Promise.reject())
+        .then(() => {
+          window.quranApp?.showToast("📋 تم نسخ رابط التطبيق");
+        })
+        .catch(() => {
+          prompt("انسخ رابط التطبيق:", appUrl);
+        });
+    }
   }
 
   // ---------- 13. Gestion générale des overlays ----------
