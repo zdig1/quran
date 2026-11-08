@@ -1663,8 +1663,7 @@
     line-height: 1.9;
     font-size: var(--text-md);
     color: var(--text);
-    padding: 5px 2px;
-    margin-right: 5px;
+    margin-right: 1px;
     gap: 15px;
     text-align: justify;
     text-align-last: right;
