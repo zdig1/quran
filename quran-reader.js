@@ -84,6 +84,9 @@ class QuranReader {
     this.isTransitioning = false;
     this.resizePending = false;
 
+    this._pageEnterTime = Date.now();   // horodatage d'arrivée sur la page courante
+    this._pageAtLastCommit = null;       // dernière page comptée (pour anti-doublon rapide)
+
     this.imageCache = new LRUCache(30);
     this.elements = {};
     this.eventListeners = [];
@@ -594,6 +597,16 @@ class QuranReader {
     if (this.isTransitioning) return;
     const pageNum = parseInt(page, 10);
     if (!AppUtils.isValidPage(pageNum)) return;
+
+    // ✅ Si même page : ne rien faire (évite le comptage sur rotation/navigation technique)
+    if (pageNum === this.currentPage && !this.isRestoring) return;
+
+    // ✅ Compter la page qu'on quitte (si elle était lue ≥ 10s)
+    this._commitPageIfRead(this.currentPage);
+
+    // ✅ Nouvelle page : réinitialiser le chrono
+    this._pageEnterTime = Date.now();
+
     this.isTransitioning = true;
     this.currentPage = pageNum;
     this.updatePageInfo(pageNum);
@@ -741,12 +754,26 @@ class QuranReader {
     const detected = AppUtils.clamp(Math.floor(middle / this.pageHeight) + 1, 1, APP_CFG.TOTAL_PAGES);
     if (detected === this.currentPage) return;
 
-    const step = detected > this.currentPage ? 1 : -1;
-    for (let p = this.currentPage + step; p !== detected + step; p += step) {
-      this.currentPage = p;
-      this.updatePageInfo(p);
-    }
+    // ✅ Compter la page qu'on quitte (si elle était lue ≥ 10s)
+    this._commitPageIfRead(this.currentPage);
+
+    // ✅ Nouvelle page
+    this._pageEnterTime = Date.now();
+    this.currentPage = detected;
+    this.updatePageInfo(detected);
     this.notifyPageChange();
+  }
+
+  _commitPageIfRead(leavingPage) {
+    if (!leavingPage || leavingPage < 1 || leavingPage > 604) return;
+    if (this.isRestoring) return;                                   // pas en restauration
+    if (leavingPage === this._pageAtLastCommit) return;             // anti-doublon rapide
+
+    const elapsed = Date.now() - this._pageEnterTime;
+    if (elapsed < 10000) return;                                    // < 10s → pas lue
+
+    this._pageAtLastCommit = leavingPage;
+    window.statsManager?.commitPageRead?.(leavingPage);
   }
 
   notifyPageChange(force = false) {
@@ -754,578 +781,576 @@ class QuranReader {
     const oldPage = this.previousPage;
     this.previousPage = this.currentPage;
     AppUtils.emit(APP_EVENTS.pageChanged, { page: this.currentPage, oldPage });
-    if (!this.isRestoring) {
-      window.statsManager?.onPageViewed(this.currentPage);
-    }
-  }
-  // ---------- Swipe navigation (book mode) ----------
-
-  setupSwipeNavigation() {
-    if (!this.elements.pageScroll || this.readingMode !== "book") return;
-    const element = this.elements.pageScroll;
-
-    this.removeSwipeNavigation();
-    this.swipeCleanup = window.quranApp.enableSwipe(
-      element,
-      () => {
-        if (!this.isTransitioning && !this._dialogOpen) this.goToNextPage();
-      },
-      () => {
-        if (!this.isTransitioning && !this._dialogOpen) this.goToPreviousPage();
-      },
-      50,
-      300
-    );
   }
 
-  removeSwipeNavigation() {
-    if (this.swipeCleanup) {
-      this.swipeCleanup();
-      this.swipeCleanup = null;
-    }
+// ---------- Swipe navigation (book mode) ----------
+
+setupSwipeNavigation() {
+  if (!this.elements.pageScroll || this.readingMode !== "book") return;
+  const element = this.elements.pageScroll;
+
+  this.removeSwipeNavigation();
+  this.swipeCleanup = window.quranApp.enableSwipe(
+    element,
+    () => {
+      if (!this.isTransitioning && !this._dialogOpen) this.goToNextPage();
+    },
+    () => {
+      if (!this.isTransitioning && !this._dialogOpen) this.goToPreviousPage();
+    },
+    50,
+    300
+  );
+}
+
+removeSwipeNavigation() {
+  if (this.swipeCleanup) {
+    this.swipeCleanup();
+    this.swipeCleanup = null;
   }
+}
 
-  // ---------- Tap to hide ----------
+// ---------- Tap to hide ----------
 
-  _cleanupTapHandlers() {
-    const el = this.elements.pageScroll;
-    if (el) {
-      Object.entries(this.tapHandlers).forEach(([type, handler]) => el.removeEventListener(type, handler));
-    }
-    this.tapHandlers = {};
+_cleanupTapHandlers() {
+  const el = this.elements.pageScroll;
+  if (el) {
+    Object.entries(this.tapHandlers).forEach(([type, handler]) => el.removeEventListener(type, handler));
   }
+  this.tapHandlers = {};
+}
 
-  setupTapToHide() {
-    const el = this.elements.pageScroll;
-    if (!el) return;
-    this._cleanupTapHandlers();
-    let touchStartTime = 0;
-    let touchStartX = 0;
-    let touchStartY = 0;
-    const MAX_TAP_MS = 400;
-    const MAX_TAP_MOVE_PX = 20;
-    const TAP_DEBOUNCE_MS = 300;
+setupTapToHide() {
+  const el = this.elements.pageScroll;
+  if (!el) return;
+  this._cleanupTapHandlers();
+  let touchStartTime = 0;
+  let touchStartX = 0;
+  let touchStartY = 0;
+  const MAX_TAP_MS = 400;
+  const MAX_TAP_MOVE_PX = 20;
+  const TAP_DEBOUNCE_MS = 300;
 
-    const blocked = () => this.isTransitioning || !this.tapEnabled;
+  const blocked = () => this.isTransitioning || !this.tapEnabled;
 
-    const onTouchStart = (e) => {
-      if (blocked()) return;
-      touchStartTime = Date.now();
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-    };
+  const onTouchStart = (e) => {
+    if (blocked()) return;
+    touchStartTime = Date.now();
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  };
 
-    const onTouchEnd = (e) => {
-      if (blocked()) return;
-      const now = Date.now();
-      const deltaX = Math.abs(e.changedTouches[0].clientX - touchStartX);
-      const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY);
-      const isTap =
-        now - touchStartTime < MAX_TAP_MS &&
-        deltaX < MAX_TAP_MOVE_PX &&
-        deltaY < MAX_TAP_MOVE_PX;
-      if (isTap && now - this.lastTapTime > TAP_DEBOUNCE_MS) {
-        this.lastTapTime = now;
-        this.toggleButtonsVisibility();
-      }
-    };
-
-    const onClick = (e) => {
-      if (blocked()) return;
-      const now = Date.now();
-      const tooSoon = now - this.lastTapTime < TAP_DEBOUNCE_MS;
+  const onTouchEnd = (e) => {
+    if (blocked()) return;
+    const now = Date.now();
+    const deltaX = Math.abs(e.changedTouches[0].clientX - touchStartX);
+    const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY);
+    const isTap =
+      now - touchStartTime < MAX_TAP_MS &&
+      deltaX < MAX_TAP_MOVE_PX &&
+      deltaY < MAX_TAP_MOVE_PX;
+    if (isTap && now - this.lastTapTime > TAP_DEBOUNCE_MS) {
       this.lastTapTime = now;
-      if (tooSoon) return;
-      if (e.target.closest(".header-btn, .footer-item, .menu-overlay, .overlay")) return;
       this.toggleButtonsVisibility();
-    };
+    }
+  };
 
-    el.addEventListener("touchstart", onTouchStart, { passive: false });
-    el.addEventListener("touchend", onTouchEnd, { passive: true });
-    el.addEventListener("click", onClick);
-    this.tapHandlers = { touchstart: onTouchStart, touchend: onTouchEnd, click: onClick };
-  }
+  const onClick = (e) => {
+    if (blocked()) return;
+    const now = Date.now();
+    const tooSoon = now - this.lastTapTime < TAP_DEBOUNCE_MS;
+    this.lastTapTime = now;
+    if (tooSoon) return;
+    if (e.target.closest(".header-btn, .footer-item, .menu-overlay, .overlay")) return;
+    this.toggleButtonsVisibility();
+  };
 
-  toggleButtonsVisibility() {
-    const menuOpen = document.querySelector(".menu-overlay.show");
-    if (document.querySelector(".overlay.show") && !menuOpen) return;
-    this.buttonsVisible = !this.buttonsVisible;
-    this._applyHeaderFooterVisibility();
-    this._emitButtonsVisibility();
-  }
+  el.addEventListener("touchstart", onTouchStart, { passive: false });
+  el.addEventListener("touchend", onTouchEnd, { passive: true });
+  el.addEventListener("click", onClick);
+  this.tapHandlers = { touchstart: onTouchStart, touchend: onTouchEnd, click: onClick };
+}
 
-  _emitButtonsVisibility() {
-    AppUtils.emit(APP_EVENTS.buttonsVisibility, { visible: this.buttonsVisible });
-  }
+toggleButtonsVisibility() {
+  const menuOpen = document.querySelector(".menu-overlay.show");
+  if (document.querySelector(".overlay.show") && !menuOpen) return;
+  this.buttonsVisible = !this.buttonsVisible;
+  this._applyHeaderFooterVisibility();
+  this._emitButtonsVisibility();
+}
 
-  applyButtonsVisibility() {
-    this._applyHeaderFooterVisibility();
-    setTimeout(() => this._adjustFooterHeight(), 50);
-    this._emitButtonsVisibility();
-  }
+_emitButtonsVisibility() {
+  AppUtils.emit(APP_EVENTS.buttonsVisibility, { visible: this.buttonsVisible });
+}
 
-  _applyHeaderFooterVisibility() {
-    [this.elements.header, this.elements.footer].forEach(el =>
-      el?.classList.toggle("hidden", !this.buttonsVisible)
-    );
-  }
+applyButtonsVisibility() {
+  this._applyHeaderFooterVisibility();
+  setTimeout(() => this._adjustFooterHeight(), 50);
+  this._emitButtonsVisibility();
+}
 
-  _adjustFooterHeight() {
-    if (this.readingMode !== "book") return;
-    if (this.isTransitioning) return;
-    const activeWrapper = this.elements.pageScroll?.querySelector(".page-wrapper.active");
-    if (!activeWrapper) return;
-    const img = activeWrapper.querySelector('img');
-    if (!img) return;
+_applyHeaderFooterVisibility() {
+  [this.elements.header, this.elements.footer].forEach(el =>
+    el?.classList.toggle("hidden", !this.buttonsVisible)
+  );
+}
 
-    const apply = () => {
-      if (!img.complete || img.naturalWidth === 0) return;
-      if (img.getBoundingClientRect().height === 0) return;
-      requestAnimationFrame(() => {
-        this._applyFooterAdjustment(img);
-      });
-    };
+_adjustFooterHeight() {
+  if (this.readingMode !== "book") return;
+  if (this.isTransitioning) return;
+  const activeWrapper = this.elements.pageScroll?.querySelector(".page-wrapper.active");
+  if (!activeWrapper) return;
+  const img = activeWrapper.querySelector('img');
+  if (!img) return;
 
-    this._whenImageReady(img, apply);
-  }
+  const apply = () => {
+    if (!img.complete || img.naturalWidth === 0) return;
+    if (img.getBoundingClientRect().height === 0) return;
+    requestAnimationFrame(() => {
+      this._applyFooterAdjustment(img);
+    });
+  };
 
-  _applyFooterAdjustment(img) {
-    const footer = this.elements.footer;
-    if (!footer) return;
+  this._whenImageReady(img, apply);
+}
 
-    const container = this._pageContainer();
-    const containerH = container.clientHeight || window.innerHeight;
-    const spaceBelow =
-      (container.getBoundingClientRect().bottom || containerH) - img.getBoundingClientRect().bottom;
-    const minFooter = AppUtils.cssPx("--footer-height", 56);
-    const footerHeight = spaceBelow > minFooter ? spaceBelow : minFooter;
+_applyFooterAdjustment(img) {
+  const footer = this.elements.footer;
+  if (!footer) return;
 
-    footer.style.height = `${footerHeight}px`;
-    footer.style.minHeight = `${footerHeight}px`;
-  }
+  const container = this._pageContainer();
+  const containerH = container.clientHeight || window.innerHeight;
+  const spaceBelow =
+    (container.getBoundingClientRect().bottom || containerH) - img.getBoundingClientRect().bottom;
+  const minFooter = AppUtils.cssPx("--footer-height", 56);
+  const footerHeight = spaceBelow > minFooter ? spaceBelow : minFooter;
 
-  enableTapDetection(enabled) {
-    this.tapEnabled = enabled;
-  }
+  footer.style.height = `${footerHeight}px`;
+  footer.style.minHeight = `${footerHeight}px`;
+}
 
-  // ---------- Auto scroll ----------
+enableTapDetection(enabled) {
+  this.tapEnabled = enabled;
+}
 
-  _getAutoScrollBtns() {
-    return {
-      btnScroll: document.getElementById("autoScrollBtn"),
-      btnIcon: document.getElementById("autoScrollIcon"),
-      btnSlower: document.getElementById("autoScrollSlower"),
-      btnFaster: document.getElementById("autoScrollFaster"),
-    };
-  }
+// ---------- Auto scroll ----------
 
-  startAutoScroll() {
-    if (this.autoScrollActive) return;
-    this.autoScrollActive = true;
-    this._acquireWakeLock();
+_getAutoScrollBtns() {
+  return {
+    btnScroll: document.getElementById("autoScrollBtn"),
+    btnIcon: document.getElementById("autoScrollIcon"),
+    btnSlower: document.getElementById("autoScrollSlower"),
+    btnFaster: document.getElementById("autoScrollFaster"),
+  };
+}
 
-    const { btnScroll, btnIcon } = this._getAutoScrollBtns();
-    btnScroll?.classList.add("playing");
-    if (btnIcon) btnIcon.textContent = "⏸️";
-    this._setSpeedButtonsVisible(true);
-    this._updateSpeedButtons();
+startAutoScroll() {
+  if (this.autoScrollActive) return;
+  this.autoScrollActive = true;
+  this._acquireWakeLock();
 
-    let lastTimestamp = null;
-    const tick = (timestamp) => {
-      if (!this.autoScrollActive) return;
-      if (lastTimestamp !== null && this._autoScrollStep(timestamp - lastTimestamp)) return;
-      lastTimestamp = timestamp;
-      this.autoScrollRAF = requestAnimationFrame(tick);
-    };
+  const { btnScroll, btnIcon } = this._getAutoScrollBtns();
+  btnScroll?.classList.add("playing");
+  if (btnIcon) btnIcon.textContent = "⏸️";
+  this._setSpeedButtonsVisible(true);
+  this._updateSpeedButtons();
+
+  let lastTimestamp = null;
+  const tick = (timestamp) => {
+    if (!this.autoScrollActive) return;
+    if (lastTimestamp !== null && this._autoScrollStep(timestamp - lastTimestamp)) return;
+    lastTimestamp = timestamp;
     this.autoScrollRAF = requestAnimationFrame(tick);
-  }
+  };
+  this.autoScrollRAF = requestAnimationFrame(tick);
+}
 
-  _autoScrollStep(delta) {
-    const el = this.elements.pageScroll;
-    if (!el) return false;
-    this._scrollAccum += (this.autoScrollSpeed * delta) / 16;
-    const pixels = Math.floor(this._scrollAccum);
-    if (pixels > 0) {
-      el.scrollTop += pixels;
-      this._scrollAccum -= pixels;
-    }
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) {
-      this.stopAutoScroll();
-      return true;
-    }
-    return false;
+_autoScrollStep(delta) {
+  const el = this.elements.pageScroll;
+  if (!el) return false;
+  this._scrollAccum += (this.autoScrollSpeed * delta) / 16;
+  const pixels = Math.floor(this._scrollAccum);
+  if (pixels > 0) {
+    el.scrollTop += pixels;
+    this._scrollAccum -= pixels;
   }
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) {
+    this.stopAutoScroll();
+    return true;
+  }
+  return false;
+}
 
   async _acquireWakeLock() {
-    if (!("wakeLock" in navigator)) return;
-    try {
-      const lock = await navigator.wakeLock.request("screen");
-      if (this.autoScrollActive) this._wakeLock = lock;
-      else lock.release();
-    } catch {
-      /* non supporté ou refusé */
-    }
+  if (!("wakeLock" in navigator)) return;
+  try {
+    const lock = await navigator.wakeLock.request("screen");
+    if (this.autoScrollActive) this._wakeLock = lock;
+    else lock.release();
+  } catch {
+    /* non supporté ou refusé */
   }
+}
 
-  _setSpeedButtonsVisible(visible) {
-    const { btnSlower, btnFaster } = this._getAutoScrollBtns();
-    [btnSlower, btnFaster].forEach((btn) => {
-      if (!btn) return;
-      if (visible) {
-        btn.style.display = "";
-        requestAnimationFrame(() => btn.classList.add("visible"));
-      } else {
-        btn.classList.remove("visible");
-        setTimeout(() => {
-          btn.style.display = "none";
-        }, AppUtils.cssMs("--speed-btn-fade", 200));
-      }
-    });
-  }
-
-  stopAutoScroll() {
-    if (!this.autoScrollActive) return;
-    this.autoScrollActive = false;
-
-    if (this._wakeLock) {
-      this._wakeLock.release();
-      this._wakeLock = null;
-    }
-
-    this._scrollAccum = 0;
-    if (this.autoScrollRAF) {
-      cancelAnimationFrame(this.autoScrollRAF);
-      this.autoScrollRAF = null;
-    }
-
-    const { btnScroll, btnIcon } = this._getAutoScrollBtns();
-    btnScroll?.classList.remove("playing");
-    if (btnIcon) btnIcon.textContent = "⏫";
-    this._setSpeedButtonsVisible(false);
-  }
-
-  toggleAutoScroll() {
-    if (this.autoScrollActive) this.stopAutoScroll();
-    else this.startAutoScroll();
-  }
-
-  changeSpeed(direction) {
-    const raw = Math.round((this.autoScrollSpeed + direction * this.speedStep) * 10) / 10;
-    const speed = AppUtils.clamp(raw, this.minSpeed, this.maxSpeed);
-    if (speed === this.autoScrollSpeed) return;
-    this.autoScrollSpeed = speed;
-    window.quranApp?.setPreference("scrollSpeed", speed);
-    this._updateSpeedButtons();
-    window.quranApp?.showToast(`⚡ السرعة: ${speed.toFixed(1)}`);
-  }
-
-  _updateSpeedButtons() {
-    const { btnSlower, btnFaster } = this._getAutoScrollBtns();
-    if (btnSlower) btnSlower.disabled = this.autoScrollSpeed <= this.minSpeed + 0.01;
-    if (btnFaster) btnFaster.disabled = this.autoScrollSpeed >= this.maxSpeed - 0.01;
-  }
-
-  updateAutoScrollButton() {
-    const el =
-      document.getElementById("autoScrollGroup") ||
-      document.getElementById("autoScrollBtn");
-    if (!el) return;
-    if (this.readingMode === "scroll") {
-      el.style.display = "";
+_setSpeedButtonsVisible(visible) {
+  const { btnSlower, btnFaster } = this._getAutoScrollBtns();
+  [btnSlower, btnFaster].forEach((btn) => {
+    if (!btn) return;
+    if (visible) {
+      btn.style.display = "";
+      requestAnimationFrame(() => btn.classList.add("visible"));
     } else {
-      this.stopAutoScroll();
-      el.style.display = "none";
+      btn.classList.remove("visible");
+      setTimeout(() => {
+        btn.style.display = "none";
+      }, AppUtils.cssMs("--speed-btn-fade", 200));
     }
+  });
+}
+
+stopAutoScroll() {
+  if (!this.autoScrollActive) return;
+  this.autoScrollActive = false;
+
+  if (this._wakeLock) {
+    this._wakeLock.release();
+    this._wakeLock = null;
   }
 
-  // ---------- Setup UI et événements ----------
-
-  setupUI() {
-    setTimeout(() => {
-      if (this.readingMode === "book") {
-        this.loadPageImage(this.currentPage, "high");
-        this.preloadAdjacentPages(this.currentPage);
-        this._adjustFooterHeight();
-      }
-    }, 50);
-    this.updateAutoScrollButton();
+  this._scrollAccum = 0;
+  if (this.autoScrollRAF) {
+    cancelAnimationFrame(this.autoScrollRAF);
+    this.autoScrollRAF = null;
   }
 
-  setupEventListeners() {
-    if (!this.elements.pageScroll) return;
+  const { btnScroll, btnIcon } = this._getAutoScrollBtns();
+  btnScroll?.classList.remove("playing");
+  if (btnIcon) btnIcon.textContent = "⏫";
+  this._setSpeedButtonsVisible(false);
+}
 
-    this._setupOrientationListener();
+toggleAutoScroll() {
+  if (this.autoScrollActive) this.stopAutoScroll();
+  else this.startAutoScroll();
+}
 
-    this._setupBookmarkButton();
-    this._on(this.elements.autoScrollBtn, "click", () => this.toggleAutoScroll());
-    this._on(document.getElementById("autoScrollSlower"), "click", () => this.changeSpeed(-1));
-    this._on(document.getElementById("autoScrollFaster"), "click", () => this.changeSpeed(1));
-    this._on(this.elements.pageNumber, "click", () => window.overlayManager?.showPageInputDialog());
+changeSpeed(direction) {
+  const raw = Math.round((this.autoScrollSpeed + direction * this.speedStep) * 10) / 10;
+  const speed = AppUtils.clamp(raw, this.minSpeed, this.maxSpeed);
+  if (speed === this.autoScrollSpeed) return;
+  this.autoScrollSpeed = speed;
+  window.quranApp?.setPreference("scrollSpeed", speed);
+  this._updateSpeedButtons();
+  window.quranApp?.showToast(`⚡ السرعة: ${speed.toFixed(1)}`);
+}
 
-    this.setupTapToHide();
+_updateSpeedButtons() {
+  const { btnSlower, btnFaster } = this._getAutoScrollBtns();
+  if (btnSlower) btnSlower.disabled = this.autoScrollSpeed <= this.minSpeed + 0.01;
+  if (btnFaster) btnFaster.disabled = this.autoScrollSpeed >= this.maxSpeed - 0.01;
+}
 
-    this._on(window, APP_EVENTS.menuToggle, (e) => {
-      if (e.detail.isOpen) {
-        this.buttonsVisible = true;
-        this.applyButtonsVisibility();
-        this.enableTapDetection(false);
-      } else {
-        this.enableTapDetection(true);
-      }
-    });
+updateAutoScrollButton() {
+  const el =
+    document.getElementById("autoScrollGroup") ||
+    document.getElementById("autoScrollBtn");
+  if (!el) return;
+  if (this.readingMode === "scroll") {
+    el.style.display = "";
+  } else {
+    this.stopAutoScroll();
+    el.style.display = "none";
+  }
+}
 
-    this._on(window, APP_EVENTS.overlayOpened, () => {
+// ---------- Setup UI et événements ----------
+
+setupUI() {
+  setTimeout(() => {
+    if (this.readingMode === "book") {
+      this.loadPageImage(this.currentPage, "high");
+      this.preloadAdjacentPages(this.currentPage);
+      this._adjustFooterHeight();
+    }
+  }, 50);
+  this.updateAutoScrollButton();
+}
+
+setupEventListeners() {
+  if (!this.elements.pageScroll) return;
+
+  this._setupOrientationListener();
+
+  this._setupBookmarkButton();
+  this._on(this.elements.autoScrollBtn, "click", () => this.toggleAutoScroll());
+  this._on(document.getElementById("autoScrollSlower"), "click", () => this.changeSpeed(-1));
+  this._on(document.getElementById("autoScrollFaster"), "click", () => this.changeSpeed(1));
+  this._on(this.elements.pageNumber, "click", () => window.overlayManager?.showPageInputDialog());
+
+  this.setupTapToHide();
+
+  this._on(window, APP_EVENTS.menuToggle, (e) => {
+    if (e.detail.isOpen) {
       this.buttonsVisible = true;
       this.applyButtonsVisibility();
       this.enableTapDetection(false);
-      this._dialogOpen = true;
-    });
-
-    this._on(window, APP_EVENTS.overlayClosed, () => {
+    } else {
       this.enableTapDetection(true);
-      this._dialogOpen = false;
-    });
+    }
+  });
 
-    this._on(window, APP_EVENTS.buttonsVisibility, () => {
-      if (this.readingMode === "book") this._adjustFooterHeight();
-    });
-  }
+  this._on(window, APP_EVENTS.overlayOpened, () => {
+    this.buttonsVisible = true;
+    this.applyButtonsVisibility();
+    this.enableTapDetection(false);
+    this._dialogOpen = true;
+  });
 
-  // ---------- Bouton signets : appui court / appui long ----------
+  this._on(window, APP_EVENTS.overlayClosed, () => {
+    this.enableTapDetection(true);
+    this._dialogOpen = false;
+  });
 
-  _setupBookmarkButton() {
-    const btn = this.elements.bookmarkBtn;
-    if (!btn) return;
-    let timer = null;
-    let longPressed = false;
-    const cancel = () => {
-      clearTimeout(timer);
-      timer = null;
-    };
-    this._on(btn, "pointerdown", () => {
+  this._on(window, APP_EVENTS.buttonsVisibility, () => {
+    if (this.readingMode === "book") this._adjustFooterHeight();
+  });
+}
+
+// ---------- Bouton signets : appui court / appui long ----------
+
+_setupBookmarkButton() {
+  const btn = this.elements.bookmarkBtn;
+  if (!btn) return;
+  let timer = null;
+  let longPressed = false;
+  const cancel = () => {
+    clearTimeout(timer);
+    timer = null;
+  };
+  this._on(btn, "pointerdown", () => {
+    longPressed = false;
+    cancel();
+    timer = setTimeout(() => {
+      longPressed = true;
+      this._bookmarkLongPress();
+    }, 500);
+  });
+  ["pointerup", "pointerleave", "pointercancel"].forEach((type) => this._on(btn, type, cancel));
+  this._on(btn, "contextmenu", (e) => e.preventDefault());
+  this._on(btn, "click", () => {
+    if (longPressed) {
       longPressed = false;
-      cancel();
-      timer = setTimeout(() => {
-        longPressed = true;
-        this._bookmarkLongPress();
-      }, 500);
-    });
-    ["pointerup", "pointerleave", "pointercancel"].forEach((type) => this._on(btn, type, cancel));
-    this._on(btn, "contextmenu", (e) => e.preventDefault());
-    this._on(btn, "click", () => {
-      if (longPressed) {
-        longPressed = false;
-        return;
-      }
-      window.overlayManager?.showBookmarks();
-    });
-  }
-
-  _bookmarkLongPress() {
-    const app = window.quranApp;
-    const om = window.overlayManager;
-    const page = this.currentPage;
-    navigator.vibrate?.(30);
-    if (!app || app.bookmarkedPagesSet.has(page)) {
-      om?.showBookmarks();
       return;
     }
-    const name = om?.getDefaultBookmarkName?.(page) || `صفحة ${page}`;
-    app.addBookmark({ id: `bookmark_${page}_${Date.now()}`, page, name });
-    app.showToast("⭐ تمت إضافة العلامة المرجعية");
+    window.overlayManager?.showBookmarks();
+  });
+}
+
+_bookmarkLongPress() {
+  const app = window.quranApp;
+  const om = window.overlayManager;
+  const page = this.currentPage;
+  navigator.vibrate?.(30);
+  if (!app || app.bookmarkedPagesSet.has(page)) {
+    om?.showBookmarks();
+    return;
   }
+  const name = om?.getDefaultBookmarkName?.(page) || `صفحة ${page}`;
+  app.addBookmark({ id: `bookmark_${page}_${Date.now()}`, page, name });
+  app.showToast("⭐ تمت إضافة العلامة المرجعية");
+}
 
-  // ---------- Rotation de l'écran ----------
+// ---------- Rotation de l'écran ----------
 
-  _setupOrientationListener() {
-    if (window.matchMedia) {
-      this.orientationMedia = window.matchMedia("(orientation: portrait)");
-      const onChange = (e) => {
-        if ((e.matches ? "book" : "scroll") !== this.readingMode) this._handleOrientationChange();
-      };
-      try {
-        this._on(this.orientationMedia, "change", onChange);
-        return;
-      } catch {
-        /* anciens navigateurs : repli sur orientationchange */
-      }
-    }
-    this._on(window, "orientationchange", () => this._handleOrientationChange());
-  }
-
-  _handleOrientationChange() {
-    this.isTransitioning = true;
-    const savedPage = this.currentPage;
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-    setTimeout(() => {
-      try {
-        this.applyReadingMode();
-        setTimeout(() => this._finishOrientationChange(savedPage, isIOS), isIOS ? 300 : 200);
-      } catch {
-        this.isTransitioning = false;
-      }
-    }, isIOS ? 500 : 50);
-  }
-
-  _finishOrientationChange(savedPage, isIOS) {
-    this.isTransitioning = false;
-    this.goToPage(savedPage);
-    if (isIOS && this.readingMode === "book") this._reloadImageIOS(savedPage);
-    if (this.readingMode === "book") this._adjustFooterHeight();
-    const player = window.quranAudioPlayer;
-    if (!player?.isStopped && (player?.isPlaying || player?.currentAyah)) {
-      setTimeout(() => this._reapplyHighlightIfNeeded(), 100);
+_setupOrientationListener() {
+  if (window.matchMedia) {
+    this.orientationMedia = window.matchMedia("(orientation: portrait)");
+    const onChange = (e) => {
+      if ((e.matches ? "book" : "scroll") !== this.readingMode) this._handleOrientationChange();
+    };
+    try {
+      this._on(this.orientationMedia, "change", onChange);
+      return;
+    } catch {
+      /* anciens navigateurs : repli sur orientationchange */
     }
   }
+  this._on(window, "orientationchange", () => this._handleOrientationChange());
+}
 
-  /** iOS : force le rafraîchissement de l'image après rotation. */
-  _reloadImageIOS(page) {
-    const img = document.querySelector(`img[data-page="${page}"]`);
+_handleOrientationChange() {
+  this.isTransitioning = true;
+  const savedPage = this.currentPage;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  setTimeout(() => {
+    try {
+      this.applyReadingMode();
+      setTimeout(() => this._finishOrientationChange(savedPage, isIOS), isIOS ? 300 : 200);
+    } catch {
+      this.isTransitioning = false;
+    }
+  }, isIOS ? 500 : 50);
+}
+
+_finishOrientationChange(savedPage, isIOS) {
+  this.isTransitioning = false;
+  this.goToPage(savedPage);
+  if (isIOS && this.readingMode === "book") this._reloadImageIOS(savedPage);
+  if (this.readingMode === "book") this._adjustFooterHeight();
+  const player = window.quranAudioPlayer;
+  if (!player?.isStopped && (player?.isPlaying || player?.currentAyah)) {
+    setTimeout(() => this._reapplyHighlightIfNeeded(), 100);
+  }
+}
+
+/** iOS : force le rafraîchissement de l'image après rotation. */
+_reloadImageIOS(page) {
+  const img = document.querySelector(`img[data-page="${page}"]`);
+  if (!img) return;
+  const src = img.src;
+  img.src = "";
+  requestAnimationFrame(() => {
+    img.src = src;
+    img.dataset.loaded = "true";
+  });
+}
+
+_on(el, type, handler, opts) {
+  if (!el) return;
+  el.addEventListener(type, handler, opts);
+  this.eventListeners.push({ element: el, type, handler });
+}
+
+// ---------- Reprise et destruction ----------
+
+onAppResume() {
+  this.isTransitioning = false;
+  const overlayOpen = document.querySelector(".overlay.show, .menu-overlay.show") !== null;
+  this.tapEnabled = !overlayOpen;
+  if (this.autoScrollActive) this._acquireWakeLock();
+  this.applyReadingMode();
+  setTimeout(() => {
+    if (this.readingMode === "book") {
+      this.loadPageImage(this.currentPage, "high");
+      this._adjustFooterHeight();
+    }
+  }, 100);
+}
+
+destroy() {
+  this.stopAutoScroll();
+  this.cleanupResizeObserver();
+  if (this.imageObserver) {
+    this.imageObserver.disconnect();
+    this.imageObserver = null;
+  }
+  if (this._scrollHandler) {
+    this._scrollTarget?.removeEventListener("scroll", this._scrollHandler);
+    this._scrollHandler = null;
+    this._scrollTarget = null;
+  }
+  this.eventListeners.forEach(({ element, type, handler }) => {
+    try {
+      element.removeEventListener(type, handler);
+    } catch {
+      /* cible déjà détruite */
+    }
+  });
+  this.eventListeners = [];
+  this._cleanupTapHandlers();
+  this.removeSwipeNavigation();
+  this.imageCache.clear();
+}
+
+// ---------- Surlignage du verset ----------
+
+highlightAya(surah, ayah, rects) {
+  this.clearHighlight();
+  if (!rects?.length) return;
+  const page = this.currentPage;
+  if (rects[0]?.p !== page) return;
+
+  const rc = RIWAYA_LAYOUT[window.ACTIVE_RIWAYA] ?? RIWAYA_LAYOUT.hafs;
+  const { WEBP_TOP, WEBP_BOT, SHRINK } = rc;
+  const lineMap = this._buildLineMap(page);
+
+  let imgW, imgH, getLeft, getTop, appendTo;
+
+  if (this.readingMode === "scroll") {
+    if (!this.spacer || !this.pageHeight) return;
+    imgW = this.elements.pageScroll?.clientWidth ?? window.innerWidth;
+    imgH = this.pageHeight;
+    if (!imgW || !imgH) return;
+    const pageOffsetTop = this._pageTopOffset(page);
+    getLeft = (sx, r) => (r.x1 + rc.LEFT_OFFSET) * sx;
+    getTop = (sy, realY1, yCorrect) => pageOffsetTop + realY1 * sy + yCorrect + SHRINK * sy;
+    appendTo = this.spacer;
+  } else {
+    const wrapper = this._findBookWrapper(page);
+    const img = wrapper?.querySelector("img");
     if (!img) return;
-    const src = img.src;
-    img.src = "";
-    requestAnimationFrame(() => {
-      img.src = src;
-      img.dataset.loaded = "true";
+    imgW = img.offsetWidth || img.naturalWidth;
+    imgH = img.offsetHeight || Math.round((img.naturalWidth * PAGE_IMG.H) / PAGE_IMG.W);
+    if (!imgW || !imgH) return;
+    const offX = img.offsetLeft;
+    const offY = img.offsetTop;
+    getLeft = (sx, r) => offX + (r.x1 + rc.LEFT_OFFSET) * sx;
+    getTop = (sy, realY1, yCorrect) => offY + realY1 * sy + yCorrect + SHRINK * sy;
+    appendTo = wrapper;
+  }
+
+  const sx = imgW / PAGE_IMG.W;
+  const sy = imgH / PAGE_IMG.H;
+
+  rects.forEach((r) => {
+    const line = r.l ? lineMap[r.l] : null;
+    const realY1 = line ? line.y1 : r.y1;
+    const realY2 = line ? line.y2 : r.y2;
+    const yCorrect = (WEBP_TOP - (realY1 / PAGE_IMG.H) * (WEBP_TOP + WEBP_BOT)) * sy;
+
+    const div = AppUtils.el("div", "aya-highlight");
+    Object.assign(div.style, {
+      position: "absolute",
+      left: `${getLeft(sx, r)}px`,
+      width: `${(r.x2 - r.x1) * sx}px`,
+      top: `${getTop(sy, realY1, yCorrect)}px`,
+      height: `${(realY2 - realY1) * sy - SHRINK * 2 * sy}px`,
     });
-  }
+    appendTo.appendChild(div);
+  });
 
-  _on(el, type, handler, opts) {
-    if (!el) return;
-    el.addEventListener(type, handler, opts);
-    this.eventListeners.push({ element: el, type, handler });
-  }
+  if (this.readingMode === "scroll") this._scrollToFirstHighlight(rc.SCROLL_OFFSET);
+}
 
-  // ---------- Reprise et destruction ----------
-
-  onAppResume() {
-    this.isTransitioning = false;
-    const overlayOpen = document.querySelector(".overlay.show, .menu-overlay.show") !== null;
-    this.tapEnabled = !overlayOpen;
-    if (this.autoScrollActive) this._acquireWakeLock();
-    this.applyReadingMode();
-    setTimeout(() => {
-      if (this.readingMode === "book") {
-        this.loadPageImage(this.currentPage, "high");
-        this._adjustFooterHeight();
-      }
-    }, 100);
-  }
-
-  destroy() {
-    this.stopAutoScroll();
-    this.cleanupResizeObserver();
-    if (this.imageObserver) {
-      this.imageObserver.disconnect();
-      this.imageObserver = null;
-    }
-    if (this._scrollHandler) {
-      this._scrollTarget?.removeEventListener("scroll", this._scrollHandler);
-      this._scrollHandler = null;
-      this._scrollTarget = null;
-    }
-    this.eventListeners.forEach(({ element, type, handler }) => {
-      try {
-        element.removeEventListener(type, handler);
-      } catch {
-        /* cible déjà détruite */
-      }
-    });
-    this.eventListeners = [];
-    this._cleanupTapHandlers();
-    this.removeSwipeNavigation();
-    this.imageCache.clear();
-  }
-
-  // ---------- Surlignage du verset ----------
-
-  highlightAya(surah, ayah, rects) {
-    this.clearHighlight();
-    if (!rects?.length) return;
-    const page = this.currentPage;
-    if (rects[0]?.p !== page) return;
-
-    const rc = RIWAYA_LAYOUT[window.ACTIVE_RIWAYA] ?? RIWAYA_LAYOUT.hafs;
-    const { WEBP_TOP, WEBP_BOT, SHRINK } = rc;
-    const lineMap = this._buildLineMap(page);
-
-    let imgW, imgH, getLeft, getTop, appendTo;
-
-    if (this.readingMode === "scroll") {
-      if (!this.spacer || !this.pageHeight) return;
-      imgW = this.elements.pageScroll?.clientWidth ?? window.innerWidth;
-      imgH = this.pageHeight;
-      if (!imgW || !imgH) return;
-      const pageOffsetTop = this._pageTopOffset(page);
-      getLeft = (sx, r) => (r.x1 + rc.LEFT_OFFSET) * sx;
-      getTop = (sy, realY1, yCorrect) => pageOffsetTop + realY1 * sy + yCorrect + SHRINK * sy;
-      appendTo = this.spacer;
+_buildLineMap(page) {
+  const lineMap = {};
+  (window.quranAudioPlayer?.ayaCoords || []).forEach((r) => {
+    if (r.p !== page || !r.l) return;
+    const line = lineMap[r.l];
+    if (!line) {
+      lineMap[r.l] = { y1: r.y1, y2: r.y2 };
     } else {
-      const wrapper = this._findBookWrapper(page);
-      const img = wrapper?.querySelector("img");
-      if (!img) return;
-      imgW = img.offsetWidth || img.naturalWidth;
-      imgH = img.offsetHeight || Math.round((img.naturalWidth * PAGE_IMG.H) / PAGE_IMG.W);
-      if (!imgW || !imgH) return;
-      const offX = img.offsetLeft;
-      const offY = img.offsetTop;
-      getLeft = (sx, r) => offX + (r.x1 + rc.LEFT_OFFSET) * sx;
-      getTop = (sy, realY1, yCorrect) => offY + realY1 * sy + yCorrect + SHRINK * sy;
-      appendTo = wrapper;
+      line.y1 = Math.min(line.y1, r.y1);
+      line.y2 = Math.max(line.y2, r.y2);
     }
+  });
+  return lineMap;
+}
 
-    const sx = imgW / PAGE_IMG.W;
-    const sy = imgH / PAGE_IMG.H;
+_scrollToFirstHighlight(scrollOffset) {
+  const first = this.spacer?.querySelector(".aya-highlight");
+  if (!first) return;
+  const container = this.elements.pageScroll;
+  if (!container) return;
+  const top = parseFloat(first.style.top);
+  if (isNaN(top)) return;
+  container.scrollTo({ top: Math.max(0, top - scrollOffset), behavior: "auto" });
+}
 
-    rects.forEach((r) => {
-      const line = r.l ? lineMap[r.l] : null;
-      const realY1 = line ? line.y1 : r.y1;
-      const realY2 = line ? line.y2 : r.y2;
-      const yCorrect = (WEBP_TOP - (realY1 / PAGE_IMG.H) * (WEBP_TOP + WEBP_BOT)) * sy;
-
-      const div = AppUtils.el("div", "aya-highlight");
-      Object.assign(div.style, {
-        position: "absolute",
-        left: `${getLeft(sx, r)}px`,
-        width: `${(r.x2 - r.x1) * sx}px`,
-        top: `${getTop(sy, realY1, yCorrect)}px`,
-        height: `${(realY2 - realY1) * sy - SHRINK * 2 * sy}px`,
-      });
-      appendTo.appendChild(div);
-    });
-
-    if (this.readingMode === "scroll") this._scrollToFirstHighlight(rc.SCROLL_OFFSET);
-  }
-
-  _buildLineMap(page) {
-    const lineMap = {};
-    (window.quranAudioPlayer?.ayaCoords || []).forEach((r) => {
-      if (r.p !== page || !r.l) return;
-      const line = lineMap[r.l];
-      if (!line) {
-        lineMap[r.l] = { y1: r.y1, y2: r.y2 };
-      } else {
-        line.y1 = Math.min(line.y1, r.y1);
-        line.y2 = Math.max(line.y2, r.y2);
-      }
-    });
-    return lineMap;
-  }
-
-  _scrollToFirstHighlight(scrollOffset) {
-    const first = this.spacer?.querySelector(".aya-highlight");
-    if (!first) return;
-    const container = this.elements.pageScroll;
-    if (!container) return;
-    const top = parseFloat(first.style.top);
-    if (isNaN(top)) return;
-    container.scrollTo({ top: Math.max(0, top - scrollOffset), behavior: "auto" });
-  }
-
-  clearHighlight() {
-    document.querySelectorAll(".aya-highlight").forEach((el) => el.remove());
-  }
+clearHighlight() {
+  document.querySelectorAll(".aya-highlight").forEach((el) => el.remove());
+}
 }
 
 // ============================================================

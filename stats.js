@@ -7,16 +7,15 @@ class StatsManager {
   constructor() {
     this.storageKey = "quran_stats";
     this.data = this._loadData();
-    this._pageTimer = null;
-    this._currentPagePending = null;
   }
 
   // ---------- 1. Persistance & Utilitaires ----------
 
   _loadData() {
     const defaultData = {
-      version: 2,
-      pages: {},
+      version: 3,
+      pages: {},                                    // { "2026-11-20": count }
+      pagesSet: {},                                 // { "2026-11-20": [1,2,3,...] }
       goals: { daily: 10 }
     };
 
@@ -25,9 +24,18 @@ class StatsManager {
       if (!raw) return defaultData;
       const parsed = JSON.parse(raw);
 
+      // Migration v2 → v3 : créer pagesSet à partir des counts existants
+      let pagesSet = parsed.pagesSet || {};
+      if (!parsed.pagesSet && parsed.pages) {
+        // Ancienne version : on ne connaît pas les pages exactes, on laisse vide
+        // Les anciens counts restent dans `pages`, mais pagesSet démarre vide
+        pagesSet = {};
+      }
+
       return {
-        version: 2,
+        version: 3,
         pages: parsed.pages || {},
+        pagesSet,
         goals: { daily: parsed.goals?.daily ?? defaultData.goals.daily }
       };
     } catch {
@@ -51,28 +59,34 @@ class StatsManager {
     return (pages / 10).toFixed(1).replace('.0', '');
   }
 
-  // ---------- 2. Logique d'enregistrement ----------
-
-  onPageViewed(page) {
-    if (!page || page < 1 || page > 604) return;
-
-    if (this._pageTimer) clearTimeout(this._pageTimer);
-    this._currentPagePending = page;
-
-    this._pageTimer = setTimeout(() => {
-      this._commitPageRead(this._currentPagePending);
-      this._pageTimer = null;
-      this._currentPagePending = null;
-    }, 3000);
+  _todaySet() {
+    const today = this._getDateKey();
+    if (!this.data.pagesSet[today]) this.data.pagesSet[today] = [];
+    return this.data.pagesSet[today];
   }
 
-  _commitPageRead(page) {
+  // ---------- 2. Logique d'enregistrement ----------
+
+  // ✅ Appelée par quran-reader.js quand une page est quittée après >= 10s
+  commitPageRead(page) {
+    if (!page || page < 1 || page > 604) return;
+
+    const todaySet = this._todaySet();
+
+    // ✅ Anti-doublon journalier : si déjà comptée aujourd'hui, on ignore
+    if (todaySet.includes(page)) return;
+
+    todaySet.push(page);
     const today = this._getDateKey();
-    this.data.pages[today] = (this.data.pages[today] || 0) + 1;
+    this.data.pages[today] = todaySet.length;
 
     // Nettoyage des données > 365 jours
     const keys = Object.keys(this.data.pages).sort();
-    if (keys.length > 365) delete this.data.pages[keys[0]];
+    if (keys.length > 365) {
+      const oldest = keys[0];
+      delete this.data.pages[oldest];
+      delete this.data.pagesSet[oldest];
+    }
 
     this.save();
   }
@@ -133,6 +147,9 @@ class StatsManager {
     const fillClass = isGoalReached ? '' : 'red-fill';
     const textClass = isGoalReached ? '' : 'red-text';
 
+    const TEXT_INSIDE_THRESHOLD = 15;
+    const textPosClass = percentToday < TEXT_INSIDE_THRESHOLD ? 'outside' : 'inside';
+
     container.innerHTML = `
       <!-- 1. Objectif du jour (Barre horizontale) -->
       <div class="stats-goal-header">
@@ -147,8 +164,9 @@ class StatsManager {
         </div>
 
         <div class="stats-goal-bar-bg">
-          <div class="stats-goal-bar-fill ${fillClass}" style="width: ${percentToday}%"></div>
-          <span class="stats-goal-bar-text">${percentToday}%</span>
+          <div class="stats-goal-bar-fill ${fillClass}" style="width: ${percentToday}%">
+          <span class="stats-goal-bar-text ${textPosClass}">${percentToday}%</span>
+          </div>
         </div>
         
         <div class="stats-hizb-equivalence">
@@ -286,96 +304,105 @@ class StatsManager {
 
   // ---------- 4. Mini-Overlay Objectifs ----------
 
-_showGoalEditor() {
-  const g = this.data.goals;
+  _showGoalEditor() {
+    const g = this.data.goals;
 
-  const rowHtml = (key, label, val) => `
-    <div class="stats-goal-row">
-      <div>
-        <span class="stats-goal-row-label">${label}</span>
-        <span class="stats-goal-row-sub" id="sub_${key}">(${val > 0 ? this._pagesToHizb(val) + ' حزب' : 'معطل'})</span>
+    const rowHtml = (key, label, val) => `
+      <div class="stats-goal-row">
+        <div>
+          <span class="stats-goal-row-label">${label}</span>
+          <span class="stats-goal-row-sub" id="sub_${key}">(${val > 0 ? this._pagesToHizb(val) + ' حزب' : 'معطل'})</span>
+        </div>
+        <div class="stats-counter">
+          <input type="number" class="stats-counter-input" id="val_${key}" 
+                 value="${val}" min="0" inputmode="numeric" data-key="${key}">
+          <span style="color: var(--text-light); font-weight: bold;">ص</span>
+        </div>
       </div>
-      <div class="stats-counter">
-        <input type="number" class="stats-counter-input" id="val_${key}" 
-               value="${val}" min="0" inputmode="numeric" data-key="${key}">
-        <span style="color: var(--text-light); font-weight: bold;">ص</span>
-      </div>
-    </div>
-  `;
+    `;
 
-  window.overlayManager._showBackdropDialog(
-    `<h3 style="margin-bottom:15px; text-align:center;">🎯 تعديل الأهداف</h3>
-     <div style="text-align: center; font-size: var(--text-sm); color: var(--text-light); margin-bottom: 10px;">
-       حدد عدد الصفحات التي تريد قراءتها يومياً
-     </div>
-     <div class="stats-goal-editor">
-       ${rowHtml('daily', 'الهدف اليومي', g.daily)}
-     </div>`,
-    (dialog, cleanup) => {
-      const input = dialog.querySelector('#val_daily');
+    window.overlayManager._showBackdropDialog(
+      `<h3 style="margin-bottom:15px; text-align:center;">🎯 تعديل الأهداف</h3>
+       <div style="text-align: center; font-size: var(--text-sm); color: var(--text-light); margin-bottom: 10px;">
+         حدد عدد الصفحات التي تريد قراءتها يومياً
+       </div>
+       <div class="stats-goal-editor">
+         ${rowHtml('daily', 'الهدف اليومي', g.daily)}
+       </div>`,
+      (dialog, cleanup) => {
+        const input = dialog.querySelector('#val_daily');
 
-      // ✅ AJOUT : focus + sélection automatique à l'ouverture
-      requestAnimationFrame(() => {
-        input.focus();
-        input.select();
-      });
+        // ✅ Focus + sélection automatique à l'ouverture
+        requestAnimationFrame(() => {
+          input.focus();
+          input.select();
+        });
 
-      input.addEventListener('input', (e) => {
-        let val = parseInt(e.target.value, 10) || 0;
-        if (val < 0) val = 0;
-        this.data.goals.daily = val;
-        dialog.querySelector('#sub_daily').textContent = val > 0 ? `(${this._pagesToHizb(val)} حزب)` : '(معطل)';
-      });
+        input.addEventListener('input', (e) => {
+          let val = parseInt(e.target.value, 10) || 0;
+          if (val < 0) val = 0;
+          this.data.goals.daily = val;
+          dialog.querySelector('#sub_daily').textContent = val > 0 ? `(${this._pagesToHizb(val)} حزب)` : '(معطل)';
+        });
 
-      // Bonus : Entrée pour valider
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          saveBtn.click();
-        }
-      });
+        // ✅ Entrée pour valider
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            saveBtn.click();
+          }
+        });
 
-      const saveBtn = document.createElement('button');
-      saveBtn.className = "confirm-btn ok";
-      saveBtn.style.marginTop = "15px";
-      saveBtn.style.width = "100%";
-      saveBtn.textContent = "حفظ وإغلاق";
-      saveBtn.addEventListener('click', () => {
-        this.save();
-        cleanup(null);
-        this._renderUI(document.getElementById('statsContent'));
-      });
+        const saveBtn = document.createElement('button');
+        saveBtn.className = "confirm-btn ok";
+        saveBtn.style.marginTop = "15px";
+        saveBtn.style.width = "100%";
+        saveBtn.textContent = "حفظ وإغلاق";
+        saveBtn.addEventListener('click', () => {
+          this.save();
+          cleanup(null);
+          this._renderUI(document.getElementById('statsContent'));
+        });
 
-      dialog.appendChild(saveBtn);
-    }
-  );
-}
+        dialog.appendChild(saveBtn);
+      }
+    );
+  }
+
   // ---------- 5. Export / Import pour Backup ----------
 
   exportData() {
     return {
       goals: { daily: this.data.goals.daily },
-      pages: this.data.pages
+      pages: this.data.pages,
+      pagesSet: this.data.pagesSet
     };
   }
 
   importData(importedStats, merge = false) {
     if (!importedStats) return;
 
+    if (importedStats.goals?.daily !== undefined) {
+      this.data.goals.daily = importedStats.goals.daily;
+    }
+
     if (merge) {
-      if (importedStats.goals?.daily !== undefined) {
-        this.data.goals.daily = importedStats.goals.daily;
-      }
       if (importedStats.pages) {
         for (const [date, count] of Object.entries(importedStats.pages)) {
           this.data.pages[date] = Math.max(this.data.pages[date] || 0, count);
         }
       }
-    } else {
-      if (importedStats.goals?.daily !== undefined) {
-        this.data.goals.daily = importedStats.goals.daily;
+      if (importedStats.pagesSet) {
+        for (const [date, pagesArr] of Object.entries(importedStats.pagesSet)) {
+          const existing = this.data.pagesSet[date] || [];
+          const merged = Array.from(new Set([...existing, ...pagesArr]));
+          this.data.pagesSet[date] = merged;
+          this.data.pages[date] = merged.length;
+        }
       }
+    } else {
       if (importedStats.pages) this.data.pages = importedStats.pages;
+      if (importedStats.pagesSet) this.data.pagesSet = importedStats.pagesSet;
     }
 
     this.save();
