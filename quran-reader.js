@@ -754,8 +754,10 @@ class QuranReader {
     const oldPage = this.previousPage;
     this.previousPage = this.currentPage;
     AppUtils.emit(APP_EVENTS.pageChanged, { page: this.currentPage, oldPage });
+    if (!this.isRestoring) {
+      window.statsManager?.onPageViewed(this.currentPage);
+    }
   }
-
   // ---------- Swipe navigation (book mode) ----------
 
   setupSwipeNavigation() {

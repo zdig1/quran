@@ -111,14 +111,19 @@ class OverlayManager {
       closeBtn: "closeKhatmBtn",
       content: "khatmContent",
     },
-    about: {
-      element: "aboutOverlay",
-      closeBtn: "closeAboutBtn",
-      content: "aboutContent",
+    stats: {
+      element: "statsOverlay",
+      closeBtn: "closeStatsBtn",
+      content: "statsContent",
     },
     backup: {
       element: "backupOverlay",
       closeBtn: "closeBackupBtn",
+    },
+    about: {
+      element: "aboutOverlay",
+      closeBtn: "closeAboutBtn",
+      content: "aboutContent",
     },
   };
 
@@ -190,6 +195,7 @@ class OverlayManager {
       tafsirBtn: document.getElementById("tafsirBtn"),
       tajweedBtn: document.getElementById("tajweedBtn"),
       khatmBtn: document.getElementById("khatmBtn"),
+      statsBtn: document.getElementById("statsBtn"),
       themeBtn: document.getElementById("themeBtn"),
       aboutBtn: document.getElementById("aboutBtn"),
     };
@@ -243,6 +249,7 @@ class OverlayManager {
     this._on(e.tafsirBtn, "click", () => window.tafsirManager?.showTafsirOverlay());
     this._on(e.tajweedBtn, "click", () => this.showTajweed());
     this._on(e.khatmBtn, "click", () => this.showKhatm());
+    this._on(e.statsBtn, "click", () => window.statsManager?.showOverlay());
     this._on(e.themeBtn, "click", () => { this.closeMenu(); setTimeout(() => window.quranApp?.toggleTheme(), 50); });
     this._on(e.aboutBtn, "click", () => this.showAbout());
   }
@@ -307,32 +314,41 @@ class OverlayManager {
     const badge = R.createBadge(String(surah.s_id));
     badge.classList.add("g-col", "g-badge");
 
-    // Col 3 — nom en calligraphie + ordre de révélation
-    const nameCell = cell("g-name");
-    nameCell.appendChild(AppUtils.el("span", "surah-calligraphy", `surah${AppUtils.pad3(surah.s_id)}`));
-
-    // Col 4 — info ℹ️ + lieu de révélation 🕋 / 🕌
-    const infoBtn = AppUtils.el("button", "g-col g-info action-icon info-btn surah-info", "ℹ️");
+    // Col 2 ligne 2 — bouton info (sous le badge)
+    const infoCell = cell("g-info");
+    const infoBtn = AppUtils.el("button", "action-icon info-btn surah-info", "ℹ️");
     infoBtn.dataset.surahId = surah.s_id;
+    infoCell.appendChild(infoBtn);
+
+    // Col 3 — nom en calligraphie (Ligne 1) + révélation et ordre (Ligne 2)
+    const nameCell = cell("g-name");
+    nameCell.appendChild(
+      AppUtils.el("span", "surah-calligraphy", "\uE000")
+    );
+    nameCell.appendChild(
+      AppUtils.el("span", "surah-calligraphy", `surah${AppUtils.pad3(surah.s_id)}`)
+    );
+
+    const orderCell = cell("g-order");
+    const revelSpan = AppUtils.el("span", "surah-revel", surah.type === "مدنية" ? "🕌" : "🕋");
+    const orderSpan = AppUtils.el("span", "note-small", `التنزيل: ${surah.order}`);
+    orderCell.append(revelSpan, orderSpan);
 
     // Col 5 — signet
     const bookmarkCell = cell("g-bookmark");
     if (bookmarkedSurahIds?.has(surah.s_id)) bookmarkCell.textContent = "🔖";
 
     grid.append(
-      pinBtn,
-      badge,
-      nameCell,
-      cell("g-order", `<span class="note-small">النزول: ${surah.order}</span>`),
-      infoBtn,
-      cell("g-revel", `<span class="surah-revel">${surah.type === "مدنية" ? "🕌" : "🕋"}</span>`),
-      bookmarkCell,
-      // Col 6 — juz + sajda ۩
-      cell("g-juz", juzStarts.length ? `<span class="juz-badge">${juzStarts.map((j) => `ج${j}`).join(" ")}</span>` : ""),
-      cell("g-sajda", calc.hasSajdaInSurah(surah.s_id) ? '<span class="item-sajda-icon">۩</span>' : ""),
-      // Col 7 — page + nombre de versets
-      cell("g-page", `<span class="page-tag">${APP_TEXTS.pageShort} ${surah.page_start}</span>`),
-      cell("g-verses", `<span class="surah-verses">(${surah.verses}) آية</span>`),
+      pinBtn,               // Col 1
+      badge,                // Col 2
+      infoCell,           // Col 2  Ligne 2
+      nameCell,             // Col 3 - Ligne 1
+      orderCell,            // Col 3 - Ligne 2
+      bookmarkCell,         // Col 5
+      cell("g-juz", juzStarts.length ? `<span class="juz-badge">${juzStarts.map((j) => `ج${j}`).join(" ")}</span>` : ""), // Col 6
+      cell("g-sajda", calc.hasSajdaInSurah(surah.s_id) ? '<span class="item-sajda-icon">۩</span>' : ""), // Col 6
+      cell("g-page", `<span class="page-tag">${APP_TEXTS.pageShort} ${surah.page_start}</span>`), // Col 7
+      cell("g-verses", `<span class="surah-verses">(${surah.verses}) آية</span>`) // Col 7
     );
     container.appendChild(grid);
 

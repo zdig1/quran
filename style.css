@@ -1202,7 +1202,7 @@
 
   .item-surah .surah-grid {
     display: grid;
-    grid-template-columns: auto auto minmax(0, 1fr) 2rem 1.2rem 2.6rem 4.6rem;
+    grid-template-columns: auto auto minmax(0, 1fr) 1.2rem 2.6rem 4.6rem;
     grid-template-rows: auto auto;
     align-items: center;
     column-gap: 6px;
@@ -1231,7 +1231,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 6px;
+    gap: 2px;
     min-width: 0;
     padding-right: 4px;
   }
@@ -1242,27 +1242,20 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    gap: 4px;
     min-width: 0;
     padding-right: 4px;
   }
 
   .item-surah .g-info {
-    grid-column: 4;
-    grid-row: 1;
+    grid-column: 2;
+    grid-row: 2;
     align-self: center;
     justify-self: center;
   }
 
-  .item-surah .g-revel {
-    grid-column: 4;
-    grid-row: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
   .item-surah .g-bookmark {
-    grid-column: 5;
+    grid-column: 4;
     grid-row: 1;
     display: flex;
     align-items: center;
@@ -1272,7 +1265,7 @@
   }
 
   .item-surah .g-juz {
-    grid-column: 6;
+    grid-column: 5;
     grid-row: 1;
     display: flex;
     align-items: center;
@@ -1285,7 +1278,7 @@
   }
 
   .item-surah .g-sajda {
-    grid-column: 6;
+    grid-column: 5;
     grid-row: 2;
     display: flex;
     align-items: center;
@@ -1294,7 +1287,7 @@
   }
 
   .item-surah .g-page {
-    grid-column: 7;
+    grid-column: 6;
     grid-row: 1;
     display: flex;
     align-items: center;
@@ -1302,7 +1295,7 @@
   }
 
   .item-surah .g-verses {
-    grid-column: 7;
+    grid-column: 6;
     grid-row: 2;
     display: flex;
     align-items: center;
@@ -1313,7 +1306,6 @@
     font-family: "SurahNamesFont", sans-serif;
     font-size: 2.5rem;
     line-height: 1;
-    color: var(--primary);
     display: inline-block;
     direction: rtl;
     font-feature-settings:
@@ -1337,8 +1329,9 @@
   .item-surah .info-btn {
     width: 2rem;
     height: 2rem;
-    font-size: 1.1rem;
+    font-size: 1.375rem;
     padding: 0;
+    margin: 0;
     background: none;
     border: none;
     cursor: pointer;
@@ -1347,6 +1340,9 @@
     align-items: center;
     justify-content: center;
     transition: var(--transition-default);
+    line-height: 1;
+    vertical-align: middle;
+    flex-shrink: 0;
   }
 
   .item-surah .info-btn:hover {
@@ -2685,6 +2681,30 @@
     font-weight: 600;
   }
 
+  .audio-aya-range {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    font-size: 13px;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    color: #555555;
+    margin-top: 6px;
+    gap: 6px;
+    width: 100%;
+    /* On laisse le RTL du body, pas de direction: ltr ici */
+  }
+
+  /* Chaque référence sourate:aya est forcée en LTR */
+  .audio-aya-range .aya-range-ref {
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-weight: 600;
+  }
+
+  .night-mode .audio-aya-range {
+    color: #b0b0b0;
+  }
+
   /* « Aller à » : sélecteurs et bouton sur la même ligne, titres de même style */
   .goto-row {
     display: flex;
@@ -2708,6 +2728,7 @@
    COUCHE night — exceptions du mode nuit (le reste passe par les variables)
    ============================================================ */
 @layer night {
+
   /*  Mode nuit — En-tête et pied de page  */
   .night-mode .footer-surah,
   .night-mode .footer-value {
@@ -2868,5 +2889,342 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+  }
+}
+
+/* ============================================================
+   FICHIER : stats.css
+   Rôle : styles dédiés à l'overlay des statistiques
+   ============================================================ */
+
+@layer app {
+
+  /* --- Layout général --- */
+  .stats-body {
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    background: var(--bg);
+  }
+
+  .stats-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius-lg);
+    padding: var(--space-md);
+    box-shadow: var(--shadow);
+  }
+
+  /* --- 1. Objectif quotidien (Barre horizontale) --- */
+  .stats-goal-header {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    padding: var(--space-md);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--primary-light);
+    box-shadow: var(--shadow);
+  }
+
+  .stats-goal-top {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+  }
+
+  .stats-goal-title {
+    font-weight: 700;
+    color: var(--text);
+    font-size: var(--text-lg);
+  }
+
+  .stats-edit-btn {
+    background: var(--surface-alt);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .stats-edit-btn:active {
+    background: var(--border);
+  }
+
+  .stats-goal-numbers {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 4px;
+  }
+
+  .stats-goal-current {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+  }
+
+  .stats-goal-current.red-text {
+    color: var(--color-red);
+  }
+
+  .stats-goal-target {
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    font-weight: 600;
+  }
+
+  .stats-goal-bar-bg {
+    width: 100%;
+    height: 16px;
+    background: var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: var(--space-sm);
+    position: relative;
+  }
+
+  .stats-goal-bar-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 8px;
+    transition: width 0.3s ease;
+  }
+
+  .stats-goal-bar-fill.red-fill {
+    background: var(--color-red);
+  }
+
+  .stats-goal-bar-text {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: white;
+    z-index: 2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .stats-hizb-equivalence {
+    font-size: var(--text-sm);
+    color: var(--primary);
+    font-weight: 600;
+    background: var(--primary-light);
+    padding: 4px 12px;
+    border-radius: 20px;
+    align-self: center;
+  }
+
+  /* --- En-têtes de section --- */
+  .stats-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+    font-weight: bold;
+    font-size: var(--text-md);
+  }
+
+  /* --- Bloc résumé (Total / Moyenne / Jours atteints) --- */
+  .stats-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    /* <-- 3 colonnes au lieu de 2 */
+    gap: 6px;
+    margin-bottom: var(--space-md);
+  }
+
+  .stats-summary-box {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    padding: 8px 4px;
+    /* Un peu moins de padding pour que ça rentre */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  /* On réduit un peu la taille des textes pour que ça rentre dans 3 cases */
+  .stats-summary-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1.2;
+  }
+
+  .stats-summary-hizb {
+    font-size: 0.65rem;
+    color: var(--text-light);
+    font-weight: 600;
+  }
+
+  /* --- 2. Barres des 7 derniers jours --- */
+  .stats-7days-bars {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    height: 90px;
+  }
+
+  .stats-7days-bar-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    gap: 4px;
+  }
+
+  .stats-bar-value {
+    font-size: 0.7rem;
+    color: var(--text-light);
+    font-weight: 700;
+  }
+
+  .stats-7days-bar {
+    width: 60%;
+    background: var(--primary-light);
+    border-radius: 4px;
+    transition: height 0.3s ease;
+    min-height: 6px;
+  }
+
+  .stats-7days-bar.full {
+    background: var(--primary);
+  }
+
+  .stats-7days-bar.partial {
+    background: var(--color-red);
+  }
+
+  .stats-7days-bar.active {
+    border: 2px solid var(--text);
+  }
+
+  .stats-day-label {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    font-weight: 600;
+  }
+
+  /* --- 3. Grille Calendrier (28 Jours) --- */
+  .stats-month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    direction: rtl;
+    padding: 0 10px;
+  }
+
+  .stats-month-dot {
+    width: 80%;
+    aspect-ratio: 1;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    color: var(--text-light);
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 1;
+  }
+
+  .stats-month-dot.green {
+    background: var(--primary);
+    border-color: transparent;
+    color: white;
+  }
+
+  .stats-month-dot.partial {
+    background: var(--surface-alt);
+    color: var(--text);
+  }
+
+  .stats-month-dot.partial::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    background: var(--surface);
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  .stats-month-dot.today {
+    border-width: 2px;
+    border-color: var(--text);
+  }
+
+  /* --- Mini-overlay d'édition des objectifs --- */
+  .stats-goal-editor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    padding: var(--space-sm);
+  }
+
+  .stats-goal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) 0;
+  }
+
+  .stats-goal-row-label {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .stats-goal-row-sub {
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .stats-counter {
+    display: flex;
+    align-items: center;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    padding: 4px 8px;
+  }
+
+  .stats-counter-input {
+    width: 60px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: var(--text-lg);
+    font-weight: bold;
+    text-align: center;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .stats-counter-input::-webkit-outer-spin-button,
+  .stats-counter-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .stats-counter-input[type=number] {
+    -moz-appearance: textfield;
   }
 }

@@ -529,6 +529,7 @@ class QuranApp {
         activeReciters,
         lastPage: this.lastPage,
         theme: this.theme,
+        stats: window.statsManager ? window.statsManager.exportData() : null,
       },
       null,
       2,
@@ -547,6 +548,9 @@ class QuranApp {
       this._importBookmarksAndPins(imported, merge);
       this._importReciters(imported, merge);
       this._importPageAndTheme(imported);
+      if (imported.stats && window.statsManager) {
+        window.statsManager.importData(imported.stats, merge);
+      }
 
       this.saveToLocalStorage();
       AppUtils.emit(APP_EVENTS.bookmarkChanged);

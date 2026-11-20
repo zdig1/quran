@@ -609,7 +609,7 @@ class QuranAudioPlayer {
 
     return `
     <div class="mem-summary-line" dir="rtl">
-      🧠 (${n} آيات × ${perVerse}) × ${passes} = ${total} قراءات
+      (${n} آيات × ${perVerse}) × ${passes} = ${total} قراءات
     </div>
     <div class="mem-progress" dir="rtl">
       <span>تكرار الآية <bdi dir="rtl">${verseNow} من ${perVerse}</bdi></span>
@@ -918,7 +918,8 @@ class QuranAudioPlayer {
                 <span class="audio-riwaya-info">🎙️ رواية ${riwayaLabel} (عبر النت)</span>
                 <span id="currentSurahDisplay" class="audio-current-display"></span>
             </div>
-            <div id="memDisplay" class="audio-mem-display" style="display: none;"></div>
+<div id="currentAyaRange" class="audio-aya-range"></div>            
+<div id="memDisplay" class="audio-mem-display" style="display: none;"></div>
         </div>
         <div class="audio-sleep-row">
             <button type="button" class="audio-sleep-pill" id="sleepBtn">
@@ -1494,15 +1495,14 @@ class QuranAudioPlayer {
     bar.id = "audioMiniBar";
     bar.className = "audio-mini-bar hidden";
     bar.innerHTML = `
-    <!-- ✅ LIGNE AJOUTÉE AU-DESSUS -->
     <div id="miniBarMemLine" class="mini-bar-mem-line" style="display:none;"></div>
 
     <div class="mini-bar-bottom">
       <button class="audio-btn" id="miniBarOptions" title="خيارات">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
+      
       <div class="mini-bar-controls">
-        <button class="audio-btn speed-btn" id="miniBarSpeed" title="السرعة">1.0×</button>
         <button class="audio-btn" id="miniBarRepeat" title="تكرار">
           ${SVG.repeat}
         </button>
@@ -1519,6 +1519,7 @@ class QuranAudioPlayer {
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="8" y="8" width="8" height="8"/></svg>
         </button>
       </div>
+
       <button class="audio-btn" id="miniBarHide" title="إخفاء">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
@@ -1854,10 +1855,28 @@ class QuranAudioPlayer {
   _updateCurrentDisplay() {
     const surah = this._surah(this.currentSurah);
     const memDisplay = document.getElementById("memDisplay");
+    const rangeDisplay = document.getElementById("currentAyaRange");
 
-    // Overlay principal
     if (this.elements.currentDisplay && surah) {
       this.elements.currentDisplay.textContent = `${surah.name} : آية ${this.currentAyah} / ${this.totalAyahs}`;
+    }
+
+    if (rangeDisplay) {
+      if (this._mem && this._mem.from && this._mem.to) {
+        // INVERSION : On met l'Ayah (a) avant la Sourate (s)
+        const startStr = `${this._mem.from.a}:${this._mem.from.s}`;
+        const endStr = `${this._mem.to.a}:${this._mem.to.s}`;
+
+        // Le premier élément va à droite (RTL)
+        rangeDisplay.innerHTML = ` 🧠
+      <span dir="ltr" class="aya-range-ref">${startStr}</span> 
+      &larr; 
+      <span dir="ltr" class="aya-range-ref">${endStr}</span>
+    `;
+        rangeDisplay.style.display = "flex";
+      } else {
+        rangeDisplay.style.display = "none";
+      }
     }
 
     if (memDisplay) {
@@ -1875,7 +1894,7 @@ class QuranAudioPlayer {
         const m = this._mem;
         const verseNow = (m.vDone || 0) + 1;
         const passNow = (m.pDone || 0) + 1;
-        barMemLine.innerHTML = `🧠 تكرار الآية ${verseNow} من ${m.perVerse} &nbsp;|&nbsp; المقطع ${passNow} من ${m.passes}`;
+        barMemLine.innerHTML = `تكرار الآية ${verseNow} من ${m.perVerse} &nbsp;|&nbsp; المقطع ${passNow} من ${m.passes}`;
         barMemLine.style.display = "block";
       } else {
         barMemLine.style.display = "none";

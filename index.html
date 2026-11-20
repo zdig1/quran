@@ -207,6 +207,14 @@
                             <span class="menu-text">الأجزاء والأحزاب</span>
                         </button>
 
+                        <button type="button" class="btn menu-item" id="goToBtn">
+                            <svg class="menu-icon-svg" viewBox="0 0 24 24">
+                                <path
+                                    d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" />
+                            </svg>
+                            <span class="menu-text">الانتقال إلى آية</span>
+                        </button>
+
                         <button type="button" class="btn menu-item" id="bookmarksBtn">
                             <svg class="menu-icon-svg" viewBox="0 0 24 24">
                                 <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z">
@@ -214,12 +222,11 @@
                             <span class="menu-text">العلامات المرجعية</span>
                         </button>
 
-                        <button type="button" class="btn menu-item" id="goToBtn">
+                        <button type="button" class="btn menu-item" id="statsBtn">
                             <svg class="menu-icon-svg" viewBox="0 0 24 24">
-                                <path
-                                    d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" />
+                                <path d="M3 13h2v8H3v-8zm4-6h2v14H7V7zm4-4h2v18h-2V3zm4 10h2v8h-2v-8zm4-4h2v12h-2V9z" />
                             </svg>
-                            <span class="menu-text">الانتقال إلى آية</span>
+                            <span class="menu-text">الإحصائيات</span>
                         </button>
 
                         <button type="button" class="btn menu-item" id="audioBtn">
@@ -327,6 +334,17 @@
             </div>
         </div>
 
+        <!-- Aller à un verset ou une page -->
+        <div id="pageInputOverlay" class="overlay" role="dialog" aria-label="الانتقال إلى آية أو صفحة">
+            <div class="overlay-content">
+                <div class="overlay-header">
+                    <h2>⬅️ الانتقال إلى</h2>
+                    <button type="button" class="btn close-btn" id="closePageInputBtn">✕</button>
+                </div>
+                <div id="goToContent" class="overlay-body page-input-body"></div>
+            </div>
+        </div>
+
         <!-- Signets -->
         <div id="bookmarksOverlay" class="overlay" role="dialog" aria-label="العلامات المرجعية">
             <div class="overlay-content">
@@ -338,14 +356,16 @@
             </div>
         </div>
 
-        <!-- Aller à un verset ou une page -->
-        <div id="pageInputOverlay" class="overlay" role="dialog" aria-label="الانتقال إلى آية أو صفحة">
+        <!-- Statistiques -->
+        <div id="statsOverlay" class="overlay" role="dialog" aria-label="الإحصائيات">
             <div class="overlay-content">
                 <div class="overlay-header">
-                    <h2>⬅️ الانتقال إلى</h2>
-                    <button type="button" class="btn close-btn" id="closePageInputBtn">✕</button>
+                    <h2>📊 الإحصائيات</h2>
+                    <button type="button" class="btn close-btn" id="closeStatsBtn">✕</button>
                 </div>
-                <div id="goToContent" class="overlay-body page-input-body"></div>
+                <div id="statsContent" class="overlay-body">
+                    <!-- Rempli par stats.js -->
+                </div>
             </div>
         </div>
 
@@ -431,19 +451,6 @@
             </div>
         </div>
 
-        <!-- À propos -->
-        <div id="aboutOverlay" class="overlay" role="dialog" aria-label="عن التطبيق">
-            <div class="overlay-content">
-                <div class="overlay-header">
-                    <h2>✅ عن التطبيق</h2>
-                    <button type="button" class="btn close-btn" id="closeAboutBtn">✕</button>
-                </div>
-                <div class="overlay-body">
-                    <div id="aboutContent" class="about-content"></div>
-                </div>
-            </div>
-        </div>
-
         <!-- Sauvegarde (export / import) -->
         <div id="backupOverlay" class="overlay" role="dialog" aria-label="النسخ الاحتياطي">
             <div class="overlay-content">
@@ -457,11 +464,25 @@
                         🔖 العلامات المرجعية
                         <br> ⭐ السور المفضلة
                         <br> 🎙️ القرّاء المفضلون
+                        <br> 📊 الإحصائيات
                     </p>
                     <div class="confirm-buttons">
                         <button type="button" class="confirm-btn" id="backupExportBtn">تصدير</button>
                         <button type="button" class="confirm-btn" id="backupImportBtn">استيراد</button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- À propos -->
+        <div id="aboutOverlay" class="overlay" role="dialog" aria-label="عن التطبيق">
+            <div class="overlay-content">
+                <div class="overlay-header">
+                    <h2>✅ عن التطبيق</h2>
+                    <button type="button" class="btn close-btn" id="closeAboutBtn">✕</button>
+                </div>
+                <div class="overlay-body">
+                    <div id="aboutContent" class="about-content"></div>
                 </div>
             </div>
         </div>
@@ -489,7 +510,8 @@
                 './quran-reader.js',
                 './overlays-manager.js',
                 './tafsir-search.js',
-                './quran-audio.js'
+                './quran-audio.js',
+                './stats.js'
             ];
 
             const loadScript = (src) =>
