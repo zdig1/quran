@@ -482,38 +482,53 @@
     background: rgba(255, 255, 255, 0.1);
   }
 
-  /*  Badges et icônes  */
+  /*  Badges et icônes (Format Sceau Islamique Rub el Hizb)  */
   .badge,
   .item-badge,
   .sura-badge {
-    width: 2.2rem;
-    height: 2.2rem;
-    border-radius: 50%;
+    position: relative;
+    z-index: 1;
+    isolation: isolate;
+    width: 2.6rem;
+    height: 2.6rem;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: var(--text-sm);
     font-weight: bold;
     flex-shrink: 0;
-    background: var(--primary);
-    color: white;
+    color: var(--badge-bg);
+    background: transparent !important;
   }
 
-  .item-badge {
+  .badge::before,
+  .item-badge::before,
+  .sura-badge::before {
+    --rub-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50 6L63 18 81 19 82 37 94 50 82 63 81 81 63 82 50 94 37 82 19 81 18 63 6 50 18 37 19 19 37 18Z' fill='none' stroke='black' stroke-width='6.5' stroke-linejoin='round'/></svg>");
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-color: var(--badge-bg);
+    -webkit-mask: var(--rub-mask) center / 100% 100% no-repeat;
+    mask: var(--rub-mask) center / 100% 100% no-repeat;
+  }
+
+  .item-badge,
+  .badge,
+  .sura-badge {
     --badge-bg: var(--primary);
-    background: var(--badge-bg);
+    /* Vert par défaut */
   }
 
   .item-search .item-badge {
     --badge-bg: var(--color-brown);
+    /* Marron pour la recherche */
   }
 
   .item-juzhizb .item-badge {
     --badge-bg: var(--color-blue);
-  }
-
-  .sura-badge {
-    background: var(--primary);
+    /* Bleu pour les Juz */
   }
 
   .action-icon {
@@ -2274,7 +2289,8 @@
   .audio-controls {
     display: flex;
     justify-content: space-between;
-    align-items: center; /* Garde l'alignement vertical des boutons de l'overlay */
+    align-items: center;
+    /* Garde l'alignement vertical des boutons de l'overlay */
     margin: 0.2rem 0;
   }
 
@@ -2343,8 +2359,10 @@
   /* ---------- Bouton générique Audio ---------- */
   .audio-btn {
     font-size: 1.2rem;
-    width: var(--btn-sm); /* 32px */
-    height: var(--btn-sm); /* 32px */
+    width: var(--btn-sm);
+    /* 32px */
+    height: var(--btn-sm);
+    /* 32px */
     border: none;
     background: transparent;
     color: var(--text);
@@ -2353,8 +2371,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0; /* Sécurité pour éviter les décalages */
-    line-height: 1; /* Évite la line-box parasite du texte */
+    padding: 0;
+    /* Sécurité pour éviter les décalages */
+    line-height: 1;
+    /* Évite la line-box parasite du texte */
     transition:
       var(--transition-default),
       transform 0.1s;
@@ -2377,10 +2397,12 @@
     font-size: 0.85rem;
     background: var(--surface-alt);
     border-radius: 2rem;
-    letter-spacing: 0; /* Corrigé : retire le -3px qui tassait le texte */
+    letter-spacing: 0;
+    /* Corrigé : retire le -3px qui tassait le texte */
     padding: 0 6px;
     min-width: 2.8rem;
-    height: var(--btn-sm); /* Aligné sur la même hauteur que les autres boutons */
+    height: var(--btn-sm);
+    /* Aligné sur la même hauteur que les autres boutons */
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2414,7 +2436,8 @@
   /* L'icône du Play est agrandie pour avoir le même poids visuel que les flèches */
   .audio-btn.play-main-btn svg {
     display: block;
-    width: 30px;  /* Corrigé : 30px au lieu de 22px */
+    width: 30px;
+    /* Corrigé : 30px au lieu de 22px */
     height: 30px;
     flex-shrink: 0;
   }
@@ -2470,7 +2493,8 @@
   .audio-mini-bar .mini-bar-controls {
     display: flex;
     flex: 1;
-    align-items: center; /* ✅ Clé de l'alignement vertical */
+    align-items: center;
+    /* ✅ Clé de l'alignement vertical */
     justify-content: space-around;
     gap: 0.25rem;
   }
@@ -2478,7 +2502,8 @@
   /* ---------- Icônes SVG (Mini-barre et Overlay) ---------- */
   .audio-mini-bar .audio-btn svg,
   .audio-controls .audio-btn svg {
-    display: block; /* ✅ Clé anti-baseline */
+    display: block;
+    /* ✅ Clé anti-baseline */
     width: 30px;
     height: 30px;
     flex-shrink: 0;
