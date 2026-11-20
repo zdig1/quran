@@ -5,7 +5,7 @@
 
 class StatsManager {
   constructor() {
-    this.storageKey = "quran_stats";
+    this.storageKey = `quran_stats_${window.APP_ID}`;
     this.data = this._loadData();
   }
 
@@ -13,9 +13,8 @@ class StatsManager {
 
   _loadData() {
     const defaultData = {
-      version: 3,
-      pages: {},                                    // { "2026-11-20": count }
-      pagesSet: {},                                 // { "2026-11-20": [1,2,3,...] }
+      pages: {},        // { "2026-11-20": count }
+      pagesSet: {},     // { "2026-11-20": [1,2,3,...] }
       goals: { daily: 10 }
     };
 
@@ -24,20 +23,26 @@ class StatsManager {
       if (!raw) return defaultData;
       const parsed = JSON.parse(raw);
 
-      // Migration v2 → v3 : créer pagesSet à partir des counts existants
-      let pagesSet = parsed.pagesSet || {};
-      if (!parsed.pagesSet && parsed.pages) {
-        // Ancienne version : on ne connaît pas les pages exactes, on laisse vide
-        // Les anciens counts restent dans `pages`, mais pagesSet démarre vide
-        pagesSet = {};
-      }
-
-      return {
-        version: 3,
+      const data = {
         pages: parsed.pages || {},
-        pagesSet,
+        pagesSet: parsed.pagesSet || {},
         goals: { daily: parsed.goals?.daily ?? defaultData.goals.daily }
       };
+
+      // ✅ Nettoyage immédiat : pages 28 jours, pagesSet aujourd'hui seulement
+      const today = new Date().toLocaleDateString('en-CA');
+
+      Object.keys(data.pagesSet).forEach((date) => {
+        if (date !== today) delete data.pagesSet[date];
+      });
+
+      const keys = Object.keys(data.pages).sort();
+      if (keys.length > 28) {
+        const toDelete = keys.length - 28;
+        for (let i = 0; i < toDelete; i++) delete data.pages[keys[i]];
+      }
+
+      return data;
     } catch {
       return defaultData;
     }
@@ -73,19 +78,23 @@ class StatsManager {
 
     const todaySet = this._todaySet();
 
-    // ✅ Anti-doublon journalier : si déjà comptée aujourd'hui, on ignore
+    // Anti-doublon journalier : si déjà comptée aujourd'hui, on ignore
     if (todaySet.includes(page)) return;
 
     todaySet.push(page);
     const today = this._getDateKey();
     this.data.pages[today] = todaySet.length;
 
-    // Nettoyage des données > 365 jours
+    // ✅ Nettoyage pagesSet : on ne garde QUE aujourd'hui
+    Object.keys(this.data.pagesSet).forEach((date) => {
+      if (date !== today) delete this.data.pagesSet[date];
+    });
+
+    // ✅ Nettoyage pages : on ne garde QUE les 28 derniers jours
     const keys = Object.keys(this.data.pages).sort();
-    if (keys.length > 365) {
-      const oldest = keys[0];
-      delete this.data.pages[oldest];
-      delete this.data.pagesSet[oldest];
+    if (keys.length > 28) {
+      const toDelete = keys.length - 28;
+      for (let i = 0; i < toDelete; i++) delete this.data.pages[keys[i]];
     }
 
     this.save();
@@ -165,7 +174,7 @@ class StatsManager {
 
         <div class="stats-goal-bar-bg">
           <div class="stats-goal-bar-fill ${fillClass}" style="width: ${percentToday}%">
-          <span class="stats-goal-bar-text ${textPosClass}">${percentToday}%</span>
+            <span class="stats-goal-bar-text ${textPosClass}">${percentToday}%</span>
           </div>
         </div>
         
@@ -332,7 +341,7 @@ class StatsManager {
       (dialog, cleanup) => {
         const input = dialog.querySelector('#val_daily');
 
-        // ✅ Focus + sélection automatique à l'ouverture
+        // Focus + sélection automatique à l'ouverture
         requestAnimationFrame(() => {
           input.focus();
           input.select();
@@ -345,7 +354,7 @@ class StatsManager {
           dialog.querySelector('#sub_daily').textContent = val > 0 ? `(${this._pagesToHizb(val)} حزب)` : '(معطل)';
         });
 
-        // ✅ Entrée pour valider
+        // Entrée pour valider
         input.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -373,6 +382,11 @@ class StatsManager {
 
   exportData() {
     return {
+      app: window.APP_ID,
+      appName: window.APP_NAME,
+      version: window.APP_VERSION,
+      exportedAt: new Date().toISOString(),
+
       goals: { daily: this.data.goals.daily },
       pages: this.data.pages,
       pagesSet: this.data.pagesSet
@@ -381,7 +395,6 @@ class StatsManager {
 
   importData(importedStats, merge = false) {
     if (!importedStats) return;
-
     if (importedStats.goals?.daily !== undefined) {
       this.data.goals.daily = importedStats.goals.daily;
     }

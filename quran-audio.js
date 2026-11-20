@@ -719,7 +719,7 @@ class QuranAudioPlayer {
     if (!overlay?.content) return;
 
     const cfg = loadMemCfg();
-    const PAUSE_LABELS = { 0: "بدون", half: "0.5×", same: "1×", one_and_half: "1.5×" };
+    const PAUSE_LABELS = { 0: "بدون انتظار", half: "0.5× الآية", same: "1× الآية", one_and_half: "1.5× الآية" };
 
     const chips = (key, values, fmt) =>
       `<div class="mem-chips" data-key="${key}">${values
@@ -1503,9 +1503,7 @@ class QuranAudioPlayer {
       </button>
       
       <div class="mini-bar-controls">
-        <button class="audio-btn" id="miniBarRepeat" title="تكرار">
-          ${SVG.repeat}
-        </button>
+        <button class="audio-btn speed-btn" id="miniBarSpeed" title="السرعة">1.0×</button>
         <button class="audio-btn" id="miniBarNextAyah" title="الآية التالية">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="13 6 21 12 13 18"/><polygon points="3 6 11 12 3 18"/></svg>
         </button>
