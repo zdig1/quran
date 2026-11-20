@@ -125,6 +125,16 @@ class QuranReader {
     this._scrollAccum = 0;
     this._wakeLock = null;
     this._dialogOpen = false;
+
+    // --- Menu contextuel aya (appui long) ---
+    this._ayaMenuEl = null;
+    this._ayaMenuPressTimer = null;
+    this._ayaMenuPressStart = null;
+    this._ayaMenuCurrent = null;       // { s, a, page, rects, text }
+    this._ayaMenuBound = false;
+    this._ayaMenuLongPressMs = 500;
+    this._ayaMenuMoveTolerance = 20;
+    this._ayaMenuGlobalHandlers = null;
   }
 
   // ---------- Initialisation ----------
@@ -136,6 +146,7 @@ class QuranReader {
     await this.initializeState(startPage);
     this.setupUI();
     this.setupEventListeners();
+    this._initAyaContextMenu();   // ← AJOUT
     return this;
   }
 
@@ -783,574 +794,951 @@ class QuranReader {
     AppUtils.emit(APP_EVENTS.pageChanged, { page: this.currentPage, oldPage });
   }
 
-// ---------- Swipe navigation (book mode) ----------
+  // ---------- Swipe navigation (book mode) ----------
 
-setupSwipeNavigation() {
-  if (!this.elements.pageScroll || this.readingMode !== "book") return;
-  const element = this.elements.pageScroll;
+  setupSwipeNavigation() {
+    if (!this.elements.pageScroll || this.readingMode !== "book") return;
+    const element = this.elements.pageScroll;
 
-  this.removeSwipeNavigation();
-  this.swipeCleanup = window.quranApp.enableSwipe(
-    element,
-    () => {
-      if (!this.isTransitioning && !this._dialogOpen) this.goToNextPage();
-    },
-    () => {
-      if (!this.isTransitioning && !this._dialogOpen) this.goToPreviousPage();
-    },
-    50,
-    300
-  );
-}
-
-removeSwipeNavigation() {
-  if (this.swipeCleanup) {
-    this.swipeCleanup();
-    this.swipeCleanup = null;
+    this.removeSwipeNavigation();
+    this.swipeCleanup = window.quranApp.enableSwipe(
+      element,
+      () => {
+        if (!this.isTransitioning && !this._dialogOpen) this.goToNextPage();
+      },
+      () => {
+        if (!this.isTransitioning && !this._dialogOpen) this.goToPreviousPage();
+      },
+      50,
+      300
+    );
   }
-}
 
-// ---------- Tap to hide ----------
-
-_cleanupTapHandlers() {
-  const el = this.elements.pageScroll;
-  if (el) {
-    Object.entries(this.tapHandlers).forEach(([type, handler]) => el.removeEventListener(type, handler));
-  }
-  this.tapHandlers = {};
-}
-
-setupTapToHide() {
-  const el = this.elements.pageScroll;
-  if (!el) return;
-  this._cleanupTapHandlers();
-  let touchStartTime = 0;
-  let touchStartX = 0;
-  let touchStartY = 0;
-  const MAX_TAP_MS = 400;
-  const MAX_TAP_MOVE_PX = 20;
-  const TAP_DEBOUNCE_MS = 300;
-
-  const blocked = () => this.isTransitioning || !this.tapEnabled;
-
-  const onTouchStart = (e) => {
-    if (blocked()) return;
-    touchStartTime = Date.now();
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  };
-
-  const onTouchEnd = (e) => {
-    if (blocked()) return;
-    const now = Date.now();
-    const deltaX = Math.abs(e.changedTouches[0].clientX - touchStartX);
-    const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY);
-    const isTap =
-      now - touchStartTime < MAX_TAP_MS &&
-      deltaX < MAX_TAP_MOVE_PX &&
-      deltaY < MAX_TAP_MOVE_PX;
-    if (isTap && now - this.lastTapTime > TAP_DEBOUNCE_MS) {
-      this.lastTapTime = now;
-      this.toggleButtonsVisibility();
+  removeSwipeNavigation() {
+    if (this.swipeCleanup) {
+      this.swipeCleanup();
+      this.swipeCleanup = null;
     }
-  };
+  }
 
-  const onClick = (e) => {
-    if (blocked()) return;
-    const now = Date.now();
-    const tooSoon = now - this.lastTapTime < TAP_DEBOUNCE_MS;
-    this.lastTapTime = now;
-    if (tooSoon) return;
-    if (e.target.closest(".header-btn, .footer-item, .menu-overlay, .overlay")) return;
-    this.toggleButtonsVisibility();
-  };
+  // ---------- Tap to hide ----------
 
-  el.addEventListener("touchstart", onTouchStart, { passive: false });
-  el.addEventListener("touchend", onTouchEnd, { passive: true });
-  el.addEventListener("click", onClick);
-  this.tapHandlers = { touchstart: onTouchStart, touchend: onTouchEnd, click: onClick };
-}
+  _cleanupTapHandlers() {
+    const el = this.elements.pageScroll;
+    if (el) {
+      Object.entries(this.tapHandlers).forEach(([type, handler]) => el.removeEventListener(type, handler));
+    }
+    this.tapHandlers = {};
+  }
 
-toggleButtonsVisibility() {
-  const menuOpen = document.querySelector(".menu-overlay.show");
-  if (document.querySelector(".overlay.show") && !menuOpen) return;
-  this.buttonsVisible = !this.buttonsVisible;
-  this._applyHeaderFooterVisibility();
-  this._emitButtonsVisibility();
-}
+  setupTapToHide() {
+    const el = this.elements.pageScroll;
+    if (!el) return;
+    this._cleanupTapHandlers();
+    let touchStartTime = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const MAX_TAP_MS = 400;
+    const MAX_TAP_MOVE_PX = 20;
+    const TAP_DEBOUNCE_MS = 300;
 
-_emitButtonsVisibility() {
-  AppUtils.emit(APP_EVENTS.buttonsVisibility, { visible: this.buttonsVisible });
-}
+    const blocked = () => this.isTransitioning || !this.tapEnabled;
 
-applyButtonsVisibility() {
-  this._applyHeaderFooterVisibility();
-  setTimeout(() => this._adjustFooterHeight(), 50);
-  this._emitButtonsVisibility();
-}
+    const onTouchStart = (e) => {
+      if (blocked()) return;
+      touchStartTime = Date.now();
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    };
 
-_applyHeaderFooterVisibility() {
-  [this.elements.header, this.elements.footer].forEach(el =>
-    el?.classList.toggle("hidden", !this.buttonsVisible)
-  );
-}
+    const onTouchEnd = (e) => {
+      if (blocked()) return;
+      const now = Date.now();
+      const deltaX = Math.abs(e.changedTouches[0].clientX - touchStartX);
+      const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY);
+      const isTap =
+        now - touchStartTime < MAX_TAP_MS &&
+        deltaX < MAX_TAP_MOVE_PX &&
+        deltaY < MAX_TAP_MOVE_PX;
+      if (isTap && now - this.lastTapTime > TAP_DEBOUNCE_MS) {
+        this.lastTapTime = now;
+        this.toggleButtonsVisibility();
+      }
+    };
 
-_adjustFooterHeight() {
-  if (this.readingMode !== "book") return;
-  if (this.isTransitioning) return;
-  const activeWrapper = this.elements.pageScroll?.querySelector(".page-wrapper.active");
-  if (!activeWrapper) return;
-  const img = activeWrapper.querySelector('img');
-  if (!img) return;
+    const onClick = (e) => {
+      if (blocked()) return;
+      const now = Date.now();
+      const tooSoon = now - this.lastTapTime < TAP_DEBOUNCE_MS;
+      this.lastTapTime = now;
+      if (tooSoon) return;
+      if (e.target.closest(".header-btn, .footer-item, .menu-overlay, .overlay")) return;
+      this.toggleButtonsVisibility();
+    };
 
-  const apply = () => {
-    if (!img.complete || img.naturalWidth === 0) return;
-    if (img.getBoundingClientRect().height === 0) return;
-    requestAnimationFrame(() => {
-      this._applyFooterAdjustment(img);
-    });
-  };
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
+    el.addEventListener("click", onClick);
+    this.tapHandlers = { touchstart: onTouchStart, touchend: onTouchEnd, click: onClick };
+  }
 
-  this._whenImageReady(img, apply);
-}
+  toggleButtonsVisibility() {
+    const menuOpen = document.querySelector(".menu-overlay.show");
+    if (document.querySelector(".overlay.show") && !menuOpen) return;
+    this.buttonsVisible = !this.buttonsVisible;
+    this._applyHeaderFooterVisibility();
+    this._emitButtonsVisibility();
+  }
 
-_applyFooterAdjustment(img) {
-  const footer = this.elements.footer;
-  if (!footer) return;
+  _emitButtonsVisibility() {
+    AppUtils.emit(APP_EVENTS.buttonsVisibility, { visible: this.buttonsVisible });
+  }
 
-  const container = this._pageContainer();
-  const containerH = container.clientHeight || window.innerHeight;
-  const spaceBelow =
-    (container.getBoundingClientRect().bottom || containerH) - img.getBoundingClientRect().bottom;
-  const minFooter = AppUtils.cssPx("--footer-height", 56);
-  const footerHeight = spaceBelow > minFooter ? spaceBelow : minFooter;
+  applyButtonsVisibility() {
+    this._applyHeaderFooterVisibility();
+    setTimeout(() => this._adjustFooterHeight(), 50);
+    this._emitButtonsVisibility();
+  }
 
-  footer.style.height = `${footerHeight}px`;
-  footer.style.minHeight = `${footerHeight}px`;
-}
+  _applyHeaderFooterVisibility() {
+    [this.elements.header, this.elements.footer].forEach(el =>
+      el?.classList.toggle("hidden", !this.buttonsVisible)
+    );
+  }
 
-enableTapDetection(enabled) {
-  this.tapEnabled = enabled;
-}
+  _adjustFooterHeight() {
+    if (this.readingMode !== "book") return;
+    if (this.isTransitioning) return;
+    const activeWrapper = this.elements.pageScroll?.querySelector(".page-wrapper.active");
+    if (!activeWrapper) return;
+    const img = activeWrapper.querySelector('img');
+    if (!img) return;
 
-// ---------- Auto scroll ----------
+    const apply = () => {
+      if (!img.complete || img.naturalWidth === 0) return;
+      if (img.getBoundingClientRect().height === 0) return;
+      requestAnimationFrame(() => {
+        this._applyFooterAdjustment(img);
+      });
+    };
 
-_getAutoScrollBtns() {
-  return {
-    btnScroll: document.getElementById("autoScrollBtn"),
-    btnIcon: document.getElementById("autoScrollIcon"),
-    btnSlower: document.getElementById("autoScrollSlower"),
-    btnFaster: document.getElementById("autoScrollFaster"),
-  };
-}
+    this._whenImageReady(img, apply);
+  }
 
-startAutoScroll() {
-  if (this.autoScrollActive) return;
-  this.autoScrollActive = true;
-  this._acquireWakeLock();
+  _applyFooterAdjustment(img) {
+    const footer = this.elements.footer;
+    if (!footer) return;
 
-  const { btnScroll, btnIcon } = this._getAutoScrollBtns();
-  btnScroll?.classList.add("playing");
-  if (btnIcon) btnIcon.textContent = "⏸️";
-  this._setSpeedButtonsVisible(true);
-  this._updateSpeedButtons();
+    const container = this._pageContainer();
+    const containerH = container.clientHeight || window.innerHeight;
+    const spaceBelow =
+      (container.getBoundingClientRect().bottom || containerH) - img.getBoundingClientRect().bottom;
+    const minFooter = AppUtils.cssPx("--footer-height", 56);
+    const footerHeight = spaceBelow > minFooter ? spaceBelow : minFooter;
 
-  let lastTimestamp = null;
-  const tick = (timestamp) => {
-    if (!this.autoScrollActive) return;
-    if (lastTimestamp !== null && this._autoScrollStep(timestamp - lastTimestamp)) return;
-    lastTimestamp = timestamp;
+    footer.style.height = `${footerHeight}px`;
+    footer.style.minHeight = `${footerHeight}px`;
+  }
+
+  enableTapDetection(enabled) {
+    this.tapEnabled = enabled;
+  }
+
+  // ---------- Auto scroll ----------
+
+  _getAutoScrollBtns() {
+    return {
+      btnScroll: document.getElementById("autoScrollBtn"),
+      btnIcon: document.getElementById("autoScrollIcon"),
+      btnSlower: document.getElementById("autoScrollSlower"),
+      btnFaster: document.getElementById("autoScrollFaster"),
+    };
+  }
+
+  startAutoScroll() {
+    if (this.autoScrollActive) return;
+    this.autoScrollActive = true;
+    this._acquireWakeLock();
+
+    const { btnScroll, btnIcon } = this._getAutoScrollBtns();
+    btnScroll?.classList.add("playing");
+    if (btnIcon) btnIcon.textContent = "⏸️";
+    this._setSpeedButtonsVisible(true);
+    this._updateSpeedButtons();
+
+    let lastTimestamp = null;
+    const tick = (timestamp) => {
+      if (!this.autoScrollActive) return;
+      if (lastTimestamp !== null && this._autoScrollStep(timestamp - lastTimestamp)) return;
+      lastTimestamp = timestamp;
+      this.autoScrollRAF = requestAnimationFrame(tick);
+    };
     this.autoScrollRAF = requestAnimationFrame(tick);
-  };
-  this.autoScrollRAF = requestAnimationFrame(tick);
-}
+  }
 
-_autoScrollStep(delta) {
-  const el = this.elements.pageScroll;
-  if (!el) return false;
-  this._scrollAccum += (this.autoScrollSpeed * delta) / 16;
-  const pixels = Math.floor(this._scrollAccum);
-  if (pixels > 0) {
-    el.scrollTop += pixels;
-    this._scrollAccum -= pixels;
+  _autoScrollStep(delta) {
+    const el = this.elements.pageScroll;
+    if (!el) return false;
+    this._scrollAccum += (this.autoScrollSpeed * delta) / 16;
+    const pixels = Math.floor(this._scrollAccum);
+    if (pixels > 0) {
+      el.scrollTop += pixels;
+      this._scrollAccum -= pixels;
+    }
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) {
+      this.stopAutoScroll();
+      return true;
+    }
+    return false;
   }
-  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) {
-    this.stopAutoScroll();
-    return true;
-  }
-  return false;
-}
 
   async _acquireWakeLock() {
-  if (!("wakeLock" in navigator)) return;
-  try {
-    const lock = await navigator.wakeLock.request("screen");
-    if (this.autoScrollActive) this._wakeLock = lock;
-    else lock.release();
-  } catch {
-    /* non supporté ou refusé */
+    if (!("wakeLock" in navigator)) return;
+    try {
+      const lock = await navigator.wakeLock.request("screen");
+      if (this.autoScrollActive) this._wakeLock = lock;
+      else lock.release();
+    } catch {
+      /* non supporté ou refusé */
+    }
   }
-}
 
-_setSpeedButtonsVisible(visible) {
-  const { btnSlower, btnFaster } = this._getAutoScrollBtns();
-  [btnSlower, btnFaster].forEach((btn) => {
-    if (!btn) return;
-    if (visible) {
-      btn.style.display = "";
-      requestAnimationFrame(() => btn.classList.add("visible"));
+  _setSpeedButtonsVisible(visible) {
+    const { btnSlower, btnFaster } = this._getAutoScrollBtns();
+    [btnSlower, btnFaster].forEach((btn) => {
+      if (!btn) return;
+      if (visible) {
+        btn.style.display = "";
+        requestAnimationFrame(() => btn.classList.add("visible"));
+      } else {
+        btn.classList.remove("visible");
+        setTimeout(() => {
+          btn.style.display = "none";
+        }, AppUtils.cssMs("--speed-btn-fade", 200));
+      }
+    });
+  }
+
+  stopAutoScroll() {
+    if (!this.autoScrollActive) return;
+    this.autoScrollActive = false;
+
+    if (this._wakeLock) {
+      this._wakeLock.release();
+      this._wakeLock = null;
+    }
+
+    this._scrollAccum = 0;
+    if (this.autoScrollRAF) {
+      cancelAnimationFrame(this.autoScrollRAF);
+      this.autoScrollRAF = null;
+    }
+
+    const { btnScroll, btnIcon } = this._getAutoScrollBtns();
+    btnScroll?.classList.remove("playing");
+    if (btnIcon) btnIcon.textContent = "⏫";
+    this._setSpeedButtonsVisible(false);
+  }
+
+  toggleAutoScroll() {
+    if (this.autoScrollActive) this.stopAutoScroll();
+    else this.startAutoScroll();
+  }
+
+  changeSpeed(direction) {
+    const raw = Math.round((this.autoScrollSpeed + direction * this.speedStep) * 10) / 10;
+    const speed = AppUtils.clamp(raw, this.minSpeed, this.maxSpeed);
+    if (speed === this.autoScrollSpeed) return;
+    this.autoScrollSpeed = speed;
+    window.quranApp?.setPreference("scrollSpeed", speed);
+    this._updateSpeedButtons();
+    window.quranApp?.showToast(`⚡ السرعة: ${speed.toFixed(1)}`);
+  }
+
+  _updateSpeedButtons() {
+    const { btnSlower, btnFaster } = this._getAutoScrollBtns();
+    if (btnSlower) btnSlower.disabled = this.autoScrollSpeed <= this.minSpeed + 0.01;
+    if (btnFaster) btnFaster.disabled = this.autoScrollSpeed >= this.maxSpeed - 0.01;
+  }
+
+  updateAutoScrollButton() {
+    const el =
+      document.getElementById("autoScrollGroup") ||
+      document.getElementById("autoScrollBtn");
+    if (!el) return;
+    if (this.readingMode === "scroll") {
+      el.style.display = "";
     } else {
-      btn.classList.remove("visible");
-      setTimeout(() => {
-        btn.style.display = "none";
-      }, AppUtils.cssMs("--speed-btn-fade", 200));
+      this.stopAutoScroll();
+      el.style.display = "none";
     }
-  });
-}
-
-stopAutoScroll() {
-  if (!this.autoScrollActive) return;
-  this.autoScrollActive = false;
-
-  if (this._wakeLock) {
-    this._wakeLock.release();
-    this._wakeLock = null;
   }
 
-  this._scrollAccum = 0;
-  if (this.autoScrollRAF) {
-    cancelAnimationFrame(this.autoScrollRAF);
-    this.autoScrollRAF = null;
+  // ---------- Setup UI et événements ----------
+
+  setupUI() {
+    setTimeout(() => {
+      if (this.readingMode === "book") {
+        this.loadPageImage(this.currentPage, "high");
+        this.preloadAdjacentPages(this.currentPage);
+        this._adjustFooterHeight();
+      }
+    }, 50);
+    this.updateAutoScrollButton();
   }
 
-  const { btnScroll, btnIcon } = this._getAutoScrollBtns();
-  btnScroll?.classList.remove("playing");
-  if (btnIcon) btnIcon.textContent = "⏫";
-  this._setSpeedButtonsVisible(false);
-}
+  setupEventListeners() {
+    if (!this.elements.pageScroll) return;
 
-toggleAutoScroll() {
-  if (this.autoScrollActive) this.stopAutoScroll();
-  else this.startAutoScroll();
-}
+    this._setupOrientationListener();
 
-changeSpeed(direction) {
-  const raw = Math.round((this.autoScrollSpeed + direction * this.speedStep) * 10) / 10;
-  const speed = AppUtils.clamp(raw, this.minSpeed, this.maxSpeed);
-  if (speed === this.autoScrollSpeed) return;
-  this.autoScrollSpeed = speed;
-  window.quranApp?.setPreference("scrollSpeed", speed);
-  this._updateSpeedButtons();
-  window.quranApp?.showToast(`⚡ السرعة: ${speed.toFixed(1)}`);
-}
+    this._setupBookmarkButton();
+    this._on(this.elements.autoScrollBtn, "click", () => this.toggleAutoScroll());
+    this._on(document.getElementById("autoScrollSlower"), "click", () => this.changeSpeed(-1));
+    this._on(document.getElementById("autoScrollFaster"), "click", () => this.changeSpeed(1));
+    this._on(this.elements.pageNumber, "click", () => window.overlayManager?.showPageInputDialog());
 
-_updateSpeedButtons() {
-  const { btnSlower, btnFaster } = this._getAutoScrollBtns();
-  if (btnSlower) btnSlower.disabled = this.autoScrollSpeed <= this.minSpeed + 0.01;
-  if (btnFaster) btnFaster.disabled = this.autoScrollSpeed >= this.maxSpeed - 0.01;
-}
+    this.setupTapToHide();
 
-updateAutoScrollButton() {
-  const el =
-    document.getElementById("autoScrollGroup") ||
-    document.getElementById("autoScrollBtn");
-  if (!el) return;
-  if (this.readingMode === "scroll") {
-    el.style.display = "";
-  } else {
-    this.stopAutoScroll();
-    el.style.display = "none";
-  }
-}
+    this._on(window, APP_EVENTS.menuToggle, (e) => {
+      if (e.detail.isOpen) {
+        this.buttonsVisible = true;
+        this.applyButtonsVisibility();
+        this.enableTapDetection(false);
+      } else {
+        this.enableTapDetection(true);
+      }
+    });
 
-// ---------- Setup UI et événements ----------
-
-setupUI() {
-  setTimeout(() => {
-    if (this.readingMode === "book") {
-      this.loadPageImage(this.currentPage, "high");
-      this.preloadAdjacentPages(this.currentPage);
-      this._adjustFooterHeight();
-    }
-  }, 50);
-  this.updateAutoScrollButton();
-}
-
-setupEventListeners() {
-  if (!this.elements.pageScroll) return;
-
-  this._setupOrientationListener();
-
-  this._setupBookmarkButton();
-  this._on(this.elements.autoScrollBtn, "click", () => this.toggleAutoScroll());
-  this._on(document.getElementById("autoScrollSlower"), "click", () => this.changeSpeed(-1));
-  this._on(document.getElementById("autoScrollFaster"), "click", () => this.changeSpeed(1));
-  this._on(this.elements.pageNumber, "click", () => window.overlayManager?.showPageInputDialog());
-
-  this.setupTapToHide();
-
-  this._on(window, APP_EVENTS.menuToggle, (e) => {
-    if (e.detail.isOpen) {
+    this._on(window, APP_EVENTS.overlayOpened, () => {
       this.buttonsVisible = true;
       this.applyButtonsVisibility();
       this.enableTapDetection(false);
-    } else {
-      this.enableTapDetection(true);
-    }
-  });
-
-  this._on(window, APP_EVENTS.overlayOpened, () => {
-    this.buttonsVisible = true;
-    this.applyButtonsVisibility();
-    this.enableTapDetection(false);
-    this._dialogOpen = true;
-  });
-
-  this._on(window, APP_EVENTS.overlayClosed, () => {
-    this.enableTapDetection(true);
-    this._dialogOpen = false;
-  });
-
-  this._on(window, APP_EVENTS.buttonsVisibility, () => {
-    if (this.readingMode === "book") this._adjustFooterHeight();
-  });
-}
-
-// ---------- Bouton signets : appui court / appui long ----------
-
-_setupBookmarkButton() {
-  const btn = this.elements.bookmarkBtn;
-  if (!btn) return;
-  let timer = null;
-  let longPressed = false;
-  const cancel = () => {
-    clearTimeout(timer);
-    timer = null;
-  };
-  this._on(btn, "pointerdown", () => {
-    longPressed = false;
-    cancel();
-    timer = setTimeout(() => {
-      longPressed = true;
-      this._bookmarkLongPress();
-    }, 500);
-  });
-  ["pointerup", "pointerleave", "pointercancel"].forEach((type) => this._on(btn, type, cancel));
-  this._on(btn, "contextmenu", (e) => e.preventDefault());
-  this._on(btn, "click", () => {
-    if (longPressed) {
-      longPressed = false;
-      return;
-    }
-    window.overlayManager?.showBookmarks();
-  });
-}
-
-_bookmarkLongPress() {
-  const app = window.quranApp;
-  const om = window.overlayManager;
-  const page = this.currentPage;
-  navigator.vibrate?.(30);
-  if (!app || app.bookmarkedPagesSet.has(page)) {
-    om?.showBookmarks();
-    return;
-  }
-  const name = om?.getDefaultBookmarkName?.(page) || `صفحة ${page}`;
-  app.addBookmark({ id: `bookmark_${page}_${Date.now()}`, page, name });
-  app.showToast("⭐ تمت إضافة العلامة المرجعية");
-}
-
-// ---------- Rotation de l'écran ----------
-
-_setupOrientationListener() {
-  if (window.matchMedia) {
-    this.orientationMedia = window.matchMedia("(orientation: portrait)");
-    const onChange = (e) => {
-      if ((e.matches ? "book" : "scroll") !== this.readingMode) this._handleOrientationChange();
-    };
-    try {
-      this._on(this.orientationMedia, "change", onChange);
-      return;
-    } catch {
-      /* anciens navigateurs : repli sur orientationchange */
-    }
-  }
-  this._on(window, "orientationchange", () => this._handleOrientationChange());
-}
-
-_handleOrientationChange() {
-  this.isTransitioning = true;
-  const savedPage = this.currentPage;
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-  setTimeout(() => {
-    try {
-      this.applyReadingMode();
-      setTimeout(() => this._finishOrientationChange(savedPage, isIOS), isIOS ? 300 : 200);
-    } catch {
-      this.isTransitioning = false;
-    }
-  }, isIOS ? 500 : 50);
-}
-
-_finishOrientationChange(savedPage, isIOS) {
-  this.isTransitioning = false;
-  this.goToPage(savedPage);
-  if (isIOS && this.readingMode === "book") this._reloadImageIOS(savedPage);
-  if (this.readingMode === "book") this._adjustFooterHeight();
-  const player = window.quranAudioPlayer;
-  if (!player?.isStopped && (player?.isPlaying || player?.currentAyah)) {
-    setTimeout(() => this._reapplyHighlightIfNeeded(), 100);
-  }
-}
-
-/** iOS : force le rafraîchissement de l'image après rotation. */
-_reloadImageIOS(page) {
-  const img = document.querySelector(`img[data-page="${page}"]`);
-  if (!img) return;
-  const src = img.src;
-  img.src = "";
-  requestAnimationFrame(() => {
-    img.src = src;
-    img.dataset.loaded = "true";
-  });
-}
-
-_on(el, type, handler, opts) {
-  if (!el) return;
-  el.addEventListener(type, handler, opts);
-  this.eventListeners.push({ element: el, type, handler });
-}
-
-// ---------- Reprise et destruction ----------
-
-onAppResume() {
-  this.isTransitioning = false;
-  const overlayOpen = document.querySelector(".overlay.show, .menu-overlay.show") !== null;
-  this.tapEnabled = !overlayOpen;
-  if (this.autoScrollActive) this._acquireWakeLock();
-  this.applyReadingMode();
-  setTimeout(() => {
-    if (this.readingMode === "book") {
-      this.loadPageImage(this.currentPage, "high");
-      this._adjustFooterHeight();
-    }
-  }, 100);
-}
-
-destroy() {
-  this.stopAutoScroll();
-  this.cleanupResizeObserver();
-  if (this.imageObserver) {
-    this.imageObserver.disconnect();
-    this.imageObserver = null;
-  }
-  if (this._scrollHandler) {
-    this._scrollTarget?.removeEventListener("scroll", this._scrollHandler);
-    this._scrollHandler = null;
-    this._scrollTarget = null;
-  }
-  this.eventListeners.forEach(({ element, type, handler }) => {
-    try {
-      element.removeEventListener(type, handler);
-    } catch {
-      /* cible déjà détruite */
-    }
-  });
-  this.eventListeners = [];
-  this._cleanupTapHandlers();
-  this.removeSwipeNavigation();
-  this.imageCache.clear();
-}
-
-// ---------- Surlignage du verset ----------
-
-highlightAya(surah, ayah, rects) {
-  this.clearHighlight();
-  if (!rects?.length) return;
-  const page = this.currentPage;
-  if (rects[0]?.p !== page) return;
-
-  const rc = RIWAYA_LAYOUT[window.ACTIVE_RIWAYA] ?? RIWAYA_LAYOUT.hafs;
-  const { WEBP_TOP, WEBP_BOT, SHRINK } = rc;
-  const lineMap = this._buildLineMap(page);
-
-  let imgW, imgH, getLeft, getTop, appendTo;
-
-  if (this.readingMode === "scroll") {
-    if (!this.spacer || !this.pageHeight) return;
-    imgW = this.elements.pageScroll?.clientWidth ?? window.innerWidth;
-    imgH = this.pageHeight;
-    if (!imgW || !imgH) return;
-    const pageOffsetTop = this._pageTopOffset(page);
-    getLeft = (sx, r) => (r.x1 + rc.LEFT_OFFSET) * sx;
-    getTop = (sy, realY1, yCorrect) => pageOffsetTop + realY1 * sy + yCorrect + SHRINK * sy;
-    appendTo = this.spacer;
-  } else {
-    const wrapper = this._findBookWrapper(page);
-    const img = wrapper?.querySelector("img");
-    if (!img) return;
-    imgW = img.offsetWidth || img.naturalWidth;
-    imgH = img.offsetHeight || Math.round((img.naturalWidth * PAGE_IMG.H) / PAGE_IMG.W);
-    if (!imgW || !imgH) return;
-    const offX = img.offsetLeft;
-    const offY = img.offsetTop;
-    getLeft = (sx, r) => offX + (r.x1 + rc.LEFT_OFFSET) * sx;
-    getTop = (sy, realY1, yCorrect) => offY + realY1 * sy + yCorrect + SHRINK * sy;
-    appendTo = wrapper;
-  }
-
-  const sx = imgW / PAGE_IMG.W;
-  const sy = imgH / PAGE_IMG.H;
-
-  rects.forEach((r) => {
-    const line = r.l ? lineMap[r.l] : null;
-    const realY1 = line ? line.y1 : r.y1;
-    const realY2 = line ? line.y2 : r.y2;
-    const yCorrect = (WEBP_TOP - (realY1 / PAGE_IMG.H) * (WEBP_TOP + WEBP_BOT)) * sy;
-
-    const div = AppUtils.el("div", "aya-highlight");
-    Object.assign(div.style, {
-      position: "absolute",
-      left: `${getLeft(sx, r)}px`,
-      width: `${(r.x2 - r.x1) * sx}px`,
-      top: `${getTop(sy, realY1, yCorrect)}px`,
-      height: `${(realY2 - realY1) * sy - SHRINK * 2 * sy}px`,
+      this._dialogOpen = true;
     });
-    appendTo.appendChild(div);
-  });
 
-  if (this.readingMode === "scroll") this._scrollToFirstHighlight(rc.SCROLL_OFFSET);
-}
+    this._on(window, APP_EVENTS.overlayClosed, () => {
+      this.enableTapDetection(true);
+      this._dialogOpen = false;
+    });
 
-_buildLineMap(page) {
-  const lineMap = {};
-  (window.quranAudioPlayer?.ayaCoords || []).forEach((r) => {
-    if (r.p !== page || !r.l) return;
-    const line = lineMap[r.l];
-    if (!line) {
-      lineMap[r.l] = { y1: r.y1, y2: r.y2 };
-    } else {
-      line.y1 = Math.min(line.y1, r.y1);
-      line.y2 = Math.max(line.y2, r.y2);
+    this._on(window, APP_EVENTS.buttonsVisibility, () => {
+      if (this.readingMode === "book") this._adjustFooterHeight();
+    });
+  }
+
+  // ---------- Bouton signets : appui court / appui long ----------
+
+  _setupBookmarkButton() {
+    const btn = this.elements.bookmarkBtn;
+    if (!btn) return;
+    let timer = null;
+    let longPressed = false;
+    const cancel = () => {
+      clearTimeout(timer);
+      timer = null;
+    };
+    this._on(btn, "pointerdown", () => {
+      longPressed = false;
+      cancel();
+      timer = setTimeout(() => {
+        longPressed = true;
+        this._bookmarkLongPress();
+      }, 500);
+    });
+    ["pointerup", "pointerleave", "pointercancel"].forEach((type) => this._on(btn, type, cancel));
+    this._on(btn, "contextmenu", (e) => e.preventDefault());
+    this._on(btn, "click", () => {
+      if (longPressed) {
+        longPressed = false;
+        return;
+      }
+      window.overlayManager?.showBookmarks();
+    });
+  }
+
+  _bookmarkLongPress() {
+    const app = window.quranApp;
+    const om = window.overlayManager;
+    const page = this.currentPage;
+    navigator.vibrate?.(30);
+    if (!app || app.bookmarkedPagesSet.has(page)) {
+      om?.showBookmarks();
+      return;
     }
-  });
-  return lineMap;
-}
+    const name = om?.getDefaultBookmarkName?.(page) || `صفحة ${page}`;
+    app.addBookmark({ id: `bookmark_${page}_${Date.now()}`, page, name });
+    app.showToast("⭐ تمت إضافة العلامة المرجعية");
+  }
 
-_scrollToFirstHighlight(scrollOffset) {
-  const first = this.spacer?.querySelector(".aya-highlight");
-  if (!first) return;
-  const container = this.elements.pageScroll;
-  if (!container) return;
-  const top = parseFloat(first.style.top);
-  if (isNaN(top)) return;
-  container.scrollTo({ top: Math.max(0, top - scrollOffset), behavior: "auto" });
-}
+  // ---------- Rotation de l'écran ----------
 
-clearHighlight() {
-  document.querySelectorAll(".aya-highlight").forEach((el) => el.remove());
-}
+  _setupOrientationListener() {
+    if (window.matchMedia) {
+      this.orientationMedia = window.matchMedia("(orientation: portrait)");
+      const onChange = (e) => {
+        if ((e.matches ? "book" : "scroll") !== this.readingMode) this._handleOrientationChange();
+      };
+      try {
+        this._on(this.orientationMedia, "change", onChange);
+        return;
+      } catch {
+        /* anciens navigateurs : repli sur orientationchange */
+      }
+    }
+    this._on(window, "orientationchange", () => this._handleOrientationChange());
+  }
+
+  _handleOrientationChange() {
+    this.isTransitioning = true;
+    const savedPage = this.currentPage;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    setTimeout(() => {
+      try {
+        this.applyReadingMode();
+        setTimeout(() => this._finishOrientationChange(savedPage, isIOS), isIOS ? 300 : 200);
+      } catch {
+        this.isTransitioning = false;
+      }
+    }, isIOS ? 500 : 50);
+  }
+
+  _finishOrientationChange(savedPage, isIOS) {
+    this.isTransitioning = false;
+    this.goToPage(savedPage);
+    if (isIOS && this.readingMode === "book") this._reloadImageIOS(savedPage);
+    if (this.readingMode === "book") this._adjustFooterHeight();
+    const player = window.quranAudioPlayer;
+    if (!player?.isStopped && (player?.isPlaying || player?.currentAyah)) {
+      setTimeout(() => this._reapplyHighlightIfNeeded(), 100);
+    }
+  }
+
+  /** iOS : force le rafraîchissement de l'image après rotation. */
+  _reloadImageIOS(page) {
+    const img = document.querySelector(`img[data-page="${page}"]`);
+    if (!img) return;
+    const src = img.src;
+    img.src = "";
+    requestAnimationFrame(() => {
+      img.src = src;
+      img.dataset.loaded = "true";
+    });
+  }
+
+  _on(el, type, handler, opts) {
+    if (!el) return;
+    el.addEventListener(type, handler, opts);
+    this.eventListeners.push({ element: el, type, handler });
+  }
+
+  // ---------- Reprise et destruction ----------
+
+  onAppResume() {
+    this.isTransitioning = false;
+    const overlayOpen = document.querySelector(".overlay.show, .menu-overlay.show") !== null;
+    this.tapEnabled = !overlayOpen;
+    if (this.autoScrollActive) this._acquireWakeLock();
+    this.applyReadingMode();
+    setTimeout(() => {
+      if (this.readingMode === "book") {
+        this.loadPageImage(this.currentPage, "high");
+        this._adjustFooterHeight();
+      }
+    }, 100);
+  }
+
+  destroy() {
+    this.stopAutoScroll();
+    this.cleanupResizeObserver();
+    if (this.imageObserver) {
+      this.imageObserver.disconnect();
+      this.imageObserver = null;
+    }
+    if (this._scrollHandler) {
+      this._scrollTarget?.removeEventListener("scroll", this._scrollHandler);
+      this._scrollHandler = null;
+      this._scrollTarget = null;
+    }
+    this.eventListeners.forEach(({ element, type, handler }) => {
+      try {
+        element.removeEventListener(type, handler);
+      } catch {
+        /* cible déjà détruite */
+      }
+    });
+    this.eventListeners = [];
+    this._cleanupTapHandlers();
+    this.removeSwipeNavigation();
+    this.imageCache.clear();
+
+    // ← AJOUT : nettoyage du menu contextuel aya
+    clearTimeout(this._ayaMenuPressTimer);
+    this._ayaMenuPressTimer = null;
+    this._ayaMenuPressStart = null;
+    this._ayaMenuEl?.remove();
+    this._ayaMenuEl = null;
+    this._ayaMenuBound = false;
+    this._ayaMenuCurrent = null;
+    // Nettoyer les listeners globaux du menu contextuel
+    if (this._ayaMenuGlobalHandlers) {
+      this._ayaMenuGlobalHandlers.forEach(({ target, type, handler, options }) => {
+        try { target.removeEventListener(type, handler, options); } catch { /* ignoré */ }
+      });
+      this._ayaMenuGlobalHandlers = null;
+    }
+  }
+
+  // ---------- Surlignage du verset ----------
+
+  highlightAya(surah, ayah, rects, skipScroll = false) {
+    this.clearHighlight();
+    if (!rects?.length) return;
+    const page = this.currentPage;
+    if (rects[0]?.p !== page) return;
+
+    const rc = RIWAYA_LAYOUT[window.ACTIVE_RIWAYA] ?? RIWAYA_LAYOUT.hafs;
+    const { WEBP_TOP, WEBP_BOT, SHRINK } = rc;
+    const lineMap = this._buildLineMap(page);
+
+    let imgW, imgH, getLeft, getTop, appendTo;
+
+    if (this.readingMode === "scroll") {
+      if (!this.spacer || !this.pageHeight) return;
+      imgW = this.elements.pageScroll?.clientWidth ?? window.innerWidth;
+      imgH = this.pageHeight;
+      if (!imgW || !imgH) return;
+      const pageOffsetTop = this._pageTopOffset(page);
+      getLeft = (sx, r) => (r.x1 + rc.LEFT_OFFSET) * sx;
+      getTop = (sy, realY1, yCorrect) => pageOffsetTop + realY1 * sy + yCorrect + SHRINK * sy;
+      appendTo = this.spacer;
+    } else {
+      const wrapper = this._findBookWrapper(page);
+      const img = wrapper?.querySelector("img");
+      if (!img) return;
+      imgW = img.offsetWidth || img.naturalWidth;
+      imgH = img.offsetHeight || Math.round((img.naturalWidth * PAGE_IMG.H) / PAGE_IMG.W);
+      if (!imgW || !imgH) return;
+      const offX = img.offsetLeft;
+      const offY = img.offsetTop;
+      getLeft = (sx, r) => offX + (r.x1 + rc.LEFT_OFFSET) * sx;
+      getTop = (sy, realY1, yCorrect) => offY + realY1 * sy + yCorrect + SHRINK * sy;
+      appendTo = wrapper;
+    }
+
+    const sx = imgW / PAGE_IMG.W;
+    const sy = imgH / PAGE_IMG.H;
+
+    rects.forEach((r) => {
+      const line = r.l ? lineMap[r.l] : null;
+      const realY1 = line ? line.y1 : r.y1;
+      const realY2 = line ? line.y2 : r.y2;
+      const yCorrect = (WEBP_TOP - (realY1 / PAGE_IMG.H) * (WEBP_TOP + WEBP_BOT)) * sy;
+
+      const div = AppUtils.el("div", "aya-highlight");
+      Object.assign(div.style, {
+        position: "absolute",
+        left: `${getLeft(sx, r)}px`,
+        width: `${(r.x2 - r.x1) * sx}px`,
+        top: `${getTop(sy, realY1, yCorrect)}px`,
+        height: `${(realY2 - realY1) * sy - SHRINK * 2 * sy}px`,
+      });
+      appendTo.appendChild(div);
+    });
+
+    if (this.readingMode === "scroll" && !skipScroll) {
+      this._scrollToFirstHighlight(rc.SCROLL_OFFSET);
+    }
+  }
+
+  _buildLineMap(page) {
+    const lineMap = {};
+    (window.quranAudioPlayer?.ayaCoords || []).forEach((r) => {
+      if (r.p !== page || !r.l) return;
+      const line = lineMap[r.l];
+      if (!line) {
+        lineMap[r.l] = { y1: r.y1, y2: r.y2 };
+      } else {
+        line.y1 = Math.min(line.y1, r.y1);
+        line.y2 = Math.max(line.y2, r.y2);
+      }
+    });
+    return lineMap;
+  }
+
+  _scrollToFirstHighlight(scrollOffset) {
+    const first = this.spacer?.querySelector(".aya-highlight");
+    if (!first) return;
+    const container = this.elements.pageScroll;
+    if (!container) return;
+    const top = parseFloat(first.style.top);
+    if (isNaN(top)) return;
+    container.scrollTo({ top: Math.max(0, top - scrollOffset), behavior: "auto" });
+  }
+
+  clearHighlight() {
+    document.querySelectorAll(".aya-highlight").forEach((el) => el.remove());
+  }
+
+  // ============================================================
+  //  MENU CONTEXTUEL AYA (appui long)
+  //  Réutilise ayaCoords / _getAyaRects / highlightAya existants
+  // ============================================================
+
+  _initAyaContextMenu() {
+    if (this._ayaMenuBound) return;
+    this._ayaMenuBound = true;
+
+    this._createAyaContextMenuElement();
+    this._bindAyaContextMenuEvents();
+  }
+
+  _createAyaContextMenuElement() {
+    if (this._ayaMenuEl) return;
+
+    const menu = AppUtils.el("div", "aya-context-menu");
+    menu.setAttribute("role", "menu");
+    // Ordre RTL (flex-direction: row-reverse) :
+    // DOM: tafsir → share → play
+    // Visuel (droite → gauche) : play → share → tafsir
+    menu.innerHTML = `
+      <button type="button" class="aya-menu-btn" data-action="share" role="menuitem" title="مشاركة" aria-label="مشاركة">
+        <span class="aya-menu-emoji">🔗</span>
+        <span class="aya-menu-label">مشاركة</span>
+      </button>
+      <button type="button" class="aya-menu-btn" data-action="tafsir" role="menuitem" title="التفسير" aria-label="التفسير">
+        <span class="aya-menu-emoji">📖</span>
+        <span class="aya-menu-label">التفسير</span>
+      </button>
+  
+      <button type="button" class="aya-menu-btn" data-action="play" role="menuitem" title="تشغيل الآية" aria-label="تشغيل الآية">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true">
+          <polygon points="8 6 18 12 8 18"/>
+        </svg>
+        <span class="aya-menu-label">تشغيل</span>
+      </button>
+    `;
+    document.body.appendChild(menu);
+    this._ayaMenuEl = menu;
+
+    menu.addEventListener("click", (e) => {
+      const btn = e.target.closest(".aya-menu-btn");
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      this._runAyaMenuAction(btn.dataset.action);
+    });
+  }
+
+  _bindAyaContextMenuEvents() {
+    const handlers = [];
+    const add = (target, type, handler, options) => {
+      target.addEventListener(type, handler, options);
+      handlers.push({ target, type, handler, options });
+    };
+
+    add(document, "pointerdown", (e) => this._onAyaMenuPointerDown(e), true);
+    add(document, "pointermove", (e) => this._onAyaMenuPointerMove(e), true);
+    add(document, "pointerup", () => this._onAyaMenuPointerUp(), true);
+    add(document, "pointercancel", () => this._onAyaMenuPointerUp(), true);
+
+    add(document, "pointerdown", (e) => {
+      if (!this._ayaMenuEl?.classList.contains("show")) return;
+      if (!this._ayaMenuEl.contains(e.target)) this.hideAyaContextMenu();
+    }, true);
+
+    add(window, "scroll", () => this.hideAyaContextMenu(), true);
+    const pageScrollEl = this.elements.pageScroll;
+    if (pageScrollEl) {
+      const onScroll = () => this.hideAyaContextMenu();
+      pageScrollEl.addEventListener("scroll", onScroll, { capture: true, passive: true });
+      handlers.push({ target: pageScrollEl, type: "scroll", handler: onScroll, options: { capture: true } });
+    }
+    add(document, "keydown", (e) => {
+      if (e.key === "Escape" && this._ayaMenuEl?.classList.contains("show")) {
+        e.preventDefault();
+        this.hideAyaContextMenu();
+      }
+    });
+
+    this._ayaMenuGlobalHandlers = handlers;
+  }
+
+  // ---------- Détection appui long ----------
+
+  _onAyaMenuPointerDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    // Ne pas rouvrir si on clique dans le menu lui-même
+    if (this._ayaMenuEl?.contains(e.target)) return;
+
+    const pageWrapper = e.target?.closest?.(".page-wrapper");
+    if (!pageWrapper) return;
+
+    const hit = this._hitTestAya(e.clientX, e.clientY, pageWrapper);
+    if (!hit) return;
+
+    // Capturer les coordonnées MAINTENANT (le PointerEvent peut être recyclé)
+    this._ayaMenuPressStart = {
+      x: e.clientX,
+      y: e.clientY,
+      hit,
+    };
+
+    clearTimeout(this._ayaMenuPressTimer);
+    this._ayaMenuPressTimer = setTimeout(() => {
+      const start = this._ayaMenuPressStart;
+      if (!start) return;
+      this._ayaMenuPressStart = null;
+      this._showAyaContextMenu(start.hit, start.x, start.y);
+    }, this._ayaMenuLongPressMs);
+  }
+
+  _onAyaMenuPointerMove(e) {
+    if (!this._ayaMenuPressStart) return;
+    const dx = e.clientX - this._ayaMenuPressStart.x;
+    const dy = e.clientY - this._ayaMenuPressStart.y;
+    if (Math.hypot(dx, dy) > this._ayaMenuMoveTolerance) {
+      clearTimeout(this._ayaMenuPressTimer);
+      this._ayaMenuPressTimer = null;
+      this._ayaMenuPressStart = null;
+    }
+  }
+
+  _onAyaMenuPointerUp() {
+    clearTimeout(this._ayaMenuPressTimer);
+    this._ayaMenuPressTimer = null;
+    this._ayaMenuPressStart = null;
+  }
+
+  // ---------- Hit-test point écran → (s, a) ----------
+
+  _hitTestAya(clientX, clientY, pageWrapper) {
+    const page = parseInt(pageWrapper.dataset.page, 10);
+    if (!page) return null;
+
+    // --- Mode "book" : aya sur une image de page ---
+    const img = pageWrapper.querySelector("img");
+    if (img) {
+      const player = window.quranAudioPlayer;
+      if (!player?.ayaCoordsLoaded) return null;
+
+      const imgRect = img.getBoundingClientRect();
+      if (!imgRect.width || !imgRect.height) return null;
+
+      // Les rects sont en coordonnées PAGE_IMG (1260×1890)
+      const sx = imgRect.width / PAGE_IMG.W;
+      const sy = imgRect.height / PAGE_IMG.H;
+
+      const candidates = this._getAyasOnPage(page);
+      for (const { s, a } of candidates) {
+        const rects = player._getAyaRects(s, a);
+        if (!rects?.length) continue;
+        for (const r of rects) {
+          const x0 = imgRect.left + r.x1 * sx;
+          const y0 = imgRect.top + r.y1 * sy;
+          const x1 = imgRect.left + r.x2 * sx;
+          const y1 = imgRect.top + r.y2 * sy;
+          if (clientX >= x0 && clientX <= x1 && clientY >= y0 && clientY <= y1) {
+            return { s, a, page, rects, text: this._getAyaText(s, a) };
+          }
+        }
+      }
+      return null;
+    }
+
+    // --- Mode "scroll" : aya dans un élément DOM ---
+    const el = document.elementFromPoint(clientX, clientY)?.closest("[data-aya]");
+    if (el && pageWrapper.contains(el)) {
+      return {
+        s: +el.dataset.sura,
+        a: +el.dataset.aya,
+        page,
+        rects: null,
+        text: el.textContent?.trim() || "",
+      };
+    }
+    return null;
+  }
+
+  _getAyasOnPage(page) {
+    const player = window.quranAudioPlayer;
+    if (!player?._ayaByPage) return [];
+    const set = player._ayaByPage.get(page);
+    if (!set) return [];
+    return Array.from(set).map(k => {
+      const [s, a] = k.split(":").map(Number);
+      return { s, a };
+    });
+  }
+
+  _getAyaText(s, a) {
+    const tm = window.tafsirManager;
+    if (!tm?.data) return "";
+    const F = tm.F;
+    const found = tm.data.find(x => x[F.sura_n] === s && x[F.aya_n] === a);
+    return found?.[F.text] || "";
+  }
+
+  // ---------- Affichage / fermeture ----------
+
+  _showAyaContextMenu(hit, clientX, clientY) {
+    this._ayaMenuCurrent = hit;
+
+    if (window.quranAudioPlayer?.isStopped) {
+      this.highlightAya(hit.s, hit.a, hit.rects, true);
+    }
+
+    const menu = this._ayaMenuEl;
+    menu.classList.add("show");
+    menu.classList.remove("below");
+    const mw = menu.offsetWidth;
+    const mh = menu.offsetHeight;
+
+    let left = clientX - mw / 2;
+    let top = clientY - mh - 14;
+    let below = false;
+
+    // Clamp horizontal
+    left = Math.max(8, Math.min(window.innerWidth - mw - 8, left));
+
+    // Pas assez de place au-dessus → on ouvre en dessous
+    if (top < 8) {
+      top = clientY + 20;
+      below = true;
+    }
+    // Clamp vertical
+    if (top + mh > window.innerHeight - 8) {
+      top = window.innerHeight - mh - 8;
+    }
+
+    if (below) menu.classList.add("below");
+
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+
+    navigator.vibrate?.(20);
+    AppUtils.emit("quran:ayaContextMenuOpened", { s: hit.s, a: hit.a });
+  }
+
+  hideAyaContextMenu() {
+    if (!this._ayaMenuEl?.classList.contains("show")) return;
+    this._ayaMenuEl.classList.remove("show");
+    this._ayaMenuCurrent = null;
+    if (window.quranAudioPlayer?.isStopped) {
+      this.clearHighlight();
+    }
+  }
+
+  // ---------- Actions ----------
+
+  _runAyaMenuAction(action) {
+    const hit = this._ayaMenuCurrent;
+    if (!hit) return;
+    const { s, a, text } = hit;
+    this.hideAyaContextMenu();
+
+    switch (action) {
+      case "play": this._playAyaFromMenu(s, a); break;
+      case "share": this._shareAyaFromMenu(s, a, text); break;
+      case "tafsir": this._openTafsirFromMenu(s, a); break;
+    }
+  }
+
+  async _playAyaFromMenu(s, a) {
+    const player = window.quranAudioPlayer;
+    if (!player) {
+      window.quranApp?.showToast("⚠️ المشغل غير متاح");
+      return;
+    }
+    try {
+      await player.init();
+
+      // 1. Sélectionner un récitateur si pas encore fait
+      if (!player.currentReciter) {
+        const saved = window.quranApp.getPreference(`reciter_${player.currentRiwaya}`);
+        player._selectReciter(saved, false);
+      }
+      if (!player.currentReciter) {
+        const reciters = window.RIWAYAT_CONFIG?.[player.currentRiwaya]?.reciters || [];
+        if (reciters.length) player._selectReciter(reciters[0].id, false);
+      }
+      if (!player.currentReciter) {
+        window.quranApp?.showToast("❌ لا يوجد قارئ متاح");
+        return;
+      }
+
+      // 2. Attendre les coordonnées (pour le highlight)
+      if (!player.ayaCoordsLoaded) {
+        await new Promise((resolve) => {
+          const start = Date.now();
+          const check = () => {
+            if (player.ayaCoordsLoaded || Date.now() - start > 3000) resolve();
+            else setTimeout(check, 100);
+          };
+          check();
+        });
+      }
+
+      // 3. Mode "une seule aya" : désactiver la répétition automatique
+      //    et jouer uniquement cette aya
+      player._playSingleAya(s, a);
+    } catch {
+      window.quranApp?.showToast("⚠️ تعذر تشغيل الآية");
+    }
+  }
+
+  async _shareAyaFromMenu(s, a, text) {
+    if (!text) {
+      try {
+        await window.tafsirManager?.ensureLoaded?.();
+        text = this._getAyaText(s, a);
+      } catch { /* silencieux */ }
+    }
+    const surahName = window.quranCalculator?.getSurah?.(s)?.name || "";
+    const page = window.tafsirManager?.getAya?.(s, a)?.page;
+    const versePart = text ? `﴿ ${text} ﴾\n\n` : "";
+    const msg = `${versePart}[${surahName} - الآية ${a}]\n${page ? `صفحة ${page}` : ""}\n— القرآن الكريم`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${surahName} - الآية ${a}`, text: msg });
+        return;
+      } catch (err) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+
+    if (typeof cordova !== "undefined" && window.plugins?.socialsharing) {
+      window.plugins.socialsharing.share(msg, `${surahName} - ${a}`);
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(msg);
+      window.quranApp?.showToast("📋 تم نسخ الآية");
+    } catch {
+      window.quranApp?.showToast("⚠️ تعذر المشاركة");
+    }
+  }
+
+  _openTafsirFromMenu(s, a) {
+    const tm = window.tafsirManager;
+    if (!tm) return;
+    const ayaInfo = tm.getAya?.(s, a);
+    if (!ayaInfo?.page) {
+      window.quranApp?.showToast("❌ لم يتم العثور على الآية");
+      return;
+    }
+
+    // Naviguer dans le reader vers la page de l'aya (pour que la fermeture du tafsir ramène à la bonne page)
+    window.quranApp?.goToPage?.(ayaInfo.page);
+
+    // Ouvrir le tafsir en ciblant cette aya précise
+    setTimeout(() => {
+      tm.showTafsirOverlay({ s: Number(s), a: Number(a) });
+    }, 150);
+  }
 }
 
 // ============================================================

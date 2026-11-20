@@ -178,6 +178,9 @@ class QuranAudioPlayer {
     this._killTimer1 = null;
     this._killTimer2 = null;
     this._killTimer3 = null;
+    // Mode "single aya" (depuis le menu contextuel)
+    this._singleAyaMode = false;
+    this._singleAyaTarget = null;
   }
 
   // ---------- Helpers privés ----------
@@ -765,10 +768,15 @@ class QuranAudioPlayer {
       if (r.ok) {
         this.ayaCoords = await r.json();
         this._ayaIndex = new Map();
+        this._ayaByPage = new Map();               // ← AJOUT
         for (const rect of this.ayaCoords) {
           const k = `${rect.s}:${rect.a}`;
           if (!this._ayaIndex.has(k)) this._ayaIndex.set(k, []);
           this._ayaIndex.get(k).push(rect);
+
+          // ← AJOUT : index par page (dédupliqué par s:a)
+          if (!this._ayaByPage.has(rect.p)) this._ayaByPage.set(rect.p, new Set());
+          this._ayaByPage.get(rect.p).add(k);
         }
         this.ayaCoordsLoaded = true;
       } else this.ayaCoordsLoaded = false;
@@ -1273,6 +1281,25 @@ class QuranAudioPlayer {
     setTimeout(() => { this._isStarting = false; }, 500);
   }
 
+  /**
+ * Joue une seule aya (depuis le menu contextuel) puis s'arrête.
+ * Ne modifie pas les préférences repeatMode globales de l'utilisateur.
+ */
+  _playSingleAya(surah, ayah) {
+    // Positionner la sourate + aya
+    this._setSurah(surah, ayah);
+
+    // Flag temporaire : "arrêt après cette aya"
+    this._singleAyaMode = true;
+    this._singleAyaTarget = { s: surah, a: ayah };
+
+    // Afficher la mini-barre AVANT de lancer (pour feedback immédiat)
+    this._showMiniBar();
+
+    // Lancer la lecture
+    this.play();
+  }
+
   _handlePlayError() {
     this.hasError = true;
     const reciters = RIWAYAT_CONFIG[this.currentRiwaya]?.reciters || [];
@@ -1368,6 +1395,8 @@ class QuranAudioPlayer {
   }
 
   nextAyah() {
+    this._singleAyaMode = false;       // ← AJOUT
+    this._singleAyaTarget = null;
     if (this._mem) return this._memSkip(1);
     if (!this.currentSurah) return;
     this._isTransitioning = true;
@@ -1393,6 +1422,8 @@ class QuranAudioPlayer {
   }
 
   prevAyah() {
+    this._singleAyaMode = false;       // ← AJOUT
+    this._singleAyaTarget = null;
     if (this._mem) return this._memSkip(-1);
     if (!this.currentSurah) return;
     this._isTransitioning = true;
@@ -1415,6 +1446,8 @@ class QuranAudioPlayer {
   }
 
   nextSurah() {
+    this._singleAyaMode = false;       // ← AJOUTER CECI
+    this._singleAyaTarget = null;
     this._memExit();
     if (!this.currentSurah || this.currentSurah >= 114) return;
     this._setSurah(this.currentSurah + 1, 1);
@@ -1423,6 +1456,8 @@ class QuranAudioPlayer {
   }
 
   prevSurah() {
+    this._singleAyaMode = false;       // ← AJOUTER CECI
+    this._singleAyaTarget = null;
     this._memExit();
     if (!this.currentSurah || this.currentSurah <= 1) return;
     this._setSurah(this.currentSurah - 1, 1);
@@ -1444,6 +1479,8 @@ class QuranAudioPlayer {
   }
 
   cycleRepeat() {
+    this._singleAyaMode = false;       // ← AJOUTER CECI
+    this._singleAyaTarget = null;
     if (this._mem) {
       window.quranApp?.showToast?.("غير متاح أثناء الحفظ");
       return;
@@ -1514,7 +1551,7 @@ class QuranAudioPlayer {
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><polygon points="11 6 3 12 11 18"/><polygon points="21 6 13 12 21 18"/></svg>
         </button>
         <button class="audio-btn" id="miniBarStop" title="إيقاف">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="8" y="8" width="8" height="8"/></svg>
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="8" y="8" width="12" height="12"/></svg>
         </button>
       </div>
 
@@ -1623,6 +1660,14 @@ class QuranAudioPlayer {
     const onEnded = () => {
       if (this.audioElement.dataset.basmala === "true") return;
       if (this._isStarting) return;
+
+      if (this._singleAyaMode) {
+        this._singleAyaMode = false;
+        this._singleAyaTarget = null;
+        this.stop();
+        return;
+      }
+
       if (this._mem && !(this._sleepEndsAt && Date.now() >= this._sleepEndsAt)) { this._memOnEnded(); return; }
       if (this._sleepEndsAt && Date.now() >= this._sleepEndsAt) { this.stop(); return; }
       this.isPlaying = false;

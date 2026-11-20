@@ -58,6 +58,7 @@ class TafsirSearchManager {
 
     this.inputElement = null;
     this.resultsElement = null;
+    this._scrollLocked = false;
   }
 
   // ---------- 1. Utilitaires ----------
@@ -847,9 +848,11 @@ class TafsirSearchManager {
   // ---------- 11. Scroll vers une position ----------
 
   scrollToFirstAyaOfPage(page) {
+    if (this._scrollLocked) return;
     const container = this.tafsirUI?.contentContainer;
     if (!container) return;
     setTimeout(() => {
+      if (this._scrollLocked) return;
       const el = container.querySelector(`[data-page="${page}"]`);
       if (!el) return;
       this.isScrolling = true;
@@ -872,6 +875,29 @@ class TafsirSearchManager {
         this.isScrolling = false;
       }, 100);
     }, 300);
+  }
+
+  scrollToAyaFromMenu(sura_n, aya_n) {
+    const container = this.tafsirUI?.contentContainer;
+    if (!container) return;
+    this._scrollLocked = false;
+    setTimeout(() => {
+      const el = container.querySelector(`[data-sura="${sura_n}"][data-aya="${aya_n}"]`);
+      if (!el) {
+        this._scrollLocked = false;  // ← DÉBLOQUER si erreur
+        return;
+      }
+      this.isScrolling = true;
+      const offset = this._getOffsetTop(el, container);
+      container.scrollTo({ top: offset - 10, behavior: "auto" });
+      const page = parseInt(el.dataset.page, 10);
+      this.updateTafsirNavigation(sura_n, aya_n, page);
+      this.syncDropdowns(sura_n, aya_n, page, "init");
+      setTimeout(() => {
+        this.isScrolling = false;
+        this._scrollLocked = false;  // ← DÉBLOQUER à la fin
+      }, 100);
+    }, 200);
   }
 
   _scrollContainerTo(el, offset = 20) {
@@ -1011,7 +1037,7 @@ class TafsirSearchManager {
 
   // ---------- 15. Overlay du tafsir ----------
 
-  async showTafsirOverlay() {
+  async showTafsirOverlay(targetAya = null) {
     const om = window.overlayManager;
     if (!om) return;
 
@@ -1019,7 +1045,6 @@ class TafsirSearchManager {
 
     if (!(await window.quranApp?.loadTafsir())) return;
 
-    // Sauvegarde de la page courante (restaurée à la fermeture par overlays-manager)
     if (window.quranReader?.getCurrentPage) {
       om._tafsirSavedPage = window.quranReader.getCurrentPage();
     }
@@ -1027,7 +1052,6 @@ class TafsirSearchManager {
     const overlay = om.lazyLoadOverlay("tafsir");
     if (!overlay?.content) return;
 
-    // Injecter les contrôles (une seule fois)
     if (!overlay.contentGenerated) {
       const controlsEl = document.getElementById("tafsirControlsContainer");
       if (controlsEl) controlsEl.innerHTML = this._renderTafsirControls();
@@ -1040,18 +1064,54 @@ class TafsirSearchManager {
 
     const tafsirContent = document.getElementById("tafsirContentContainer");
 
+    // --- INITIALISATION (seulement la 1ère fois) ---
     if (tafsirContent && !this.tafsirUIReady) {
-      await this.initTafsirUI(tafsirContent);
+      this.optimizeForMobile();
+      this.tafsirUI = { contentContainer: tafsirContent };
+      await this.ensureLoaded();
+      this.initializeTafsirSelectors();
+      this.setupInfiniteScroll(tafsirContent);
+      this.tafsirUIReady = true;
       this.initTafsirFontControls();
-    } else if (this.tafsirUIReady) {
-      const currentPage = window.quranApp?.getCurrentPage() || 1;
-      await this.loadTafsirForPage(currentPage);
+    }
 
-      const firstAya = this.getFirstAyaForPage(currentPage);
-      if (firstAya) {
-        this.updateTafsirNavigation(firstAya.sura_n, firstAya.aya_n, currentPage);
-        this.syncDropdowns(firstAya.sura_n, firstAya.aya_n, currentPage, "init");
-        setTimeout(() => this.scrollToFirstAyaOfPage(currentPage), 200);
+    // --- CHARGEMENT DE LA CIBLE ---
+    if (this.tafsirUIReady) {
+      let page, sura_n, aya_n;
+
+      if (targetAya) {
+        const ayaInfo = this.getAya(targetAya.s, targetAya.a);
+        page = ayaInfo?.page || 1;
+        sura_n = ayaInfo?.sura_n || targetAya.s;
+        aya_n = ayaInfo?.aya_n || targetAya.a;
+      } else {
+        page = window.quranApp?.getCurrentPage() || 1;
+        const firstAya = this.getFirstAyaForPage(page);
+        sura_n = firstAya?.sura_n;
+        aya_n = firstAya?.aya_n;
+      }
+
+      // ⚠️ VERROUILLER AVANT loadTafsirForPage (crucial !)
+      if (targetAya) {
+        this._scrollLocked = true;
+      }
+
+      await this.loadTafsirForPage(page);
+
+      if (sura_n && aya_n) {
+        this.updateTafsirNavigation(sura_n, aya_n, page);
+        this.syncDropdowns(sura_n, aya_n, page, "init");
+
+        if (targetAya) {
+          // Scroll ciblé (le lock est déjà posé)
+          this.scrollToAyaFromMenu(sura_n, aya_n);
+        } else {
+          // Scroll vers la 1ère aya de la page
+          this.scrollToFirstAyaOfPage(page);
+        }
+      } else if (targetAya) {
+        // Sécurité : débloquer si on n'a pas pu scroller
+        this._scrollLocked = false;
       }
     }
   }

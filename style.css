@@ -2274,7 +2274,7 @@
   .audio-controls {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: center; /* Garde l'alignement vertical des boutons de l'overlay */
     margin: 0.2rem 0;
   }
 
@@ -2340,10 +2340,11 @@
     margin-left: 6px;
   }
 
+  /* ---------- Bouton générique Audio ---------- */
   .audio-btn {
     font-size: 1.2rem;
-    width: var(--btn-sm);
-    height: var(--btn-sm);
+    width: var(--btn-sm); /* 32px */
+    height: var(--btn-sm); /* 32px */
     border: none;
     background: transparent;
     color: var(--text);
@@ -2352,6 +2353,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    padding: 0; /* Sécurité pour éviter les décalages */
+    line-height: 1; /* Évite la line-box parasite du texte */
     transition:
       var(--transition-default),
       transform 0.1s;
@@ -2368,14 +2371,20 @@
     pointer-events: none;
   }
 
+  /* ---------- Bouton de vitesse ---------- */
   .audio-btn.speed-btn {
     font-family: monospace;
-    font-size: 1rem;
+    font-size: 0.85rem;
     background: var(--surface-alt);
     border-radius: 2rem;
-    letter-spacing: -3px;
-    padding: 2px 4px;
-    min-width: 2.2rem;
+    letter-spacing: 0; /* Corrigé : retire le -3px qui tassait le texte */
+    padding: 0 6px;
+    min-width: 2.8rem;
+    height: var(--btn-sm); /* Aligné sur la même hauteur que les autres boutons */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
   }
 
   .audio-controls .audio-btn.speed-btn {
@@ -2383,7 +2392,7 @@
     min-width: 2.8rem;
   }
 
-  /* Bouton Play/Pause central (Mini-barre et Overlay) */
+  /* ---------- Bouton Play/Pause central ---------- */
   .audio-btn.play-main-btn {
     background-color: var(--primary);
     color: #ffffff;
@@ -2394,6 +2403,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    padding: 0;
   }
 
   .audio-btn.play-main-btn:active {
@@ -2401,9 +2411,12 @@
     transform: scale(0.95);
   }
 
+  /* L'icône du Play est agrandie pour avoir le même poids visuel que les flèches */
   .audio-btn.play-main-btn svg {
-    width: 22px;
-    height: 22px;
+    display: block;
+    width: 30px;  /* Corrigé : 30px au lieu de 22px */
+    height: 30px;
+    flex-shrink: 0;
   }
 
   .night-mode .audio-btn.play-main-btn {
@@ -2416,6 +2429,7 @@
     border-top-color: #ffffff;
   }
 
+  /* ---------- Mini-barre ---------- */
   .audio-mini-bar {
     position: fixed;
     inset: auto 0 0 0;
@@ -2456,12 +2470,18 @@
   .audio-mini-bar .mini-bar-controls {
     display: flex;
     flex: 1;
+    align-items: center; /* ✅ Clé de l'alignement vertical */
     justify-content: space-around;
+    gap: 0.25rem;
   }
 
-  .audio-mini-bar .audio-btn svg {
+  /* ---------- Icônes SVG (Mini-barre et Overlay) ---------- */
+  .audio-mini-bar .audio-btn svg,
+  .audio-controls .audio-btn svg {
+    display: block; /* ✅ Clé anti-baseline */
     width: 30px;
     height: 30px;
+    flex-shrink: 0;
   }
 
   .mini-bar-mem-line {
@@ -2472,11 +2492,6 @@
     padding: 4px 10px;
     border-bottom: 1px solid var(--border);
     background: var(--surface-alt);
-  }
-
-  .audio-controls .audio-btn svg {
-    width: 32px;
-    height: 32px;
   }
 
   .audio-fab {
@@ -3240,5 +3255,146 @@
 
   .stats-counter-input[type=number] {
     -moz-appearance: textfield;
+  }
+}
+
+/* ============================================================
+   MENU CONTEXTUEL AYA (appui long)
+   Style sombre inspiré du menu tajweed
+   ============================================================ */
+@layer app {
+
+  .aya-context-menu {
+    position: fixed;
+    z-index: 9999;
+    display: none;
+    flex-direction: row-reverse;
+    gap: 0;
+    background: rgba(0, 0, 0, 0.85);
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+    padding: 0;
+    transform-origin: top center;
+    animation: ayaMenuIn 0.15s ease-out;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    overflow: hidden;
+  }
+
+  .aya-context-menu.show {
+    display: flex;
+  }
+
+  @keyframes ayaMenuIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.96);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .aya-context-menu .aya-menu-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 72px;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+
+  /* Séparateur vertical entre les boutons */
+  .aya-context-menu .aya-menu-btn+.aya-menu-btn::before {
+    content: "";
+    position: absolute;
+    top: 20%;
+    bottom: 20%;
+    left: 0;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .aya-context-menu .aya-menu-btn:hover,
+  .aya-context-menu .aya-menu-btn:active {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .aya-context-menu .aya-menu-btn:focus {
+    outline: none;
+  }
+
+  .aya-context-menu .aya-menu-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: -4px;
+  }
+
+  /* Icône SVG */
+  .aya-context-menu .aya-menu-btn svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+    flex-shrink: 0;
+  }
+
+  /* Emoji */
+  .aya-context-menu .aya-menu-emoji {
+    font-size: 1rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Label sous l'icône */
+  .aya-context-menu .aya-menu-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    line-height: 1.2;
+    font-family: "MyNotoKufi", "Segoe UI", sans-serif;
+  }
+
+  /* Petit triangle indicateur (flèche vers le bas du menu) */
+  .aya-context-menu::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 7px solid rgba(0, 0, 0, 0.85);
+  }
+
+  /* Si le menu s'affiche en dessous (top > clientY), on inverse la flèche */
+  .aya-context-menu.below::after {
+    top: auto;
+    bottom: -6px;
+    border-bottom: none;
+    border-top: 7px solid rgba(0, 0, 0, 0.85);
+  }
+
+  /* Mode nuit : même style, c'est déjà sombre */
+  .night-mode .aya-context-menu {
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.7);
   }
 }
