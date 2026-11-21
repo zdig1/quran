@@ -1407,9 +1407,9 @@ class QuranReader {
         <span class="aya-menu-emoji">🔗</span>
         <span class="aya-menu-label">مشاركة</span>
       </button>
-      <button type="button" class="aya-menu-btn" data-action="tafsir" role="menuitem" title="التفسير" aria-label="التفسير">
+      <button type="button" class="aya-menu-btn" data-action="tafsir" role="menuitem" title="تفسير" aria-label="التفسير">
         <span class="aya-menu-emoji">📖</span>
-        <span class="aya-menu-label">التفسير</span>
+        <span class="aya-menu-label">تفسير</span>
       </button>
   
       <button type="button" class="aya-menu-btn" data-action="play" role="menuitem" title="تشغيل الآية" aria-label="تشغيل الآية">
@@ -1632,15 +1632,19 @@ class QuranReader {
 
   // ---------- Actions ----------
 
-  _runAyaMenuAction(action) {
-    const hit = this._ayaMenuCurrent;
+  async _runAyaMenuAction(action) {
+    let hit = this._ayaMenuCurrent;
     if (!hit) return;
-    const { s, a, text } = hit;
+    const { s, a } = hit;
     this.hideAyaContextMenu();
-
+    if (action === "tafsir" || action === "share") {
+      const ok = await window.quranApp?.loadTafsir?.();
+      if (!ok && action === "tafsir") return;
+      hit = { ...hit, text: this._getAyaText(s, a) };
+    }
     switch (action) {
       case "play": this._playAyaFromMenu(s, a); break;
-      case "share": this._shareAyaFromMenu(s, a, text); break;
+      case "share": this._shareAyaFromMenu(s, a, hit.text); break;
       case "tafsir": this._openTafsirFromMenu(s, a); break;
     }
   }

@@ -12,7 +12,7 @@ class TafsirSearchManager {
       id: "i",
       page: "p",
       sura_n: "s",
-      sura: "n",
+      sura: "sura",
       aya_n: "a",
       text: "t",
       tfsir: "m",
@@ -152,6 +152,13 @@ class TafsirSearchManager {
     const response = await fetch(this.config.dataUrl, { cache: "force-cache" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     this.data = await response.json();
+
+    const calc = window.quranCalculator;
+    const suraKey = this.F.sura;
+    for (const aya of this.data) {
+      aya[suraKey] = calc?.getSurah(aya[this.F.sura_n])?.name || "";
+    }
+
     AppUtils.emit("tafsir:loaded", { ayatCount: this.data.length });
     return this.data;
   }
