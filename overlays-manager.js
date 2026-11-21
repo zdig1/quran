@@ -86,11 +86,6 @@ class OverlayManager {
       closeBtn: "closeMemorizeBtn",
       content: "memorizeContent",
     },
-    memSettings: {
-      element: "memSettingsOverlay",
-      closeBtn: "closeMemSettingsBtn",
-      content: "memSettingsContent",
-    },
     search: {
       element: "searchOverlay",
       closeBtn: "closeSearchBtn",

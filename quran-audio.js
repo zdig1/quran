@@ -661,19 +661,38 @@ class QuranAudioPlayer {
     const to = { s: pos.s, a: Math.min(window.AyaPicker.totalOf(pos.s) || 1, pos.a + 2) };
     const cmp = (x, y) => x.s - y.s || x.a - y.a;
 
+    const PAUSE_LABELS = { 0: "بدون انتظار", half: "0.5× الآية", same: "1× الآية", one_and_half: "1.5× الآية" };
+
+    const chips = (key, values, fmt) =>
+      `<div class="mem-chips" data-key="${key}">${values
+        .map((v) => `<button type="button" class="mem-chip${String(v) === String(cfg[key]) ? " active" : ""}" data-v="${v}">${fmt(v)}</button>`)
+        .join("")}</div>`;
+
     this._memOverlayShow(
       `<div class="mem-overlay-body">
-         <div class="mem-label">تحديد البداية</div>
-         ${window.AyaPicker.pairHtml("memFrom", from)}
-         
-         <div class="mem-label">تحديد النهاية</div>
-         ${window.AyaPicker.pairHtml("memTo", to)}
-         
-         <div class="mem-summary" id="memSummary"></div>
-         
-         <button type="button" class="mem-edit-btn" id="memEditBtn">⚙️ تعديل الإعدادات</button>
-         <button type="button" class="mem-go" id="memGo">بدء</button>
-       </div>`,
+       <div class="mem-label">تحديد البداية</div>
+       ${window.AyaPicker.pairHtml("memFrom", from)}
+       
+       <div class="mem-label">تحديد النهاية</div>
+       ${window.AyaPicker.pairHtml("memTo", to)}
+       
+       <div class="mem-summary" id="memSummary"></div>
+       
+       <button type="button" class="mem-edit-btn" id="memEditBtn" aria-expanded="false" aria-controls="memSettingsPanel">
+         إعدادات التكرار
+       </button>
+       
+       <div id="memSettingsPanel" class="mem-settings-panel" hidden>
+         <div class="aya-label">تكرار الآية</div>
+         ${chips("perVerse", MEM_OPTIONS.perVerse, (v) => `× ${v}`)}
+         <div class="aya-label">تكرار المقطع</div>
+         ${chips("passes", MEM_OPTIONS.passes, (v) => `× ${v}`)}
+         <div class="aya-label">الانتظار بين التلاوات</div>
+         ${chips("pause", MEM_OPTIONS.pause, (v) => PAUSE_LABELS[v])}
+       </div>
+       
+       <button type="button" class="mem-go" id="memGo">بدء</button>
+     </div>`,
       (dialog, cleanup) => {
         const summary = dialog.querySelector("#memSummary");
         const updateSummary = () => {
@@ -694,10 +713,26 @@ class QuranAudioPlayer {
         fromPair = window.AyaPicker.bindPair(dialog, "memFrom", from, onChange);
         toPair = window.AyaPicker.bindPair(dialog, "memTo", to, onChange);
 
-        dialog.querySelector("#memEditBtn").addEventListener("click", () => {
-          this._showMemSettings((newCfg) => {
-            Object.assign(cfg, newCfg);
-            updateSummary();
+        // ---- Panneau inline repliable (remplace l'ancien overlay) ----
+        const toggleBtn = dialog.querySelector("#memEditBtn");
+        const panel = dialog.querySelector("#memSettingsPanel");
+
+        toggleBtn.addEventListener("click", () => {
+          const open = toggleBtn.getAttribute("aria-expanded") === "true";
+          toggleBtn.setAttribute("aria-expanded", String(!open));
+          panel.hidden = open;
+          if (!open) panel.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        });
+
+        panel.querySelectorAll(".mem-chips").forEach((wrapEl) => {
+          wrapEl.addEventListener("click", (e) => {
+            const b = e.target.closest(".mem-chip");
+            if (!b) return;
+            const key = wrapEl.dataset.key;
+            cfg[key] = MEM_OPTIONS[key].find((x) => String(x) === b.dataset.v);
+            wrapEl.querySelectorAll(".mem-chip").forEach((x) => x.classList.toggle("active", x === b));
+            saveMemCfg(cfg);          // ← persistance immédiate
+            updateSummary();          // ← met à jour le résumé live
           });
         });
 
@@ -714,49 +749,6 @@ class QuranAudioPlayer {
         updateSummary();
       },
     );
-  }
-
-  _showMemSettings(onChange) {
-    const om = window.overlayManager;
-    const overlay = om.lazyLoadOverlay("memSettings");
-    if (!overlay?.content) return;
-
-    const cfg = loadMemCfg();
-    const PAUSE_LABELS = { 0: "بدون انتظار", half: "0.5× الآية", same: "1× الآية", one_and_half: "1.5× الآية" };
-
-    const chips = (key, values, fmt) =>
-      `<div class="mem-chips" data-key="${key}">${values
-        .map((v) => `<button type="button" class="mem-chip${String(v) === String(cfg[key]) ? " active" : ""}" data-v="${v}">${fmt(v)}</button>`)
-        .join("")}</div>`;
-
-    overlay.content.innerHTML = `
-      <div class="aya-label">تكرار الآية</div>
-      ${chips("perVerse", MEM_OPTIONS.perVerse, (v) => `× ${v}`)}
-      <div class="aya-label">تكرار المقطع</div>
-      ${chips("passes", MEM_OPTIONS.passes, (v) => `× ${v}`)}
-      <div class="aya-label">الانتظار بين التلاوات</div>
-      ${chips("pause", MEM_OPTIONS.pause, (v) => PAUSE_LABELS[v])}
-    `;
-
-    overlay.content.querySelectorAll(".mem-chips").forEach((wrapEl) => {
-      wrapEl.addEventListener("click", (e) => {
-        const b = e.target.closest(".mem-chip");
-        if (!b) return;
-        const key = wrapEl.dataset.key;
-        cfg[key] = MEM_OPTIONS[key].find((x) => String(x) === b.dataset.v);
-        wrapEl.querySelectorAll(".mem-chip").forEach((x) => x.classList.toggle("active", x === b));
-        saveMemCfg(cfg);
-        onChange?.(cfg);
-      });
-    });
-
-    const backToMem = (e) => {
-      if (e.detail?.overlay !== "memSettings") return;
-      window.removeEventListener("quran:overlayClosed", backToMem);
-      om.showOverlay("memorize");
-    };
-    window.addEventListener("quran:overlayClosed", backToMem);
-    om.showOverlay("memSettings");
   }
 
   // ---------- Coordonnées des versets ----------
