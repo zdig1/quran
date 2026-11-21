@@ -1681,7 +1681,6 @@ class QuranReader {
       }
 
       // 3. Mode "une seule aya" : désactiver la répétition automatique
-      //    et jouer uniquement cette aya
       player._playSingleAya(s, a);
     } catch {
       window.quranApp?.showToast("⚠️ تعذر تشغيل الآية");
@@ -1696,13 +1695,13 @@ class QuranReader {
       } catch { /* silencieux */ }
     }
     const surahName = window.quranCalculator?.getSurah?.(s)?.name || "";
-    const page = window.tafsirManager?.getAya?.(s, a)?.page;
-    const versePart = text ? `﴿ ${text} ﴾\n\n` : "";
-    const msg = `${versePart}[${surahName} - الآية ${a}]\n${page ? `صفحة ${page}` : ""}\n— القرآن الكريم`;
+    const surahLabel = surahName ? `${s}.${surahName}` : `${s}`;
+    const ref = `${surahLabel} - الآية ${a}`;
+    const msg = text ? `${text}\n\n[${ref}]` : `[${ref}]`;
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: `${surahName} - الآية ${a}`, text: msg });
+        await navigator.share({ title: ref, text: msg });
         return;
       } catch (err) {
         if (err?.name === "AbortError") return;
@@ -1710,7 +1709,7 @@ class QuranReader {
     }
 
     if (typeof cordova !== "undefined" && window.plugins?.socialsharing) {
-      window.plugins.socialsharing.share(msg, `${surahName} - ${a}`);
+      window.plugins.socialsharing.share(msg, ref);
       return;
     }
 
