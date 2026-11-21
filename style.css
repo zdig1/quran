@@ -647,7 +647,6 @@
   }
 
   .page-tag {
-    background: var(--primary-light);
     color: var(--primary);
     padding: 3px 6px;
     border-radius: var(--border-radius);
@@ -1380,7 +1379,6 @@
   }
 
   .item-surah .page-tag {
-    background: var(--primary-light);
     color: var(--primary);
     padding: 3px 6px;
     border-radius: var(--border-radius);
