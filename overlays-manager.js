@@ -283,7 +283,7 @@ class OverlayManager {
     this._openMenuOverlay("surahs", () => this.renderSurahsList(true));
   }
 
-  _createSurahItem(surah, isPinned, bookmarkedSurahIds) {
+  _createSurahItem(surah, isPinned, bookmarkedSurahIds, khatmaSurahId = null) {
     const R = ListItemRenderer;
     const container = R.createContainer("surah", surah.s_id);
     const calc = window.quranCalculator;
@@ -329,17 +329,21 @@ class OverlayManager {
     const orderSpan = AppUtils.el("span", "note-small", `التنزيل: ${surah.order}`);
     orderCell.append(revelSpan, orderSpan);
 
-    // Col 5 — signet
+    // Col 4 — signet
     const bookmarkCell = cell("g-bookmark");
     if (bookmarkedSurahIds?.has(surah.s_id)) bookmarkCell.textContent = "🔖";
+    // Col 4 ligne 2 — marque de khatma (sous le signet)
+    const khatmaCell = cell("g-khatma");
+    if (khatmaSurahId === surah.s_id) khatmaCell.textContent = "🚩";
 
     grid.append(
       pinBtn,               // Col 1
       badge,                // Col 2
-      infoCell,           // Col 2  Ligne 2
+      infoCell,             // Col 2  Ligne 2
       nameCell,             // Col 3 - Ligne 1
       orderCell,            // Col 3 - Ligne 2
-      bookmarkCell,         // Col 5
+      bookmarkCell,         // Col 4
+      khatmaCell,           // Col 4 Ligne 2
       cell("g-juz", juzStarts.length ? `<span class="juz-badge">${juzStarts.map((j) => `ج${j}`).join(" ")}</span>` : ""), // Col 6
       cell("g-sajda", calc.hasSajdaInSurah(surah.s_id) ? '<span class="item-sajda-icon">۩</span>' : ""), // Col 6
       cell("g-page", `<span class="page-tag">${APP_TEXTS.pageShort} ${surah.page_start}</span>`), // Col 7
@@ -390,13 +394,18 @@ class OverlayManager {
     const surahs = calc.getAllSurahs();
     const pinnedIds = window.quranApp?.getPinnedSurahs() || [];
     const bookmarkedSurahIds = new Set(
-      (window.quranApp?.getBookmarks() || []).map((b) => b.surahId).filter(Boolean),
+      (window.quranApp?.getBookmarks() || [])
+        .filter((b) => b.type !== "khatma")
+        .map((b) => b.surahId)
+        .filter(Boolean),
     );
-
+    const khatmaSurahId = window.quranApp?.getKhatmaBookmark()?.surahId ?? null;
     const section = (cls, title, list) => {
       const el = AppUtils.el("div", `surah-section ${cls}`);
       el.innerHTML = `<h3 class="section-title">${title}</h3>`;
-      list.forEach((s) => el.appendChild(this._createSurahItem(s, pinnedIds.includes(s.s_id), bookmarkedSurahIds)));
+      list.forEach((s) =>
+        el.appendChild(this._createSurahItem(s, pinnedIds.includes(s.s_id), bookmarkedSurahIds, khatmaSurahId)),
+      );
       return el;
     };
 
@@ -556,7 +565,8 @@ class OverlayManager {
     if (!overlay?.content || !calc) return;
     const R = ListItemRenderer;
 
-    const bookmarks = window.quranApp?.getBookmarks() || [];
+    const bookmarks = (window.quranApp?.getBookmarks() || []).filter((b) => b.type !== "khatma");
+    const khatmaPage = window.quranApp?.getKhatmaBookmark()?.page ?? null;
     const items = calc.getHizbWithPageRange().map((hizb) => {
       const hizbNum = parseInt(hizb.hizb, 10);
       const isNewJuz = hizbNum % 2 !== 0;
@@ -568,6 +578,8 @@ class OverlayManager {
       const badge = R.createBadge(isNewJuz ? `ج${Math.ceil(hizbNum / 2)}` : "ج0");
       if (!isNewJuz) badge.style.visibility = "hidden";
       const leftElements = [];
+      const hasKhatmaInRange = khatmaPage !== null && khatmaPage >= hizb.page_start && khatmaPage <= hizb.page_end;
+      if (hasKhatmaInRange) leftElements.push(R.createIcon("🚩"));
       if (hasBookmarkInRange) leftElements.push(R.createIcon("🔖"));
       leftElements.push(R.createPageTag(hizb.page_start));
       container.appendChild(
@@ -673,8 +685,9 @@ class OverlayManager {
     this.bookmarkFormCancel = cancelBtn;
 
     const container = AppUtils.el("div", "bookmarks-overlay-content");
-    container.append(list, form);
-    overlay.content.replaceChildren(container);
+    const khatmaBtn = AppUtils.el("button", "confirm-btn khatma-btn", "🚩 علامة الختمة");
+    khatmaBtn.addEventListener("click", () => this._setKhatmaHere(currentPage));
+    container.append(list, form, khatmaBtn); overlay.content.replaceChildren(container);
 
     this.setupBookmarkFormHandlers(currentPage);
   }
@@ -708,6 +721,27 @@ class OverlayManager {
       this.resetBookmarkForm();
       this.refreshBookmarksDisplay();
     });
+  }
+
+  async _setKhatmaHere(page) {
+    const app = window.quranApp;
+    const old = app.getKhatmaBookmark();
+    if (!old) {
+      window.statsManager?.setKhatmaStart(1);
+      app.setKhatmaMarker(page, window.statsManager?.defaultKhatmaName?.());
+      app.showToast(`🚩 علامة الختمة في صفحة ${page}`);
+      this.refreshBookmarksDisplay();
+      return;
+    }
+    if (old.page === page) {
+      app.showToast("⚠️ علامة الختمة موجودة بالفعل على هذه الصفحة");
+      return;
+    }
+    await this._confirmAndRefresh(
+      `هل تريد نقل علامة الختمة من صفحة ${old.page} إلى صفحة ${page} ؟`,
+      () => app.setKhatmaMarker(page),
+      `🚩 تم نقل علامة الختمة إلى صفحة ${page}`,
+    );
   }
 
   startEditingBookmark(bookmark) {
@@ -751,8 +785,10 @@ class OverlayManager {
 
   renderBookmarkDisplayMode(item, bookmark) {
     const R = ListItemRenderer;
+    const isKhatma = bookmark.type === "khatma";
+    if (isKhatma) item.classList.add("bookmark-khatma");
 
-    const nameSpan = AppUtils.el("span", "item-title bookmark-name", bookmark.name);
+    const nameSpan = AppUtils.el("span", "item-title bookmark-name", isKhatma ? `🚩 ${bookmark.name}` : bookmark.name);
     nameSpan.dataset.id = bookmark.id;
 
     item.appendChild(

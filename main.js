@@ -417,6 +417,18 @@ class QuranApp {
   getBookmarks() {
     return [...this.bookmarks];
   }
+  getKhatmaBookmark() {
+    return this.bookmarks.find((b) => b.type === "khatma") || null;
+  }
+
+  setKhatmaMarker(page, name = "الختمة") {
+    const p = Number(page);
+    if (!AppUtils.isValidPage(p)) return false;
+    const existing = this.getKhatmaBookmark();
+    if (existing) return this.replaceBookmarkPage(existing.id, p);
+    this.addBookmark({ id: `khatma_${Date.now()}`, type: "khatma", page: p, name });
+    return true;
+  }
 
   _makeBookmarkId(page, index = 0) {
     return `bookmark_${page}_${Date.now()}_${index}`;
@@ -448,11 +460,24 @@ class QuranApp {
   }
 
   _updateBookmarkedPagesSet() {
-    this.bookmarkedPagesSet = new Set(this.bookmarks.map((b) => b.page));
+    this.bookmarkedPagesSet = new Set(
+      this.bookmarks.filter((b) => b.type !== "khatma").map((b) => b.page),
+    );
+  }
+  // Marque de khatma épinglée en premier, puis tri par page
+  _sortBookmarks() {
+    this.bookmarks.sort((a, b) => (b.type === "khatma") - (a.type === "khatma") || a.page - b.page);
   }
 
+  // Une seule marque de khatma : on garde la plus récente
+  _dedupeKhatma() {
+    const list = this.bookmarks.filter((b) => b.type === "khatma");
+    if (list.length < 2) return;
+    list.sort((a, b) => String(b.lastModified).localeCompare(String(a.lastModified)));
+    this.bookmarks = this.bookmarks.filter((b) => b.type !== "khatma" || b === list[0]);
+  }
   _commitBookmarks(pagesToRefresh = []) {
-    this.bookmarks.sort((a, b) => a.page - b.page);
+    this._sortBookmarks();
     this._updateBookmarkedPagesSet();
     this.saveToLocalStorage();
     pagesToRefresh.forEach((p) => this.updateBookmarkIcon(p));
@@ -492,7 +517,7 @@ class QuranApp {
   updateBookmark(bookmarkId, newName) {
     const bookmark = this._findBookmark(bookmarkId);
     if (!bookmark) return false;
-    bookmark.name = newName.trim() || `صفحة ${bookmark.page}`;
+    bookmark.name = newName.trim() || (bookmark.type === "khatma" ? "الختمة" : `صفحة ${bookmark.page}`);
     bookmark.lastModified = new Date().toISOString();
     this._commitBookmarks();
     return true;
@@ -501,9 +526,10 @@ class QuranApp {
   updateBookmarkIcon(page) {
     const icon = document.getElementById("bookmarkIcon");
     if (!icon) return;
+    const isKhatma = this.getKhatmaBookmark()?.page === page;
     const has = this.bookmarkedPagesSet.has(page);
-    icon.textContent = has ? "⭐" : "🔖";
-    icon.title = has ? "علامة مرجعية موجودة" : "إضافة علامة مرجعية";
+    icon.textContent = isKhatma ? "🚩" : has ? "⭐" : "🔖";
+    icon.title = isKhatma ? "علامة الختمة" : has ? "علامة مرجعية موجودة" : "إضافة علامة مرجعية";
   }
 
   // ---------- Export / import des données utilisateur ----------
@@ -576,7 +602,8 @@ class QuranApp {
       if (pins && pins.every(AppUtils.isValidSurahId)) this.pinnedSurahs = [...pins];
     }
 
-    this.bookmarks.sort((a, b) => a.page - b.page);
+    this._dedupeKhatma();
+    this._sortBookmarks();
     this._updateBookmarkedPagesSet();
     this._migrateBookmarks();
   }
