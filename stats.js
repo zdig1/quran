@@ -501,9 +501,10 @@ class StatsManager {
        <div class="stats-set-card">
          <div class="stats-set-head">
            <span class="stats-set-label">🚩 الختمة</span>
-           <span class="stats-set-sub">${khatmaSub}</span>
+<span class="stats-set-sub" id="sub_khatma">${khatmaSub}</span>
          </div>
-         <div class="stats-set-row">
+         <div class="stats-set-actions">${khatmaActions}</div>
+         <div class="stats-set-row secondary">
            <span>✅ ختمات منجزة</span>
            <div class="stats-stepper stats-stepper-sm">
              <button type="button" class="stats-step-btn" data-target="count" data-d="-1" aria-label="إنقاص">−</button>
@@ -511,16 +512,16 @@ class StatsManager {
              <button type="button" class="stats-step-btn" data-target="count" data-d="1" aria-label="زيادة">+</button>
            </div>
          </div>
-         <div class="stats-set-actions">${khatmaActions}</div>
        </div>
 
-       <button type="button" class="stats-save-btn" id="set_save">حفظ وإغلاق</button>
+       <button type="button" class="stats-save-btn" id="set_save">تم</button>
 
        <div class="stats-danger">
-         <button type="button" class="stats-reset-btn" id="set_reset">🗑️ إعادة تعيين الإحصائيات</button>
          ${undoBtn}
-       </div>`,
+         <button type="button" class="stats-reset-btn" id="set_reset">🗑️ إعادة تعيين الإحصائيات</button>
+        </div>`,
       (dialog, cleanup) => {
+        dialog.classList.add('stats-settings-dialog');
         const input = dialog.querySelector('#val_daily');
         const countEl = dialog.querySelector('#val_count');
         const countMinus = dialog.querySelector('[data-target="count"][data-d="-1"]');
@@ -550,7 +551,14 @@ class StatsManager {
           if (countVal !== k.count) this._setKhatmaCount(countVal);
           this.save();
         };
-
+        // Applique tout de suite : stockage + page stats derrière (plus de perte à la fermeture)
+        const live = () => {
+          commit();
+          const m = this._khatmaMarker();
+          const sub = dialog.querySelector('#sub_khatma');
+          if (sub) sub.textContent = m ? `${m.name} · ص ${m.page}` : 'لا توجد ختمة جارية';
+          if (this._container) this._renderUI(this._container);
+        };
         refresh(g.daily);
         setCount(k.count);
 
@@ -559,17 +567,22 @@ class StatsManager {
             const d = Number(b.dataset.d);
             if (b.dataset.target === 'goal') refresh(Math.max(0, newVal + d));
             else setCount(countVal + d);
+            live();
           })
         );
 
         dialog.querySelectorAll('.stats-preset').forEach((b) =>
-          b.addEventListener('click', () => refresh(Number(b.dataset.v)))
+          b.addEventListener('click', () => {
+            refresh(Number(b.dataset.v));
+            live();
+          })
         );
 
         input.addEventListener('input', (e) => {
           let val = parseInt(e.target.value, 10) || 0;
           if (val < 0) val = 0;
           refresh(val, true);
+          live();
         });
 
         input.addEventListener('keydown', (e) => {

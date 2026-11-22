@@ -3031,7 +3031,7 @@
 }
 
 /* ============================================================
-  stats : styles dédiés à l'overlay des statistiques
+   stats : styles dédiés à l'overlay des statistiques
    ============================================================ */
 
 @layer app {
@@ -3053,7 +3053,7 @@
     box-shadow: var(--shadow);
   }
 
-  /* --- 1. Objectif quotidien (Barre horizontale) --- */
+  /* --- 1. Série (carte du haut) --- */
   .stats-goal-header {
     display: flex;
     flex-direction: column;
@@ -3093,10 +3093,10 @@
     background: var(--border);
   }
 
-  .stats-goal-numbers {
+  .stats-streak-value {
     display: flex;
-    justify-content: space-between;
     align-items: flex-end;
+    gap: 6px;
     margin-bottom: 4px;
   }
 
@@ -3105,10 +3105,6 @@
     font-weight: 800;
     color: var(--primary);
     line-height: 1;
-  }
-
-  .stats-goal-current.red-text {
-    color: var(--color-red);
   }
 
   .stats-goal-target {
@@ -3134,44 +3130,12 @@
     transition: width 0.3s ease;
   }
 
-  .stats-goal-bar-fill.red-fill {
-    background: var(--color-red);
-  }
-
-  .stats-goal-bar-text {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.7rem;
-    font-weight: 800;
-    z-index: 2;
-    white-space: nowrap;
-    pointer-events: none;
-  }
-
-  .stats-goal-bar-text.inside {
-    left: 6px;
-    right: auto;
-    color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  }
-
-  .stats-goal-bar-text.outside {
-    right: 100%;
-    left: auto;
-    margin-right: 8px;
-    color: var(--color-red);
-    text-shadow: none;
-  }
-
-  .stats-hizb-equivalence {
+  .stats-streak-foot {
+    display: flex;
+    justify-content: space-between;
     font-size: var(--text-sm);
-    color: var(--primary);
     font-weight: 600;
-    background: var(--primary-light);
-    padding: 4px 12px;
-    border-radius: 20px;
-    align-self: center;
+    color: var(--text-light);
   }
 
   /* --- En-têtes de section --- */
@@ -3184,11 +3148,15 @@
     font-size: var(--text-md);
   }
 
-  /* --- Bloc résumé (Total / Moyenne / Jours atteints) --- */
+  .stats-header-total small {
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  /* --- Bloc résumé 28 jours (Total / Moyenne / Jours atteints) --- */
   .stats-summary-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    /* <-- 3 colonnes au lieu de 2 */
     gap: 6px;
     margin-bottom: var(--space-md);
   }
@@ -3198,7 +3166,6 @@
     border: 1px solid var(--border);
     border-radius: var(--border-radius);
     padding: 8px 4px;
-    /* Un peu moins de padding pour que ça rentre */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -3206,7 +3173,12 @@
     gap: 2px;
   }
 
-  /* On réduit un peu la taille des textes pour que ça rentre dans 3 cases */
+  .stats-summary-label {
+    font-size: 0.7rem;
+    color: var(--text-light);
+    font-weight: 600;
+  }
+
   .stats-summary-value {
     font-size: 1.4rem;
     font-weight: 800;
@@ -3223,7 +3195,6 @@
   /* --- 2. Barres des 7 derniers jours --- */
   .stats-7days-bars {
     padding-top: 18px;
-    /* place pour le chiffre de la plus haute barre */
   }
 
   .stats-plot {
@@ -3246,6 +3217,18 @@
     background: var(--primary-light);
     border-radius: 4px 4px 0 0;
     transition: height 0.3s ease;
+  }
+
+  .stats-7days-bar.full {
+    background: var(--primary);
+  }
+
+  .stats-7days-bar.partial {
+    background: var(--color-red);
+  }
+
+  .stats-7days-bar.active {
+    border: 2px solid var(--text);
   }
 
   .stats-goal-line {
@@ -3283,24 +3266,6 @@
     font-weight: 600;
     color: var(--text-light);
   }
-
-  .stats-header-total small {
-    font-size: 0.7rem;
-    font-weight: 600;
-  }
-
-  .stats-7days-bar.full {
-    background: var(--primary);
-  }
-
-  .stats-7days-bar.partial {
-    background: var(--color-red);
-  }
-
-  .stats-7days-bar.active {
-    border: 2px solid var(--text);
-  }
-
 
   /* --- 3. Grille Calendrier (28 Jours) --- */
   .stats-month-grid {
@@ -3353,66 +3318,7 @@
     border-color: var(--text);
   }
 
-  /* --- Mini-overlay d'édition des objectifs --- */
-  .stats-goal-editor {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-lg);
-    padding: var(--space-sm);
-  }
-
-  .stats-goal-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--space-sm) 0;
-  }
-
-  .stats-goal-row-label {
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .stats-goal-row-sub {
-    font-size: var(--text-sm);
-    color: var(--text-light);
-    display: block;
-    margin-top: 2px;
-  }
-
-  .stats-counter {
-    display: flex;
-    align-items: center;
-    background: var(--surface-alt);
-    border: 1px solid var(--border);
-    border-radius: var(--border-radius);
-    padding: 4px 8px;
-  }
-
-  .stats-counter-input {
-    width: 60px;
-    background: transparent;
-    border: none;
-    color: var(--text);
-    font-size: var(--text-lg);
-    font-weight: bold;
-    text-align: center;
-    outline: none;
-    font-family: inherit;
-  }
-
-  .stats-counter-input::-webkit-outer-spin-button,
-  .stats-counter-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-
-  .stats-counter-input[type=number] {
-    -moz-appearance: textfield;
-    appearance: textfield;
-  }
-
-  /* --- Deux cercles --- */
+  /* --- 4. Deux cercles (objectif jour + khatma) --- */
   .stats-rings {
     display: flex;
     gap: var(--space-md);
@@ -3485,141 +3391,24 @@
     margin-top: 2px;
   }
 
-  /* --- Équivalence hizb en bas de la carte 28 jours --- */
-  .stats-card>.stats-hizb-equivalence {
-    display: table;
-    margin: var(--space-md) auto 0;
-  }
-
-  /* --- Formule de calcul dans les paramètres --- */
-  /* --- Raccourcis d'objectif (paramètres) --- */
-  .stats-presets {
-    display: flex;
-    gap: var(--space-sm);
-  }
-
-  .stats-preset {
-    flex: 1;
-    padding: 10px 0;
-    background: var(--surface-alt);
-    border: 1px solid var(--border);
-    border-radius: var(--border-radius);
-    font-size: var(--text-lg);
-    font-weight: 700;
-    color: var(--text);
-    font-family: inherit;
-    cursor: pointer;
-  }
-
-  .stats-preset.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: white;
-  }
-
-  .stats-khatma-line {
-    text-align: center;
-    font-weight: 700;
-    color: var(--primary);
-    background: var(--primary-light);
-    padding: 8px 12px;
-    border-radius: 20px;
-  }
-
-  .stats-streak-value {
-    display: flex;
-    align-items: flex-end;
-    gap: 6px;
-    margin-bottom: 4px;
-  }
-
-  .stats-streak-foot {
-    display: flex;
-    justify-content: space-between;
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--text-light);
-  }
-
-  /* --- Boutons des dialogues en colonne --- */
-  .confirm-buttons.col {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .confirm-btn.danger {
-    color: var(--color-red);
-    border-color: var(--color-red);
-  }
-
-  /* --- Marque de khatma dans la liste des signets --- */
-  .item-bookmark.bookmark-khatma {
-    background-color: var(--primary-light);
-    border: 1px solid var(--primary);
-    border-radius: 8px;
-  }
-
-  .khatma-btn {
-    width: 100%;
-    margin: 8px 0 0;
-  }
-
-  /* --- Section khatma dans les réglages --- */
-  .stats-set-section {
-    margin-top: var(--space-md);
-    padding-top: var(--space-md);
-    border-top: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-  }
-
-  .stats-set-title {
-    font-weight: 700;
-    text-align: center;
-  }
-
-  .stats-set-note {
-    text-align: center;
-    font-size: var(--text-sm);
-    color: var(--text-light);
-  }
-
-  .stats-tools {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-sm);
-    margin-top: var(--space-lg);
-    padding-top: var(--space-md);
-    border-top: 1px solid var(--border);
-  }
-
-  .stats-reset-btn,
-  .stats-undo-btn {
-    background: none;
-    border: none;
-    font-family: inherit;
-    font-size: var(--text-sm);
-    font-weight: 600;
-    cursor: pointer;
-    padding: 6px;
-  }
-
-  .stats-reset-btn {
-    color: var(--color-red);
-  }
-
-  .stats-undo-btn {
-    color: var(--primary);
-  }
-
-  /* --- Fenêtre des réglages --- */
+  /* --- 5. Dialogue des réglages --- */
   .stats-dlg-title {
     font-size: var(--text-lg);
     font-weight: 800;
     text-align: center;
     margin-bottom: var(--space-md);
+  }
+
+  .confirm-dialog.stats-settings-dialog {
+    max-width: 31.25rem;
+    max-height: 80vh;
+  }
+
+  .stats-set-row.secondary {
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-sm);
+    font-size: var(--text-sm);
+    color: var(--text-light);
   }
 
   .stats-set-card {
@@ -3677,7 +3466,7 @@
     gap: var(--space-sm);
   }
 
-  /* Stepper  −  valeur  + */
+  /* Stepper − valeur + */
   .stats-stepper {
     display: flex;
     align-items: center;
@@ -3757,7 +3546,31 @@
     font-weight: 800;
   }
 
-  /* Raccourcis à l'intérieur de la carte */
+  /* Raccourcis d'objectif */
+  .stats-presets {
+    display: flex;
+    gap: var(--space-sm);
+  }
+
+  .stats-preset {
+    flex: 1;
+    padding: 10px 0;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .stats-preset.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+  }
+
   .stats-set-card .stats-preset {
     background: var(--surface);
     padding: 8px 0;
@@ -3770,7 +3583,7 @@
     color: #fff;
   }
 
-  /* Boutons d'action de la carte khatma (remplace l'ancienne règle) */
+  /* Boutons d'action (khatma, etc.) */
   .stats-action-btn {
     background: var(--surface);
     color: var(--text);
@@ -3812,6 +3625,47 @@
     flex-direction: column;
     align-items: center;
     gap: 4px;
+  }
+
+  .stats-reset-btn,
+  .stats-undo-btn {
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px;
+  }
+
+  .stats-reset-btn {
+    color: var(--color-red);
+  }
+
+  .stats-undo-btn {
+    color: var(--primary);
+  }
+
+  /* --- Boutons de confirmation en colonne (utilisés par les dialogues stats) --- */
+  .confirm-buttons.col {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .confirm-btn.danger {
+    color: var(--color-red);
+    border-color: var(--color-red);
+  }
+
+  .item-bookmark.bookmark-khatma {
+    background-color: var(--primary-light);
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+  }
+
+  .khatma-btn {
+    width: 100%;
+    margin: 8px 0 0;
   }
 }
 

@@ -565,13 +565,16 @@ class QuranApp {
   importUserData(jsonString, merge = false) {
     try {
       const imported = JSON.parse(jsonString);
-      if (!imported || !Array.isArray(imported.bookmarks)) throw new Error("Format inconnu");
-      const allValid = imported.bookmarks.every(
-        (b) => b && typeof b === "object" && AppUtils.isValidPage(b.page),
-      );
-      if (!allValid) throw new Error("Signets invalides");
+      const hasBookmarks = Array.isArray(imported?.bookmarks);
+      if (!imported || (!hasBookmarks && !imported.stats)) throw new Error("Format inconnu");
 
-      this._importBookmarksAndPins(imported, merge);
+      if (hasBookmarks) {
+        const allValid = imported.bookmarks.every(
+          (b) => b && typeof b === "object" && AppUtils.isValidPage(b.page),
+        );
+        if (!allValid) throw new Error("Signets invalides");
+        this._importBookmarksAndPins(imported, merge);
+      }
       this._importReciters(imported, merge);
       this._importPageAndTheme(imported);
       if (imported.stats && window.statsManager) {

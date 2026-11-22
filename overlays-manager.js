@@ -880,7 +880,9 @@ class OverlayManager {
 
   async exportBookmarks() {
     const app = window.quranApp;
-    if (!app.bookmarks?.length && !app.pinnedSurahs?.length && !this._hasPinnedReciters()) {
+    const st = window.statsManager?.data;
+    const hasStats = Object.keys(st?.pages || {}).length > 0 || (st?.khatma?.count || 0) > 0;
+    if (!app.bookmarks?.length && !app.pinnedSurahs?.length && !this._hasPinnedReciters() && !hasStats) {
       app.showToast("⚠️ لا توجد بيانات للتصدير");
       return;
     }
@@ -891,8 +893,7 @@ class OverlayManager {
     if (hasNativeShare()) {
       window.plugins.socialsharing.shareWithOptions(
         {
-          message: "نسخة احتياطية من العلامات المرجعية والسور المفضلة",
-          subject: fileName,
+          message: "نسخة احتياطية: العلامات المرجعية، السور المفضلة والإحصائيات", subject: fileName,
           files: [dataUrl],
           chooserTitle: "حفظ أو مشاركة الملف",
         },
