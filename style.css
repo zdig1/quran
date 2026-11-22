@@ -943,10 +943,11 @@
     color: var(--text-light);
     font-weight: 700;
   }
+
 }
 
 /* ============================================================
-   COUCHE app — écrans de l'application : lecteur, sourates, signets, recherche, tafsir, audio…
+   COUCHE app — écrans de l'application : lecteur, signets, recherche, tafsir...
    ============================================================ */
 @layer app {
 
@@ -1060,27 +1061,6 @@
   .autoscroll-speed-btn:disabled {
     opacity: 0.3;
     pointer-events: none;
-  }
-
-  .tafsir-font-btn {
-    flex: 0 0 auto;
-    width: 2.5rem;
-    height: 2.5rem;
-    background: var(--color-white);
-    border: 1px solid var(--border);
-    color: var(--primary);
-    border-radius: 50%;
-    font-size: 1.2rem;
-    font-weight: bold;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: var(--transition-default);
-  }
-
-  .tafsir-font-btn:hover {
-    background: var(--primary-light);
   }
 
   .autoscroll-group {
@@ -1204,6 +1184,265 @@
     transition: all 0.2s ease;
     z-index: 10;
   }
+
+  /*  Marque-pages  */
+  .bookmarks-overlay-content {
+    width: 100%;
+    padding: 5px 10px 10px 10px;
+    margin: 0;
+  }
+
+  .bookmarks-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .bookmarks-add-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    flex-direction: row-reverse;
+    margin-top: 5px;
+    padding: 0;
+  }
+
+  .bookmarks-add-form .search-input {
+    flex: 1;
+    min-width: 120px;
+    padding: var(--space-md);
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    width: 100%;
+  }
+
+  .bookmarks-add-form .btn {
+    flex: 0 0 auto;
+    padding: var(--space-md) var(--space-lg);
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .item-bookmark.editing-bookmark {
+    background-color: var(--primary-light);
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+  }
+
+  .bookmarks-button-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .bookmark-line2 {
+    margin-top: 4px;
+    padding-right: 45px;
+  }
+
+  /*  Sauvegarde  */
+  .backup-body {
+    padding: 16px;
+  }
+
+  .backup-title {
+    margin-bottom: 12px;
+    line-height: 1.8;
+  }
+
+  .backup-list {
+    line-height: 2;
+  }
+
+  .backup-body .confirm-buttons {
+    margin-top: 20px;
+  }
+
+  /*  Aller à une page  */
+  .page-input-body {
+    padding: 16px;
+  }
+
+  .page-input-body p {
+    text-align: right;
+    margin: 0 0 12px 0;
+  }
+
+  .page-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #pageInputField {
+    flex: 1;
+    direction: ltr;
+    text-align: right;
+    margin: 0;
+  }
+
+  /*  À propos  */
+  .about-content {
+    flex: 1;
+    width: auto;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    padding: var(--space-md);
+    gap: var(--space-sm);
+    color: var(--text);
+    text-align: justify;
+    text-align-last: right;
+  }
+
+  .about-content strong {
+    color: var(--text);
+    font-weight: bold;
+  }
+
+  .about-title {
+    text-align: center;
+    font-size: var(--text-lg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .about-version {
+    font-size: var(--text-sm);
+    color: var(--text-light);
+  }
+
+  .about-desc {
+    font-size: var(--text-md);
+    line-height: 1.7;
+    color: var(--text);
+    text-align: justify;
+  }
+
+  .about-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+    margin: var(--space-md) 0;
+  }
+
+  .about-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    padding: var(--space-md);
+    gap: 0.25rem;
+  }
+
+  .about-stat span {
+    font-size: var(--text-sm);
+    color: var(--text-light);
+  }
+
+  .about-stat strong {
+    font-size: var(--text-lg);
+    font-weight: bold;
+    color: var(--text);
+  }
+
+  .about-footer {
+    text-align: center;
+    text-align-last: center;
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    line-height: 1.8;
+    margin-top: auto;
+    padding-top: var(--space-md);
+  }
+
+  .about-footer a {
+    color: var(--text-light);
+    text-decoration: none;
+  }
+
+  .contact-grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 15px 0;
+  }
+
+  .contact-box-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 5px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius-lg);
+    text-decoration: none;
+    transition: var(--transition-default);
+    min-height: 60px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text);
+  }
+
+  .contact-box-item:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+
+  .contact-box-item span {
+    font-size: var(--text-sm);
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .contact-box-item:active {
+    transform: scale(0.96);
+    filter: brightness(0.95);
+  }
+
+  .about-credits-line {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: var(--text-sm);
+    line-height: 1.8;
+    text-align: center;
+    text-align-last: center;
+    color: var(--text-light);
+  }
+
+  .about-credits-line span {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .about-credits-line a {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+
+  .about-credits-line a:hover,
+  .about-credits-line a:focus-visible {
+    opacity: 0.75;
+  }
+
+}
+
+/* ============================================================
+   COUCHE app —  surah, juz
+   ============================================================ */
+@layer app {
 
   /*  Sourates  */
   .item-surah {
@@ -1539,104 +1778,12 @@
     margin-bottom: 4px;
   }
 
-  /*  Marque-pages  */
-  .bookmarks-overlay-content {
-    width: 100%;
-    padding: 5px 10px 10px 10px;
-    margin: 0;
-  }
+}
 
-  .bookmarks-list {
-    flex: 1;
-    overflow-y: auto;
-  }
-
-  .bookmarks-add-form {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    flex-direction: row-reverse;
-    margin-top: 5px;
-    padding: 0;
-  }
-
-  .bookmarks-add-form .search-input {
-    flex: 1;
-    min-width: 120px;
-    padding: var(--space-md);
-    border: 1px solid #ccc;
-    border-radius: var(--border-radius);
-    width: 100%;
-  }
-
-  .bookmarks-add-form .btn {
-    flex: 0 0 auto;
-    padding: var(--space-md) var(--space-lg);
-    border: none;
-    border-radius: var(--border-radius);
-    font-weight: bold;
-    cursor: pointer;
-  }
-
-  .item-bookmark.editing-bookmark {
-    background-color: var(--primary-light);
-    border: 2px solid var(--primary);
-    border-radius: 8px;
-  }
-
-  .bookmarks-button-container {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-shrink: 0;
-  }
-
-  .bookmark-line2 {
-    margin-top: 4px;
-    padding-right: 45px;
-  }
-
-  /*  Sauvegarde  */
-  .backup-body {
-    padding: 16px;
-  }
-
-  .backup-title {
-    margin-bottom: 12px;
-    line-height: 1.8;
-  }
-
-  .backup-list {
-    line-height: 2;
-  }
-
-  .backup-body .confirm-buttons {
-    margin-top: 20px;
-  }
-
-  /*  Aller à une page  */
-  .page-input-body {
-    padding: 16px;
-  }
-
-  .page-input-body p {
-    text-align: right;
-    margin: 0 0 12px 0;
-  }
-
-  .page-input-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  #pageInputField {
-    flex: 1;
-    direction: ltr;
-    text-align: right;
-    margin: 0;
-  }
+/* ============================================================
+   COUCHE app — RECHERCHE + TAFSIR + TAJWEED + KHATM
+   ============================================================ */
+@layer app {
 
   /*  Khatm et tajweed  */
   .khatm-content {
@@ -1695,8 +1842,6 @@
     padding-right: 10px;
     margin-bottom: 15px;
   }
-
-  /*  Tajweed : couleurs de la légende et mise en forme (remplace le style en ligne du JS)  */
 
   .tajweed-text li {
     margin-bottom: 10px;
@@ -1994,158 +2139,34 @@
     line-height: 1.4;
   }
 
-  /*  À propos  */
-  .about-content {
-    flex: 1;
-    width: auto;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg);
-    padding: var(--space-md);
-    gap: var(--space-sm);
-    color: var(--text);
-    text-align: justify;
-    text-align-last: right;
-  }
-
-  .about-content strong {
-    color: var(--text);
+  /*  Bouton de taille de police Tafsir  */
+  /* (déplacé ici depuis le bloc principal — voir étape 1D) */
+  .tafsir-font-btn {
+    flex: 0 0 auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--color-white);
+    border: 1px solid var(--border);
+    color: var(--primary);
+    border-radius: 50%;
+    font-size: 1.2rem;
     font-weight: bold;
-  }
-
-  .about-title {
-    text-align: center;
-    font-size: var(--text-lg);
-    color: var(--text);
-    line-height: 1.5;
-  }
-
-  .about-version {
-    font-size: var(--text-sm);
-    color: var(--text-light);
-  }
-
-  .about-desc {
-    font-size: var(--text-md);
-    line-height: 1.7;
-    color: var(--text);
-    text-align: justify;
-  }
-
-  .about-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-md);
-    margin: var(--space-md) 0;
-  }
-
-  .about-stat {
-    display: flex;
-    flex-direction: column;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--surface-alt);
-    border: 1px solid var(--border);
-    border-radius: var(--border-radius);
-    padding: var(--space-md);
-    gap: 0.25rem;
-  }
-
-  .about-stat span {
-    font-size: var(--text-sm);
-    color: var(--text-light);
-  }
-
-  .about-stat strong {
-    font-size: var(--text-lg);
-    font-weight: bold;
-    color: var(--text);
-  }
-
-  .about-footer {
-    text-align: center;
-    text-align-last: center;
-    font-size: var(--text-sm);
-    color: var(--text-light);
-    line-height: 1.8;
-    margin-top: auto;
-    padding-top: var(--space-md);
-  }
-
-  .about-footer a {
-    color: var(--text-light);
-    text-decoration: none;
-  }
-
-  .contact-grid-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    margin: 15px 0;
-  }
-
-  .contact-box-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 5px;
-    background: var(--surface-alt);
-    border: 1px solid var(--border);
-    border-radius: var(--border-radius-lg);
-    text-decoration: none;
-    transition: var(--transition-default);
-    min-height: 60px;
     cursor: pointer;
-    font-family: inherit;
-    color: var(--text);
+    transition: var(--transition-default);
   }
 
-  .contact-box-item:hover {
-    border-color: var(--primary);
+  .tafsir-font-btn:hover {
     background: var(--primary-light);
   }
+}
 
-  .contact-box-item span {
-    font-size: var(--text-sm);
-    font-weight: bold;
-    text-align: center;
-  }
-
-  .contact-box-item:active {
-    transform: scale(0.96);
-    filter: brightness(0.95);
-  }
-
-  .about-credits-line {
-    margin-top: 1.25rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: var(--text-sm);
-    line-height: 1.8;
-    text-align: center;
-    text-align-last: center;
-    color: var(--text-light);
-  }
-
-  .about-credits-line span {
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .about-credits-line a {
-    color: var(--primary);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    white-space: nowrap;
-    transition: opacity 0.15s;
-  }
-
-  .about-credits-line a:hover,
-  .about-credits-line a:focus-visible {
-    opacity: 0.75;
-  }
+/* ============================================================
+   COUCHE app —  audio, memorisation
+   ============================================================ */
+@layer app {
 
   /* --- Audio --- */
   .audio-body {
@@ -2229,37 +2250,6 @@
     height: 12px;
     background-color: var(--border-dark);
     display: inline-block;
-  }
-
-  /* Panneau de réglages inline dans l'overlay mémorisation */
-  .mem-settings-panel {
-    margin-top: 8px;
-    padding: 12px;
-    border-top: 1px solid var(--border-color, rgba(0, 0, 0, .08));
-    border-radius: 12px;
-    background: var(--surface-2, rgba(0, 0, 0, .02));
-    animation: memPanelIn .18s ease-out;
-  }
-
-  .mem-settings-panel[hidden] {
-    display: none;
-  }
-
-  @keyframes memPanelIn {
-    from {
-      opacity: 0;
-      transform: translateY(-4px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* état visuel du bouton toggle */
-  .mem-edit-btn[aria-expanded="true"] {
-    background: var(--accent-weak, rgba(26, 94, 37, .12));
   }
 
   .audio-select-grid {
@@ -3593,21 +3583,6 @@
     text-align: center;
     font-size: var(--text-sm);
     color: var(--text-light);
-  }
-
-  .stats-action-btn {
-    background: var(--surface-alt);
-    color: var(--text);
-    border: 1px solid var(--border);
-    padding: 10px 12px;
-    border-radius: var(--border-radius);
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-  }
-
-  .stats-action-btn:active {
-    background: var(--border);
   }
 
   .stats-tools {
