@@ -297,7 +297,8 @@ class StatsManager {
       <div class="stats-card">
         <div class="stats-section-header">
           <span>📅 آخر 7 أيام</span>
-<span class="stats-header-total">المجموع: ${sum7} صفحة <small>(${this._pagesToHizb(sum7)} حزب)</small></span>        </div>
+          <span class="stats-header-total">${sum7} ص <small>(${this._pagesToHizb(sum7)} حزب)</small></span>
+        </div>
         <div class="stats-7days-bars">
           ${this._render7DaysBars()}
         </div>
@@ -338,7 +339,7 @@ class StatsManager {
   }
 
   _render7DaysBars() {
-    const daysAbbr = ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'];
+    const daysAbbr = ['أحـ', 'إثـ', 'ثلـ', 'أر', 'خمـ', 'جمـ', 'سبـ'];
     const gDaily = this.data.goals.daily;
     const today = new Date();
 
