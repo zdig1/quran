@@ -1054,8 +1054,8 @@ class QuranAudioPlayer {
       });
     };
 
-    addOptions(pinned, '⭐ المفضلون');
-    addOptions(normal, '📖 جميع القراء');
+    addOptions(pinned, '🌟 المفضلون');
+    addOptions(normal, '🎙️ جميع القراء');
 
     if (this.currentReciter) {
       CustomSelect.setValue('reciterSelect', 'reciterSelectList', this.currentReciter.id);

@@ -1149,7 +1149,7 @@ class TafsirSearchManager {
     window.overlayManager?.closeOverlay("search");
     setTimeout(() => {
       window.quranApp?.goToPage(ayaInfo.page);
-      window.quranApp?.showToast(`📖 ${ayaInfo.sura} - الآية ${ayaInfo.aya_n}`);
+      window.quranApp?.showToast(`🔍 ${ayaInfo.sura} - الآية ${ayaInfo.aya_n}`);
       window.overlayManager?.flashAya({ s: Number(sura), a: Number(aya) }, ayaInfo.page);
     }, 200);
   }

@@ -1,11 +1,14 @@
 // ============================================================
 //  FICHIER : stats.js
-//  Rôle : gestion des statistiques de lecture et des objectifs
+//  Rôle : statistiques de lecture, série de jours, khatma, objectifs
 // ============================================================
 
 class StatsManager {
   constructor() {
     this.storageKey = `quran_stats_${window.APP_ID}`;
+    this.TOTAL = 604;
+    this.MILESTONES = [3, 7, 14, 30, 60, 100, 200, 365];
+    this._container = null;
     this.data = this._loadData();
   }
 
@@ -13,9 +16,11 @@ class StatsManager {
 
   _loadData() {
     const defaultData = {
-      pages: {},        // { "2026-11-20": count }
-      pagesSet: {},     // { "2026-11-20": [1,2,3,...] }
-      goals: { daily: 10 }
+      pages: {},
+      pagesSet: {},
+      goals: { daily: 10 },
+      streak: { current: 0, best: 0, lastDay: null },
+      khatma: { pages: [], count: 0 }
     };
 
     try {
@@ -26,12 +31,21 @@ class StatsManager {
       const data = {
         pages: parsed.pages || {},
         pagesSet: parsed.pagesSet || {},
-        goals: { daily: parsed.goals?.daily ?? defaultData.goals.daily }
+        goals: { daily: parsed.goals?.daily ?? defaultData.goals.daily },
+        streak: {
+          current: parsed.streak?.current || 0,
+          best: parsed.streak?.best || 0,
+          lastDay: parsed.streak?.lastDay || null
+        },
+        khatma: {
+          pages: Array.isArray(parsed.khatma?.pages)
+            ? [...new Set(parsed.khatma.pages.filter((p) => Number.isInteger(p) && p >= 1 && p <= 604))]
+            : [],
+          count: parsed.khatma?.count || 0
+        }
       };
 
-      // ✅ Nettoyage immédiat : pages 28 jours, pagesSet aujourd'hui seulement
-      const today = new Date().toLocaleDateString('en-CA');
-
+      const today = this._getDateKey();
       Object.keys(data.pagesSet).forEach((date) => {
         if (date !== today) delete data.pagesSet[date];
       });
@@ -60,6 +74,12 @@ class StatsManager {
     return date.toLocaleDateString('en-CA');
   }
 
+  _yesterdayKey() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return this._getDateKey(d);
+  }
+
   _pagesToHizb(pages) {
     return (pages / 10).toFixed(1).replace('.0', '');
   }
@@ -70,34 +90,86 @@ class StatsManager {
     return this.data.pagesSet[today];
   }
 
+  // Nombre de jours pour une khatma avec N pages/jour (arrondi au-dessus)
+  _khatmaDays(perDay) {
+    return perDay > 0 ? Math.max(1, Math.floor(this.TOTAL / perDay)) : 0;
+  }
+
   // ---------- 2. Logique d'enregistrement ----------
 
-  // ✅ Appelée par quran-reader.js quand une page est quittée après >= 10s
+  // Appelée par quran-reader.js quand une page est quittée après >= 10s
   commitPageRead(page) {
-    if (!page || page < 1 || page > 604) return;
+    if (!page || page < 1 || page > this.TOTAL) return;
+
+    const khatmaChanged = this._addToKhatma(page);
 
     const todaySet = this._todaySet();
-
-    // Anti-doublon journalier : si déjà comptée aujourd'hui, on ignore
-    if (todaySet.includes(page)) return;
+    if (todaySet.includes(page)) {
+      if (khatmaChanged) this.save();
+      return;
+    }
 
     todaySet.push(page);
     const today = this._getDateKey();
     this.data.pages[today] = todaySet.length;
 
-    // ✅ Nettoyage pagesSet : on ne garde QUE aujourd'hui
     Object.keys(this.data.pagesSet).forEach((date) => {
       if (date !== today) delete this.data.pagesSet[date];
     });
 
-    // ✅ Nettoyage pages : on ne garde QUE les 28 derniers jours
     const keys = Object.keys(this.data.pages).sort();
     if (keys.length > 28) {
       const toDelete = keys.length - 28;
       for (let i = 0; i < toDelete; i++) delete this.data.pages[keys[i]];
     }
 
+    this._updateStreak();
     this.save();
+  }
+
+  // Khatma : pages uniques de la khatma en cours. Retourne true si modifié.
+  _addToKhatma(page) {
+    const k = this.data.khatma;
+    // Khatma terminée : la prochaine page lue démarre une nouvelle khatma
+    if (k.pages.length >= this.TOTAL) k.pages = [];
+    if (k.pages.includes(page)) return false;
+    k.pages.push(page);
+    if (k.pages.length === this.TOTAL) k.count++;
+    return true;
+  }
+  // Jours consécutifs validés d'après l'historique (28 jours max)
+  _historyStreak() {
+    const goal = this.data.goals.daily;
+    const threshold = goal > 0 ? goal : 1;
+    const d = new Date();
+    // Aujourd'hui pas encore validé : on compte à partir d'hier
+    if ((this.data.pages[this._getDateKey(d)] || 0) < threshold) d.setDate(d.getDate() - 1);
+    let n = 0;
+    while (n < 28 && (this.data.pages[this._getDateKey(d)] || 0) >= threshold) {
+      n++;
+      d.setDate(d.getDate() - 1);
+    }
+    return n;
+  }
+  _updateStreak() {
+    const s = this.data.streak;
+    const today = this._getDateKey();
+    const goal = this.data.goals.daily;
+    const threshold = goal > 0 ? goal : 1;
+
+    if ((this.data.pages[today] || 0) < threshold) return;
+    if (s.lastDay === today) return;
+
+    const base = s.lastDay === this._yesterdayKey() ? s.current + 1 : 1;
+    s.current = Math.max(base, this._historyStreak());
+    s.best = Math.max(s.best, s.current);
+    s.lastDay = today;
+  }
+
+  _currentStreak() {
+    const s = this.data.streak;
+    const stored = (s.lastDay === this._getDateKey() || s.lastDay === this._yesterdayKey()) ? s.current : 0;
+    return Math.max(stored, this._historyStreak());
   }
 
   // ---------- 3. Interface Utilisateur (Rendu) ----------
@@ -117,23 +189,30 @@ class StatsManager {
     om.showOverlay("stats");
   }
 
+  _ringHtml(percent, reached) {
+    const colorClass = reached ? 'green' : 'red';
+    return `
+      <div class="stats-ring ${colorClass}" style="--p:${percent}">
+        <div class="stats-ring-inner">
+          <span class="stats-ring-pct ${colorClass}">${percent}%</span>
+        </div>
+      </div>`;
+  }
+
   _renderUI(container) {
-    const today = this.data.pages[this._getDateKey()] || 0;
+    this._container = container;
+    const todayKey = this._getDateKey();
+    const today = this.data.pages[todayKey] || 0;
     const gDaily = this.data.goals.daily;
 
-    // --- Calculs 7 jours ---
+    // --- 7 jours ---
     let sum7 = 0;
-    let daysGoalReached7 = 0;
     for (let i = 0; i < 7; i++) {
       const d = new Date(); d.setDate(d.getDate() - i);
-      const p = this.data.pages[this._getDateKey(d)] || 0;
-      sum7 += p;
-      if (gDaily > 0 && p >= gDaily) daysGoalReached7++;
+      sum7 += this.data.pages[this._getDateKey(d)] || 0;
     }
-    const avg7 = (sum7 / 7).toFixed(1);
-    const percent7 = Math.round((daysGoalReached7 / 7) * 100);
 
-    // --- Calculs 28 jours ---
+    // --- 28 jours ---
     let sum28 = 0;
     let daysGoalReached28 = 0;
     for (let i = 0; i < 28; i++) {
@@ -145,74 +224,86 @@ class StatsManager {
     const avg28 = (sum28 / 28).toFixed(1);
     const percent28 = Math.round((daysGoalReached28 / 28) * 100);
 
-    // --- Calcul de la barre du jour ---
-    let percentToday = 0;
-    let isGoalReached = false;
+    // --- Série ---
+    const streak = this._currentStreak();
+    if (streak > this.data.streak.best) { this.data.streak.best = streak; this.save(); }
+    const best = this.data.streak.best;
+    const nextMilestone = this.MILESTONES.find((m) => m > streak) || streak || 1;
+    const streakPct = Math.min(100, Math.round((streak / nextMilestone) * 100));
+
+    // --- Cercle objectif du jour ---
+    const percentToday = gDaily > 0 ? Math.min(100, Math.round((today / gDaily) * 100)) : 0;
+    const goalReached = gDaily > 0 && today >= gDaily;
+    let goalNote = '';
     if (gDaily > 0) {
-      percentToday = Math.min(100, Math.round((today / gDaily) * 100));
-      isGoalReached = percentToday >= 100;
+      goalNote = goalReached ? 'أحسنت! ✅' : `بقي ${gDaily - today} صفحة`;
+    } else {
+      goalNote = 'الهدف معطل';
     }
 
-    const fillClass = isGoalReached ? '' : 'red-fill';
-    const textClass = isGoalReached ? '' : 'red-text';
-
-    const TEXT_INSIDE_THRESHOLD = 15;
-    const textPosClass = percentToday < TEXT_INSIDE_THRESHOLD ? 'outside' : 'inside';
+    // --- Cercle khatma ---
+    const kPages = this.data.khatma.pages.length;
+    const kPercent = Math.min(100, Math.round((kPages / this.TOTAL) * 100));
+    const kDone = kPages >= this.TOTAL;
+    const avg7 = sum7 / 7;
+    let kNote = '';
+    if (kDone) {
+      kNote = '🎉 ختمة مكتملة';
+    } else if (avg7 > 0) {
+      kNote = `≈ ${Math.ceil((this.TOTAL - kPages) / avg7)} يوم متبقي`;
+    } else {
+      kNote = `بقي ${this.TOTAL - kPages} صفحة`;
+    }
+    const kCount = this.data.khatma.count;
 
     container.innerHTML = `
-      <!-- 1. Objectif du jour (Barre horizontale) -->
+      <!-- 1. Série -->
       <div class="stats-goal-header">
         <div class="stats-goal-top">
-          <span class="stats-goal-title">🎯 الهدف اليومي</span>
+          <span class="stats-goal-title">🔥 السلسلة</span>
           <button class="stats-edit-btn" id="editGoalsBtn">⚙️ تعديل</button>
         </div>
-        
-        <div class="stats-goal-numbers">
-          <span class="stats-goal-current ${textClass}">${today}</span>
-          <span class="stats-goal-target">/ ${gDaily > 0 ? gDaily : '∞'} ص</span>
+        <div class="stats-streak-value">
+          <span class="stats-goal-current">${streak}</span>
+          <span class="stats-goal-target">يوم</span>
         </div>
-
         <div class="stats-goal-bar-bg">
-          <div class="stats-goal-bar-fill ${fillClass}" style="width: ${percentToday}%">
-            <span class="stats-goal-bar-text ${textPosClass}">${percentToday}%</span>
-          </div>
+          <div class="stats-goal-bar-fill" style="width: ${streakPct}%"></div>
         </div>
-        
-        <div class="stats-hizb-equivalence">
-          ${today} صفحة = ${this._pagesToHizb(today)} حزب
+        <div class="stats-streak-foot">
+          <span>🎯 الهدف التالي: ${nextMilestone} يوم</span>
+          <span>🏆 الرقم القياسي: ${best}</span>
         </div>
       </div>
 
-      <!-- 2. Derniers 7 jours -->
+      <!-- 2. Deux cercles -->
+      <div class="stats-rings">
+        <div class="stats-card stats-ring-card">
+          <div class="stats-ring-title">🎯 الهدف اليومي</div>
+          ${this._ringHtml(percentToday, goalReached)}
+          <div class="stats-ring-sub">${today} / ${gDaily > 0 ? gDaily : '∞'} ص</div>
+          <div class="stats-ring-note">${goalNote}</div>
+        </div>
+        <div class="stats-card stats-ring-card">
+          <div class="stats-ring-title">🚩 الختمة</div>
+          ${this._ringHtml(kPercent, kDone)}
+          <div class="stats-ring-sub">${kPages} / ${this.TOTAL} ص</div>
+          <div class="stats-ring-note">${kNote}</div>
+          ${kCount > 0 ? `<div class="stats-ring-note">✅ ختمات: ${kCount}</div>` : ''}
+        </div>
+      </div>
+
+      <!-- 3. 7 jours -->
       <div class="stats-card">
         <div class="stats-section-header">
           <span>📅 آخر 7 أيام</span>
-        </div>
-        
-        <div class="stats-summary-grid">
-          <div class="stats-summary-box">
-            <span class="stats-summary-label">المجموع</span>
-            <span class="stats-summary-value">${sum7}</span>
-            <span class="stats-summary-hizb">${this._pagesToHizb(sum7)} حزب</span>
-          </div>
-          <div class="stats-summary-box">
-            <span class="stats-summary-label">المعدل</span>
-            <span class="stats-summary-value">${avg7}</span>
-            <span class="stats-summary-hizb">${this._pagesToHizb(avg7)} حزب</span>
-          </div>
-          <div class="stats-summary-box">
-            <span class="stats-summary-label">منجز</span>
-            <span class="stats-summary-value">${percent7}%</span>
-            <span class="stats-summary-hizb">${daysGoalReached7} من 7</span>
-          </div>
-        </div>
-
+<span class="stats-header-total">المجموع: ${sum7} صفحة <small>(${this._pagesToHizb(sum7)} حزب)</small></span>        </div>
         <div class="stats-7days-bars">
           ${this._render7DaysBars()}
         </div>
       </div>
 
-      <!-- 3. Derniers 28 jours -->
+      <!-- 4. 28 jours -->
       <div class="stats-card">
         <div class="stats-section-header">
           <span>🗓️ آخر 28 يوماً</span>
@@ -230,7 +321,7 @@ class StatsManager {
             <span class="stats-summary-hizb">${this._pagesToHizb(avg28)} حزب</span>
           </div>
           <div class="stats-summary-box">
-            <span class="stats-summary-label">منجز</span>
+            <span class="stats-summary-label">الهدف</span>
             <span class="stats-summary-value">${percent28}%</span>
             <span class="stats-summary-hizb">${daysGoalReached28} من 28</span>
           </div>
@@ -239,6 +330,7 @@ class StatsManager {
         <div class="stats-month-grid">
           ${this._renderMonthGrid()}
         </div>
+
       </div>
     `;
 
@@ -246,35 +338,35 @@ class StatsManager {
   }
 
   _render7DaysBars() {
-    const daysAbbr = ['أ', 'إ', 'ث', 'إ', 'خ', 'ج', 'س'];
+    const daysAbbr = ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'];
     const gDaily = this.data.goals.daily;
     const today = new Date();
 
-    let maxPages = 1;
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(today); d.setDate(d.getDate() - i);
-      maxPages = Math.max(maxPages, this.data.pages[this._getDateKey(d)] || 0);
-    }
-
-    let html = '';
+    const days = [];
+    let scale = Math.max(1, gDaily);
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today); d.setDate(d.getDate() - i);
       const pages = this.data.pages[this._getDateKey(d)] || 0;
-
-      const heightPercent = Math.max(6, (pages / maxPages) * 100);
-      const isFull = (pages >= gDaily && gDaily > 0);
-
-      const barClass = `${isFull ? 'full' : 'partial'} ${i === 0 ? 'active' : ''}`;
-
-      html += `
-        <div class="stats-7days-bar-wrapper">
-          <span class="stats-bar-value">${pages}</span>
-          <div class="stats-7days-bar ${barClass}" style="height: ${heightPercent}%"></div>
-          <span class="stats-day-label">${daysAbbr[d.getDay()]}</span>
-        </div>
-      `;
+      scale = Math.max(scale, pages);
+      days.push({ pages, label: daysAbbr[d.getDay()], isToday: i === 0 });
     }
-    return html;
+
+    const cols = days.map(({ pages, isToday }) => {
+      const h = Math.max(4, (pages / scale) * 100);
+      const isFull = gDaily > 0 && pages >= gDaily;
+      return `
+        <div class="stats-plot-col">
+          <span class="stats-bar-value" style="bottom: calc(${h}% + 3px)">${pages}</span>
+          <div class="stats-7days-bar ${isFull ? 'full' : 'partial'} ${isToday ? 'active' : ''}" style="height:${h}%"></div>
+        </div>`;
+    }).join('');
+
+    const labels = days.map((d) => `<span class="stats-day-label">${d.label}</span>`).join('');
+    const line = gDaily > 0
+      ? `<div class="stats-goal-line" style="bottom:${(gDaily / scale) * 100}%"></div>`
+      : '';
+
+    return `<div class="stats-plot">${line}${cols}</div><div class="stats-day-labels">${labels}</div>`;
   }
 
   _renderMonthGrid() {
@@ -313,48 +405,60 @@ class StatsManager {
 
   // ---------- 4. Mini-Overlay Objectifs ----------
 
+  _khatmaText(val) {
+    return val > 0 ? `🚩 ختمة خلال ${this._khatmaDays(val)} يوم` : 'الهدف معطل';
+  }
+
   _showGoalEditor() {
     const g = this.data.goals;
-
-    const rowHtml = (key, label, val) => `
-      <div class="stats-goal-row">
-        <div>
-          <span class="stats-goal-row-label">${label}</span>
-          <span class="stats-goal-row-sub" id="sub_${key}">(${val > 0 ? this._pagesToHizb(val) + ' حزب' : 'معطل'})</span>
-        </div>
-        <div class="stats-counter">
-          <input type="number" class="stats-counter-input" id="val_${key}" 
-                 value="${val}" min="0" inputmode="numeric" data-key="${key}">
-          <span style="color: var(--text-light); font-weight: bold;">ص</span>
-        </div>
-      </div>
-    `;
+    const PRESETS = [5, 10, 20];
 
     window.overlayManager._showBackdropDialog(
       `<h3 style="margin-bottom:15px; text-align:center;">🎯 تعديل الأهداف</h3>
-       <div style="text-align: center; font-size: var(--text-sm); color: var(--text-light); margin-bottom: 10px;">
-         حدد عدد الصفحات التي تريد قراءتها يومياً
-       </div>
        <div class="stats-goal-editor">
-         ${rowHtml('daily', 'الهدف اليومي', g.daily)}
+         <div class="stats-goal-row">
+           <div>
+             <span class="stats-goal-row-label">الهدف اليومي</span>
+             <span class="stats-goal-row-sub" id="sub_daily"></span>
+           </div>
+           <div class="stats-counter">
+             <input type="number" class="stats-counter-input" id="val_daily"
+                    min="0" inputmode="numeric">
+             <span style="color: var(--text-light); font-weight: bold;">ص</span>
+           </div>
+         </div>
+         <div class="stats-presets">
+           ${PRESETS.map((n) => `<button type="button" class="stats-preset" data-v="${n}">${n}</button>`).join('')}
+         </div>
+         <div class="stats-khatma-line" id="khatma_calc"></div>
        </div>`,
       (dialog, cleanup) => {
         const input = dialog.querySelector('#val_daily');
+        let newVal = g.daily;
 
-        // Focus + sélection automatique à l'ouverture
-        requestAnimationFrame(() => {
-          input.focus();
-          input.select();
-        });
+        const refresh = (val, fromInput) => {
+          newVal = val;
+          if (!fromInput) input.value = val;
+          dialog.querySelector('#sub_daily').textContent =
+            val > 0 ? `(${this._pagesToHizb(val)} حزب)` : '(معطل)';
+          dialog.querySelector('#khatma_calc').textContent = this._khatmaText(val);
+          dialog.querySelectorAll('.stats-preset').forEach((b) =>
+            b.classList.toggle('active', Number(b.dataset.v) === val)
+          );
+        };
+
+        refresh(g.daily);
+
+        dialog.querySelectorAll('.stats-preset').forEach((b) =>
+          b.addEventListener('click', () => refresh(Number(b.dataset.v)))
+        );
 
         input.addEventListener('input', (e) => {
           let val = parseInt(e.target.value, 10) || 0;
           if (val < 0) val = 0;
-          this.data.goals.daily = val;
-          dialog.querySelector('#sub_daily').textContent = val > 0 ? `(${this._pagesToHizb(val)} حزب)` : '(معطل)';
+          refresh(val, true);
         });
 
-        // Entrée pour valider
         input.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -368,9 +472,11 @@ class StatsManager {
         saveBtn.style.width = "100%";
         saveBtn.textContent = "حفظ وإغلاق";
         saveBtn.addEventListener('click', () => {
+          this.data.goals.daily = newVal;
+          this._updateStreak();
           this.save();
           cleanup(null);
-          this._renderUI(document.getElementById('statsContent'));
+          if (this._container) this._renderUI(this._container);
         });
 
         dialog.appendChild(saveBtn);
@@ -389,7 +495,9 @@ class StatsManager {
 
       goals: { daily: this.data.goals.daily },
       pages: this.data.pages,
-      pagesSet: this.data.pagesSet
+      pagesSet: this.data.pagesSet,
+      streak: this.data.streak,
+      khatma: this.data.khatma
     };
   }
 
@@ -413,14 +521,30 @@ class StatsManager {
           this.data.pages[date] = merged.length;
         }
       }
+      if (importedStats.streak) {
+        const s = this.data.streak;
+        const i = importedStats.streak;
+        s.best = Math.max(s.best, i.best || 0);
+        if ((i.lastDay || '') > (s.lastDay || '')) {
+          s.current = i.current || 0;
+          s.lastDay = i.lastDay;
+        }
+      }
+      if (importedStats.khatma) {
+        const k = this.data.khatma;
+        const i = importedStats.khatma;
+        k.pages = Array.from(new Set([...k.pages, ...(i.pages || [])]));
+        k.count = Math.max(k.count, i.count || 0);
+      }
     } else {
       if (importedStats.pages) this.data.pages = importedStats.pages;
       if (importedStats.pagesSet) this.data.pagesSet = importedStats.pagesSet;
+      if (importedStats.streak) this.data.streak = importedStats.streak;
+      if (importedStats.khatma) this.data.khatma = importedStats.khatma;
     }
 
     this.save();
   }
-
 }
 
 // Démarrage

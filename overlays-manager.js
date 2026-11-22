@@ -402,8 +402,8 @@ class OverlayManager {
 
     container.replaceChildren();
     const pinned = surahs.filter((s) => pinnedIds.includes(s.s_id));
-    if (pinned.length > 0) container.appendChild(section("surah-section-pinned", "⭐ السور المفضلة", pinned));
-    container.appendChild(section("surah-section-all", "📖 جميع السور", surahs));
+    if (pinned.length > 0) container.appendChild(section("surah-section-pinned", "🌟 السور المفضلة", pinned));
+    container.appendChild(section("surah-section-all", "📑 جميع السور", surahs));
 
     const currentId = calc.getFirstSurahForPage(this.getCurrentPage())?.s_id;
     if (currentId) inAllSection(currentId)?.classList.add("current-item");
@@ -1184,7 +1184,7 @@ class OverlayManager {
   shareApp() {
     const appName = window.APP_NAME;
     const appUrl = "https://zdig1.gitlab.io/quran";
-    const shortMessage = `📖${appName}\n تطبيق متكامل لقراءة القرآن الكريم والاستماع إليه ودراسته.      \n يضم التفسير الميسّر، والبحث المتقدم، بالإضافة إلى قواعد التجويد.\n`;
+    const shortMessage = `📗 ${appName}\n تطبيق متكامل لقراءة القرآن الكريم والاستماع إليه ودراسته.      \n يضم التفسير الميسّر، والبحث المتقدم، بالإضافة إلى قواعد التجويد.\n`;
 
     if (hasNativeShare()) {
       window.plugins.socialsharing.shareWithOptions(

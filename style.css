@@ -3222,34 +3222,71 @@
 
   /* --- 2. Barres des 7 derniers jours --- */
   .stats-7days-bars {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    height: 90px;
+    padding-top: 18px;
+    /* place pour le chiffre de la plus haute barre */
   }
 
-  .stats-7days-bar-wrapper {
+  .stats-plot {
+    position: relative;
+    height: 70px;
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stats-plot-col {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    height: 100%;
-    gap: 4px;
-  }
-
-  .stats-bar-value {
-    font-size: 0.7rem;
-    color: var(--text-light);
-    font-weight: 700;
+    position: relative;
   }
 
   .stats-7days-bar {
+    position: absolute;
+    bottom: 0;
+    left: 20%;
     width: 60%;
     background: var(--primary-light);
-    border-radius: 4px;
+    border-radius: 4px 4px 0 0;
     transition: height 0.3s ease;
-    min-height: 6px;
+  }
+
+  .stats-goal-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 2px dashed var(--text-light);
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .stats-bar-value {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    font-size: 0.7rem;
+    line-height: 1;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+
+  .stats-day-labels {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-top: 4px;
+  }
+
+  .stats-day-label {
+    display: flex;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-light);
+  }
+
+  .stats-header-total small {
+    font-size: 0.7rem;
+    font-weight: 600;
   }
 
   .stats-7days-bar.full {
@@ -3264,11 +3301,6 @@
     border: 2px solid var(--text);
   }
 
-  .stats-day-label {
-    font-size: 0.75rem;
-    color: var(--text-light);
-    font-weight: 600;
-  }
 
   /* --- 3. Grille Calendrier (28 Jours) --- */
   .stats-month-grid {
@@ -3378,6 +3410,130 @@
   .stats-counter-input[type=number] {
     -moz-appearance: textfield;
     appearance: textfield;
+  }
+
+  /* --- Deux cercles --- */
+  .stats-rings {
+    display: flex;
+    gap: var(--space-md);
+  }
+
+  .stats-ring-card {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-md) var(--space-sm);
+  }
+
+  .stats-ring-title {
+    font-weight: 700;
+    margin-bottom: var(--space-sm);
+  }
+
+  .stats-ring {
+    --ring-color: var(--color-red);
+    width: 110px;
+    height: 110px;
+    margin: 0 auto var(--space-sm);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: conic-gradient(var(--ring-color) calc(var(--p) * 1%), var(--border) 0);
+  }
+
+  .stats-ring.green {
+    --ring-color: var(--primary);
+  }
+
+  .stats-ring-inner {
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    background: var(--surface);
+    display: grid;
+    place-items: center;
+  }
+
+  .stats-ring-pct {
+    font-size: 1.4rem;
+    font-weight: 800;
+  }
+
+  .stats-ring-pct.red {
+    color: var(--color-red);
+  }
+
+  .stats-ring-pct.green {
+    color: var(--primary);
+  }
+
+  .stats-ring-sub {
+    font-weight: 700;
+  }
+
+  .stats-ring-note {
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    margin-top: 2px;
+  }
+
+  /* --- Équivalence hizb en bas de la carte 28 jours --- */
+  .stats-card>.stats-hizb-equivalence {
+    display: table;
+    margin: var(--space-md) auto 0;
+  }
+
+  /* --- Formule de calcul dans les paramètres --- */
+  /* --- Raccourcis d'objectif (paramètres) --- */
+  .stats-presets {
+    display: flex;
+    gap: var(--space-sm);
+  }
+
+  .stats-preset {
+    flex: 1;
+    padding: 10px 0;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .stats-preset.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+  }
+
+  .stats-khatma-line {
+    text-align: center;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--primary-light);
+    padding: 8px 12px;
+    border-radius: 20px;
+  }
+
+  .stats-streak-value {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  .stats-streak-foot {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-light);
   }
 }
 

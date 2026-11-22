@@ -22,6 +22,7 @@ const CORE_ASSETS = [
   "./tafsir-search.js",
   "./quran-audio.js",
   "./version.js",
+  "./stats.js",
   // Données
   "./data/quran.json",
   "./data/tafsir.json",
