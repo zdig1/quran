@@ -1173,7 +1173,7 @@ class QuranReader {
         this._on(this.orientationMedia, "change", onChange);
         return;
       } catch {
-        /* anciens navigateurs : repli sur orientationchange */
+        /* repli sur orientationchange */
       }
     }
     this._on(window, "orientationchange", () => this._handleOrientationChange());

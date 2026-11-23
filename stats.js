@@ -20,7 +20,6 @@ class StatsManager {
     return Number.isInteger(p) && p >= 1 && p <= this.TOTAL;
   }
 
-  // Normalise des données brutes (stockage, import, restauration)
   _parse(raw) {
     const p = raw || {};
     const data = {
@@ -80,7 +79,6 @@ class StatsManager {
     return this.data.pagesSet[today];
   }
 
-  // Nombre de jours pour lire `pages` pages à `perDay` pages/jour (arrondi vers le bas, minimum 1)
   _khatmaDays(perDay, pages = this.TOTAL) {
     return perDay > 0 ? Math.max(1, Math.floor(pages / perDay)) : 0;
   }
@@ -106,13 +104,11 @@ class StatsManager {
     this.save();
   }
 
-  // Série en cours et record : calculés depuis l'historique avec l'objectif actuel
   _streaks() {
     const goal = this.data.goals.daily;
     const threshold = goal > 0 ? goal : 1;
     const ok = (d) => (this.data.pages[this._getDateKey(d)] || 0) >= threshold;
 
-    // Série en cours : aujourd'hui, ou à partir d'hier si aujourd'hui n'est pas encore validé
     const d = new Date();
     if (!ok(d)) d.setDate(d.getDate() - 1);
     let current = 0;
@@ -121,7 +117,6 @@ class StatsManager {
       d.setDate(d.getDate() - 1);
     }
 
-    // Record : plus longue suite de jours validés dans l'historique conservé
     const keys = Object.keys(this.data.pages).sort();
     let best = 0;
     let run = 0;
@@ -172,7 +167,7 @@ class StatsManager {
     if (m && m.name !== name) app.updateBookmark(m.id, name);
     if (this._container) this._renderUI(this._container);
   }
-  // Corrige le nombre de khatmas ; le nom par défaut « ختمة N » reste synchronisé
+
   _setKhatmaCount(n) {
     const k = this.data.khatma;
     const marker = this._khatmaMarker();
@@ -180,6 +175,7 @@ class StatsManager {
     k.count = Math.max(0, n);
     if (wasDefault) window.quranApp?.updateBookmark(marker.id, this.defaultKhatmaName());
   }
+
   async _khatmaRestartDialog() {
     const om = window.overlayManager;
     const choice = await om._showBackdropDialog(
@@ -216,7 +212,6 @@ class StatsManager {
         </div>`;
     }
 
-    // Pages terminées = pages avant la marque, à partir de la page de départ
     const done = (marker.page - k.start + this.TOTAL) % this.TOTAL;
     const remaining = this.TOTAL - done;
     const last = done >= this.TOTAL - 1;
@@ -545,13 +540,11 @@ class StatsManager {
           countMinus.disabled = countVal === 0;
         };
 
-        // Enregistre les réglages saisis avant toute action qui ferme ce dialogue
         const commit = () => {
           this.data.goals.daily = newVal;
           if (countVal !== k.count) this._setKhatmaCount(countVal);
           this.save();
         };
-        // Applique tout de suite : stockage + page stats derrière (plus de perte à la fermeture)
         const live = () => {
           commit();
           const m = this._khatmaMarker();
@@ -592,7 +585,6 @@ class StatsManager {
           }
         });
 
-        // Khatma : nouvelle khatma / démarrage
         dialog.querySelector('#set_khatma_new')?.addEventListener('click', () => {
           commit();
           cleanup(null);

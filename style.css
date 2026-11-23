@@ -2139,8 +2139,6 @@
     line-height: 1.4;
   }
 
-  /*  Bouton de taille de police Tafsir  */
-  /* (déplacé ici depuis le bloc principal — voir étape 1D) */
   .tafsir-font-btn {
     flex: 0 0 auto;
     width: 2.5rem;
@@ -2320,7 +2318,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* Garde l'alignement vertical des boutons de l'overlay */
     margin: 0.2rem 0;
   }
 
@@ -2390,9 +2387,7 @@
   .audio-btn {
     font-size: 1.2rem;
     width: var(--btn-sm);
-    /* 32px */
     height: var(--btn-sm);
-    /* 32px */
     border: none;
     background: transparent;
     color: var(--text);
@@ -2402,9 +2397,7 @@
     align-items: center;
     justify-content: center;
     padding: 0;
-    /* Sécurité pour éviter les décalages */
     line-height: 1;
-    /* Évite la line-box parasite du texte */
     transition:
       var(--transition-default),
       transform 0.1s;
@@ -2428,11 +2421,9 @@
     background: var(--surface-alt);
     border-radius: 2rem;
     letter-spacing: 0;
-    /* Corrigé : retire le -3px qui tassait le texte */
     padding: 0 6px;
     min-width: 2.8rem;
     height: var(--btn-sm);
-    /* Aligné sur la même hauteur que les autres boutons */
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2467,7 +2458,6 @@
   .audio-btn.play-main-btn svg {
     display: block;
     width: 30px;
-    /* Corrigé : 30px au lieu de 22px */
     height: 30px;
     flex-shrink: 0;
   }
@@ -2524,7 +2514,6 @@
     display: flex;
     flex: 1;
     align-items: center;
-    /* ✅ Clé de l'alignement vertical */
     justify-content: space-around;
     gap: 0.25rem;
   }
@@ -2533,7 +2522,6 @@
   .audio-mini-bar .audio-btn svg,
   .audio-controls .audio-btn svg {
     display: block;
-    /* ✅ Clé anti-baseline */
     width: 30px;
     height: 30px;
     flex-shrink: 0;
@@ -2630,9 +2618,7 @@
     display: none;
   }
 
-  /* ============================================================
-   MÉMORISATION (Memorize Overlay)
-   ============================================================ */
+  /* ====================   MÉMORISATION (Memorize Overlay)=============== */
 
   /* ---------- Layout global de l'écran ---------- */
   .mem-overlay-body {
@@ -2829,10 +2815,8 @@
     margin-top: 6px;
     gap: 6px;
     width: 100%;
-    /* On laisse le RTL du body, pas de direction: ltr ici */
   }
 
-  /* Chaque référence sourate:aya est forcée en LTR */
   .audio-aya-range .aya-range-ref {
     direction: ltr;
     unicode-bidi: isolate;

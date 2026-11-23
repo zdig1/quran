@@ -207,5 +207,4 @@ class QuranCalculator {
 }
 
 //  DÉMARRAGE
-
 window.quranCalculator = new QuranCalculator();

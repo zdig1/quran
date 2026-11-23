@@ -19,7 +19,7 @@ class AyaContextMenu {
     this.menuEl = null;
     this.pressTimer = null;
     this.pressStart = null;
-    this.currentHit = null; // { s, a, page, rects, text }
+    this.currentHit = null;
     this.bound = false;
     this.globalHandlers = null;
   }
@@ -38,9 +38,6 @@ class AyaContextMenu {
 
     const menu = AppUtils.el("div", "aya-context-menu");
     menu.setAttribute("role", "menu");
-    // Ordre RTL (flex-direction: row-reverse) :
-    // DOM: tafsir → share → play
-    // Visuel (droite → gauche) : play → share → tafsir
     menu.innerHTML = `
       <button type="button" class="aya-menu-btn" data-action="share" role="menuitem" title="مشاركة" aria-label="مشاركة">
         <span class="aya-menu-emoji">🔗</span>
@@ -49,8 +46,7 @@ class AyaContextMenu {
       <button type="button" class="aya-menu-btn" data-action="tafsir" role="menuitem" title="تفسير" aria-label="التفسير">
         <span class="aya-menu-emoji">📖</span>
         <span class="aya-menu-label">تفسير</span>
-      </button>
-  
+      </button>  
       <button type="button" class="aya-menu-btn" data-action="play" role="menuitem" title="تشغيل الآية" aria-label="تشغيل الآية">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true">
           <polygon points="8 6 18 12 8 18"/>
@@ -108,7 +104,6 @@ class AyaContextMenu {
 
   _onPointerDown(e) {
     if (e.button !== undefined && e.button !== 0) return;
-    // Ne pas rouvrir si on clique dans le menu lui-même
     if (this.menuEl?.contains(e.target)) return;
 
     const pageWrapper = e.target?.closest?.(".page-wrapper");
@@ -117,7 +112,6 @@ class AyaContextMenu {
     const hit = this._hitTest(e.clientX, e.clientY, pageWrapper);
     if (!hit) return;
 
-    // Capturer les coordonnées MAINTENANT (le PointerEvent peut être recyclé)
     this.pressStart = {
       x: e.clientX,
       y: e.clientY,
@@ -241,7 +235,6 @@ class AyaContextMenu {
     // Clamp horizontal
     left = Math.max(8, Math.min(window.innerWidth - mw - 8, left));
 
-    // Pas assez de place au-dessus → on ouvre en dessous
     if (top < 8) {
       top = clientY + 20;
       below = true;
