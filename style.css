@@ -2863,174 +2863,6 @@
 }
 
 /* ============================================================
-   COUCHE night — exceptions du mode nuit (le reste passe par les variables)
-   ============================================================ */
-@layer night {
-
-  /*  Mode nuit — En-tête et pied de page  */
-  .night-mode .footer-surah,
-  .night-mode .footer-value {
-    background: rgba(30, 30, 30, 0.7);
-  }
-
-  /*  Mode nuit — Boutons  */
-  .night-mode .header-btn {
-    background: rgba(30, 30, 30, 0.7);
-  }
-
-  /*  Mode nuit — Boutons de confirmation  */
-  .night-mode .confirm-btn {
-    border-color: var(--border);
-  }
-
-  .night-mode .confirm-btn.ok {
-    border-color: var(--primary);
-  }
-
-  .night-mode .confirm-btn.ok:hover {
-    color: var(--primary);
-  }
-
-  .night-mode .confirm-btn:not(.ok):hover {
-    border-color: var(--primary);
-  }
-
-  /*  Mode nuit — Boutons spécifiques  */
-  .night-mode .autoscroll-speed-btn {
-    background: #2d2d2d;
-    border-color: var(--border-dark);
-  }
-
-  .night-mode .tafsir-font-btn {
-    border-color: var(--border-dark);
-  }
-
-  /*  Mode nuit — Page et images  */
-  .night-mode .page-image {
-    filter: invert(1) hue-rotate(-180deg);
-    content-visibility: auto;
-  }
-
-  .night-mode .tajweed-image img,
-  .night-mode .khatm-page img {
-    filter: invert(0.93) hue-rotate(180deg) brightness(0.9) contrast(1.1);
-    background-color: var(--bg);
-  }
-
-  /*  Mode nuit — Badges et icônes  */
-  .night-mode .action-icon:hover,
-  .night-mode .action-icon:active {
-    background: rgba(76, 175, 80, 0.2);
-    color: var(--primary);
-  }
-
-  /*  Mode nuit — Recherche    Mode nuit — Tafsir  */
-  .night-mode .sura-title-container {
-    border-bottom-color: var(--primary);
-  }
-
-  /*  Mode nuit — À propos  */
-  .night-mode .contact-box-item {
-    background: var(--surface-alt);
-  }
-
-  /*  Mode nuit — Audio  */
-  .night-mode .audio-current-display {
-    background: rgba(76, 175, 80, 0.15);
-    color: var(--primary);
-    border-color: var(--primary);
-  }
-
-  .night-mode .audio-sleep-pill {
-    border-color: var(--border);
-  }
-
-  .night-mode .audio-sleep-pill:hover {
-    border-color: var(--primary);
-  }
-
-  .night-mode .audio-sleep-pill.active {
-    border-color: var(--primary);
-  }
-
-  .night-mode .audio-warning {
-    background: rgba(255, 193, 7, 0.1);
-    color: #ffb74d;
-  }
-
-  /*  Mode nuit — Menus déroulants  */
-  .night-mode .custom-select-btn {
-    background-color: var(--surface);
-    border-color: var(--border);
-    color: var(--text);
-  }
-
-  .night-mode .custom-select-btn:hover {
-    border-color: var(--primary);
-    background: var(--primary-light);
-  }
-
-  .night-mode .custom-select-btn:focus,
-  .night-mode .custom-select.open .custom-select-btn {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.25);
-  }
-
-  .night-mode .custom-select-dropdown {
-    border-color: var(--border-dark);
-  }
-
-  /*  Mode nuit — Surlignage du verset  */
-  .night-mode .aya-highlight {
-    background: rgba(255, 213, 0, 0.2);
-  }
-}
-
-/* ============================================================
-   COUCHE utils — utilitaires, toujours prioritaires
-   ============================================================ */
-@layer utils {
-  /*  Utilitaires  */
-
-  ::-webkit-scrollbar {
-    width: 0;
-    background: transparent;
-  }
-
-  .error-title {
-    color: var(--color-red);
-  }
-
-  .noscript-fallback {
-    text-align: center;
-    padding: 2rem;
-    font-family: Arial, sans-serif;
-    background: #fff;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 9999;
-  }
-
-  .noscript-title {
-    color: #004494;
-  }
-
-  .hidden {
-    display: none !important;
-  }
-
-  .flex-col-fill {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-}
-
-/* ============================================================
    stats : styles dédiés à l'overlay des statistiques
    ============================================================ */
 
@@ -3676,7 +3508,7 @@
 
   .aya-context-menu {
     position: fixed;
-    z-index: 9999;
+    z-index: 10050;
     display: none;
     flex-direction: row-reverse;
     gap: 0;
@@ -3691,6 +3523,10 @@
     user-select: none;
     -webkit-touch-callout: none;
     overflow: hidden;
+  }
+
+  .aya-context-menu.below {
+    transform-origin: top center;
   }
 
   .aya-context-menu.show {
@@ -3727,7 +3563,6 @@
     position: relative;
   }
 
-  /* Séparateur vertical entre les boutons */
   .aya-context-menu .aya-menu-btn+.aya-menu-btn::before {
     content: "";
     position: absolute;
@@ -3752,7 +3587,6 @@
     outline-offset: -4px;
   }
 
-  /* Icône SVG */
   .aya-context-menu .aya-menu-btn svg {
     width: 24px;
     height: 24px;
@@ -3760,7 +3594,6 @@
     flex-shrink: 0;
   }
 
-  /* Emoji */
   .aya-context-menu .aya-menu-emoji {
     font-size: 1rem;
     line-height: 1;
@@ -3771,7 +3604,6 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Label sous l'icône */
   .aya-context-menu .aya-menu-label {
     font-size: 0.75rem;
     font-weight: 600;
@@ -3781,30 +3613,195 @@
     font-family: "MyNotoKufi", "Segoe UI", sans-serif;
   }
 
-  /* Petit triangle indicateur (flèche vers le bas du menu) */
   .aya-context-menu::after {
     content: "";
     position: absolute;
-    top: -6px;
+    bottom: -6px;
     left: 50%;
     transform: translateX(-50%);
     width: 0;
     height: 0;
     border-left: 7px solid transparent;
     border-right: 7px solid transparent;
-    border-bottom: 7px solid rgba(0, 0, 0, 0.85);
-  }
-
-  /* Si le menu s'affiche en dessous (top > clientY), on inverse la flèche */
-  .aya-context-menu.below::after {
-    top: auto;
-    bottom: -6px;
-    border-bottom: none;
     border-top: 7px solid rgba(0, 0, 0, 0.85);
   }
 
-  /* Mode nuit : même style, c'est déjà sombre */
+  .aya-context-menu.below::after {
+    top: -6px;
+    bottom: auto;
+    border-top: none;
+    border-bottom: 7px solid rgba(0, 0, 0, 0.85);
+  }
+
   .night-mode .aya-context-menu {
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* ============================================================
+   COUCHE night — exceptions du mode nuit (le reste passe par les variables)
+   ============================================================ */
+@layer night {
+
+  /*  Mode nuit — En-tête et pied de page  */
+  .night-mode .footer-surah,
+  .night-mode .footer-value {
+    background: rgba(30, 30, 30, 0.7);
+  }
+
+  /*  Mode nuit — Boutons  */
+  .night-mode .header-btn {
+    background: rgba(30, 30, 30, 0.7);
+  }
+
+  /*  Mode nuit — Boutons de confirmation  */
+  .night-mode .confirm-btn {
+    border-color: var(--border);
+  }
+
+  .night-mode .confirm-btn.ok {
+    border-color: var(--primary);
+  }
+
+  .night-mode .confirm-btn.ok:hover {
+    color: var(--primary);
+  }
+
+  .night-mode .confirm-btn:not(.ok):hover {
+    border-color: var(--primary);
+  }
+
+  /*  Mode nuit — Boutons spécifiques  */
+  .night-mode .autoscroll-speed-btn {
+    background: #2d2d2d;
+    border-color: var(--border-dark);
+  }
+
+  .night-mode .tafsir-font-btn {
+    border-color: var(--border-dark);
+  }
+
+  /*  Mode nuit — Page et images  */
+  .night-mode .page-image {
+    filter: invert(1) hue-rotate(-180deg);
+    content-visibility: auto;
+  }
+
+  .night-mode .tajweed-image img,
+  .night-mode .khatm-page img {
+    filter: invert(0.93) hue-rotate(180deg) brightness(0.9) contrast(1.1);
+    background-color: var(--bg);
+  }
+
+  /*  Mode nuit — Badges et icônes  */
+  .night-mode .action-icon:hover,
+  .night-mode .action-icon:active {
+    background: rgba(76, 175, 80, 0.2);
+    color: var(--primary);
+  }
+
+  /*  Mode nuit — Recherche    Mode nuit — Tafsir  */
+  .night-mode .sura-title-container {
+    border-bottom-color: var(--primary);
+  }
+
+  /*  Mode nuit — À propos  */
+  .night-mode .contact-box-item {
+    background: var(--surface-alt);
+  }
+
+  /*  Mode nuit — Audio  */
+  .night-mode .audio-current-display {
+    background: rgba(76, 175, 80, 0.15);
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .night-mode .audio-sleep-pill {
+    border-color: var(--border);
+  }
+
+  .night-mode .audio-sleep-pill:hover {
+    border-color: var(--primary);
+  }
+
+  .night-mode .audio-sleep-pill.active {
+    border-color: var(--primary);
+  }
+
+  .night-mode .audio-warning {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffb74d;
+  }
+
+  /*  Mode nuit — Menus déroulants  */
+  .night-mode .custom-select-btn {
+    background-color: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  .night-mode .custom-select-btn:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+
+  .night-mode .custom-select-btn:focus,
+  .night-mode .custom-select.open .custom-select-btn {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.25);
+  }
+
+  .night-mode .custom-select-dropdown {
+    border-color: var(--border-dark);
+  }
+
+  /*  Mode nuit — Surlignage du verset  */
+  .night-mode .aya-highlight {
+    background: rgba(255, 213, 0, 0.2);
+  }
+}
+
+/* ============================================================
+   COUCHE utils — utilitaires, toujours prioritaires
+   ============================================================ */
+@layer utils {
+  /*  Utilitaires  */
+
+  ::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+  }
+
+  .error-title {
+    color: var(--color-red);
+  }
+
+  .noscript-fallback {
+    text-align: center;
+    padding: 2rem;
+    font-family: Arial, sans-serif;
+    background: #fff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+  }
+
+  .noscript-title {
+    color: #004494;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  .flex-col-fill {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 }
