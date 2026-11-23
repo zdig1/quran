@@ -671,7 +671,7 @@ class OverlayManager {
     input.placeholder = "اسم العلامة";
     input.value = this.getDefaultBookmarkName(currentPage);
 
-    const addBtn = AppUtils.el("button", "confirm-btn ok", "إضافة");
+    const addBtn = AppUtils.el("button", "confirm-btn ok", "إضافة 🔖");
     const cancelBtn = AppUtils.el("button", "confirm-btn cancel", "لا");
     cancelBtn.style.display = "none";
 

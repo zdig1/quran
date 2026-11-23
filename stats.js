@@ -509,7 +509,7 @@ class StatsManager {
          </div>
        </div>
 
-       <button type="button" class="stats-save-btn" id="set_save">تم</button>
+       <button type="button" class="confirm-btn ok" id="set_save">تم</button>
 
        <div class="stats-danger">
          ${undoBtn}
