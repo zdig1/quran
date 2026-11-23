@@ -484,7 +484,7 @@ class StatsManager {
 
        <div class="stats-set-card">
          <div class="stats-set-head">
-           <span class="stats-set-label">🎯 الهدف اليومي</span>
+          <span class="stats-set-label">🎯 الهدف اليومي (صفحات)</span>
            <span class="stats-set-sub" id="sub_daily"></span>
          </div>
          <div class="stats-stepper">
