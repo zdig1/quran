@@ -494,15 +494,16 @@
         (function () {
             const MODULES = [
                 './version.js',
+                './ui-kit.js',
                 './main.js',
                 './calculator.js',
+                './aya-context-menu.js',
                 './quran-reader.js',
                 './overlays-manager.js',
                 './tafsir-search.js',
                 './quran-audio.js',
                 './stats.js'
             ];
-
             const loadScript = (src) =>
                 new Promise((resolve, reject) => {
                     const script = document.createElement('script');
