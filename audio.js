@@ -81,7 +81,7 @@ const RIWAYAT_CONFIG = (window.RIWAYAT_CONFIG = {
 
 const MEM_OPTIONS = { perVerse: [1, 3, 5, 10], passes: [1, 3, 5, 10], pause: [0, "half", "same", "one_and_half"] };
 const normalizeMemCfg = (saved = {}) => ({
-  perVerse: MEM_OPTIONS.perVerse.includes(saved.perVerse) ? saved.perVerse : 3,
+  perVerse: MEM_OPTIONS.perVerse.includes(saved.perVerse) ? saved.perVerse : 1,
   passes: MEM_OPTIONS.passes.includes(saved.passes) ? saved.passes : 1,
   pause: MEM_OPTIONS.pause.includes(saved.pause) ? saved.pause : 0,
 });

@@ -220,8 +220,8 @@ class StatsManager {
 
     let note;
     if (last) note = '🏁 آخر صفحة';
-    else if (gDaily > 0) note = `≈ ${this._khatmaDays(gDaily, remaining)} يوم متبقي`;
-    else note = `بقي ${remaining} صفحة`;
+    else if (gDaily > 0) note = `متبقي ≈ ${this._khatmaDays(gDaily, remaining)} يوم`;
+    else note = `متبقي ${remaining} صفحة`;
 
     return `
       <div class="stats-card stats-ring-card">
@@ -293,7 +293,7 @@ class StatsManager {
     const goalReached = gDaily > 0 && today >= gDaily;
     let goalNote = '';
     if (gDaily > 0) {
-      goalNote = goalReached ? 'أحسنت! ✅' : `بقي ${gDaily - today} صفحة`;
+      goalNote = goalReached ? 'أحسنت! ✅' : `متبقي ${gDaily - today} صفحة`;
     } else {
       goalNote = 'الهدف معطل';
     }
@@ -343,7 +343,7 @@ class StatsManager {
       <!-- 4. 28 jours -->
       <div class="stats-card">
         <div class="stats-section-header">
-          <span>🗓️ آخر 28 يوماً</span>
+          <span>🗓️ آخر 28 يوم</span>
         </div>
 
         <div class="stats-summary-grid">
@@ -475,7 +475,7 @@ class StatsManager {
       : '';
 
     window.overlayManager._showBackdropDialog(
-      `<div class="stats-dlg-title">⚙️ الإعدادات</div>
+      `<div class="stats-dlg-title">إعدادات الإحصائيات</div>
 
        <div class="stats-set-card">
          <div class="stats-set-head">
