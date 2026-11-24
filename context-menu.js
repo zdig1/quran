@@ -248,8 +248,6 @@ class AyaContextMenu {
 
     menu.style.left = `${left}px`;
     menu.style.top = `${top}px`;
-
-    navigator.vibrate?.(20);
     AppUtils.emit("quran:ayaContextMenuOpened", { s: hit.s, a: hit.a });
   }
 

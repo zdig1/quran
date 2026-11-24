@@ -639,8 +639,9 @@ class OverlayManager {
 
   showConfirm(message) {
     return this._showBackdropDialog(
-      `<p>${message}</p><div class="confirm-buttons"><button class="confirm-btn ok">نعم</button><button class="confirm-btn cancel">لا</button></div>`,
+      `<p class="confirm-msg"></p><div class="confirm-buttons"><button class="confirm-btn ok">نعم</button><button class="confirm-btn cancel">لا</button></div>`,
       (dialog, cleanup) => {
+        dialog.querySelector(".confirm-msg").textContent = message;
         dialog.querySelector(".ok").addEventListener("click", () => cleanup(true));
         dialog.querySelector(".cancel").addEventListener("click", () => cleanup(false));
       }

@@ -1151,7 +1151,6 @@ class QuranReader {
     const app = window.quranApp;
     const om = window.overlayManager;
     const page = this.currentPage;
-    navigator.vibrate?.(30);
     if (!app || app.bookmarkedPagesSet.has(page)) {
       om?.showBookmarks();
       return;
