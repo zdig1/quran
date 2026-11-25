@@ -240,12 +240,11 @@ class StatsManager {
 
   // ---------- 3. Logique d'enregistrement ----------
 
-  // ✅ Fait avancer le marqueur de khatma vers la page lue
   _advanceKhatmaMarker(page) {
     const marker = this._khatmaMarker();
     if (!marker) return;
     if (marker.page === page) return;
-    window.quranApp?.updateBookmark?.(marker.id, { page });
+    window.quranApp?.replaceBookmarkPage?.(marker.id, page);
   }
 
   /**
@@ -875,45 +874,45 @@ class StatsManager {
     this._refreshUI();
   }
 
-_resetStats() {
-  AppStore.setJSON(this.undoKey, this.data); // copie de sécurité pour l'annulation
-  
-  // 1. On efface les données de lecture
-  this.data.pages = {};
-  this.data.pagesSet = {};
-  this.data.time = {};
-  
-  // 2. On efface complètement la khatma (position + compteur)
-  this.data.khatma = { start: 1, count: 0 };
-  
-  // 3. ✅ NOUVEAU : On supprime le marqueur physique de la khatma dans le lecteur
-  const marker = this._khatmaMarker();
-  if (marker && window.quranApp?.removeBookmarkById) {
-    window.quranApp.removeBookmarkById(marker.id);
-  }
-  
-  // 4. On réinitialise la session (pour l'anti-saut)
-  this.data.session = { lastPage: null, lastTimestamp: 0 };
-  
-  this.save();
-}
+  _resetStats() {
+    AppStore.setJSON(this.undoKey, this.data); // copie de sécurité pour l'annulation
 
-_restoreStats() {
-  try {
-    const saved = AppStore.getJSON(this.undoKey);
-    if (!saved) return;
-    this.data = this._parse(saved);
-    AppStore.remove(this.undoKey);
-    
-    // ✅ NOUVEAU : Recréer le marqueur de khatma s'il y en avait un
-    if (this.data.khatma && this.data.khatma.count >= 0) {
-       // Note: si tu stockais la page du marqueur dans le backup, tu pourrais la restaurer ici.
-       // Sinon, on ne peut restaurer que le compteur.
+    // 1. On efface les données de lecture
+    this.data.pages = {};
+    this.data.pagesSet = {};
+    this.data.time = {};
+
+    // 2. On efface complètement la khatma (position + compteur)
+    this.data.khatma = { start: 1, count: 0 };
+
+    // 3. ✅ NOUVEAU : On supprime le marqueur physique de la khatma dans le lecteur
+    const marker = this._khatmaMarker();
+    if (marker && window.quranApp?.removeBookmarkById) {
+      window.quranApp.removeBookmarkById(marker.id);
     }
-    
+
+    // 4. On réinitialise la session (pour l'anti-saut)
+    this.data.session = { lastPage: null, lastTimestamp: 0 };
+
     this.save();
-  } catch { /* ignore */ }
-}
+  }
+
+  _restoreStats() {
+    try {
+      const saved = AppStore.getJSON(this.undoKey);
+      if (!saved) return;
+      this.data = this._parse(saved);
+      AppStore.remove(this.undoKey);
+
+      // ✅ NOUVEAU : Recréer le marqueur de khatma s'il y en avait un
+      if (this.data.khatma && this.data.khatma.count >= 0) {
+        // Note: si tu stockais la page du marqueur dans le backup, tu pourrais la restaurer ici.
+        // Sinon, on ne peut restaurer que le compteur.
+      }
+
+      this.save();
+    } catch { /* ignore */ }
+  }
   // ---------- 8. Export / Import pour Backup ----------
 
   _lastNDaysTime(n = 7) {

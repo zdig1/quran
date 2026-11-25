@@ -99,9 +99,26 @@ class QuranApp {
 
   restoreFromLocalStorage() {
     const bookmarks = AppStore.getJSON(STORAGE_KEYS.bookmarks, []);
+    let repaired = false;
+
     this.bookmarks = (Array.isArray(bookmarks) ? bookmarks : [])
       .filter((b) => b && typeof b === "object" && AppUtils.isValidPage(Number(b.page)))
-      .map((b, i) => this._normalizeBookmark(b, i));
+      .map((b, i) => {
+        const normalized = this._normalizeBookmark(b, i);
+        if (normalized.name && String(normalized.name).includes("[object Object]")) {
+          normalized.name =
+            normalized.type === "khatma"
+              ? "الختمة"
+              : window.overlayManager?.getDefaultBookmarkName?.(normalized.page) || `صفحة ${normalized.page}`;
+          repaired = true;
+        }
+        return normalized;
+      });
+
+    if (repaired) {
+      AppStore.setJSON(STORAGE_KEYS.bookmarks, this.bookmarks);
+    }
+
     this._updateBookmarkedPagesSet();
 
     const page = parseInt(AppStore.get(STORAGE_KEYS.lastPage), 10);
