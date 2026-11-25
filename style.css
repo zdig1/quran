@@ -3192,9 +3192,11 @@
 
   .stats-khatma-start-row {
     display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  .stats-khatma-start-row .stats-action-btn {
+    flex: 1;
   }
 
   /* Stepper − valeur + */

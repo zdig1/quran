@@ -681,10 +681,13 @@ class OverlayManager {
     this.bookmarkFormCancel = cancelBtn;
 
     const container = AppUtils.el("div", "bookmarks-overlay-content");
-    const khatmaBtn = AppUtils.el("button", "confirm-btn khatma-btn", "🏴 علامة الختمة");
-    khatmaBtn.addEventListener("click", () => this._setKhatmaHere(currentPage));
-    container.append(list, form, khatmaBtn); overlay.content.replaceChildren(container);
-
+    container.append(list, form);
+    if (!window.quranApp?.getKhatmaBookmark()) {
+      const khatmaBtn = AppUtils.el("button", "confirm-btn khatma-btn", "🏴 علامة الختمة");
+      khatmaBtn.addEventListener("click", () => this._setKhatmaHere(currentPage));
+      container.append(khatmaBtn);
+    }
+    overlay.content.replaceChildren(container);
     this.setupBookmarkFormHandlers(currentPage);
   }
 
@@ -723,7 +726,6 @@ class OverlayManager {
     const app = window.quranApp;
     const old = app.getKhatmaBookmark();
     if (!old) {
-      window.statsManager?.setKhatmaStart(1);
       app.setKhatmaMarker(page, window.statsManager?.defaultKhatmaName?.());
       app.showToast(`🏴 علامة الختمة في صفحة ${page}`);
       this.refreshBookmarksDisplay();
@@ -837,7 +839,7 @@ class OverlayManager {
     item.querySelector(".icon-btn--remove")?.addEventListener("click", async (e) => {
       e.stopPropagation();
       await this._confirmAndRefresh(
-        `هل تريد حذف العلامة (${AppUtils.esc(bookmark.name)}) ؟`,
+        `هل تريد حذف ${bookmark.type === "khatma" ? "🏴 علامة الختمة" : "العلامة"} (${AppUtils.esc(bookmark.name)}) ؟`,
         () => window.quranApp?.removeBookmarkById(bookmark.id),
         "✖️ تمت إزالة العلامة",
       );

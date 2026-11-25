@@ -12,13 +12,8 @@ class StatsManager {
     this.HISTORY_DAYS = 400;
     this.MILESTONES = [3, 7, 14, 30, 60, 100, 200, 365];
 
-    // Temps maximal compté pour un seul appel legacy (commitPageRead avec elapsedMs)
+    // Temps maximal compté pour une seule page (durée mesurée et envoyée par le lecteur)
     this.MAX_PAGE_MS = 5 * 60 * 1000;
-
-    // Timer actif
-    this.IDLE_TIMEOUT = 120000;   // flush après 2 min sans activité
-    this.POLL_INTERVAL = 3000;    // tick de polling
-    this.POLL_GRACE = 5000;       // laisse le reader gagner s'il pousse commitPageRead
 
     // Anti-saut (pages)
     this.MAX_JUMP = 20;           // saut max toléré entre deux commits
@@ -27,29 +22,6 @@ class StatsManager {
 
     this._container = null;
     this.data = this._loadData();
-
-    // État timer / activité
-    this._readingStart = null;
-    this._lastActivity = null;
-    this._lastManualAt = 0;
-    this._lastPolledPage = null;
-    this._pollTimer = null;
-    this._initialized = false;
-
-    // ✅ La khatma démarre toujours "conceptuellement" à la page 1
-    if (this.data.khatma.start !== 1) {
-      this.data.khatma.start = 1;
-      this.save();
-    }
-  }
-
-  // ---------- 0. Init défensif ----------
-
-  init() {
-    if (this._initialized) return this;
-    this._initialized = true;
-    this._bindTriggers();
-    return this;
   }
 
   // ---------- 1. Persistance & Utilitaires ----------
@@ -62,24 +34,51 @@ class StatsManager {
     return Math.round((n + Number.EPSILON) * 100) / 100;
   }
 
-  _parse(raw) {
-    const p = raw || {};
-    const data = {
-      pages: p.pages || {},
-      pagesSet: p.pagesSet || {},
-      time: p.time || {},
-      goals: { daily: p.goals?.daily ?? 10 },
-      khatma: {
-        start: 1,
-        count: p.khatma?.count || 0
-      },
-      session: p.session || { lastPage: null, lastTimestamp: 0 }
-    };
+  // ---------- Assainissement (données du stockage et des fichiers importés) ----------
 
-    const today = this._getDateKey();
-    Object.keys(data.pagesSet).forEach((date) => {
-      if (date !== today) delete data.pagesSet[date];
-    });
+  _cleanDayMap(obj, max) {
+    const out = {};
+    if (!obj || typeof obj !== "object") return out;
+    for (const [key, value] of Object.entries(obj)) {
+      const n = Math.floor(Number(value));
+      if (/^\d{4}-\d{2}-\d{2}$/.test(key) && Number.isFinite(n) && n >= 0) out[key] = Math.min(n, max);
+    }
+    return out;
+  }
+
+  _cleanTodaySet(obj) {
+    const list = obj && typeof obj === "object" ? obj[this._getDateKey()] : null;
+    if (!Array.isArray(list)) return {};
+    const pages = [...new Set(list.map(Number).filter((p) => this._validPage(p)))];
+    return pages.length ? { [this._getDateKey()]: pages } : {};
+  }
+
+  _cleanDaily(value) {
+    if (value === undefined || value === null) return 10;
+    const n = Math.floor(Number(value));
+    return Number.isFinite(n) ? Math.min(Math.max(n, 0), this.TOTAL) : 10;
+  }
+
+  _cleanCount(value) {
+    const n = Math.floor(Number(value));
+    return Number.isFinite(n) ? Math.min(Math.max(n, 0), 9999) : 0;
+  }
+
+  _parse(raw) {
+    const p = raw && typeof raw === "object" ? raw : {};
+    const lastPage = Number(p.session?.lastPage);
+    const lastTimestamp = Number(p.session?.lastTimestamp);
+    const data = {
+      pages: this._cleanDayMap(p.pages, this.TOTAL),
+      pagesSet: this._cleanTodaySet(p.pagesSet),
+      time: this._cleanDayMap(p.time, 86400),
+      goals: { daily: this._cleanDaily(p.goals?.daily) },
+      khatma: { count: this._cleanCount(p.khatma?.count) },
+      session: {
+        lastPage: this._validPage(lastPage) ? lastPage : null,
+        lastTimestamp: Number.isFinite(lastTimestamp) ? lastTimestamp : 0
+      }
+    };
 
     this._trimHistory(data.pages);
     this._trimHistory(data.time);
@@ -111,7 +110,6 @@ class StatsManager {
     return date.toLocaleDateString("en-CA");
   }
 
-  // ✅ Ancrage à midi : robuste face aux changements d'heure / minuit
   _anchorDate(offsetDays = 0) {
     const d = new Date();
     d.setHours(12, 0, 0, 0);
@@ -141,12 +139,16 @@ class StatsManager {
     return this.data.pagesSet[today];
   }
 
-  _avgLast7DaysPages() {
-    let sum7 = 0;
-    this._forEachDay(7, (_, key) => {
-      sum7 += this.data.pages[key] || 0;
+  _sumPages(days) {
+    let sum = 0;
+    this._forEachDay(days, (_, key) => {
+      sum += this.data.pages[key] || 0;
     });
-    return sum7 / 7;
+    return sum;
+  }
+
+  _avgLast7DaysPages() {
+    return this._sumPages(7) / 7;
   }
 
   _khatmaDays(perDay, pages = this.TOTAL) {
@@ -161,25 +163,7 @@ class StatsManager {
     );
   }
 
-  // ---------- 2. Timer & activité ----------
-
-  _touchActivity() {
-    if (!this._readingStart) this._readingStart = Date.now();
-    this._lastActivity = Date.now();
-  }
-
-  _flushReadingTime() {
-    if (!this._readingStart) return;
-    const sec = Math.floor((Date.now() - this._readingStart) / 1000);
-    if (sec > 0 && sec < 3600) {
-      const today = this._getDateKey();
-      this.data.time[today] = (Number(this.data.time[today]) || 0) + sec;
-      this._trimHistory(this.data.time);
-      this.save();
-    }
-    this._readingStart = null;
-    this._lastActivity = null;
-  }
+  // ---------- 2. Temps de lecture (durée par page, envoyée par le lecteur) ----------
 
   _addReadingTime(ms) {
     const sec = Math.floor(Math.min(Number(ms) || 0, this.MAX_PAGE_MS) / 1000);
@@ -189,94 +173,19 @@ class StatsManager {
     this._trimHistory(this.data.time);
   }
 
-  _bindTriggers() {
-    // Audio = activité (l'utilisateur écoute, il n'est pas AFK)
-    window.addEventListener("quran:audioStateChanged", (e) => {
-      if (e.detail?.isPlaying) this._touchActivity();
-    });
-
-    const onHide = () => {
-      this._flushReadingTime();
-      this.save();
-    };
-    window.addEventListener("pagehide", onHide);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") onHide();
-      else this._touchActivity();
-    });
-
-    this._startPolling();
-  }
-
-  _startPolling() {
-    clearInterval(this._pollTimer);
-    this._pollTimer = setInterval(() => this._pollTick(), this.POLL_INTERVAL);
-  }
-
-  _pollTick() {
-    const page = this._currentPage();
-
-    // Même page : on vérifie juste l'inactivité
-    if (page === this._lastPolledPage) {
-      if (this._readingStart && Date.now() - this._lastActivity > this.IDLE_TIMEOUT) {
-        this._flushReadingTime();
-      }
-      return;
-    }
-
-    // Changement de page = activité
-    this._touchActivity();
-
-    // Le reader a poussé un commit manuel il y a moins de 5 s → on le laisse gérer
-    if (Date.now() - this._lastManualAt < this.POLL_GRACE) {
-      // On ne met PAS à jour _lastPolledPage : on retentera au prochain tick
-      return;
-    }
-
-    // Fallback : le reader ne pousse pas commitPageRead → on prend le relais
-    this.commitPageRead(page, 0, "poll");
-    this._lastPolledPage = page;
-  }
-
   // ---------- 3. Logique d'enregistrement ----------
 
-  _advanceKhatmaMarker(page) {
-    const marker = this._khatmaMarker();
-    if (!marker) return;
-    if (marker.page === page) return;
-    window.quranApp?.replaceBookmarkPage?.(marker.id, page);
-  }
-
-  /**
-   * @param {number} page
-   * @param {number} elapsedMs  Temps mesuré par le reader (0 = utiliser le timer actif)
-   * @param {string} source     "manual" (reader) ou "poll" (fallback interne)
-   */
-  commitPageRead(page, elapsedMs = 0, source = "manual") {
+  commitPageRead(page, elapsedMs = 0) {
     page = Number(page);
     if (!this._validPage(page)) return;
 
-    if (source === "manual") this._lastManualAt = Date.now();
+    this._addReadingTime(elapsedMs);
 
-    // --- 1. Temps ---
-    if (elapsedMs > 0) {
-      // Le reader fournit le temps : on lui fait confiance
-      this._addReadingTime(elapsedMs);
-    } else {
-      // Sinon, on flush le timer actif
-      this._flushReadingTime();
-    }
-    // Repartir un timer propre (évite le double comptage au prochain commit)
-    this._readingStart = Date.now();
-    this._lastActivity = Date.now();
-
-    // --- 2. Anti-saut ---
     const now = Date.now();
     const sess = this.data.session || { lastPage: null, lastTimestamp: 0 };
     const delta = sess.lastPage != null ? page - sess.lastPage : null;
     const dt = now - (sess.lastTimestamp || 0);
 
-    // On met TOUJOURS à jour la session (sinon delta s'accumule)
     this.data.session = { lastPage: page, lastTimestamp: now };
 
     if (delta !== null) {
@@ -284,20 +193,17 @@ class StatsManager {
       const backward = delta <= 0;
       const tooFast = dt < this.FAST_JUMP_SEC && delta > this.FAST_JUMP_PAGES;
       if (tooBig || backward || tooFast) {
-        // Repositionnement sans comptage (comme stats-h)
         this.save();
         return;
       }
     }
 
-    // --- 3. Déduplication (page déjà lue aujourd'hui) ---
     const todaySet = this._todaySet();
     if (todaySet.includes(page)) {
       this.save();
       return;
     }
 
-    // --- 4. Comptage ---
     todaySet.push(page);
     const today = this._getDateKey();
     this.data.pages[today] = todaySet.length;
@@ -306,10 +212,6 @@ class StatsManager {
       if (date !== today) delete this.data.pagesSet[date];
     });
     this._trimHistory(this.data.pages);
-
-    // ✅ Marqueur de khatma avancé avec la lecture
-    this._advanceKhatmaMarker(page);
-
     this.save();
     window.dispatchEvent(new CustomEvent("quran:statsUpdated"));
   }
@@ -356,26 +258,12 @@ class StatsManager {
   }
 
   _formatMarkerSub(marker) {
-    if (!marker) return "لا توجد ختمة جارية";
-
-    // Si marker.name est un objet, on essaye de récupérer une propriété texte (ar, fr, ou la première dispo)
-    let name = marker.name;
-    if (typeof name === "object" && name !== null) {
-      name = name.ar || name.fr || name.en || Object.values(name)[0] || "الختمة";
-    }
-
-    return `${name} · ص ${marker.page}`;
-  }
-
-  setKhatmaStart(page) {
-    this.data.khatma.start = 1;
-    this.save();
+    return marker ? `${marker.name} · ص ${marker.page}` : "حدّد موضع العلامة";
   }
 
   _startKhatma(markerPage) {
     const page = this._validPage(Number(markerPage)) ? Number(markerPage) : 1;
-    this.setKhatmaStart(1);
-
+    this.save();
     const app = window.quranApp;
     const name = this.defaultKhatmaName();
     app?.setKhatmaMarker(page, name);
@@ -416,7 +304,6 @@ class StatsManager {
   }
 
   _khatmaCardHtml() {
-    const k = this.data.khatma;
     const marker = this._khatmaMarker();
 
     if (!marker) {
@@ -429,7 +316,7 @@ class StatsManager {
         </div>`;
     }
 
-    const done = (marker.page - k.start + this.TOTAL) % this.TOTAL;
+    const done = marker.page - 1;
     const remaining = this.TOTAL - done;
     const last = done >= this.TOTAL - 1;
     const percent = last ? 100 : Math.floor((done / this.TOTAL) * 100);
@@ -453,9 +340,6 @@ class StatsManager {
   // ---------- 5. Interface Utilisateur (Rendu) ----------
 
   showOverlay() {
-    // ✅ Flush le temps accumulé avant d'afficher (sinon perdu si pas de tourne-page)
-    this._flushReadingTime();
-
     const om = window.overlayManager;
     om.closeMenu();
     const overlay = om.lazyLoadOverlay("stats");
@@ -484,12 +368,8 @@ class StatsManager {
     const today = this.data.pages[this._getDateKey()] || 0;
     const gDaily = this.data.goals.daily;
 
-    let sum7 = 0;
-    let time7 = 0;
-    this._forEachDay(7, (_, key) => {
-      sum7 += this.data.pages[key] || 0;
-      time7 += Number(this.data.time?.[key]) || 0;
-    });
+    const sum7 = this._sumPages(7);
+    const time7 = Object.values(this._lastNDaysTime(7)).reduce((a, b) => a + b, 0);
 
     let sum28 = 0;
     let daysGoalReached28 = 0;
@@ -555,9 +435,8 @@ class StatsManager {
       <div class="stats-card">
         <div class="stats-section-header">
           <span>📅 آخر 7 أيام</span>
-          <span class="stats-header-total">${sum7} ص </span>
-           <span class="stats-header-total"><small>(${this._pagesToHizb(sum7)} حزب - ${this._formatDuration(time7)})</div></span>
-          </span>
+          <span class="stats-header-total">${sum7} ص</span>
+          <span class="stats-header-total"><small>(${this._pagesToHizb(sum7)} حزب - ${this._formatDuration(time7)})</small></span>
         </div>
         <div class="stats-7days-bars">
           ${this._render7DaysBars()}
@@ -668,7 +547,7 @@ class StatsManager {
   // ---------- 6. Mini-Overlay Objectifs ----------
 
   _khatmaText(val) {
-    return val > 0 ? `🏴 ختمة خلال ${this._khatmaDays(val)} يوم` : "الهدف معطل";
+    return val > 0 ? `ختمة خلال ${this._khatmaDays(val)} يوم` : "الهدف معطل";
   }
 
   _hasUndo() {
@@ -684,9 +563,9 @@ class StatsManager {
     if (marker) {
       khatmaActions = `<button type="button" class="stats-action-btn" id="set_khatma_new">🏁 ختمة جديدة</button>`;
     } else {
-      const page1Btn = `<button type="button" class="stats-action-btn" data-khatma-start="1">🏴 من الصفحة 1</button>`;
+      const page1Btn = `<button type="button" class="stats-action-btn" data-khatma-start="1">صفحة 1</button>`;
       const curBtn = cur > 1
-        ? `<button type="button" class="stats-action-btn" data-khatma-start="${cur}">🏴 من الصفحة ${cur}</button>`
+        ? `<button type="button" class="stats-action-btn" data-khatma-start="${cur}">صفحة ${cur}</button>`
         : "";
       khatmaActions = `<div class="stats-khatma-start-row">${page1Btn}${curBtn}</div>`;
     }
@@ -787,7 +666,7 @@ class StatsManager {
     dialog.querySelectorAll(".stats-step-btn").forEach((b) =>
       b.addEventListener("click", () => {
         const d = Number(b.dataset.d);
-        if (b.dataset.target === "goal") refresh(Math.max(0, newVal + d));
+        if (b.dataset.target === "goal") refresh(Math.min(this.TOTAL, Math.max(0, newVal + d)));
         else setCount(countVal + d);
         live();
       })
@@ -803,7 +682,8 @@ class StatsManager {
     input.addEventListener("input", (e) => {
       let val = parseInt(e.target.value, 10) || 0;
       if (val < 0) val = 0;
-      refresh(val, true);
+      if (val > this.TOTAL) val = this.TOTAL;
+      refresh(val);
       live();
     });
 
@@ -853,10 +733,10 @@ class StatsManager {
     const om = window.overlayManager;
     const ok = await om._showBackdropDialog(
       `<h3 style="margin-bottom:10px; text-align:center;">⚠️ إعادة تعيين الإحصائيات</h3>
-<p style="text-align:center; line-height:1.8;">
-  سيتم حذف: سجل القراءة، السلسلة والرقم القياسي، وعدد الختمات المنجزة، <b>وعلامة الختمة الحالية</b>.<br>
-  لن يُحذف: الهدف اليومي والعلامات المرجعية الأخرى.
-</p>
+        <p style="text-align:center; line-height:1.8;">
+        سيتم حذف: سجل القراءة، السلسلة والرقم القياسي، وعدد الختمات المنجزة، <b>وعلامة الختمة الحالية</b>.
+          لن يُحذف: العلامات المرجعية الأخرى.
+        </p>
        <div class="confirm-buttons col">
          <button class="confirm-btn ok" id="rs_backup">💾 حفظ نسخة احتياطية أولاً</button>
          <button class="confirm-btn danger" id="rs_delete">🗑️ حذف نهائي</button>
@@ -875,23 +755,22 @@ class StatsManager {
   }
 
   _resetStats() {
-    AppStore.setJSON(this.undoKey, this.data); // copie de sécurité pour l'annulation
+    const marker = this._khatmaMarker();
+    AppStore.setJSON(this.undoKey, {
+      ...this.data,
+      khatmaMarker: marker ? { page: marker.page, name: String(marker.name || "") } : null,
+    });
 
-    // 1. On efface les données de lecture
     this.data.pages = {};
     this.data.pagesSet = {};
     this.data.time = {};
 
-    // 2. On efface complètement la khatma (position + compteur)
-    this.data.khatma = { start: 1, count: 0 };
-
-    // 3. ✅ NOUVEAU : On supprime le marqueur physique de la khatma dans le lecteur
-    const marker = this._khatmaMarker();
+    this.data.khatma = { count: 0 };
+    this.data.goals = { daily: this._cleanDaily(undefined) };
     if (marker && window.quranApp?.removeBookmarkById) {
       window.quranApp.removeBookmarkById(marker.id);
     }
 
-    // 4. On réinitialise la session (pour l'anti-saut)
     this.data.session = { lastPage: null, lastTimestamp: 0 };
 
     this.save();
@@ -904,15 +783,15 @@ class StatsManager {
       this.data = this._parse(saved);
       AppStore.remove(this.undoKey);
 
-      // ✅ NOUVEAU : Recréer le marqueur de khatma s'il y en avait un
-      if (this.data.khatma && this.data.khatma.count >= 0) {
-        // Note: si tu stockais la page du marqueur dans le backup, tu pourrais la restaurer ici.
-        // Sinon, on ne peut restaurer que le compteur.
+      const m = saved.khatmaMarker;
+      if (m && this._validPage(Number(m.page)) && !this._khatmaMarker()) {
+        window.quranApp?.setKhatmaMarker?.(Number(m.page), String(m.name || "").slice(0, 100) || undefined);
       }
 
       this.save();
     } catch { /* ignore */ }
   }
+
   // ---------- 8. Export / Import pour Backup ----------
 
   _lastNDaysTime(n = 7) {
@@ -934,50 +813,42 @@ class StatsManager {
       pagesSet: this.data.pagesSet,
       time: this.data.time,
       time7Days: this._lastNDaysTime(7),
-      khatma: { start: this.data.khatma.start, count: this.data.khatma.count }
+      khatma: { count: this.data.khatma.count }
     };
   }
 
   importData(importedStats, merge = false) {
-    if (!importedStats) return;
+    if (!importedStats || typeof importedStats !== "object") return;
+
+    const pages = this._cleanDayMap(importedStats.pages, this.TOTAL);
+    const pagesSet = this._cleanTodaySet(importedStats.pagesSet);
+    const time = this._cleanDayMap(importedStats.time || importedStats.time7Days, 86400);
+
     if (importedStats.goals?.daily !== undefined) {
-      this.data.goals.daily = importedStats.goals.daily;
+      this.data.goals.daily = this._cleanDaily(importedStats.goals.daily);
     }
 
-    const incomingTime = importedStats.time || importedStats.time7Days || null;
-
     if (merge) {
-      if (importedStats.pages) {
-        for (const [date, count] of Object.entries(importedStats.pages)) {
-          this.data.pages[date] = Math.max(this.data.pages[date] || 0, Number(count) || 0);
-        }
+      for (const [date, count] of Object.entries(pages)) {
+        this.data.pages[date] = Math.max(this.data.pages[date] || 0, count);
       }
-      if (importedStats.pagesSet) {
-        for (const [date, pagesArr] of Object.entries(importedStats.pagesSet)) {
-          const existing = this.data.pagesSet[date] || [];
-          const merged = Array.from(new Set([...existing, ...pagesArr]));
-          this.data.pagesSet[date] = merged;
-          this.data.pages[date] = merged.length;
-        }
+      for (const [date, pagesArr] of Object.entries(pagesSet)) {
+        const merged = Array.from(new Set([...(this.data.pagesSet[date] || []), ...pagesArr]));
+        this.data.pagesSet[date] = merged;
+        this.data.pages[date] = merged.length;
       }
-      if (incomingTime) {
-        for (const [date, sec] of Object.entries(incomingTime)) {
-          this.data.time[date] = Math.max(Number(this.data.time[date]) || 0, Number(sec) || 0);
-        }
+      for (const [date, sec] of Object.entries(time)) {
+        this.data.time[date] = Math.max(Number(this.data.time[date]) || 0, sec);
       }
       if (importedStats.khatma) {
-        const k = this.data.khatma;
-        k.count = Math.max(k.count, Number(importedStats.khatma.count) || 0);
+        this.data.khatma.count = Math.max(this.data.khatma.count, this._cleanCount(importedStats.khatma.count));
       }
     } else {
-      if (importedStats.pages) this.data.pages = importedStats.pages;
-      if (importedStats.pagesSet) this.data.pagesSet = importedStats.pagesSet;
-      if (incomingTime) this.data.time = { ...incomingTime };
+      if (importedStats.pages) this.data.pages = pages;
+      if (importedStats.pagesSet) this.data.pagesSet = pagesSet;
+      if (importedStats.time || importedStats.time7Days) this.data.time = time;
       if (importedStats.khatma) {
-        this.data.khatma = {
-          start: 1,
-          count: Number(importedStats.khatma.count) || 0
-        };
+        this.data.khatma = { count: this._cleanCount(importedStats.khatma.count) };
       }
     }
 
@@ -988,11 +859,3 @@ class StatsManager {
 }
 
 window.statsManager = new StatsManager();
-
-// ✅ Init défensif : app prête → event → fallback 3 s
-if (window.quranApp?.isInitialized) {
-  setTimeout(() => window.statsManager.init(), 100);
-} else {
-  window.addEventListener("quran:appReady", () => window.statsManager.init(), { once: true });
-}
-setTimeout(() => window.statsManager.init(), 3000);

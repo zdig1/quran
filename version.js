@@ -50,8 +50,12 @@
 
   function safeUrl(raw) {
     if (typeof raw !== "string") return null;
-    const trimmed = raw.trim();
-    return /^https?:\/\//i.test(trimmed) ? trimmed : null;
+    try {
+      const url = new URL(raw.trim());
+      return url.protocol === "https:" ? url.href : null;
+    } catch {
+      return null;
+    }
   }
 
   function safeColor(raw) {
@@ -108,7 +112,7 @@
     document.body.prepend(banner);
 
     banner.querySelector("#download-btn").addEventListener("click", () => {
-      if (url) window.open(url, window.cordova ? "_system" : "_blank");
+      if (url) window.open(url, window.cordova ? "_system" : "_blank", "noopener");
     });
     banner.querySelector("#close-btn").addEventListener("click", () => {
       dismissedVersion = app.version;

@@ -105,13 +105,7 @@ class QuranApp {
       .filter((b) => b && typeof b === "object" && AppUtils.isValidPage(Number(b.page)))
       .map((b, i) => {
         const normalized = this._normalizeBookmark(b, i);
-        if (normalized.name && String(normalized.name).includes("[object Object]")) {
-          normalized.name =
-            normalized.type === "khatma"
-              ? "الختمة"
-              : window.overlayManager?.getDefaultBookmarkName?.(normalized.page) || `صفحة ${normalized.page}`;
-          repaired = true;
-        }
+        if (normalized.name !== b.name) repaired = true; // nom absent, illisible ("[object Object]") ou trop long
         return normalized;
       });
 
@@ -232,11 +226,24 @@ class QuranApp {
 
   _normalizeBookmark(bookmark, index = 0) {
     const page = Number(bookmark.page);
+    const isKhatma = bookmark.type === "khatma";
+    const text = (value, max) => (typeof value === "string" ? value.trim().slice(0, max) : "");
+
+    // Le nom est toujours du texte : valeur absente ou corrompue → nom par défaut
+    let name = text(bookmark.name, 100);
+    if (!name || name.includes("[object Object]")) {
+      name = isKhatma ? "الختمة" : window.overlayManager?.getDefaultBookmarkName?.(page) || `صفحة ${page}`;
+    }
+
+    // Seuls les champs connus sont conservés (les signets importés peuvent venir d'un fichier externe)
+    const surahId = Number(bookmark.surahId);
     return {
-      ...bookmark,
+      id: text(bookmark.id, 64) || this._makeBookmarkId(page, index),
+      name,
       page,
-      id: bookmark.id || this._makeBookmarkId(page, index),
-      lastModified: bookmark.lastModified || bookmark.date || new Date().toISOString(),
+      ...(isKhatma ? { type: "khatma" } : {}),
+      ...(AppUtils.isValidSurahId(surahId) ? { surahId } : {}),
+      lastModified: text(bookmark.lastModified || bookmark.date, 40) || new Date().toISOString(),
     };
   }
 
@@ -392,7 +399,7 @@ class QuranApp {
   }
 
   _importBookmarksAndPins(imported, merge) {
-    const incoming = imported.bookmarks.map((b, i) => this._normalizeBookmark(b, i));
+    const incoming = imported.bookmarks.slice(0, 2000).map((b, i) => this._normalizeBookmark(b, i));
     const pins = Array.isArray(imported.pinnedSurahs) ? imported.pinnedSurahs : null;
 
     if (merge) {
@@ -416,11 +423,14 @@ class QuranApp {
 
     if (pinnedReciters && typeof pinnedReciters === "object") {
       Object.entries(pinnedReciters).forEach(([riwaya, ids]) => {
-        if (!Array.isArray(ids)) return;
+        const reciters = this._riwayas().includes(riwaya) ? window.RIWAYAT_CONFIG[riwaya]?.reciters : null;
+        if (!reciters || !Array.isArray(ids)) return;
+        const known = new Set(reciters.map((r) => r.id));
+        const valid = ids.filter((id) => typeof id === "string" && known.has(id));
         const key = `pinnedReciters_${riwaya}`;
         const existing = merge ? this.getPreferenceJSON(key, []) : [];
         const base = Array.isArray(existing) ? existing : [];
-        this.setPreferenceJSON(key, [...new Set([...base, ...ids])]);
+        this.setPreferenceJSON(key, [...new Set([...base, ...valid])]);
       });
     }
 
