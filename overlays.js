@@ -334,7 +334,7 @@ class OverlayManager {
     if (bookmarkedSurahIds?.has(surah.s_id)) bookmarkCell.textContent = "🔖";
     // Col 4 ligne 2 — marque de khatma (sous le signet)
     const khatmaCell = cell("g-khatma");
-    if (khatmaSurahId === surah.s_id) khatmaCell.textContent = "🚩";
+    if (khatmaSurahId === surah.s_id) khatmaCell.textContent = "🏴";
 
     grid.append(
       pinBtn,               // Col 1
@@ -446,9 +446,7 @@ class OverlayManager {
 
     if (!this.surahsInfo) {
       try {
-        const response = await fetch("./data/surainfo.json", { cache: "force-cache" });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        this.surahsInfo = await response.json();
+        this.surahsInfo = await AppUtils.fetchJSON("./data/surainfo.json");
       } catch {
         overlay.content.innerHTML = `<div class="empty-message">⚠️ تعذر تحميل المعلومات</div>`;
         return;
@@ -510,16 +508,14 @@ class OverlayManager {
     const element = this.overlays.surahInfo?.element;
     if (!element) return;
     this._surahInfoSwipeInitialized = true;
-    window.quranApp.enableSwipe(
-      element,
-      () => {
+    AppUtils.onSwipe(element, {
+      onSwipeLeft: () => {
         if (this.currentSurahInfoId < APP_CFG.TOTAL_SURAHS) this._updateSurahInfoUI(this.currentSurahInfoId + 1);
       },
-      () => {
+      onSwipeRight: () => {
         if (this.currentSurahInfoId > 1) this._updateSurahInfoUI(this.currentSurahInfoId - 1);
       },
-      50
-    );
+    });
   }
 
   formatSurahInfo(text) {
@@ -579,7 +575,7 @@ class OverlayManager {
       if (!isNewJuz) badge.style.visibility = "hidden";
       const leftElements = [];
       const hasKhatmaInRange = khatmaPage !== null && khatmaPage >= hizb.page_start && khatmaPage <= hizb.page_end;
-      if (hasKhatmaInRange) leftElements.push(R.createIcon("🚩"));
+      if (hasKhatmaInRange) leftElements.push(R.createIcon("🏴"));
       if (hasBookmarkInRange) leftElements.push(R.createIcon("🔖"));
       leftElements.push(R.createPageTag(hizb.page_start));
       container.appendChild(
@@ -639,9 +635,8 @@ class OverlayManager {
 
   showConfirm(message) {
     return this._showBackdropDialog(
-      `<p class="confirm-msg"></p><div class="confirm-buttons"><button class="confirm-btn ok">نعم</button><button class="confirm-btn cancel">لا</button></div>`,
+      `<p>${message}</p><div class="confirm-buttons"><button class="confirm-btn ok">نعم</button><button class="confirm-btn cancel">لا</button></div>`,
       (dialog, cleanup) => {
-        dialog.querySelector(".confirm-msg").textContent = message;
         dialog.querySelector(".ok").addEventListener("click", () => cleanup(true));
         dialog.querySelector(".cancel").addEventListener("click", () => cleanup(false));
       }
@@ -686,7 +681,7 @@ class OverlayManager {
     this.bookmarkFormCancel = cancelBtn;
 
     const container = AppUtils.el("div", "bookmarks-overlay-content");
-    const khatmaBtn = AppUtils.el("button", "confirm-btn khatma-btn", "🚩 علامة الختمة");
+    const khatmaBtn = AppUtils.el("button", "confirm-btn khatma-btn", "🏴 علامة الختمة");
     khatmaBtn.addEventListener("click", () => this._setKhatmaHere(currentPage));
     container.append(list, form, khatmaBtn); overlay.content.replaceChildren(container);
 
@@ -730,7 +725,7 @@ class OverlayManager {
     if (!old) {
       window.statsManager?.setKhatmaStart(1);
       app.setKhatmaMarker(page, window.statsManager?.defaultKhatmaName?.());
-      app.showToast(`🚩 علامة الختمة في صفحة ${page}`);
+      app.showToast(`🏴 علامة الختمة في صفحة ${page}`);
       this.refreshBookmarksDisplay();
       return;
     }
@@ -741,7 +736,7 @@ class OverlayManager {
     await this._confirmAndRefresh(
       `هل تريد نقل علامة الختمة من صفحة ${old.page} إلى صفحة ${page} ؟`,
       () => app.setKhatmaMarker(page),
-      `🚩 تم نقل علامة الختمة إلى صفحة ${page}`,
+      `🏴 تم نقل علامة الختمة إلى صفحة ${page}`,
     );
   }
 
@@ -779,8 +774,8 @@ class OverlayManager {
     const date = iso ? new Date(iso) : null;
     if (!date || isNaN(date)) return "";
     const yy = String(date.getFullYear()).slice(-2);
-    const mm = String(date.getMonth() + 1).padStart(2, "0");
-    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = AppUtils.pad2(date.getMonth() + 1);
+    const dd = AppUtils.pad2(date.getDate());
     return `${yy}-${mm}-${dd}`;
   }
 
@@ -789,7 +784,7 @@ class OverlayManager {
     const isKhatma = bookmark.type === "khatma";
     if (isKhatma) item.classList.add("bookmark-khatma");
 
-    const nameSpan = AppUtils.el("span", "item-title bookmark-name", isKhatma ? `🚩 ${bookmark.name}` : bookmark.name);
+    const nameSpan = AppUtils.el("span", "item-title bookmark-name", isKhatma ? `🏴 ${bookmark.name}` : bookmark.name);
     nameSpan.dataset.id = bookmark.id;
 
     item.appendChild(

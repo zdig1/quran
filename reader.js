@@ -621,7 +621,7 @@ class QuranReader {
 
     this.notifyPageChange(true);
     if (this.readingMode === "book") this._reapplyHighlightIfNeeded();
-    setTimeout(() => { this.isTransitioning = false; }, 200);
+    setTimeout(() => { this.isTransitioning = false; }, AppUtils.cssMs("--t-fast", 200));
   }
 
   _reapplyHighlightIfNeeded() {
@@ -774,7 +774,7 @@ class QuranReader {
     if (elapsed < 10000) return;                                    // < 10s → pas lue
 
     this._pageAtLastCommit = leavingPage;
-    window.statsManager?.commitPageRead?.(leavingPage);
+    window.statsManager?.commitPageRead?.(leavingPage, elapsed);
   }
 
   notifyPageChange(force = false) {
@@ -791,17 +791,14 @@ class QuranReader {
     const element = this.elements.pageScroll;
 
     this.removeSwipeNavigation();
-    this.swipeCleanup = window.quranApp.enableSwipe(
-      element,
-      () => {
+    this.swipeCleanup = AppUtils.onSwipe(element, {
+      onSwipeLeft: () => {
         if (!this.isTransitioning && !this._dialogOpen) this.goToNextPage();
       },
-      () => {
+      onSwipeRight: () => {
         if (!this.isTransitioning && !this._dialogOpen) this.goToPreviousPage();
       },
-      50,
-      300
-    );
+    });
   }
 
   removeSwipeNavigation() {
@@ -1004,7 +1001,7 @@ class QuranReader {
         btn.classList.remove("visible");
         setTimeout(() => {
           btn.style.display = "none";
-        }, AppUtils.cssMs("--speed-btn-fade", 200));
+        }, AppUtils.cssMs("--t-fast", 200));
       }
     });
   }

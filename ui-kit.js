@@ -71,6 +71,8 @@ const AppUtils = {
 
   clamp: (value, min, max) => Math.min(Math.max(value, min), max),
 
+  pad2: (n) => String(n).padStart(2, "0"),
+
   pad3: (n) => String(n).padStart(3, "0"),
 
   isValidPage: (p) => Number.isInteger(p) && p >= 1 && p <= APP_CFG.TOTAL_PAGES,
@@ -91,6 +93,12 @@ const AppUtils = {
       timer = setTimeout(() => reject(new Error("Timeout")), ms);
     });
     return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+  },
+
+  async fetchJSON(url) {
+    const response = await fetch(url, { cache: "force-cache" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
   },
 
   cssVar(name, fallback = "") {
@@ -180,7 +188,7 @@ const AppUtils = {
       toast.style.opacity = "0";
       AppUtils._toastHideTimeout = setTimeout(() => {
         toast.style.display = "none";
-      }, AppUtils.cssMs("--toast-fade", 300));
+      }, AppUtils.cssMs("--t-base", 300));
     }, duration);
   },
 };
@@ -547,7 +555,7 @@ window.Picker = (() => {
 
 window.AyaPicker = (() => {
   const surahs = () => window.quranCalculator?.getAllSurahs?.() || [];
-  const surahOf = (id) => surahs().find((s) => s.s_id === id);
+  const surahOf = (id) => window.quranCalculator?.getSurah?.(id);
 
   const totalOf = (id) => surahOf(id)?.verses_count || 0;
   const surahStartPage = (id) => surahOf(id)?.page_start || null;

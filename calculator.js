@@ -35,9 +35,7 @@ class QuranCalculator {
   }
 
   async _fetchData() {
-    const response = await fetch("./data/quran.json", { cache: "force-cache" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    this.data = await response.json();
+    this.data = await AppUtils.fetchJSON("./data/quran.json");
     this.buildPageIndex();
     this.isLoaded = true;
     return this.data;
@@ -175,10 +173,6 @@ class QuranCalculator {
     return this._findSurah(id);
   }
 
-  getTotalAyahs(id) {
-    return this._findSurah(id)?.verses_count || 0;
-  }
-
   hasSajdaInSurah(sura_id) {
     return this._sajdaSet.has(sura_id);
   }
@@ -188,10 +182,6 @@ class QuranCalculator {
   }
 
   // ---------- API publique — Hizbs ----------
-
-  getHizbIndex() {
-    return this._hizbIndex();
-  }
 
   getHizbWithPageRange() {
     const hizbs = this._hizbIndex();

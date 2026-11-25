@@ -54,10 +54,7 @@ class TafsirSearchManager {
     this._tafsirFontReady = false;
     this.updatingDropdowns = false;
     this._pickersBound = false;
-    this.currentSuraInView = null;
 
-    this.inputElement = null;
-    this.resultsElement = null;
     this._scrollLocked = false;
   }
 
@@ -149,9 +146,7 @@ class TafsirSearchManager {
   }
 
   async loadData() {
-    const response = await fetch(this.config.dataUrl, { cache: "force-cache" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    this.data = await response.json();
+    this.data = await AppUtils.fetchJSON(this.config.dataUrl);
 
     const calc = window.quranCalculator;
     const suraKey = this.F.sura;
@@ -379,8 +374,6 @@ class TafsirSearchManager {
     const parent = inputEl?.parentElement;
     if (!inputEl || !resultsEl || !parent) return null;
 
-    this.inputElement = inputEl;
-    this.resultsElement = resultsEl;
     const statsEl = this._createStatsElement(parent);
 
     const reset = () => {
@@ -500,28 +493,6 @@ class TafsirSearchManager {
 
   // ---------- 8. Interface tafsir — initialisation et menus ----------
 
-  async initTafsirUI(contentContainer) {
-    this.optimizeForMobile();
-    this.tafsirUI = { contentContainer };
-    await this.ensureLoaded();
-    this.initializeTafsirSelectors();
-
-    const currentPage = window.quranApp?.getCurrentPage() || 1;
-    const firstAya = this.getFirstAyaForPage(currentPage);
-    if (firstAya) {
-      this.updateTafsirNavigation(firstAya.sura_n, firstAya.aya_n, currentPage);
-      this.syncDropdowns(firstAya.sura_n, firstAya.aya_n, currentPage, "init");
-      await this.loadTafsirForPage(currentPage);
-      setTimeout(() => this.scrollToFirstAyaOfPage(currentPage), 150);
-    } else {
-      contentContainer.replaceChildren();
-    }
-
-    this.setupInfiniteScroll(contentContainer);
-    this.tafsirUIReady = true;
-    return this.tafsirUI;
-  }
-
   initializeTafsirSelectors() {
     if (!this.tafsirUI) return;
 
@@ -558,11 +529,6 @@ class TafsirSearchManager {
   _setAyaForSura(sura_n, aya_n) {
     this.updateAyaDropdown(this.getAyatBySura(sura_n));
     CustomSelect.set("ayaSelect", aya_n);
-  }
-
-  _syncFromFirstAya(page, ayaInfo) {
-    this.updateTafsirNavigation(ayaInfo[this.F.sura_n], ayaInfo[this.F.aya_n], page);
-    this.syncDropdowns(ayaInfo[this.F.sura_n], ayaInfo[this.F.aya_n], page, "init");
   }
 
   handleSuraChange() {
@@ -643,7 +609,6 @@ class TafsirSearchManager {
 
   updateTafsirNavigation(sura_n, aya_n, page) {
     this.currentTafsirPage = parseInt(page, 10);
-    this.currentSuraInView = parseInt(sura_n, 10);
   }
 
   // ---------- 9. Chargement des pages du tafsir ----------

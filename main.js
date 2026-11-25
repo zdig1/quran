@@ -151,16 +151,6 @@ class QuranApp {
     return AppStore.getJSON(STORAGE_KEYS.prefix + key, defaultValue);
   }
 
-  // ---------- Utilitaires exposés aux autres scripts ----------
-
-  escapeHtml(text) {
-    return AppUtils.esc(text);
-  }
-
-  enableSwipe(element, onSwipeLeft, onSwipeRight, threshold = 50, cooldown = 300) {
-    return AppUtils.onSwipe(element, { onSwipeLeft, onSwipeRight, threshold, cooldown });
-  }
-
   // ---------- Navigation ----------
 
   getCurrentPage() {
@@ -321,7 +311,7 @@ class QuranApp {
     if (!icon) return;
     const isKhatma = this.getKhatmaBookmark()?.page === page;
     const has = this.bookmarkedPagesSet.has(page);
-    icon.textContent = isKhatma ? "🚩" : has ? "⭐" : "🔖";
+    icon.textContent = isKhatma ? "🏴" : has ? "⭐" : "🔖";
     icon.title = isKhatma ? "علامة الختمة" : has ? "علامة مرجعية موجودة" : "إضافة علامة مرجعية";
   }
 
