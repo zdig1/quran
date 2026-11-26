@@ -178,7 +178,6 @@ class OverlayManager {
   cacheElements() {
     this.elements = {
       menuOverlay: document.getElementById("menuOverlay"),
-      closeMenuBtn: document.getElementById("closeMenuBtn"),
       menuBtn: document.getElementById("menuBtn"),
       surahsBtn: document.getElementById("surahsBtn"),
       juzHizbBtn: document.getElementById("juzHizbBtn"),
@@ -219,13 +218,12 @@ class OverlayManager {
     if (el) el.addEventListener(type, handler);
   }
 
-  setupEventListeners() {
-    const { menuOverlay, menuBtn, closeMenuBtn } = this.elements;
+setupEventListeners() {
+    const { menuOverlay, menuBtn } = this.elements;
     this._on(menuOverlay, "click", (e) => {
       if (e.target === menuOverlay) this.closeMenu();
     });
     this._on(menuBtn, "click", () => this.showMenu());
-    this._on(closeMenuBtn, "click", () => this.closeMenu());
     this.setupMenuButtons();
     this._on(document, "keydown", (e) => {
       if (e.key === "Escape") window.quranApp?.handleBack?.();

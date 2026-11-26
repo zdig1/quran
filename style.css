@@ -426,7 +426,7 @@
   }
 
   .menu-content {
-    width: 17rem;
+    width: auto;
     position: absolute;
     top: 0;
     right: 0;
@@ -439,21 +439,6 @@
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
-  }
-
-  .menu-header {
-    padding: var(--space-sm);
-    border-bottom: 1px solid var(--menu-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .menu-header h2 {
-    color: var(--white);
-    font-size: var(--text-lg);
-    margin: 0;
-    font-family: "MyNotoKufi", sans-serif;
   }
 
   .menu-icon-svg {
@@ -2606,7 +2591,7 @@
   .mem-overlay-body {
     display: flex;
     flex-direction: column;
-    padding: var(--space-md);
+    padding: var(--space-sm);
     direction: rtl;
   }
 
@@ -2647,7 +2632,7 @@
   /* ---------- Panneau des réglages (Accordéon) ---------- */
   .mem-settings-panel {
     margin-top: var(--space-xs);
-    padding: var(--space-md);
+    padding: var(--space-sm);
     border-top: 1px solid var(--border);
     border-radius: var(--border-radius);
     background: var(--surface-alt);
@@ -2693,7 +2678,7 @@
   .mem-chip {
     flex: 1 1 auto;
     min-width: 60px;
-    padding: var(--space-sm) var(--space-md);
+    padding: var(--space-sm);
     font: inherit;
     font-size: var(--text-sm);
     color: var(--text);
