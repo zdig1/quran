@@ -292,13 +292,16 @@ class QuranApp {
   addBookmark(bookmark) {
     const page = Number(bookmark.page);
     if (!AppUtils.isValidPage(page)) return;
+
     const normalized = this._normalizeBookmark({ ...bookmark, page });
     if (!normalized.surahId) {
       const surahId = this._surahIdForPage(page);
       if (surahId) normalized.surahId = surahId;
     }
+
     this.bookmarks.push(normalized);
     this._commitBookmarks([page]);
+    return normalized;
   }
 
   replaceBookmarkPage(bookmarkId, newPage) {

@@ -1227,9 +1227,68 @@
     flex-shrink: 0;
   }
 
-  .bookmark-line2 {
-    margin-top: var(--space-xs);
-    padding-right: 45px;
+  /* Grille principale du signet (3 colonnes) */
+  .bookmark-grid-3col {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-sm);
+    width: 100%;
+    padding: 6px 0;
+  }
+
+  /* --- Colonne de droite --- */
+  .bookmark-grid-3col .item-right-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .bookmark-grid-3col .item-title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  /* Empêche le nom de pousser la date */
+  .bookmark-grid-3col .item-title-row .item-title {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bookmark-grid-3col .item-date-row {
+    padding-right: 36px;
+    /* Aligne la date sous le nom (après le crayon) */
+    margin-top: 2px;
+  }
+
+  /* --- Colonne du centre --- */
+  .bookmark-grid-3col .item-center-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    transform: translateX(-6px);
+  }
+
+  .bookmark-grid-3col .item-center-col .bookmark-time {
+    font-size: var(--text-xs);
+    color: var(--text-lighter);
+    font-weight: 600;
+    white-space: nowrap;
+    direction: ltr;
+  }
+
+  /* --- Colonne de gauche --- */
+  .bookmark-grid-3col .item-left-col {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-sm);
   }
 
   /*  Sauvegarde  */

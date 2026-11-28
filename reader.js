@@ -1269,8 +1269,8 @@ class QuranReader {
   highlightAya(surah, ayah, rects, skipScroll = false) {
     this.clearHighlight();
     if (!rects?.length) return;
-    const page = this.currentPage;
-    if (rects[0]?.p !== page) return;
+    const page = rects[0]?.p;
+    if (!page || (this.readingMode !== "scroll" && page !== this.currentPage)) return;
 
     const rc = RIWAYA_LAYOUT[window.ACTIVE_RIWAYA] ?? RIWAYA_LAYOUT.hafs;
     const { WEBP_TOP, WEBP_BOT, SHRINK } = rc;

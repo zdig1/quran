@@ -205,9 +205,11 @@ class QuranAudioPlayer {
     }
     const ayaPage = rects[0]?.p;
     const reader = window.quranReader;
-    if (ayaPage && ayaPage !== reader?.currentPage) {
-      if (this._autoNavigate) window.quranApp?.goToPage(ayaPage);
-      else reader?.clearHighlight();
+    if (ayaPage && ayaPage !== reader?.currentPage && reader?.readingMode !== "scroll") {
+      if (this._autoNavigate) {
+        window.quranApp?.goToPage(ayaPage);
+        if (reader?.currentPage === ayaPage) this._performHighlight(rects, ayaPage);
+      } else reader?.clearHighlight();
       return;
     }
     this._performHighlight(rects, ayaPage);
@@ -1366,7 +1368,7 @@ class QuranAudioPlayer {
     }
   }
 
-  nextAyah() {
+  nextAyah(autoplay = this.isPlaying) {
     this._clearSingleAya();
     if (this._mem) return this._memSkip(1);
     if (!this.currentSurah) return;
@@ -1376,13 +1378,13 @@ class QuranAudioPlayer {
 
     if (this.currentAyah < this.totalAyahs) {
       this.currentAyah++;
-      if (this.isPlaying) this.play();
+      if (autoplay) this.play();
       else this._afterNavigate();
     } else if (this.currentSurah < 114 && this._surah(this.currentSurah + 1)) {
       this._setSurah(this.currentSurah + 1, 1);
-      if (this.isPlaying) this.play();
+      if (autoplay) this.play();
       else this._afterNavigate();
-    } else if (this.isPlaying) {
+    } else if (autoplay) {
       this._onEndOfSurah();
     } else {
       this._afterNavigate();
@@ -1644,7 +1646,7 @@ class QuranAudioPlayer {
         return;
       }
 
-      this.nextAyah();
+      this.nextAyah(true);
     };
 
     const onTimeUpdate = () => {
@@ -1722,7 +1724,7 @@ class QuranAudioPlayer {
     window.addEventListener("online", () => this._updateOnlineStatus());
     window.addEventListener("offline", () => this._updateOnlineStatus());
     window.addEventListener(APP_EVENTS.pageChanged, (e) => {
-      if (this.isStopped && e.detail?.page) this.setCurrentSurahFromPage();
+      if (this.isStopped && !this._autoNavigate && e.detail?.page) this.setCurrentSurahFromPage(true);
     });
     this._updateOnlineStatus();
   }
@@ -1757,9 +1759,11 @@ class QuranAudioPlayer {
     this._updateFabIndicator();
   }
 
-  setCurrentSurahFromPage() {
+  setCurrentSurahFromPage(keepIfOnPage = false) {
     if (this._mem) return;
     const page = window.quranApp?.getCurrentPage() || window.quranReader?.currentPage || 1;
+    // Le verset choisi est déjà sur cette page : on ne le remplace pas par le premier verset de la page
+    if (keepIfOnPage && this.currentSurah && this._getPageForAya(this.currentSurah, this.currentAyah) === page) return;
     const first = this._getFirstAyahOfPage(page);
     if (first) {
       this._setSurah(first.surah, first.ayah);

@@ -218,7 +218,7 @@ class OverlayManager {
     if (el) el.addEventListener(type, handler);
   }
 
-setupEventListeners() {
+  setupEventListeners() {
     const { menuOverlay, menuBtn } = this.elements;
     this._on(menuOverlay, "click", (e) => {
       if (e.target === menuOverlay) this.closeMenu();
@@ -676,12 +676,12 @@ setupEventListeners() {
 
     this.bookmarkFormInput = input;
     this.bookmarkFormButton = addBtn;
-    this.bookmarkFormCancel = cancelBtn;
+    this.bookmarkFormCancel = cancelBtn
 
     const container = AppUtils.el("div", "bookmarks-overlay-content");
     container.append(list, form);
     if (!window.quranApp?.getKhatmaBookmark()) {
-      const khatmaBtn = AppUtils.el("button", "confirm-btn khatma-btn", "🏴 علامة الختمة");
+      const khatmaBtn = AppUtils.el("button", "confirm-btn khatma-btn", "ضع علامة الختمة 🏴");
       khatmaBtn.addEventListener("click", () => this._setKhatmaHere(currentPage));
       container.append(khatmaBtn);
     }
@@ -692,7 +692,8 @@ setupEventListeners() {
   setupBookmarkFormHandlers(currentPage) {
     if (!this.bookmarkFormInput || !this.bookmarkFormButton) return;
 
-    this.bookmarkFormButton.addEventListener("click", () => {
+    this.bookmarkFormButton.addEventListener("click", async () => {
+      // ═══ MODE ÉDITION ═══
       if (this.editingBookmarkId) {
         const newName = this.bookmarkFormInput.value.trim();
         if (newName && window.quranApp?.updateBookmark(this.editingBookmarkId, newName)) {
@@ -700,18 +701,35 @@ setupEventListeners() {
           this.resetBookmarkForm();
           this.refreshBookmarksDisplay();
         }
-      } else {
-        const name = this.bookmarkFormInput.value.trim() || `صفحة ${currentPage}`;
-        window.quranApp.addBookmark({
-          page: currentPage,
-          name,
-          date: new Date().toISOString(),
-          id: `bookmark_${currentPage}_${Date.now()}`,
-        });
-        window.quranApp.showToast("✅ تمت إضافة العلامة");
-        this.bookmarkFormInput.value = this.getDefaultBookmarkName(currentPage);
-        this.refreshBookmarksDisplay();
+        return;
       }
+
+      // ═══ MODE AJOUT ═══
+      const name = this.bookmarkFormInput.value.trim() || `صفحة ${currentPage}`;
+
+      // 1) Détection de doublon (comparaison numérique)
+      const existing = (window.quranApp?.getBookmarks() || []).find(
+        (b) => b.type !== "khatma" && Number(b.page) === Number(currentPage),
+      );
+
+      // 2) Confirmation AVANT ajout — même style que les autres dialogues
+      if (existing) {
+        const confirmed = await this.showConfirm(
+          "هذه الآية موجودة بالفعل في المفضلة.<br>  هل تريد إضافتها على أي حال؟",
+        );
+        if (!confirmed) return;
+      }
+
+      // 3) Ajout réel (remplacement si doublon confirmé, via addBookmark patché)
+      window.quranApp.addBookmark({
+        page: currentPage,
+        name,
+        date: new Date().toISOString(),
+        id: `bookmark_${currentPage}_${Date.now()}`,
+      });
+      window.quranApp.showToast("✅ تمت إضافة العلامة");
+      this.bookmarkFormInput.value = this.getDefaultBookmarkName(currentPage);
+      this.refreshBookmarksDisplay();
     });
 
     this.bookmarkFormCancel.addEventListener("click", () => {
@@ -770,7 +788,7 @@ setupEventListeners() {
     return item;
   }
 
-  _formatShortDate(iso) {
+  _formatDate(iso) {
     const date = iso ? new Date(iso) : null;
     if (!date || isNaN(date)) return "";
     const yy = String(date.getFullYear()).slice(-2);
@@ -779,34 +797,69 @@ setupEventListeners() {
     return `${yy}-${mm}-${dd}`;
   }
 
+  _formatTime(iso) {
+    const date = iso ? new Date(iso) : null;
+    if (!date || isNaN(date)) return "";
+    const hh = AppUtils.pad2(date.getHours());
+    const mn = AppUtils.pad2(date.getMinutes());
+    return `${hh}:${mn}`;
+  }
+
   renderBookmarkDisplayMode(item, bookmark) {
     const R = ListItemRenderer;
     const isKhatma = bookmark.type === "khatma";
     if (isKhatma) item.classList.add("bookmark-khatma");
 
-    const nameSpan = AppUtils.el("span", "item-title bookmark-name", isKhatma ? `🏴 ${bookmark.name}` : bookmark.name);
+    const nameSpan = AppUtils.el(
+      "span",
+      "item-title bookmark-name",
+      isKhatma ? `🏴 ${bookmark.name}` : bookmark.name,
+    );
     nameSpan.dataset.id = bookmark.id;
 
-    item.appendChild(
-      R.buildLine1({
-        rightElements: [
-          this._makeBookmarkIconBtn("icon-btn--edit", "تعديل الاسم", "✏️", bookmark.id),
-          nameSpan,
-        ],
-        leftElements: [
-          R.createPageTag(bookmark.page),
-          this._makeBookmarkIconBtn("icon-btn--replace", "استبدال الصفحة بالصفحة الحالية", "♻️", bookmark.id),
-          this._makeBookmarkIconBtn("icon-btn--remove", "حذف", "🗑️", bookmark.id),
-        ],
-      }),
+    const currentPage = Number(this.getCurrentPage());
+    const bookmarkPage = Number(bookmark.page);
+    const isSamePage = bookmarkPage === currentPage;
+
+    // ─── La Grille Principale ───
+    const grid = AppUtils.el("div", "bookmark-grid-3col");
+
+    // --- Colonne de DROITE (Ligne 1 : Nom / Ligne 2 : Date) ---
+    const rightCol = AppUtils.el("div", "item-right-col");
+
+    const nameRow = AppUtils.el("div", "item-title-row");
+    nameRow.append(
+      this._makeBookmarkIconBtn("icon-btn--edit", "تعديل الاسم", "✏️", bookmark.id),
+      nameSpan,
     );
 
-    const dateSpan = AppUtils.el("span", "note-small", this._formatShortDate(bookmark.lastModified) || "غير معروف");
-    const right = AppUtils.el("div", "item-right");
-    right.appendChild(dateSpan);
-    const line2 = AppUtils.el("div", "item-line-2 bookmark-line2");
-    line2.appendChild(right);
-    item.appendChild(line2);
+    const dateRow = AppUtils.el("div", "item-date-row");
+    dateRow.appendChild(AppUtils.el("span", "note-small", this._formatDate(bookmark.lastModified) || "غير معروف"));
+
+    rightCol.append(nameRow, dateRow);
+
+
+    // --- Colonne du CENTRE (Ligne 1 : Page / Ligne 2 : Heure) ---
+    const centerCol = AppUtils.el("div", "item-center-col");
+    centerCol.appendChild(R.createPageTag(bookmark.page));
+    centerCol.appendChild(AppUtils.el("span", "note-small bookmark-time", this._formatTime(bookmark.lastModified)));
+
+
+    // --- Colonne de GAUCHE (Ligne 1 : Boutons / Ligne 2 : Vide) ---
+    const leftCol = AppUtils.el("div", "item-left-col");
+    if (!isSamePage) {
+      leftCol.appendChild(
+        this._makeBookmarkIconBtn("icon-btn--replace", "استبدال الصفحة بالصفحة الحالية", "♻️", bookmark.id),
+      );
+    }
+    leftCol.appendChild(
+      this._makeBookmarkIconBtn("icon-btn--remove", "حذف", "🗑️", bookmark.id),
+    );
+
+
+    // --- Assemblage ---
+    grid.append(rightCol, centerCol, leftCol);
+    item.appendChild(grid);
 
     this.attachBookmarkEvents(item, bookmark);
   }
@@ -819,13 +872,14 @@ setupEventListeners() {
 
     item.querySelector(".icon-btn--replace")?.addEventListener("click", async (e) => {
       e.stopPropagation();
-      const currentPage = window.quranReader?.getCurrentPage() || this.getCurrentPage();
-      const oldPage = bookmark.page;
+      const currentPage = Number(window.quranReader?.getCurrentPage?.() ?? this.getCurrentPage());
+      const oldPage = Number(bookmark.page);   // ✅ Number() explicite
 
       if (oldPage === currentPage) {
         window.quranApp?.showToast("⚠️ العلامة موجودة بالفعل على هذه الصفحة");
         return;
       }
+
 
       await this._confirmAndRefresh(
         `هل تريد نقل العلامة (${AppUtils.esc(bookmark.name)}) من صفحة ${oldPage} إلى صفحة ${currentPage} ؟`,
