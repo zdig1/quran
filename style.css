@@ -1306,6 +1306,14 @@
     gap: var(--space-sm);
   }
 
+  .bookmark-grid-3col .icon-btn--edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+  }
+
   /*  Sauvegarde  */
   .backup-body {
     padding: var(--space-lg);
