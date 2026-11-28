@@ -1190,14 +1190,14 @@
   }
 
   .item-bookmark.bookmark-card {
-    border: 1px solid var(--primary);
-    border-radius: var(--border-radius);
     background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
   }
 
   .item-bookmark.bookmark-khatma {
-    background-color: var(--primary-light);
-    border: 1px solid var(--primary);
+    background-color: var(--surface);
+    border: var(--border-width) solid var(--primary);
     border-radius: var(--border-radius);
   }
 
@@ -3430,12 +3430,6 @@
   .confirm-btn.danger {
     color: var(--color-red);
     border-color: var(--color-red);
-  }
-
-  .item-bookmark.bookmark-khatma {
-    background-color: var(--primary-light);
-    border: 1px solid var(--primary);
-    border-radius: var(--border-radius);
   }
 
   .khatma-btn {

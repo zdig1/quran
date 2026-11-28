@@ -814,7 +814,7 @@ class OverlayManager {
     const nameSpan = AppUtils.el(
       "span",
       "item-title bookmark-name",
-      isKhatma ? `🏴 ${bookmark.name}` : bookmark.name,
+      isKhatma ? `${bookmark.name} 🏴` : bookmark.name,
     );
     nameSpan.dataset.id = bookmark.id;
 
