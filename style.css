@@ -1184,6 +1184,21 @@
   .bookmarks-list {
     flex: 1;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .item-bookmark.bookmark-card {
+    border: 1px solid var(--primary);
+    border-radius: var(--border-radius);
+    background-color: var(--surface);
+  }
+
+  .item-bookmark.bookmark-khatma {
+    background-color: var(--primary-light);
+    border: 1px solid var(--primary);
+    border-radius: var(--border-radius);
   }
 
   .bookmarks-add-form {

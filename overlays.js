@@ -808,6 +808,7 @@ class OverlayManager {
   renderBookmarkDisplayMode(item, bookmark) {
     const R = ListItemRenderer;
     const isKhatma = bookmark.type === "khatma";
+    item.classList.add("bookmark-card");
     if (isKhatma) item.classList.add("bookmark-khatma");
 
     const nameSpan = AppUtils.el(
